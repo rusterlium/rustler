@@ -1,4 +1,5 @@
-use libc::c_int;
+
+pub use libc::c_int;
 use libc::c_uint;
 use libc::c_char;
 use libc::c_uchar;
@@ -19,14 +20,14 @@ include!(concat!(env!("OUT_DIR"), "/nif_versions.snippet"));
 
 // FIXME
 #[allow(non_camel_case_types)]
-type ERL_NIF_UINT = size_t;
+pub type ERL_NIF_UINT = size_t;
 //type ERL_NIF_UINT = usize;  // users complain about non-ffi type.
 
 #[repr(C)]
-struct ERL_NIF_TERM(ERL_NIF_UINT);
+pub struct ERL_NIF_TERM(ERL_NIF_UINT);
 
 #[repr(C)]
-struct ErlNifEnv;
+pub struct ErlNifEnv;
 
 #[repr(C)]
 pub struct ErlNifFunc {
@@ -132,7 +133,7 @@ include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
 // ...
 
 
-
+/*
 
 #[no_mangle]
 pub extern "C" fn nif_init() -> *mut ErlNifEntry
@@ -158,3 +159,5 @@ pub extern "C" fn nif_init() -> *mut ErlNifEntry
 	// }
 	unsafe{ &mut entry }
 }
+
+*/
