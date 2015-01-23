@@ -250,8 +250,8 @@ is_dummy(_) -> false.
 
 emit_nif_version(OutputDir) ->
     Filename = filename:join(OutputDir, "nif_versions.snippet"),
-    Data = [io_lib:format("const NIF_MAJOR_VERSION: c_int = ~p;\n", [?NIF_MAJOR_VERSION]),
-            io_lib:format("const NIF_MINOR_VERSION: c_int = ~p;\n", [?NIF_MINOR_VERSION])],
+    Data = [io_lib:format("pub const NIF_MAJOR_VERSION: c_int = ~p;\n", [?NIF_MAJOR_VERSION]),
+            io_lib:format("pub const NIF_MINOR_VERSION: c_int = ~p;\n", [?NIF_MINOR_VERSION])],
 
     file:write_file(Filename, Data).
 
