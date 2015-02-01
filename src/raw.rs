@@ -10,6 +10,7 @@ use libc::c_long;
 use libc::c_double;
 use std::option::Option;
 use core::marker::Sync;
+use std::marker::ContravariantLifetime;
 
 include!(concat!(env!("OUT_DIR"), "/nif_versions.snippet"));
 // example of included content:
@@ -28,9 +29,13 @@ pub type ERL_NIF_TERM = *const c_void;
 //pub type ERL_NIF_TERM = ERL_NIF_UINT;
 
 // LLVM doesn't like to return structs for extern functions, so the following doesn't work.
-//#[derive(Copy)]
-//#[repr(C)]
-//pub struct ERL_NIF_TERM(pub ERL_NIF_UINT);
+// #[derive(Copy)]
+// #[repr(C)]
+// pub struct ERL_NIF_TERM<'a> {
+// 	ptr: *mut c_void, // Dummy pointer.  The purpose is to take up just the right amount of space.
+// 	marker: ContravariantLifetime<'a>,
+// }
+
 
 #[allow(missing_copy_implementations)]
 #[repr(C)]
@@ -39,8 +44,7 @@ pub struct ErlNifEnv;
 #[allow(missing_copy_implementations)]
 #[repr(C)]
 pub struct ErlNifFunc {
-	pub name: *const str,
-	//pub name:     &'a str,
+	pub name:     *const c_uchar,
 	pub arity:    c_uint,
 	pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
 	pub flags:    c_uint,
@@ -53,17 +57,15 @@ unsafe impl Sync for ErlNifFunc {}
 pub struct ErlNifEntry {
 	pub major:        c_int,
 	pub minor:        c_int,
-	pub name:         *const str,
-	//pub name:         &'a str,
+	pub name:         *const c_uchar,
 	pub num_of_funcs: c_int,
-	 pub funcs:        *const [ErlNifFunc],
-	//pub funcs:        &'a [ErlNifFunc<'a>],
+//	pub funcs:        *const [ErlNifFunc],  // preferred solution, but causes ICE
+	pub funcs:        *const ErlNifFunc,
 	pub load:    Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
 	pub reload:  Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
 	pub upgrade: Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut *mut c_void, old_priv_data:	*mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
 	pub unload:  Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut c_void)	-> ()>,
-	pub vm_variant: *const str,
-	//pub vm_variant: &'a str,
+	pub vm_variant: *const c_uchar,
 	pub options: c_uint,
 }
 unsafe impl Sync for ErlNifEntry {}
