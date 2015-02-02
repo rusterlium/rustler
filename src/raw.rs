@@ -41,34 +41,34 @@ pub type ERL_NIF_TERM = *const c_void;
 #[repr(C)]
 pub struct ErlNifEnv;
 
-#[allow(missing_copy_implementations)]
-#[repr(C)]
-pub struct ErlNifFunc {
-	pub name:     *const c_uchar,
-	pub arity:    c_uint,
-	pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
-	pub flags:    c_uint,
-}
-unsafe impl Sync for ErlNifFunc {}
+// #[allow(missing_copy_implementations)]
+// #[repr(C)]
+// pub struct ErlNifFunc {
+// 	pub name:     *const c_uchar,
+// 	pub arity:    c_uint,
+// 	pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
+// 	pub flags:    c_uint,
+// }
+// unsafe impl Sync for ErlNifFunc {}
 
 
-#[allow(missing_copy_implementations)]
-#[repr(C)]
-pub struct ErlNifEntry {
-	pub major:        c_int,
-	pub minor:        c_int,
-	pub name:         *const c_uchar,
-	pub num_of_funcs: c_int,
-//	pub funcs:        *const [ErlNifFunc],  // preferred solution, but causes ICE
-	pub funcs:        *const ErlNifFunc,
-	pub load:    Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
-	pub reload:  Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-	pub upgrade: Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut *mut c_void, old_priv_data:	*mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-	pub unload:  Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut c_void)	-> ()>,
-	pub vm_variant: *const c_uchar,
-	pub options: c_uint,
-}
-unsafe impl Sync for ErlNifEntry {}
+// #[allow(missing_copy_implementations)]
+// #[repr(C)]
+// pub struct ErlNifEntry {
+// 	pub major:        c_int,
+// 	pub minor:        c_int,
+// 	pub name:         *const c_uchar,
+// 	pub num_of_funcs: c_int,
+// //	pub funcs:        *const [ErlNifFunc],  // preferred solution, but causes ICE
+// 	pub funcs:        *const ErlNifFunc,
+// 	pub load:    Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
+// 	pub reload:  Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+// 	pub upgrade: Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut *mut c_void, old_priv_data:	*mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+// 	pub unload:  Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut c_void)	-> ()>,
+// 	pub vm_variant: *const c_uchar,
+// 	pub options: c_uint,
+// }
+// unsafe impl Sync for ErlNifEntry {}
 
 #[allow(missing_copy_implementations)]
 #[repr(C)]

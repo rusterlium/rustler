@@ -5,4 +5,4 @@ extern crate libc;
 extern crate core;
 
 pub mod raw;
-
+pub mod rnif;
