@@ -161,6 +161,21 @@ include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
 //     pub fn enif_is_binary(arg1: *mut ErlNifEnv, term: ERL_NIF_TERM) -> c_int;
 // ...
 
+#[cfg(target_pointer_width = "64")]
+pub fn enif_make_int64(env: *mut ErlNifEnv, i: i64) -> ERL_NIF_TERM
+ 	{ unsafe {enif_make_long(env, i)}}
+
+#[cfg(target_pointer_width = "64")]
+pub fn enif_make_uint64(env: *mut ErlNifEnv, i: u64) -> ERL_NIF_TERM
+ 	{ unsafe {enif_make_ulong(env, i) }}
+
+#[cfg(target_pointer_width = "64")]
+pub fn enif_get_int64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut i64) -> c_int
+ 	{ unsafe {enif_get_long(env, term, ip) }}
+
+#[cfg(target_pointer_width = "64")]
+pub fn enif_get_uint64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut u64) -> c_int
+ 	{ unsafe {enif_get_ulong(env, term, ip) }}
 
 /*
 
