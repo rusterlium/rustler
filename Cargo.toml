@@ -4,3 +4,7 @@ name = "ruster"
 version = "0.0.1"
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 build = "build.rs"
+
+[dependencies]
+
+libc = "0.1"

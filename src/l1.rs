@@ -9,8 +9,7 @@ use libc::c_ulong;
 use libc::c_long;
 use libc::c_double;
 use std::option::Option;
-use core::marker::Sync;
-use std::marker::ContravariantLifetime;
+//use core::marker::Sync;
 
 include!(concat!(env!("OUT_DIR"), "/nif_versions.snippet"));
 // example of included content:
@@ -42,33 +41,33 @@ pub type ERL_NIF_TERM = *const c_void;
 pub struct ErlNifEnv;
 
 // #[allow(missing_copy_implementations)]
-// #[repr(C)]
-// pub struct ErlNifFunc {
-// 	pub name:     *const c_uchar,
-// 	pub arity:    c_uint,
-// 	pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
-// 	pub flags:    c_uint,
-// }
+#[repr(C)]
+pub struct ErlNifFunc {
+	pub name:     *const u8,
+	pub arity:    c_uint,
+//	pub function: Option<extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM>,
+	pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
+	pub flags:    c_uint,
+}
 // unsafe impl Sync for ErlNifFunc {}
 
 
 // #[allow(missing_copy_implementations)]
-// #[repr(C)]
-// pub struct ErlNifEntry {
-// 	pub major:        c_int,
-// 	pub minor:        c_int,
-// 	pub name:         *const c_uchar,
-// 	pub num_of_funcs: c_int,
-// //	pub funcs:        *const [ErlNifFunc],  // preferred solution, but causes ICE
-// 	pub funcs:        *const ErlNifFunc,
-// 	pub load:    Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
-// 	pub reload:  Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-// 	pub upgrade: Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut *mut c_void, old_priv_data:	*mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-// 	pub unload:  Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut c_void)	-> ()>,
-// 	pub vm_variant: *const c_uchar,
-// 	pub options: c_uint,
-// }
-// unsafe impl Sync for ErlNifEntry {}
+#[repr(C)]
+pub struct ErlNifEntry {
+	pub major:        c_int,
+	pub minor:        c_int,
+	pub name:         *const u8,
+	pub num_of_funcs: c_int,
+	pub funcs:        *const ErlNifFunc,
+	pub load:    Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
+	pub reload:  Option<extern "C" fn(arg1: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+	pub upgrade: Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut *mut c_void, old_priv_data:	*mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+	pub unload:  Option<extern "C" fn(arg1: *mut ErlNifEnv,	priv_data: *mut c_void)	-> ()>,
+	pub vm_variant: *const u8,
+	pub options: c_uint,
+}
+//unsafe impl Sync for ErlNifEntry {}
 
 #[allow(missing_copy_implementations)]
 #[repr(C)]
@@ -87,21 +86,21 @@ pub struct ErlNifResourceType;
 #[allow(missing_copy_implementations)]
 pub type ErlNifResourceDtor = extern "C" fn(arg1: *mut ErlNifEnv, arg2: *mut c_void) -> ();
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifResourceFlags {
 	ERL_NIF_RT_CREATE = 1,
 	ERL_NIF_RT_TAKEOVER = 2,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifCharEncoding {
 	ERL_NIF_LATIN1 = 1,
 	DUMMY = 999, // prevents "univariant enum" compile error
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifPid {
 	pid: ERL_NIF_TERM,
@@ -123,7 +122,7 @@ pub struct ErlNifSysInfo {
 	pub dirty_scheduler_support: c_int,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifDirtyTaskFlags {
 	ERL_NIF_DIRTY_JOB_CPU_BOUND = 1,
@@ -141,7 +140,7 @@ pub struct ErlNifMapIterator {
 	__spare__: [*mut c_void; 2us],
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifMapIteratorEntry {
 	ERL_NIF_MAP_ITERATOR_HEAD = 1,
