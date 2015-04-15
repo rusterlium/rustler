@@ -27,15 +27,6 @@ pub type ERL_NIF_UINT = size_t;
 pub type ERL_NIF_TERM = *const c_void;
 //pub type ERL_NIF_TERM = ERL_NIF_UINT;
 
-// LLVM doesn't like to return structs for extern functions, so the following doesn't work.
-// #[derive(Copy)]
-// #[repr(C)]
-// pub struct ERL_NIF_TERM<'a> {
-// 	ptr: *mut c_void, // Dummy pointer.  The purpose is to take up just the right amount of space.
-// 	marker: ContravariantLifetime<'a>,
-// }
-
-
 #[allow(missing_copy_implementations)]
 #[repr(C)]
 pub struct ErlNifEnv;
@@ -175,32 +166,3 @@ pub fn enif_get_int64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut i64) -> 
 #[cfg(target_pointer_width = "64")]
 pub fn enif_get_uint64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut u64) -> c_int
  	{ unsafe {enif_get_ulong(env, term, ip) }}
-
-/*
-
-#[no_mangle]
-pub extern "C" fn nif_init() -> *mut ErlNifEntry
-{
-	static mut entry: ErlNifEntry = ErlNifEntry{
-		major : NIF_MAJOR_VERSION,
-		minor : NIF_MINOR_VERSION,
-		name : "rustnif\0",
-		num_of_funcs : 0,
-		funcs : 0 as *mut ErlNifFunc,
-		load :    None,
-		reload :  None,
-		upgrade : None,
-		unload :  None,
-		vm_variant : "beam.vanilla\0",
-	};
-	// unsafe {
-	// 	funcs[0].name = CString::from_slice("native_add".as_bytes()).as_ptr();
-	// 	entry.name = CString::from_slice("er".as_bytes()).as_ptr();
-	// 	entry.num_of_funcs = funcs.len() as i32;
-	// 	entry.funcs = funcs.as_mut_ptr();
-	
-	// }
-	unsafe{ &mut entry }
-}
-
-*/

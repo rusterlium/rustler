@@ -1,6 +1,6 @@
 [package]
 
-name = "ruster"
+name = "ruster_unsafe"
 version = "0.0.1"
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 build = "build.rs"
