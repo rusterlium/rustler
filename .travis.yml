@@ -1,1 +1,3 @@
 language: rust
+otp_release:
+	- 17.5
