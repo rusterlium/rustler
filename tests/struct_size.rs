@@ -1,6 +1,6 @@
 
 extern crate ruster_unsafe;
-use ruster_unsafe::nif::*;
+use ruster_unsafe::*;
 
 use std::process::Command;
 use std::env;

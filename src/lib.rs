@@ -11,11 +11,14 @@ A NIF module is built by creating a new crate that uses `ruster_unsafe` as a dep
 All NIF functions must have the following signature:
 
 ```
+extern crate ruster_unsafe;
+use ruster_unsafe::*;
+# fn main(){}
 extern "C" fn my_nif(env: *mut ErlNifEnv,
                      argc: c_int,
                      args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
     // ...
-#   enif_badarg(env)
+#   unsafe{enif_make_badarg(env)}
 }
 
 ```
@@ -27,13 +30,15 @@ extern "C" fn my_nif(env: *mut ErlNifEnv,
 #[macro_use]
 extern crate ruster_unsafe;
 use ruster_unsafe::*;
-# fn main(){}
 
 nif_init!(b"my_nif_module\0", Some(load), None, None, None,
     nif!(b"my_nif_fun1\0", 1, my_nif_fun1),
     nif!(b"my_dirty_fun2\0", 1, my_dirty_fun2, ERL_NIF_DIRTY_JOB_CPU_BOUND)
 );
-
+# fn main(){}
+# extern "C" fn load(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int { 0 }
+# extern "C" fn my_nif_fun1(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
+# extern "C" fn my_dirty_fun2(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
 ```
 
 ## Details
@@ -86,7 +91,7 @@ the the `args` parameter.
 
 ```
 extern crate ruster_unsafe;
-use ruster_unsafe::nif::*;
+use ruster_unsafe::*;
 use std::mem::uninitialized;
 extern "C" fn native_add(env: *mut ErlNifEnv,
                          argc: c_int,
@@ -104,11 +109,19 @@ extern "C" fn native_add(env: *mut ErlNifEnv,
          }
     }
 }
+# fn main(){}
 ```
 
 # Examples
 
 For a complete example see (ruster_demo)
+
+# Notes and Limitations
+- Tested on Linux, but any unix should be fine.
+- Windows support is planned but not currently implemented.
+- The NIF threading API is not implemented since Rust provides its own excellent, portable threading API.  But this could be implemented if there is a need.
+- Varargs NIF functions are not implemented.
+- ruster_unsafe is based on work by Radosław Szymczyszyn (https://github.com/lavrin/erlang-rust-nif)
 
 */
 
@@ -235,13 +248,17 @@ pub struct ErlNifSysInfo {
     pub dirty_scheduler_support: c_int,
 }
 
-/// See [ErlNifFunc](http://www.erlang.org/doc/man/erl_nif.html#ErlNifFunc) in the Erlang docs.
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub enum ErlNifDirtyTaskFlags {
-    ERL_NIF_DIRTY_JOB_CPU_BOUND = 1,
-    ERL_NIF_DIRTY_JOB_IO_BOUND = 2,
-}
+// /// See [ErlNifFunc](http://www.erlang.org/doc/man/erl_nif.html#ErlNifFunc) in the Erlang docs.
+// #[derive(Copy, Clone)]
+// #[repr(C)]
+// pub enum ErlNifDirtyTaskFlags {
+//     ERL_NIF_DIRTY_JOB_CPU_BOUND = 1,
+//     ERL_NIF_DIRTY_JOB_IO_BOUND = 2,
+// }
+
+pub const ERL_NIF_DIRTY_JOB_CPU_BOUND:c_uint = 1;
+pub const ERL_NIF_DIRTY_JOB_IO_BOUND:c_uint = 2;
+
 
 /// See [ErlNifMapIterator](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMapIterator) in the Erlang docs.
 #[allow(missing_copy_implementations)]
@@ -262,6 +279,7 @@ pub enum ErlNifMapIteratorEntry {
     ERL_NIF_MAP_ITERATOR_HEAD = 1,
     ERL_NIF_MAP_ITERATOR_TAIL = 2,
 }
+
 
 
 include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
