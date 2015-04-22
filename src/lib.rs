@@ -269,7 +269,7 @@ pub struct ErlNifMapIterator {
     idx: ERL_NIF_UINT,
     ks: *mut ERL_NIF_TERM,
     vs: *mut ERL_NIF_TERM,
-    __spare__: [*mut c_void; 2us],
+    __spare__: [*mut c_void; 2],
 }
 
 /// See [ErlNifMapIteratorEntry](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMapIteratorEntry) in the Erlang docs.
