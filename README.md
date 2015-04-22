@@ -5,3 +5,5 @@ A crate for creating [Erlang NIF modules](http://www.erlang.org/doc/man/erl_nif.
 See the [crate documention](http://goertzenator.github.io/ruster_unsafe/ruster_unsafe/index.html).
 
 See [ruster_unsafe_demo](https://github.com/goertzenator/ruster_unsafe_demo).
+
+Thanks go to Radosław Szymczyszyn for bootstrapping me on this Rust FFI adventure and providing the original [automatic bindings](https://github.com/lavrin/erlang-rust-nif/blob/master/rust_src/src/c.rs).
