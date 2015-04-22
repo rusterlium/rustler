@@ -239,13 +239,15 @@ emit_nif_version({Major, Minor}, OutputDir) ->
 
 emit_unix_bindings(Entries, OutputDir) ->
     Filename = filename:join(OutputDir, "nif_api.snippet"),
-    Data = [ "extern \"C\" {\n",
-             [ case Return of
+    Data = [ 
+        "extern \"C\" {\n",
+             [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
+                case Return of
                    "" ->
                        io_lib:format("pub fn ~s(~s);\n",[Name,Params]);
                    _ ->
                        io_lib:format("pub fn ~s(~s) -> ~s;\n",[Name,Params,Return])
-               end || {Return,Name,Params} <- Entries, not is_dummy(Name)],
+                end] || {Return,Name,Params} <- Entries, not is_dummy(Name)],
              "}\n"
     ],
     file:write_file(Filename, Data).
