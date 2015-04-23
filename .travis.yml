@@ -1,7 +1,8 @@
-sudo: required
+#sudo: required
 language: c
 #language: rust
 before_script:
-  - sudo apt-get install kerl
-  - kerl list
-  - kerl build 17.5
+  - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
+  - chmod a+x kerl
+  - ./kerl list
+  - ./kerl build 17.5
