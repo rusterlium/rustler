@@ -5,6 +5,5 @@ before_script:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
   - chmod a+x kerl
   - ./kerl list releases
-  - ./kerl list builds
   - ./kerl list installations
-  - ./kerl build 17.5
+  - ./kerl build 17.5 erlang-17.5
