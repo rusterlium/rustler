@@ -1,6 +1,7 @@
+sudo: required
 language: c
 #language: rust
 before_script:
-  - apt-get install kerl
+  - sudo apt-get install kerl
   - kerl list
   - kerl build 17.5
