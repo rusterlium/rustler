@@ -6,6 +6,8 @@ description = "Create Erlang NIF modules in Rust using the C NIF API."
 documentation = "http://goertzenator.github.io/ruster_unsafe/ruster_unsafe/index.html"
 repository = "https://github.com/goertzenator/ruster_unsafe"
 license = "MIT/Apache-2.0"
+keywords = ["FFI", "Erlang", "NIF"]
+
 build = "build.rs"
 
 [dependencies]
