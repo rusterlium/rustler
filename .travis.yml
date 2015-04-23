@@ -1,6 +1,6 @@
 #sudo: required
-language: c
-#language: rust
+#language: c
+language: rust
 before_script:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
   - chmod a+x kerl
