@@ -1,4 +1,6 @@
-language: erlang
+language: c
 #language: rust
-#before_script:
-#  - kerl build 17.5
+before_script:
+  - npm install kerl
+  - kerl list
+  - kerl build 17.5
