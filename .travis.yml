@@ -1,3 +1,4 @@
-language: rust
-before_script:
-  - kerl build 17.5
+language: erlang
+#language: rust
+#before_script:
+#  - kerl build 17.5
