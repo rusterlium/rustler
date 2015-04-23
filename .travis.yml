@@ -1,6 +1,6 @@
 language: c
 #language: rust
 before_script:
-  - npm install kerl
+  - apt-get install kerl
   - kerl list
   - kerl build 17.5
