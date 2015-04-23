@@ -4,5 +4,7 @@ language: c
 before_script:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
   - chmod a+x kerl
-  - ./kerl list
+  - ./kerl list releases
+  - ./kerl list builds
+  - ./kerl list installations
   - ./kerl build 17.5
