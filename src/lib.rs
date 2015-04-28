@@ -316,10 +316,10 @@ pub fn enif_get_uint64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut u64) ->
 #[macro_export]
 macro_rules! nif{
     ($name:expr, $arity:expr, $function:expr, $flags:expr) => (
-        ErlNifFunc { name:     $name as *const u8,
-                     arity:    $arity,
-                     function: $function,
-                     flags:    $flags});
+        $crate::ErlNifFunc { name:     $name as *const u8,
+                             arity:    $arity,
+                             function: $function,
+                             flags:    $flags});
 
     ($name:expr, $arity:expr, $function:expr) => (
         nif!($name, $arity, $function, 0))
@@ -339,13 +339,13 @@ macro_rules! count_expr {
 macro_rules! nif_init {
     ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, $($func:expr),* ) => (
         const NUM_FUNCS: usize = count_expr!($($func),*);
-        const FUNCS: [ErlNifFunc; NUM_FUNCS] = [$($func),*];
-        static mut ENTRY: ErlNifEntry = ErlNifEntry{
-            major : NIF_MAJOR_VERSION,
-            minor : NIF_MINOR_VERSION,
+        const FUNCS: [$crate::ErlNifFunc; NUM_FUNCS] = [$($func),*];
+        static mut ENTRY: $crate::ErlNifEntry = $crate::ErlNifEntry{
+            major : $crate::NIF_MAJOR_VERSION,
+            minor : $crate::NIF_MINOR_VERSION,
             name : $module as *const u8,
-            num_of_funcs : NUM_FUNCS as c_int,
-            funcs : &FUNCS as *const ErlNifFunc,
+            num_of_funcs : NUM_FUNCS as $crate::c_int,
+            funcs : &FUNCS as *const $crate::ErlNifFunc,
             load :    $load,
             reload :  $reload,
             upgrade : $upgrade,
@@ -355,7 +355,7 @@ macro_rules! nif_init {
         };
 
         #[no_mangle]
-        pub extern "C" fn nif_init() -> *const ErlNifEntry {
+        pub extern "C" fn nif_init() -> *const $crate::ErlNifEntry {
             unsafe {&ENTRY}
         }
     )
