@@ -2,9 +2,6 @@
 #language: c
 language: rust
 
-env:
-  global:
-    - INSTALL_DIR=%{TRAVIS_BUILD_DIR}
 
 before_script:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
@@ -15,9 +12,9 @@ before_script:
   - ./kerl list installations
   - ./kerl build 17.5 erlang-17.5
   - ./kerl list builds
-  - ./kerl install erlang-17.5 %{INSTALL_DIR}
-  - chmod a+x %{INSTALL_DIR}/activate 
-  - %{INSTALL_DIR}/activate
+  - ./kerl install erlang-17.5 `pwd`/otp
+  - chmod a+x `pwd`/otp/activate 
+  - `pwd`/otp/activate
   - ./kerl cleanup all
   - ./kerl list installations
   - ./kerl active
