@@ -8,8 +8,7 @@ before_script:
   - ./kerl list releases
   - ./kerl list installations
   - ./kerl build 17.5 erlang-17.5
-  - ./kerl install && ./kerl cleanup
-  - ./kerl install && ./kerl cleanup
+  - ./kerl install 17.5 && ./kerl cleanup
   - ./kerl list installations
   - ./kerl active
 branches:
