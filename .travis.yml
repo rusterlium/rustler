@@ -9,7 +9,9 @@ before_script:
   - ./kerl list installations
   - ./kerl build 17.5 erlang-17.5
   - ./kerl list builds
-  - ./kerl install erlang-17.5 && ./kerl cleanup
+  - ./kerl install erlang-17.5 
+  - ./activate
+  - ./kerl cleanup all
   - ./kerl list installations
   - ./kerl active
 branches:
