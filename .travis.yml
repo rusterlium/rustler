@@ -2,8 +2,7 @@
 #language: c
 language: rust
 
-
-before_script:
+install:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
   - chmod a+x kerl
   - pwd
@@ -14,10 +13,11 @@ before_script:
   - ./kerl list builds
   - ./kerl install erlang-17.5 ./otp
   - chmod a+x ./otp/activate 
-  - ./otp/activate
+  - ./otp/activate && ./kerl active
   - ./kerl cleanup all
-  - ./kerl list installations
-  - ./kerl active
+  - ./kerl list installations 
+  -  erl -version
+
 branches:
   only:
     - master
