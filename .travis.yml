@@ -13,7 +13,7 @@ install:
   - ./kerl list builds
   - ./kerl install erlang-17.5 ./otp
   - chmod a+x ./otp/activate 
-  - ./otp/activate && ./kerl active
+  - ./otp/activate
   - ./kerl cleanup all
   - ./kerl list installations 
   -  erl -version
