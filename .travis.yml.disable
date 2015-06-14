@@ -1,9 +1,23 @@
 #sudo: required
 #language: c
 language: rust
-before_script:
+
+install:
   - curl -O https://raw.githubusercontent.com/spawngrid/kerl/master/kerl
   - chmod a+x kerl
+  - pwd
+  - ./kerl update releases
   - ./kerl list releases
   - ./kerl list installations
   - ./kerl build 17.5 erlang-17.5
+  - ./kerl list builds
+  - ./kerl install erlang-17.5 ./otp
+  - chmod a+x ./otp/activate 
+  - ./otp/activate
+  - ./kerl cleanup all
+  - ./kerl list installations 
+  -  erl -version
+
+branches:
+  only:
+    - master
