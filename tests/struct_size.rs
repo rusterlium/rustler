@@ -13,21 +13,46 @@ use std::mem::size_of;
 
 #[test]
 fn test1() {
+
 	let out_dir = env::var("OUT_DIR").unwrap();
 
-	// get erts include path
-	let erts_include = String::from_utf8(Command::new("escript").arg("get_erts_path.erl")
-		.output().unwrap().stdout).unwrap();
+	// use environment escript and cc if available
+	let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
+	let cc      = env::var("CC").unwrap_or("cc".to_string());
 
-	println!("include {:?}", erts_include)
-;
+
+	// get erts include path
+	let erts_include = Command::new(escript).arg("get_erts_path.erl")
+		.output()
+		.map_err(|_| "Can't run escript")
+		.map(|out| {
+			match out.status.success() {
+				true => out.stdout,
+				false => panic!("Can't run get_erts_path.erl")
+			}
+		})
+		.map(String::from_utf8)
+		.unwrap().unwrap();
+
+
+
+	//println!("include {:?}", erts_include);
+
 	// Compile C program
 	let exe = Path::new(&out_dir).join("struct_size"); 
-    Command::new("cc").arg("-o").arg(&exe).arg("-I").arg(&erts_include).arg("tests/struct_size.c")
-    	.status().unwrap();
+    match Command::new(cc).arg("-o").arg(&exe).arg("-I").arg(&erts_include).arg("tests/struct_size.c")
+    	.status()
+    	.map_err(|_|"Can't find c compiler (cc or value of environment CC)")
+    	.unwrap().success() {
+    		false => panic!("Can't compile struct_size.c"),
+    		_ => ()
+    	}
 
     // Run C program that lists C NIF runtime information.
-    let stdout:Vec<u8> = Command::new(&exe).output().unwrap().stdout;
+    let stdout:Vec<u8> = Command::new(&exe).output()
+    	.map_err(|_|"Can't run C runtime information program")
+    	.unwrap().stdout;
+
  	let output:&str = std::str::from_utf8(&stdout).unwrap();
 
  	// Parse C program output into hashmap of (&str, u32)
