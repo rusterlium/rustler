@@ -158,7 +158,7 @@ pub type ERL_NIF_TERM = *const c_void;
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
 #[allow(missing_copy_implementations)]
 #[repr(C)]
-pub struct ErlNifEnv;
+pub struct ErlNifEnv {dummy:c_int}
 
 /// See [ErlNifFunc](http://www.erlang.org/doc/man/erl_nif.html#ErlNifFunc) in the Erlang docs.
 // #[allow(missing_copy_implementations)]
@@ -202,7 +202,7 @@ pub struct ErlNifBinary {
 /// See [ErlNifResourceType](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceType) in the Erlang docs.
 #[allow(missing_copy_implementations)]
 #[repr(C)]
-pub struct ErlNifResourceType;
+pub struct ErlNifResourceType {dummy:c_int}
 
 /// See [ErlNifResourceDtor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceDtor) in the Erlang docs.
 #[allow(missing_copy_implementations)]
