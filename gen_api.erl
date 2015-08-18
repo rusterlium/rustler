@@ -9,7 +9,7 @@
 %% the Windows callback struct keeps proper integrity.  Such functions
 %% must begin with "dummy."
 %%
-api_list({2,7}, Wordsize, HasDirtySchedulers) -> [
+api_list(Version, Wordsize, HasDirtySchedulers) when Version=={2,7} orelse Version=={2,8} -> [
 
     {"*mut c_void", "enif_priv_data", "arg1: *mut ErlNifEnv"},
     {"*mut c_void", "enif_alloc", "size: size_t"},
@@ -186,6 +186,16 @@ api_list({2,7}, Wordsize, HasDirtySchedulers) -> [
     {"ERL_NIF_TERM", "enif_schedule_nif", "env: *mut ErlNifEnv, fun_name: *const c_uchar, flags:c_int, dtor: Option<extern \"C\" fn(env: *mut ErlNifEnv, argc:c_int, argv:*const ERL_NIF_TERM)>, argc:c_int, argv:*const ERL_NIF_TERM"}
     ] ++
 
+
+
+    case Version of
+        {2,8} -> [
+            {"c_int", "enif_has_pending_exception", "env: *mut ErlNifEnv, reason: *mut ERL_NIF_TERM"},
+            {"ERL_NIF_TERM", "enif_raise_exception", "env: *mut ErlNifEnv, reason: ERL_NIF_TERM"}
+        ];
+        _ -> []
+    end ++
+
     case HasDirtySchedulers of
         true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
         false -> []
@@ -291,6 +301,7 @@ get_nif_version() ->
     version_string2tuple(Ver).
 
 version_string2tuple("2.7") -> {2,7};
+version_string2tuple("2.8") -> {2,8};
 version_string2tuple(_) -> unsupported.
 
 check_version(unsupported) ->
