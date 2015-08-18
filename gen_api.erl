@@ -182,7 +182,8 @@ api_list({2,7}, Wordsize, HasDirtySchedulers) -> [
     {"c_int", "enif_map_iterator_is_tail", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator"},
     {"c_int", "enif_map_iterator_next", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator"},
     {"c_int", "enif_map_iterator_prev", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator"},
-    {"c_int", "enif_map_iterator_get_pair", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator, key: *mut ERL_NIF_TERM, value: *mut ERL_NIF_TERM"}
+    {"c_int", "enif_map_iterator_get_pair", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator, key: *mut ERL_NIF_TERM, value: *mut ERL_NIF_TERM"},
+    {"ERL_NIF_TERM", "enif_schedule_nif", "env: *mut ErlNifEnv, fun_name: *const c_uchar, flags:c_int, dtor: Option<extern \"C\" fn(env: *mut ErlNifEnv, argc:c_int, argv:*const ERL_NIF_TERM)>, argc:c_int, argv:*const ERL_NIF_TERM"}
     ] ++
 
     case HasDirtySchedulers of
