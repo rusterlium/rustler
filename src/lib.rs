@@ -4,7 +4,6 @@ pub use self::ruster_unsafe::{ ERL_NIF_TERM, ErlNifResourceFlags, ErlNifResource
 extern crate libc;
 pub use libc::{ c_char, size_t, c_int, c_uint, c_void };
 
-use std::ffi::CString;
 use std::mem;
 use std::marker::PhantomData;
 
@@ -15,13 +14,22 @@ mod resource;
 pub use self::resource::{ open_resource_type_raw, alloc_resource_raw };
 pub use self::resource::{ open_struct_resource_type, alloc_struct_resource, get_struct_resource };
 
+mod binary;
+pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
+
 pub struct NifEnv {
     pub env: *mut ruster_unsafe::ErlNifEnv,
+}
+impl NifEnv {
+    unsafe fn as_c_arg(&self) -> *mut ruster_unsafe::ErlNifEnv {
+        self.env
+    }
 }
 
 #[derive(Clone, Copy)]
 pub enum NifError {
     BadArg,
+    AllocFail,
     Atom(&'static str),
 }
 
@@ -31,11 +39,14 @@ pub struct NifTerm<'a> {
     env_life: PhantomData<&'a NifEnv>,
 }
 impl<'a> NifTerm<'a> {
-    pub fn new(env: &'a NifEnv, inner: ERL_NIF_TERM) -> Self {
+    pub fn new(_env: &'a NifEnv, inner: ERL_NIF_TERM) -> Self {
         NifTerm {
             term: inner,
             env_life: PhantomData
         }
+    }
+    unsafe fn as_c_arg(&self) -> ERL_NIF_TERM {
+        self.term
     }
 }
 
@@ -53,14 +64,6 @@ pub struct NifStructResourceType<T> {
 pub struct NifAtom {
     term: ERL_NIF_TERM,
 }
-
-#[repr(C)]
-pub struct NifBinary {
-    size: c_int,
-    dat: *mut u8,
-    owned: bool,
-}
-
 
 pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
     let mut arity: c_int = 0;
