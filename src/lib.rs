@@ -167,3 +167,54 @@ pub fn nif_atom<'a>(env: &'a NifEnv, name: &str) -> NifTerm<'a> {
             name.len() as size_t))
     }
 }
+
+#[macro_export]
+macro_rules! nif_func_entry {
+    ($name:expr, $arity:expr, $function:ident, $flags:expr) => {
+        {
+            let c_name = $crate::std::ffi::CString::new($name).unwrap();
+            $crate::ruster_unsafe::ErlNifFunc {
+                name: c_name.as_ptr(),
+                arity: $arity,
+                function: $function,
+                flags: $flags,
+            };
+        }
+    };
+    ($name:expr, $arity:expr, $function:expr, $flags:expr) => {
+        nif_func_entry
+    }
+}
+
+#[macro_export]
+macro_rules! nif_init {
+    ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, [$($func:expr),*]) => {
+        const NUM_FUNCS: usize = nif_init!(@count_expr $($func),*);
+        const FUNCS: [$crate::ruster_unsafe::ErlNifFunc; NUM_FUNCS] = [$($func),*];
+        
+        let c_module = $crate::std::ffi::CString::new($module).unwrap();
+
+        static mut ENTRY: $crate::ruster_unsafe::ErlNifEntry = $crate::ErlNifEntry {
+            major: $crate::ruster_unsafe::NIF_MAJOR_VERSION,
+            minor: $crate::ruster_unsafe::NIF_MINOR_VERSION,
+            name: c_module,
+            num_of_funcs: NUM_FUNCS as $crate::c_int,
+            funcs: &FUNCS as *const $crate::ruster_unsafe::ErlNifFunc,
+            load: $load,
+            reload: $reload,
+            upgrade: $upgrade,
+            unload: $unload,
+            vm_variant: b"beam.vanilla\0" as *const u8,
+            options: 0,
+        };
+
+        #[no_mangle]
+        pub extern "C" fn nif_init() -> *const $crate::ruster_unsafe::ErlNifEntry {
+            unsafe { &ENTRY }
+        }
+    };
+
+    (@count_expr ()) => { 0 };
+    (@count_expr ($_e:expr)) => { 1 };
+    (@count_expr ($_e:expr, $($tail:tt)*)) => { 1 + nif_init!(@count_expr $($rest)*) }
+}
