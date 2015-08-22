@@ -9,6 +9,8 @@ license = "MIT/Apache-2.0"
 keywords = ["FFI", "Erlang", "NIF"]
 
 build = "build.rs"
+[build-dependencies]
+libc = ">=0.1"
 
 [dependencies]
 libc = ">=0.1"

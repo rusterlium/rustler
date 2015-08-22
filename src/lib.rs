@@ -137,14 +137,10 @@ use libc::c_uchar;
 use libc::size_t;
 use libc::c_ulong;
 use libc::c_long;
+use libc::c_ulonglong;
+use libc::c_longlong;
 use libc::c_double;
 use std::option::Option;
-
-include!(concat!(env!("OUT_DIR"), "/nif_versions.snippet"));
-// example of included content:
-// const NIF_MAJOR_VERSION: c_int = 2;
-// const NIF_MINOR_VERSION: c_int = 7;
-
 
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
@@ -292,26 +288,6 @@ include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
 //     pub fn enif_is_binary(arg1: *mut ErlNifEnv, term: ERL_NIF_TERM) -> c_int;
 // ...
 
-/// See [enif_make_int64](http://www.erlang.org/doc/man/erl_nif.html#enif_make_int64) at erlang.org
-#[cfg(target_pointer_width = "64")]
-pub fn enif_make_int64(env: *mut ErlNifEnv, i: i64) -> ERL_NIF_TERM
-    { unsafe {enif_make_long(env, i)}}
-
-/// See [enif_make_uint64](http://www.erlang.org/doc/man/erl_nif.html#enif_make_uint64) at erlang.org
-#[cfg(target_pointer_width = "64")]
-pub fn enif_make_uint64(env: *mut ErlNifEnv, i: u64) -> ERL_NIF_TERM
-    { unsafe {enif_make_ulong(env, i) }}
-
-/// See [enif_get_int64](http://www.erlang.org/doc/man/erl_nif.html#enif_get_int64) at erlang.org
-#[cfg(target_pointer_width = "64")]
-pub fn enif_get_int64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut i64) -> c_int
-    { unsafe {enif_get_long(env, term, ip) }}
-
-/// See [enif_get_uint64](http://www.erlang.org/doc/man/erl_nif.html#enif_get_uint64) at erlang.org
-#[cfg(target_pointer_width = "64")]
-pub fn enif_get_uint64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut u64) -> c_int
-    { unsafe {enif_get_ulong(env, term, ip) }}
-
 /// Create ErlNifFunc structure.  Use inside `nif_init!`.
 #[macro_export]
 macro_rules! nif{
@@ -354,8 +330,19 @@ macro_rules! nif_init {
             options: 0,
         };
 
+        #[cfg(unix)]
         #[no_mangle]
         pub extern "C" fn nif_init() -> *const $crate::ErlNifEntry {
+            unsafe {&ENTRY}
+        }
+
+        #[cfg(windows)]
+        #[no_mangle]
+        pub extern "C" fn nif_init(callbacks: *mut TWinDynNifCallbacks) -> *const $crate::ErlNifEntry {
+            unsafe {
+                WinDynNifCallbacks = Some(*callbacks);
+            }
+            //std::ptr::copy_nonoverlapping(callbacks, &WinDynNifCallbacks, std::mem::size_of<TWinDynNifCallbacks>());
             unsafe {&ENTRY}
         }
     )
