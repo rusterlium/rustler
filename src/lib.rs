@@ -137,8 +137,6 @@ use libc::c_uchar;
 use libc::size_t;
 use libc::c_ulong;
 use libc::c_long;
-use libc::c_ulonglong;
-use libc::c_longlong;
 use libc::c_double;
 use std::option::Option;
 
