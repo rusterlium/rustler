@@ -1,6 +1,10 @@
 extern crate ruster_unsafe;
 pub use self::ruster_unsafe::{ ERL_NIF_TERM, ErlNifResourceFlags, ErlNifResourceType };
 
+pub mod ruster_export {
+    pub use super::ruster_unsafe::*;
+}
+
 extern crate libc;
 pub use libc::{ c_char, size_t, c_int, c_uint, c_void };
 
@@ -71,7 +75,7 @@ pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>,
     let success = unsafe { ruster_unsafe::enif_get_tuple(env.env, term.term, 
                                                          &mut arity as *mut c_int, 
                                                          &mut array_ptr as *mut *const ERL_NIF_TERM) };
-    if success == 0 {
+    if success != 1 {
         return Err(NifError::BadArg);
     }
     let term_array = unsafe { std::slice::from_raw_parts(array_ptr, arity as usize) };
@@ -83,79 +87,55 @@ pub fn decode_type<T: NifDecoder>(term: NifTerm, env: &NifEnv) -> Result<T, NifE
 }
 
 #[macro_export]
-macro_rules! decode_tuple {
+macro_rules! decode_term_array_to_tuple {
     (@count ()) => { 0 };
-    (@count ($_i:ty, $($rest:tt)*)) => { 1 + decode_tuple!(@count ($($rest)*)) };
+    (@count ($_i:ty, $($rest:tt)*)) => { 1 + decode_term_array_to_tuple!(@count ($($rest)*)) };
     (@accum $_env:expr, $_list:expr, $_num:expr, ($(,)*) -> ($($body:tt)*)) => {
-        decode_tuple!(@as_expr ($($body)*))
+        decode_term_array_to_tuple!(@as_expr ($($body)*))
     };
     (@accum $env:expr, $list:expr, $num:expr, ($head:ty, $($tail:tt)*) -> ($($body:tt)*)) => {
-        decode_tuple!(@accum $env, $list, ($num+1), ($($tail)*) -> ($($body)* decode_tuple!(@decode_arg $env, $head, $list[$num]),))
+        decode_term_array_to_tuple!(@accum $env, $list, ($num+1), ($($tail)*) -> ($($body)* decode_term_array_to_tuple!(@decode_arg $env, $head, $list[$num]),))
     };
     (@as_expr $e:expr) => {$e};
     (@decode_arg $env:expr, $typ:ty, $val:expr) => {
-        match $crate::nif::decode_type::<$typ>($val, $env) {
+        match $crate::decode_type::<$typ>($val, $env) {
             Ok(val) => val,
             Err(val) => return Err(val),
         }
     };
-    ($env:expr, $term:expr, ($($typs:ty),*)) => {
+    ($env:expr, $terms:expr, ($($typs:ty),*)) => {
         {
-            let num_expr: usize = decode_tuple!(@count ($($typs,)*));
-            let terms = try!($crate::nif::get_tuple($env, $term));
-            if terms.len() != num_expr {
-                Err($crate::nif::NifError::BadArg)
-            } else {
-                Ok(decode_tuple!(@accum $env, terms, 0, ($($typs),*,) -> ()))
-            }
+            let decoder: &Fn(&NifEnv, &[NifTerm]) -> Result<($($typs),*), NifError> = &|env, terms| {
+                let num_expr: usize = decode_term_array_to_tuple!(@count ($($typs,)*));
+                if $terms.len() != num_expr {
+                    Err($crate::NifError::BadArg)
+                } else {
+                    Ok(decode_term_array_to_tuple!(@accum $env, $terms, 0, ($($typs),*,) -> ()))
+                }
+            };
+            decoder($env, $terms)
         }
     }
 }
 
-//macro_rules! decode_tuple {
-//    ($env:expr, $term:expr, ($($typ:ty),+)) => {
-//        let num_expr: usize = count_typ!($($typ,)*);
-//        let terms = try!($crate::nif::get_tuple($env, $term));
-//        if terms.len() != num_expr {
-//            Err($crate::nif::NifError::BadArg)
-//        } else {
-//            Ok((decode_tuple_arg!($env, terms, 0, ($($typ,)*))))
-//        }
-//    }
-//}
-
 #[macro_export]
-macro_rules! nif_func {
-    ($name:ident, $fun:expr) => (
-        extern "C" fn $name(r_env: *mut ErlNifEnv,
-                            argc: c_int,
-                            argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
-            use $crate::nif::{ NifEnv, NifTerm, NifError, size_t };
-            let env = NifEnv { env: r_env };
-            let terms = unsafe { std::slice::from_raw_parts(argv, argc as usize) }.iter()
-                .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
-            let inner_fun: &for<'a> Fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError> = &$fun;
-            let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
-            match res {
-                Ok(ret) => ret.term,
-                Err(NifError::BadArg) => 
-                    unsafe { ruster_unsafe::enif_make_badarg(r_env) },
-                Err(NifError::Atom(name)) => 
-                    unsafe { ruster_unsafe::enif_make_atom_len(r_env, 
-                                                               name.as_ptr() as *const u8, 
-                                                               name.len() as size_t) },
-            }
-        });
+macro_rules! decode_tuple {
+    ($env:expr, $term:expr, ($($typs:ty),*)) => {
+        {
+            let terms = try!($crate::get_tuple($env, $term));
+            decode_term_array_to_tuple!($env, &terms[..], ($($typs),*))
+        }
+    }
 }
 
 #[macro_export]
 macro_rules! nif_atom {
     ($env:expr, $name:ident) => ({
         const atom_name: &'static str = stringify!($name);
-        ruster_unsafe::enif_make_atom_len(
+        $crate::ruster_export::enif_make_atom_len(
             $env.env,
             atom_name.as_ptr() as *const u8,
-            atom_name.len() as $crate::nif::size_t)
+            atom_name.len() as $crate::size_t)
     });
 }
 
@@ -169,37 +149,69 @@ pub fn nif_atom<'a>(env: &'a NifEnv, name: &str) -> NifTerm<'a> {
 }
 
 #[macro_export]
-macro_rules! nif_func_entry {
+macro_rules! nif_func {
+    ($name:ident, $fun:expr) => (
+        extern "C" fn $name(r_env: *mut $crate::ruster_export::ErlNifEnv,
+                            argc: $crate::c_int,
+                            argv: *const $crate::ERL_NIF_TERM) -> $crate::ERL_NIF_TERM {
+            use $crate::{ NifEnv, NifTerm, NifError, size_t };
+            let env = NifEnv { env: r_env };
+            let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
+                .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
+            let inner_fun: &for<'a> Fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError> = &$fun;
+            let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
+            match res {
+                Ok(ret) => ret.term,
+                Err(NifError::BadArg) => 
+                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
+                Err(NifError::AllocFail) =>
+                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
+                Err(NifError::Atom(name)) => 
+                    unsafe { $crate::ruster_export::enif_make_atom_len(r_env, 
+                                                               name.as_ptr() as *const u8, 
+                                                               name.len() as size_t) },
+            }
+        });
+}
+
+#[macro_export]
+macro_rules! nif_init_func {
     ($name:expr, $arity:expr, $function:ident, $flags:expr) => {
-        {
-            let c_name = $crate::std::ffi::CString::new($name).unwrap();
-            $crate::ruster_unsafe::ErlNifFunc {
-                name: c_name.as_ptr(),
-                arity: $arity,
-                function: $function,
-                flags: $flags,
-            };
+        $crate::ruster_export::ErlNifFunc {
+            name: $name as *const u8,
+            arity: $arity,
+            function: $function,
+            flags: $flags,
         }
     };
-    ($name:expr, $arity:expr, $function:expr, $flags:expr) => {
-        nif_func_entry
+    ($name:expr, $arity:expr, $function:ident) => {
+        nif_init_func!($name, $arity, $function, 0)
     }
+}
+
+#[macro_use(lazy_static)]
+extern crate lazy_static;
+
+#[macro_export]
+macro_rules! lazy_static_ex {
+    ($($args:tt)*) => ( lazy_static!($($args)*); );
 }
 
 #[macro_export]
 macro_rules! nif_init {
-    ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, [$($func:expr),*]) => {
-        const NUM_FUNCS: usize = nif_init!(@count_expr $($func),*);
-        const FUNCS: [$crate::ruster_unsafe::ErlNifFunc; NUM_FUNCS] = [$($func),*];
-        
-        let c_module = $crate::std::ffi::CString::new($module).unwrap();
+    (@count ()) => { 0 };
+    (@count ($_e:expr)) => { 1 };
+    (@count ($_e:expr, $($tail:tt)*)) => { 1 + nif_init!(@count ($($tail)*)) };
 
-        static mut ENTRY: $crate::ruster_unsafe::ErlNifEntry = $crate::ErlNifEntry {
-            major: $crate::ruster_unsafe::NIF_MAJOR_VERSION,
-            minor: $crate::ruster_unsafe::NIF_MINOR_VERSION,
-            name: c_module,
+    ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, [$($func:expr),*]) => {
+        const NUM_FUNCS: usize = nif_init!(@count ($($func),*));
+        const FUNCS: [$crate::ruster_export::ErlNifFunc; NUM_FUNCS] = [$($func),*];
+        static mut NIF_ENTRY: $crate::ruster_export::ErlNifEntry = $crate::ruster_export::ErlNifEntry {
+            major: $crate::ruster_export::NIF_MAJOR_VERSION,
+            minor: $crate::ruster_export::NIF_MINOR_VERSION,
+            name: $module as *const u8,
             num_of_funcs: NUM_FUNCS as $crate::c_int,
-            funcs: &FUNCS as *const $crate::ruster_unsafe::ErlNifFunc,
+            funcs: &FUNCS as *const $crate::ruster_export::ErlNifFunc,
             load: $load,
             reload: $reload,
             upgrade: $upgrade,
@@ -209,12 +221,8 @@ macro_rules! nif_init {
         };
 
         #[no_mangle]
-        pub extern "C" fn nif_init() -> *const $crate::ruster_unsafe::ErlNifEntry {
-            unsafe { &ENTRY }
+        pub extern "C" fn nif_init() -> *const $crate::ruster_export::ErlNifEntry {
+            unsafe { &NIF_ENTRY }
         }
-    };
-
-    (@count_expr ()) => { 0 };
-    (@count_expr ($_e:expr)) => { 1 };
-    (@count_expr ($_e:expr, $($tail:tt)*)) => { 1 + nif_init!(@count_expr $($rest)*) }
+    }
 }
