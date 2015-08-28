@@ -1,0 +1,12 @@
+[package]
+name = "test"
+version = "0.1.0"
+authors = ["HansiHE <hansihe@hansihe.com>"]
+
+[lib]
+name = "rustler_test"
+path = "test.rs"
+crate-type = ["dylib"]
+
+[dependencies.rustler]
+path = "../"

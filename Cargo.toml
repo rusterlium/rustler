@@ -9,4 +9,3 @@ license = "BSD-2-Clause"
 [dependencies]
 ruster_unsafe = ">=0.2"
 libc = ">=0.1"
-lazy_static = "0.1.*"

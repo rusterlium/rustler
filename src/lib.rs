@@ -105,10 +105,44 @@ macro_rules! nif_func {
                             argv: *const $crate::ERL_NIF_TERM) -> $crate::ERL_NIF_TERM {
             use $crate::{ NifEnv, NifTerm, NifError, size_t };
             let env = NifEnv { env: r_env };
+
             let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
                 .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
+
             let inner_fun: &for<'a> Fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError> = &$fun;
             let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
+
+            match res {
+                Ok(ret) => ret.term,
+                Err(NifError::BadArg) => 
+                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
+                Err(NifError::AllocFail) =>
+                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
+                Err(NifError::Atom(name)) => 
+                    unsafe { $crate::ruster_export::enif_make_atom_len(r_env, 
+                                                               name.as_ptr() as *const u8, 
+                                                               name.len() as size_t) },
+            }
+        });
+}
+
+#[macro_export]
+macro_rules! nif_func_args {
+    ($name:ident, ($($args:ty),*), $fun:expr) => (
+        extern "C" fn $name(r_env: *mut $crate::ruster_export::ErlNifEnv,
+                            argc: $crate::c_int,
+                            argv: *const $crate::ERL_NIF_TERM) -> $crate::ERL_NIF_TERM {
+            use $crate::{ NifEnv, NifTerm, NifError, size_t };
+            let env = NifEnv { env: r_env };
+
+            let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
+                .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
+            let args_tuple = decode_term_array_to_tuple!(env, terms, ($($args),*));
+
+            let inner_fun: &for<'a> Fn(&'a NifEnv, ($($args,)*)) -> 
+                Result<NifTerm<'a>, NifError> = &$fun;
+            let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
+
             match res {
                 Ok(ret) => ret.term,
                 Err(NifError::BadArg) => 
