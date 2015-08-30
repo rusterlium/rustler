@@ -55,7 +55,7 @@ macro_rules! decode_term_array_to_tuple {
 macro_rules! decode_tuple {
     ($env:expr, $term:expr, ($($typs:ty),*)) => {
         {
-            let terms = try!($crate::get_tuple($env, $term));
+            let terms = try!($crate::tuple::get_tuple($env, $term));
             decode_term_array_to_tuple!($env, &terms[..], ($($typs),*))
         }
     }

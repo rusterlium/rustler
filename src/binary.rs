@@ -22,7 +22,7 @@ impl ErlNifBinary {
             ref_bin: uninitialized(),
         }
     }
-    unsafe fn as_c_arg(&mut self) -> *mut ruster_unsafe::ErlNifBinary {
+    fn as_c_arg(&mut self) -> *mut ruster_unsafe::ErlNifBinary {
         (self as *mut ErlNifBinary) as *mut ruster_unsafe::ErlNifBinary
     }
 }
@@ -43,10 +43,10 @@ impl<'a> NifBinary<'a> {
     unsafe fn as_c_arg(&mut self) -> *mut ruster_unsafe::ErlNifBinary {
         self.desc.as_c_arg()
     }
-    fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         unsafe { ::std::slice::from_raw_parts(self.desc.data, self.desc.size as usize) }
     }
-    fn as_mut_slice(&mut self) -> &mut [u8] {
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
         if !self.owned {
             panic!("Tried to access a nonowned NIF Binary as a mutable slice");
         }

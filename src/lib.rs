@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 extern crate ruster_unsafe;
 pub use self::ruster_unsafe::{ ERL_NIF_TERM, ErlNifResourceFlags, ErlNifResourceType };
 
@@ -22,13 +25,15 @@ mod binary;
 pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
 
 #[macro_reexport]
-mod tuple;
+pub mod tuple;
+
+pub mod atom;
 
 pub struct NifEnv {
     pub env: *mut ruster_unsafe::ErlNifEnv,
 }
 impl NifEnv {
-    unsafe fn as_c_arg(&self) -> *mut ruster_unsafe::ErlNifEnv {
+    pub fn as_c_arg(&self) -> *mut ruster_unsafe::ErlNifEnv {
         self.env
     }
 }
@@ -38,6 +43,20 @@ pub enum NifError {
     BadArg,
     AllocFail,
     Atom(&'static str),
+}
+impl NifError {
+    pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+        NifTerm::new(env, match self {
+            NifError::BadArg => 
+                unsafe { ruster_export::enif_make_badarg(env.as_c_arg()) },
+            NifError::AllocFail =>
+                unsafe { ruster_export::enif_make_badarg(env.as_c_arg()) },
+            NifError::Atom(name) => 
+                unsafe { ruster_export::enif_make_atom_len(env.as_c_arg(), 
+                                                           name.as_ptr() as *const u8, 
+                                                           name.len() as size_t) },
+        })
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -52,7 +71,7 @@ impl<'a> NifTerm<'a> {
             env_life: PhantomData
         }
     }
-    unsafe fn as_c_arg(&self) -> ERL_NIF_TERM {
+    pub fn as_c_arg(&self) -> ERL_NIF_TERM {
         self.term
     }
 }
@@ -65,12 +84,6 @@ pub struct NifStructResourceType<T> {
     pub struct_type: PhantomData<T>,
 }
 
-// Atoms are a special case of a term. They can be stored and used on all envs regardless of where
-// it lives and when it is created.
-#[derive(PartialEq, Eq)]
-pub struct NifAtom {
-    term: ERL_NIF_TERM,
-}
 
 
 pub fn decode_type<T: NifDecoder>(term: NifTerm, env: &NifEnv) -> Result<T, NifError> {
@@ -113,15 +126,8 @@ macro_rules! nif_func {
             let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
 
             match res {
-                Ok(ret) => ret.term,
-                Err(NifError::BadArg) => 
-                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
-                Err(NifError::AllocFail) =>
-                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
-                Err(NifError::Atom(name)) => 
-                    unsafe { $crate::ruster_export::enif_make_atom_len(r_env, 
-                                                               name.as_ptr() as *const u8, 
-                                                               name.len() as size_t) },
+                Ok(ret) => ret.as_c_arg(),
+                Err(err) => err.to_term(&env).as_c_arg(),
             }
         });
 }
@@ -137,23 +143,21 @@ macro_rules! nif_func_args {
 
             let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
                 .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
-            let args_tuple = decode_term_array_to_tuple!(env, terms, ($($args),*));
+            match decode_term_array_to_tuple!(&env, &terms, ($($args),*)) {
+                Ok(args_tuple) => {
+                    let inner_fun: &for<'a> Fn(&'a NifEnv, ($($args,)*)) -> 
+                        Result<NifTerm<'a>, NifError> = &$fun;
+                    let res: Result<NifTerm, NifError> = inner_fun(&env, args_tuple);
 
-            let inner_fun: &for<'a> Fn(&'a NifEnv, ($($args,)*)) -> 
-                Result<NifTerm<'a>, NifError> = &$fun;
-            let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
-
-            match res {
-                Ok(ret) => ret.term,
-                Err(NifError::BadArg) => 
-                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
-                Err(NifError::AllocFail) =>
-                    unsafe { $crate::ruster_export::enif_make_badarg(r_env) },
-                Err(NifError::Atom(name)) => 
-                    unsafe { $crate::ruster_export::enif_make_atom_len(r_env, 
-                                                               name.as_ptr() as *const u8, 
-                                                               name.len() as size_t) },
+                    match res {
+                        Ok(ret) => ret.term,
+                        Err(err) => err.to_term(&env).as_c_arg(),
+                    }
+                },
+                Err(err) => err.to_term(&env).as_c_arg(),
             }
+
+
         });
 }
 

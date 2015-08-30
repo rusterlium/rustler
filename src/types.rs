@@ -39,6 +39,20 @@ impl_number_transcoder!(libc::c_double, enif_make_double, enif_get_double);
 //impl_number_encoder!(libc::c_long, enif_make_long);
 //impl_number_encoder!(libc::c_ulong, enif_make_ulong);
 
+//impl NifEncoder for bool {
+//    fn encode<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+//        NifTerm::new(env, match self {
+//            true => ruster_unsafe::enif_make_atom(env.as_c_arg(), b"true\0" as *const u8),
+//            false => ruster_unsafe::enif_make_atom(env.as_c_arg(), b"false\0" as *const u8),
+//        })
+//    }
+//}
+//impl NifDecoder for bool {
+//    fn decode<'a>(term: NifTerm, env: &'a NifEnv) -> Result<Self, NifError> {
+//        
+//    }
+//}
+
 // Start erlang spesific implementations //
 
 // This is problematic, erlang uses Latin1 while rust uses UTF-8. Everything will work for basic
