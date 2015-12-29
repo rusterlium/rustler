@@ -1,3 +1,7 @@
+#![feature(recover, std_panic)]
+
+mod wrapper;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -14,6 +18,9 @@ pub use libc::{ c_char, size_t, c_int, c_uint, c_void };
 use std::mem;
 use std::marker::PhantomData;
 
+use std::any;
+use std::panic;
+
 mod types;
 pub use self::types::{ NifEncoder, NifDecoder };
 
@@ -28,6 +35,7 @@ pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
 pub mod tuple;
 
 pub mod atom;
+pub use self::atom::{ init_atom, get_atom, get_atom_init };
 
 pub struct NifEnv {
     pub env: *mut ruster_unsafe::ErlNifEnv,
@@ -122,14 +130,47 @@ macro_rules! nif_func {
             let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
                 .map(|x| { NifTerm::new(&env, *x) }).collect::<Vec<NifTerm>>();
 
-            let inner_fun: &for<'a> Fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError> = &$fun;
-            let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
+            let result: std::thread::Result<Result<NifTerm, NifError>> = std::panic::recover(|| {
+                let inner_fun: &for<'a> Fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError> = &$fun;
+                //let res: Result<NifTerm, NifError> = inner_fun(&env, &terms);
+                inner_fun(&env, &terms)
+            });
 
-            match res {
-                Ok(ret) => ret.as_c_arg(),
-                Err(err) => err.to_term(&env).as_c_arg(),
+            match result {
+                Ok(res) => match res {
+                    Ok(ret) => ret.as_c_arg(),
+                    Err(err) => err.to_term(&env).as_c_arg(),
+                },
+                Err(err) => NifError::Atom("nif_panic").to_term(&env).as_c_arg(),
             }
+            //match res {
+            //    Ok(ret) => ret.as_c_arg(),
+            //    Err(err) => err.to_term(&env).as_c_arg(),
+            //}
         });
+}
+
+// This is the last level of rust safe rust code before the BEAM.
+// No panics should go above this point, as they will unwrap into the C code and ruin the day.
+pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError>, 
+                       arity: usize, 
+                       r_env: *mut ruster_export::ErlNifEnv, 
+                       argc: c_int, 
+                       argv: *const ruster_export::ERL_NIF_TERM) -> ruster_export::ERL_NIF_TERM {
+    let env = NifEnv { env: r_env };
+    
+    let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
+        .map(|x| NifTerm::new(&env, *x)).collect::<Vec<NifTerm>>();
+
+    let result: std::thread::Result<Result<NifTerm, NifError>> = std::panic::recover(|| function(&env, &terms));
+
+    match result {
+        Ok(res) => match res {
+            Ok(ret) => ret.as_c_arg(),
+            Err(err) => err.to_term(&env).as_c_arg(),
+        },
+        Err(err) => NifError::Atom("nif_panic").to_term(&env).as_c_arg(),
+    }
 }
 
 #[macro_export]

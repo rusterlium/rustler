@@ -6,7 +6,7 @@ use std::mem;
 extern crate ruster_unsafe;
 use ruster_unsafe::{ ERL_NIF_TERM };
 
-pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
+/*pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
     let mut arity: c_int = 0;
     let mut array_ptr: *const ERL_NIF_TERM = unsafe { mem::uninitialized() };
     let success = unsafe { ruster_unsafe::enif_get_tuple(env.env, term.term, 
@@ -17,6 +17,13 @@ pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>,
     }
     let term_array = unsafe { ::std::slice::from_raw_parts(array_ptr, arity as usize) };
     Ok(term_array.iter().map(|x| { NifTerm::new(env, *x) }).collect::<Vec<NifTerm>>())
+}*/
+
+pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
+    match ::wrapper::get_tuple(env.as_c_arg(), term.as_c_arg()) {
+        Ok(terms) => Ok(terms.iter().map(|x| { NifTerm::new(env, *x) }).collect::<Vec<NifTerm>>()),
+        Err(error) => Err(NifError::BadArg)
+    }
 }
 
 #[macro_export]

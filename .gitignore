@@ -24,3 +24,6 @@ Session.vim
 /test/target/
 Cargo.lock
 
+/rustler_codegen/target/
+/rustler_codegen/test/target/
+/rustler_codegen/Cargo.lock

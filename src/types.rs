@@ -6,7 +6,7 @@ use super::{ NifEnv, NifTerm, NifError };
 pub trait NifEncoder {
     fn encode<'a>(self, env: &'a NifEnv) -> NifTerm<'a>;
 }
-pub trait NifDecoder {
+pub trait NifDecoder: Sized {
     fn decode<'a>(term: NifTerm, env: &'a NifEnv) -> Result<Self, NifError>;
 }
 
@@ -36,6 +36,23 @@ impl_number_transcoder!(libc::c_uint, enif_make_uint, enif_get_uint);
 impl_number_transcoder!(u64, enif_make_uint64, enif_get_uint64);
 impl_number_transcoder!(i64, enif_make_int64, enif_get_int64);
 impl_number_transcoder!(libc::c_double, enif_make_double, enif_get_double);
+
+use super::atom::{ get_atom };
+impl NifEncoder for bool {
+    fn encode<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+        if self {
+            get_atom("true").unwrap().to_term(env)
+        } else {
+            get_atom("false").unwrap().to_term(env)
+        }
+    }
+}
+impl NifDecoder for bool {
+    fn decode<'a>(term: NifTerm, env: &'a NifEnv) -> Result<bool, NifError> {
+        Ok(super::atom::is_term_truthy(term, env))
+    }
+}
+
 //impl_number_encoder!(libc::c_long, enif_make_long);
 //impl_number_encoder!(libc::c_ulong, enif_make_ulong);
 

@@ -1,0 +1,11 @@
+[package]
+name = "rustler_codegen"
+version = "0.1.0"
+authors = ["Hansihe <hansihe@hansihe.com>"]
+
+[lib]
+plugin = true
+
+[dependencies]
+easy-plugin = "0.2.2"
+aster = "0.9.2"

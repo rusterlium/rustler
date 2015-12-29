@@ -31,6 +31,8 @@ pub unsafe fn alloc_resource_raw(res_type: &NifResourceType, size: usize) -> *mu
 // End Resources
 
 // Resource Structs
+// TODO: Provide synchronization. THIS IS IMPORTANT
+// TODO: Handle destruction. This is important, heap allocated objects will leak!
 pub fn open_struct_resource_type<T>(env: &NifEnv, module: &str, name: &str,
                                  flags: ErlNifResourceFlags) -> Result<NifStructResourceType<T>, &'static str> {
     let res: NifResourceType = try!(open_resource_type_raw(env, module, name, flags));
