@@ -3,27 +3,38 @@ use std::sync::RwLock;
 use std::sync::Mutex;
 use std::ops::DerefMut;
 
-extern crate ruster_unsafe;
-use super::{ ERL_NIF_TERM, size_t, NifTerm, NifEnv };
+use super::{ size_t, NifTerm, NifEnv };
+use ::wrapper::nif_interface::{ enif_make_atom_len, enif_is_atom, enif_alloc_env, NIF_ENV, NIF_TERM };
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct NifAtom {
-    term: ERL_NIF_TERM,
+    term: NIF_TERM,
 }
 impl NifAtom {
-    unsafe fn from_nif_term(term: ERL_NIF_TERM) -> Self {
+    pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+        NifTerm::new(env, self.term)
+    }
+    unsafe fn make_atom(env: NIF_ENV, name: &str) -> Self {
+        NifAtom::from_nif_term(enif_make_atom_len(env, name.as_ptr() as *const u8, name.len() as size_t))
+    }
+
+    unsafe fn from_nif_term(term: NIF_TERM) -> Self {
         NifAtom {
             term: term
         }
     }
-    pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
-        NifTerm::new(env, self.term)
+    pub fn from_term(env: &NifEnv, term: NifTerm) -> Option<Self> {
+        match is_term_atom(env, term) {
+            true => Some(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
+            false => None
+        }
     }
-    unsafe fn make_atom(env: *mut ruster_unsafe::ErlNifEnv, name: &str) -> Self {
-        NifAtom::from_nif_term(ruster_unsafe::enif_make_atom_len(env, name.as_ptr() as *const u8, name.len() as size_t))
-    }
+}
+
+pub fn is_term_atom(env: &NifEnv, term: NifTerm) -> bool {
+    ::wrapper::atom::is_term_atom(env.as_c_arg(), term.as_c_arg())
 }
 
 pub fn is_term_truthy(term: NifTerm, _env: &NifEnv) -> bool {
@@ -35,7 +46,7 @@ unsafe impl Sync for NifAtom {}
 unsafe impl Send for NifAtom {}
 
 struct PrivNifEnvWrapper {
-    env: *mut ruster_unsafe::ErlNifEnv
+    env: NIF_ENV
 }
 unsafe impl Send for PrivNifEnvWrapper {}
 
@@ -55,7 +66,7 @@ lazy_static! {
     };
 
     static ref ATOM_ENV: Mutex<PrivNifEnvWrapper> = {
-        Mutex::new(PrivNifEnvWrapper { env: unsafe { ruster_unsafe::enif_alloc_env() } })
+        Mutex::new(PrivNifEnvWrapper { env: unsafe { enif_alloc_env() } })
     };
 }
 

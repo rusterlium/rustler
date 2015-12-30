@@ -31,24 +31,38 @@ pub unsafe fn enif_make_badarg(env: NIF_ENV) -> NIF_TERM {
     ruster_unsafe::enif_make_badarg(env)
 }
 
+pub unsafe fn enif_alloc_env() -> NIF_ENV {
+    ruster_unsafe::enif_alloc_env()
+}
+
+// Atoms
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     ruster_unsafe::enif_make_atom_len(env, string, length)
 }
+pub unsafe fn enif_is_atom(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    ruster_unsafe::enif_is_atom(env, term)
+}
 
+// Binaries
 pub unsafe fn enif_release_binary(bin_ref: NIF_BINARY) {
     ruster_unsafe::enif_release_binary(bin_ref)
 }
-
 pub unsafe fn enif_alloc_binary(size: size_t, bin_ref: NIF_BINARY) -> c_int {
     ruster_unsafe::enif_alloc_binary(size, bin_ref)
 }
-
 pub unsafe fn enif_make_binary(env: NIF_ENV, bin_ref: NIF_BINARY) -> NIF_TERM {
     ruster_unsafe::enif_make_binary(env, bin_ref)
 }
-
 pub unsafe fn enif_inspect_binary(env: NIF_ENV, term: NIF_TERM, bin_ref: NIF_BINARY) -> c_int {
     ruster_unsafe::enif_inspect_binary(env, term, bin_ref)
+}
+
+// Maps
+pub unsafe fn enif_get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: *mut NIF_TERM) -> c_int {
+    ruster_unsafe::enif_get_map_value(env, map, key, value)
+}
+pub unsafe fn enif_get_map_size(env: NIF_ENV, map: NIF_TERM, size: *mut size_t) -> c_int {
+    ruster_unsafe::enif_get_map_size(env, map, size)
 }
 
 macro_rules! wrap_number {

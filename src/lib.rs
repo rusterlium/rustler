@@ -31,6 +31,8 @@ pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
 #[macro_reexport]
 pub mod tuple;
 
+pub mod map;
+
 pub mod atom;
 pub use self::atom::{ init_atom, get_atom, get_atom_init };
 
@@ -97,7 +99,7 @@ pub fn decode_type<T: NifDecoder>(term: NifTerm, env: &NifEnv) -> Result<T, NifE
     NifDecoder::decode(term, env)
 }
 
-#[macro_export]
+/*#[macro_export]
 macro_rules! nif_atom {
     ($env:expr, $name:ident) => ({
         const atom_name: &'static str = stringify!($name);
@@ -106,14 +108,14 @@ macro_rules! nif_atom {
             atom_name.as_ptr() as *const u8,
             atom_name.len() as $crate::size_t)
     });
-}
+}*/
 
-pub fn nif_atom<'a>(env: &'a NifEnv, name: &str) -> NifTerm<'a> {
+/*pub fn nif_atom<'a>(env: &'a NifEnv, name: &str) -> NifTerm<'a> {
     unsafe { 
         NifTerm::new(env, ruster_unsafe::enif_make_atom_len(
             env.env,
             name.as_ptr() as *const u8,
             name.len() as size_t))
     }
-}
+}*/
 

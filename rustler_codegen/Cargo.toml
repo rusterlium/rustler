@@ -1,7 +1,10 @@
 [package]
 name = "rustler_codegen"
-version = "0.1.0"
+description = "Compiler plugin for Rustler"
+repository = "https://github.com/hansihe/Rustler/tree/master/rustler_codegen"
+version = "0.2.0"
 authors = ["Hansihe <hansihe@hansihe.com>"]
+license = "BSD-2-Clause"
 
 [lib]
 plugin = true

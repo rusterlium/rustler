@@ -12,6 +12,11 @@ pub mod nif_interface;
 pub mod tuple;
 pub use self::tuple::{ get_tuple };
 
+pub mod map;
+pub use self::map::{ get_map_value, get_map_size };
+
+pub mod atom;
+
 /*macro_rules! wrap_number {
     (
 }*/
