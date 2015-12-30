@@ -170,7 +170,7 @@ easy_plugin! {
                 extern "C" fn $int_fun_name_ident(env: *mut rustler::ruster_export::ErlNifEnv,
                                      argc: rustler::c_int,
                                      argv: *const rustler::ERL_NIF_TERM) -> rustler::ERL_NIF_TERM {
-                    rustler::handle_nif_call($fun_name_ident, 0, env, argc, argv)
+                    rustler::codegen_runtime::handle_nif_call($fun_name_ident, 0, env, argc, argv)
                 };
             ).unwrap()
         }).collect();

@@ -8,6 +8,8 @@
  * is preferred to keep the function signatures in here for future use/reference.
  */
 
+#![allow(dead_code)]
+
 extern crate ruster_unsafe;
 extern crate libc;
 pub use libc::{ c_int, c_uint, c_double, size_t };

@@ -26,7 +26,7 @@ impl NifAtom {
     }
 }
 
-pub fn is_term_truthy(term: NifTerm, env: &NifEnv) -> bool {
+pub fn is_term_truthy(term: NifTerm, _env: &NifEnv) -> bool {
     !((term.term == get_atom("false").unwrap().term) || (term.term == get_atom("nil").unwrap().term))
 }
 

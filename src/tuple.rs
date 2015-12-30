@@ -1,10 +1,6 @@
 use super::{ NifEnv, NifTerm, NifError };
-use super::{ c_int };
-
-use std::mem;
 
 extern crate ruster_unsafe;
-use ruster_unsafe::{ ERL_NIF_TERM };
 
 /*pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
     let mut arity: c_int = 0;
