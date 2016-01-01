@@ -64,6 +64,18 @@ pub unsafe fn enif_get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, val
 pub unsafe fn enif_get_map_size(env: NIF_ENV, map: NIF_TERM, size: *mut size_t) -> c_int {
     ruster_unsafe::enif_get_map_size(env, map, size)
 }
+pub unsafe fn enif_make_new_map(env: NIF_ENV) -> NIF_TERM {
+    ruster_unsafe::enif_make_new_map(env)
+}
+pub unsafe fn enif_make_map_put(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM, value: NIF_TERM, map_out: *mut NIF_TERM) -> c_int {
+    ruster_unsafe::enif_make_map_put(env, map_in, key, value, map_out)
+}
+pub unsafe fn enif_make_map_update(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM, value: NIF_TERM, map_out: *mut NIF_TERM) -> c_int {
+    ruster_unsafe::enif_make_map_update(env, map_in, key, value, map_out)
+}
+pub unsafe fn enif_make_map_remove(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM, map_out: *mut NIF_TERM) -> c_int {
+    ruster_unsafe::enif_make_map_remove(env, map_in, key, map_out)
+}
 
 macro_rules! wrap_number {
     ($typ: ty, $encode: ident, $decode: ident) => {

@@ -53,6 +53,23 @@ impl NifDecoder for bool {
     }
 }
 
+/*impl<'a> NifDecoder for &'a str {
+    fn decode(term: NifTerm, env: &'a NifEnv) -> Result<Self, NifError> {
+        let binary = try!(::binary::get_binary(env, term));
+        Ok(::std::str::from_utf8(binary.as_slice()))
+    }
+}*/
+impl NifDecoder for String {
+    fn decode(term: NifTerm, env: &NifEnv) -> Result<Self, NifError> {
+        let binary = try!(::binary::get_binary(env, term));
+        let string = match ::std::str::from_utf8(binary.as_slice()) {
+            Ok(string) => string,
+            Err(_) => return Err(NifError::BadArg),
+        };
+        Ok(string.to_string())
+    }
+}
+
 //impl_number_encoder!(libc::c_long, enif_make_long);
 //impl_number_encoder!(libc::c_ulong, enif_make_ulong);
 

@@ -85,6 +85,7 @@ fn parse_delim_fun_list(list: &Delimited) -> PluginResult<Vec<FunEntry>> {
                 let delim_entry = &delim_entry_rc;
                 funs.push(try!(parse_delim_fun_entry(delim_entry)));
             }
+            &TokenTree::Token(_, _) => (),
             _ => return Err((entry.get_span().clone(), "expected delimited".to_string())),
         }
     }

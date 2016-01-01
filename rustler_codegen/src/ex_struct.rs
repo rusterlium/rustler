@@ -53,6 +53,7 @@ pub fn transcoder_decorator(
                 }
 
                 push(gen_decoder(cx, &item.ident, &fields, &ex_module_name, has_lifetime));
+                push(gen_encoder(cx, &item.ident, &fields, &ex_module_name));
             },
             _ => cx.span_err(span, "must decorate a struct"),
         },
@@ -79,7 +80,6 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
         (field_ident, field_encoder)
     }).collect();
     let struct_def_ast = builder.expr().struct_path(struct_name.clone()).with_id_exprs(field_defs).build();
-    println!("{:?}", struct_def_ast);
 
     let decoder_ast = quote_item!(cx, 
         impl rustler::NifDecoder for $struct_name {
@@ -100,4 +100,18 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     Annotatable::Item(decoder_ast)
 }
 
-//fn gen_field_decoder(
+fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_module_name: &str) -> Annotatable {
+    let builder = ::aster::AstBuilder::new();
+
+    let encoder_ast = quote_item!(cx,
+        impl rustler::NifEncoder for $struct_name {
+            fn encode<'a>(self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
+                //let map = rustler::wrapper::map::map_new(env.as_c_arg());
+
+                //rustler::NifTerm::new(env, map)
+                unimplemented!();
+            }
+        }
+    ).unwrap();
+    Annotatable::Item(encoder_ast)
+}

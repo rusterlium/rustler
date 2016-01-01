@@ -13,7 +13,7 @@ pub mod tuple;
 pub use self::tuple::{ get_tuple };
 
 pub mod map;
-pub use self::map::{ get_map_value, get_map_size };
+pub use self::map::{ get_map_value, get_map_size, map_new, map_put };
 
 pub mod atom;
 

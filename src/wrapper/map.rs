@@ -21,3 +21,17 @@ pub fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Result<usize, ()> {
     }
     Ok(size)
 }
+
+pub fn map_new(env: NIF_ENV) -> NIF_TERM {
+    unsafe { nif_interface::enif_make_new_map(env) }
+}
+
+pub fn map_put(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: NIF_TERM) -> Option<NIF_TERM> {
+    let mut result: NIF_TERM = unsafe { mem::uninitialized() };
+    let success = unsafe { nif_interface::enif_make_map_put(env, map, key, value, &mut result as *mut NIF_TERM) };
+
+    if success != 1 {
+        return None;
+    }
+    Some(result)
+}
