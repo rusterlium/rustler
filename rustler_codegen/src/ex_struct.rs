@@ -1,5 +1,5 @@
 use ::syntax::ptr::P;
-use ::syntax::ast::{MetaItem, MetaItem_, Item_, Ident, StructField, VariantData, Lit_, Expr, Stmt};
+use ::syntax::ast::{MetaItem, MetaItem_, Item_, Ident, StructField, VariantData, Expr, Stmt};
 use ::syntax::codemap::{Span, Spanned};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
 use ::syntax::ext::build::AstBuilder;

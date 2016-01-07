@@ -97,13 +97,8 @@ fn make_nif_int_id(name: &str) -> String {
     ["_rustler_nif_ext_fun_", name].concat()
 }
 
-pub fn export_nifs_macro_new(context: &mut ExtCtxt, span: Span, args: &[TokenTree]) -> Box<MacResult> {
-    println!("{:?}", args);
-    unimplemented!();
-}
-
 easy_plugin! {
-    struct Arguments { $mod_name:lit, $functions:delim }
+    struct Arguments { $mod_name:lit, $functions:delim, $load_fun:expr }
 
     pub fn export_nifs_macro(context: &mut ExtCtxt, span: Span, arguments: Arguments) -> PluginResult<Box<MacResult>> {
         let builder = ::aster::AstBuilder::new().span(span);
@@ -140,7 +135,7 @@ easy_plugin! {
                  name: $module_name_expr as *const u8,//b"test\0" as *const u8,
                  num_of_funcs: $fun_exprs_len as rustler::c_int,
                  funcs: &$fun_list_ast as *const rustler::ruster_export::ErlNifFunc,
-                 load: None,
+                 load: Some(_rustler_nif_load_fun),
                  reload: None,
                  upgrade: None,
                  unload: None,
@@ -148,6 +143,15 @@ easy_plugin! {
                  options: 0,
              };
          ).unwrap();
+
+        let nif_load_handler = arguments.load_fun;
+        let nif_load_fun_item = quote_item!(context,
+            extern "C" fn _rustler_nif_load_fun(env: *mut rustler::ruster_export::ErlNifEnv,
+                                                _priv_data: *mut *mut rustler::c_void,
+                                                load_info: rustler::ERL_NIF_TERM) -> rustler::c_int {
+                rustler::codegen_runtime::handle_nif_init_call($nif_load_handler, env, load_info)
+            }
+        ).unwrap();
 
         let nif_entry_fun_item = quote_item!(context,
             #[no_mangle]
@@ -169,7 +173,7 @@ easy_plugin! {
             ).unwrap()
         }).collect();
 
-        let mut items = vec![nif_entry_item, nif_entry_fun_item];
+        let mut items = vec![nif_entry_item, nif_entry_fun_item, nif_load_fun_item];
         items.extend(nif_fun_defs);
         Ok(MacEager::items(SmallVector::many(items)))
     }

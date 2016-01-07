@@ -28,3 +28,16 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> Result
         },
     }
 }
+
+pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm) -> bool>,
+                            r_env: *mut ErlNifEnv,
+                            load_info: ERL_NIF_TERM) -> c_int {
+    let env = NifEnv { env: r_env };
+    let term = NifTerm::new(&env, load_info);
+
+    if let Some(inner) = function {
+        if inner(&env, term) { 0 } else { 1 }
+    } else {
+        0
+    }
+}
