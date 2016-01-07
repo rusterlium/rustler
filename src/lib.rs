@@ -28,7 +28,7 @@ pub use self::resource::{ open_struct_resource_type, alloc_struct_resource, get_
 mod binary;
 pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
 
-#[macro_reexport]
+//#[macro_reexport]
 pub mod tuple;
 
 pub mod map;
@@ -95,9 +95,9 @@ pub struct NifStructResourceType<T> {
 
 
 
-pub fn decode_type<T: NifDecoder>(term: NifTerm, env: &NifEnv) -> Result<T, NifError> {
+/*pub fn decode_type<T: NifDecoder>(term: NifTerm, env: &NifEnv) -> Result<T, NifError> {
     NifDecoder::decode(term, env)
-}
+}*/
 
 /*#[macro_export]
 macro_rules! nif_atom {
@@ -118,4 +118,3 @@ macro_rules! nif_atom {
             name.len() as size_t))
     }
 }*/
-

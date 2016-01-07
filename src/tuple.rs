@@ -18,7 +18,7 @@ extern crate ruster_unsafe;
 pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
     match ::wrapper::get_tuple(env.as_c_arg(), term.as_c_arg()) {
         Ok(terms) => Ok(terms.iter().map(|x| { NifTerm::new(env, *x) }).collect::<Vec<NifTerm>>()),
-        Err(error) => Err(NifError::BadArg)
+        Err(_error) => Err(NifError::BadArg)
     }
 }
 

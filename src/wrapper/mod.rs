@@ -17,6 +17,8 @@ pub use self::map::{ get_map_value, get_map_size, map_new, map_put };
 
 pub mod atom;
 
+pub mod exception;
+
 /*macro_rules! wrap_number {
     (
 }*/

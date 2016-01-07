@@ -11,4 +11,7 @@ plugin = true
 
 [dependencies]
 easy-plugin = "0.2.2"
-aster = "0.9.2"
+aster = "0.9.3"
+
+#[dependencies.aster]
+#path = "../../rustler_vendor/aster/"

@@ -97,6 +97,11 @@ fn make_nif_int_id(name: &str) -> String {
     ["_rustler_nif_ext_fun_", name].concat()
 }
 
+pub fn export_nifs_macro_new(context: &mut ExtCtxt, span: Span, args: &[TokenTree]) -> Box<MacResult> {
+    println!("{:?}", args);
+    unimplemented!();
+}
+
 easy_plugin! {
     struct Arguments { $mod_name:lit, $functions:delim }
 

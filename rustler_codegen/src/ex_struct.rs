@@ -1,5 +1,5 @@
 use ::syntax::ptr::P;
-use ::syntax::ast::{MetaItem, MetaItem_, Item_, Ident, StructField, VariantData, Lit_, Expr};
+use ::syntax::ast::{MetaItem, MetaItem_, Item_, Ident, StructField, VariantData, Lit_, Expr, Stmt};
 use ::syntax::codemap::{Span, Spanned};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
 use ::syntax::ext::build::AstBuilder;
@@ -53,7 +53,7 @@ pub fn transcoder_decorator(
                 }
 
                 push(gen_decoder(cx, &item.ident, &fields, &ex_module_name, has_lifetime));
-                push(gen_encoder(cx, &item.ident, &fields, &ex_module_name));
+                push(gen_encoder(cx, &item.ident, &fields, &ex_module_name, has_lifetime));
             },
             _ => cx.span_err(span, "must decorate a struct"),
         },
@@ -81,12 +81,13 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     }).collect();
     let struct_def_ast = builder.expr().struct_path(struct_name.clone()).with_id_exprs(field_defs).build();
 
+    let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'a>) } else { quote_ty!(cx, $struct_name) };
+
     let decoder_ast = quote_item!(cx, 
-        impl rustler::NifDecoder for $struct_name {
-            fn decode(term: rustler::NifTerm, env: &rustler::NifEnv) -> Result<Self, rustler::NifError> {
+        impl<'a> rustler::NifDecoder<'a> for $struct_typ {
+            fn decode(term: rustler::NifTerm, env: &'a rustler::NifEnv) -> Result<Self, rustler::NifError> {
                 match rustler::map::get_ex_struct_name(env, term) {
                     Some(atom) => {
-                        // Potential equality issue?
                         if atom != rustler::atom::get_atom_init($ex_module_name) {
                             return Err(rustler::NifError::BadArg);
                         }
@@ -100,16 +101,27 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     Annotatable::Item(decoder_ast)
 }
 
-fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_module_name: &str) -> Annotatable {
+fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_module_name: &str, has_lifetime: bool) -> Annotatable {
     let builder = ::aster::AstBuilder::new();
 
-    let encoder_ast = quote_item!(cx,
-        impl rustler::NifEncoder for $struct_name {
-            fn encode<'a>(self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
-                //let map = rustler::wrapper::map::map_new(env.as_c_arg());
+    let field_defs: Vec<P<Stmt>> = fields.iter().map(|field| {
+        let field_ident = builder.id(field.node.ident().unwrap());
+        let field_ident_str = field_ident.name.as_str();
+        quote_stmt!(cx, map = rustler::map::map_put(env, map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 
+                                                    self.$field_ident.encode(env)).unwrap();).unwrap()
+    }).collect();
 
-                //rustler::NifTerm::new(env, map)
-                unimplemented!();
+    let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'b>) } else { quote_ty!(cx, $struct_name) };
+
+    let encoder_ast = quote_item!(cx,
+        impl<'b> rustler::NifEncoder for $struct_typ {
+            fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
+                use rustler::NifEncoder;
+                let mut map = rustler::map::make_ex_struct(env, $ex_module_name).expect("issue #1 on github");
+
+                $field_defs
+
+                map
             }
         }
     ).unwrap();

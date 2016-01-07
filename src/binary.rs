@@ -43,7 +43,7 @@ impl<'a> NifBinary<'a> {
     unsafe fn as_c_arg(&mut self) -> *mut ruster_unsafe::ErlNifBinary {
         self.desc.as_c_arg()
     }
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.desc.data, self.desc.size as usize) }
     }
     pub fn as_mut_slice(&mut self) -> &mut [u8] {

@@ -19,6 +19,7 @@ mod ex_struct;
 pub fn plugin_registrar(reg: &mut Registry) {
     let builder = aster::AstBuilder::new();
     
+    //reg.register_macro("rustler_export_nifs", export::export_nifs_macro);
     reg.register_macro("rustler_export_nifs", export::export_nifs_macro);
     reg.register_syntax_extension(
         builder.name("ExStruct"),
