@@ -194,7 +194,7 @@ pub struct ErlNifEntry {
 #[repr(C)]
 pub struct ErlNifBinary {
     pub size: size_t,
-    pub data: *const u8,
+    pub data: *mut u8,
     bin_term: ERL_NIF_TERM,
     ref_bin: *mut c_void,
 }
