@@ -19,6 +19,8 @@ pub mod atom;
 
 pub mod exception;
 
+pub mod resource;
+
 /*macro_rules! wrap_number {
     (
 }*/

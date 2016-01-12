@@ -12,11 +12,16 @@
 
 extern crate ruster_unsafe;
 extern crate libc;
-pub use libc::{ c_int, c_uint, c_double, size_t };
+pub use libc::{ c_int, c_uint, c_double, size_t, c_void, c_uchar };
 
 pub type NIF_ENV = *mut ruster_unsafe::ErlNifEnv;
-pub type NIF_TERM = ruster_unsafe::ERL_NIF_TERM;
+pub type NIF_TERM = *const c_void;
 pub type NIF_BINARY = *mut ruster_unsafe::ErlNifBinary;
+pub type NIF_RESOURCE_TYPE = *mut ruster_unsafe::ErlNifResourceType;
+pub type NIF_RESOURCE_HANDLE = *mut c_void;
+
+pub type NifResourceDtor = extern "C" fn(r_env: NIF_ENV, obj: NIF_RESOURCE_HANDLE) -> ();
+pub type NifResourceFlags = ruster_unsafe::ErlNifResourceFlags;
 
 pub enum NIF_ERROR {
     BAD_ARG
@@ -81,6 +86,29 @@ pub unsafe fn enif_make_map_remove(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM
     ruster_unsafe::enif_make_map_remove(env, map_in, key, map_out)
 }
 
+// Resources
+pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar, 
+                                      dtor: Option<NifResourceDtor>, flags: NifResourceFlags, tried: *mut NifResourceFlags
+                                      ) -> NIF_RESOURCE_TYPE {
+    ruster_unsafe::enif_open_resource_type(env, module_str, name, dtor, flags, tried)
+}
+pub unsafe fn enif_alloc_resource(typ: NIF_RESOURCE_TYPE, size: usize) -> NIF_RESOURCE_HANDLE {
+    ruster_unsafe::enif_alloc_resource(typ, size)
+}
+pub unsafe fn enif_make_resource(env: NIF_ENV, obj: NIF_RESOURCE_HANDLE) -> NIF_TERM {
+    ruster_unsafe::enif_make_resource(env, obj)
+}
+pub unsafe fn enif_get_resource(env: NIF_ENV, term: NIF_TERM, typ: NIF_RESOURCE_TYPE, objp: *mut NIF_RESOURCE_HANDLE) -> c_int {
+    ruster_unsafe::enif_get_resource(env, term, typ, objp)
+}
+pub unsafe fn enif_release_resource(obj: NIF_RESOURCE_HANDLE) {
+    ruster_unsafe::enif_release_resource(obj)
+}
+pub unsafe fn enif_keep_resource(obj: NIF_RESOURCE_HANDLE) {
+    ruster_unsafe::enif_keep_resource(obj)
+}
+
+// Numbers
 macro_rules! wrap_number {
     ($typ: ty, $encode: ident, $decode: ident) => {
         pub unsafe fn $encode(env: NIF_ENV, val: $typ) -> NIF_TERM {

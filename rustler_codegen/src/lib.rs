@@ -14,6 +14,8 @@ use rustc_plugin::Registry;
 
 mod export;
 mod ex_struct;
+mod resource;
+mod util;
 
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
@@ -24,4 +26,9 @@ pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(
         builder.name("ExStruct"),
         syntax::ext::base::MultiDecorator(Box::new(ex_struct::transcoder_decorator)));
+
+    reg.register_syntax_extension(
+        builder.name("NifResource"),
+        syntax::ext::base::MultiDecorator(Box::new(resource::resource_struct_def_decorator)));
+    reg.register_macro("resource_struct_init", resource::resource_struct_init_macro);
 }

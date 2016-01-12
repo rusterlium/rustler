@@ -6,7 +6,7 @@ use super::{ NifEnv, NifTerm, NifError };
 pub trait NifEncoder {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a>;
 }
-pub trait NifDecoder<'a>: Sized {
+pub trait NifDecoder<'a>: Sized+'a {
     fn decode(term: NifTerm, env: &'a NifEnv) -> Result<Self, NifError>;
 }
 
@@ -15,7 +15,7 @@ macro_rules! impl_number_transcoder {
         impl NifEncoder for $typ {
             fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
                 #![allow(unused_unsafe)]
-                NifTerm::new(env, unsafe { ruster_unsafe::$encode_fun(env.env, self.clone()) })
+                NifTerm::new(env, unsafe { ruster_unsafe::$encode_fun(env.env, *self) })
             }
         }
         impl<'a> NifDecoder<'a> for $typ {
@@ -40,7 +40,7 @@ impl_number_transcoder!(libc::c_double, enif_make_double, enif_get_double);
 use super::atom::{ get_atom };
 impl NifEncoder for bool {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
-        if self.clone() {
+        if *self {
             get_atom("true").unwrap().to_term(env)
         } else {
             get_atom("false").unwrap().to_term(env)

@@ -19,7 +19,7 @@ pub fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Option<usize> {
     if success != 1 {
         return None;
     }
-    Some(size)
+    Some(size as usize)
 }
 
 pub fn map_new(env: NIF_ENV) -> NIF_TERM {

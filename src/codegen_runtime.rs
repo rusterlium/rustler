@@ -1,8 +1,10 @@
 use ::{NifEnv, NifTerm, NifError, c_int};
 use ::atom::get_atom_init;
 use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
+use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV};
 use std::panic::recover;
 use ::wrapper::exception;
+use ::resource::NifResourceStruct;
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
@@ -40,4 +42,14 @@ pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm) -> 
     } else {
         0
     }
+}
+
+
+use std::sync::RwLock;
+use std;
+use ::resource::align_alloced_mem_for_struct;
+pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceStruct>(env: NIF_ENV, handle: NIF_RESOURCE_HANDLE) {
+    let aligned = align_alloced_mem_for_struct::<RwLock<T>>(handle);
+    let res = aligned as *mut RwLock<T>;
+    std::mem::drop(std::ptr::read(res));
 }

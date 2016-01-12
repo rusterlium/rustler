@@ -1,7 +1,7 @@
 #![feature(recover, std_panic)]
 #![allow(non_camel_case_types)]
 
-mod wrapper;
+pub mod wrapper;
 
 #[macro_use]
 extern crate lazy_static;
@@ -21,9 +21,9 @@ use std::marker::PhantomData;
 mod types;
 pub use self::types::{ NifEncoder, NifDecoder };
 
-mod resource;
-pub use self::resource::{ open_resource_type_raw, alloc_resource_raw };
-pub use self::resource::{ open_struct_resource_type, alloc_struct_resource, get_struct_resource };
+pub mod resource;
+//pub use self::resource::{ open_resource_type_raw, alloc_resource_raw };
+//pub use self::resource::{ open_struct_resource_type, alloc_struct_resource, get_struct_resource };
 
 mod binary;
 pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
@@ -37,6 +37,8 @@ pub mod atom;
 pub use self::atom::{ init_atom, get_atom, get_atom_init };
 
 pub mod codegen_runtime;
+#[macro_use]
+mod macros;
 
 pub struct NifEnv {
     pub env: *mut ruster_unsafe::ErlNifEnv,
@@ -85,13 +87,6 @@ impl<'a> NifTerm<'a> {
     }
 }
 
-pub struct NifResourceType {
-    pub res: *mut ErlNifResourceType
-}
-pub struct NifStructResourceType<T> {
-    pub res: NifResourceType,
-    pub struct_type: PhantomData<T>,
-}
 
 
 
