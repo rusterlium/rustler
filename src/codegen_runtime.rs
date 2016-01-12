@@ -1,7 +1,7 @@
 use ::{NifEnv, NifTerm, NifError, c_int};
 use ::atom::get_atom_init;
-use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
-use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV};
+//use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
+use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
 use std::panic::recover;
 use ::wrapper::exception;
 use ::resource::NifResourceStruct;
@@ -10,9 +10,9 @@ use ::resource::NifResourceStruct;
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
 pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> Result<NifTerm<'a>, NifError>, 
                        _arity: usize, 
-                       r_env: *mut ErlNifEnv, 
+                       r_env: NIF_ENV, 
                        argc: c_int, 
-                       argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+                       argv: *const NIF_TERM) -> NIF_TERM {
     let env = NifEnv { env: r_env };
     
     let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
@@ -32,8 +32,8 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> Result
 }
 
 pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm) -> bool>,
-                            r_env: *mut ErlNifEnv,
-                            load_info: ERL_NIF_TERM) -> c_int {
+                            r_env: NIF_ENV,
+                            load_info: NIF_TERM) -> c_int {
     let env = NifEnv { env: r_env };
     let term = NifTerm::new(&env, load_info);
 

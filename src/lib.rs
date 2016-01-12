@@ -2,16 +2,17 @@
 #![allow(non_camel_case_types)]
 
 pub mod wrapper;
+use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};
 
 #[macro_use]
 extern crate lazy_static;
 
-extern crate ruster_unsafe;
-pub use self::ruster_unsafe::{ ERL_NIF_TERM, ErlNifResourceFlags, ErlNifResourceType };
+//extern crate ruster_unsafe;
+//pub use self::ruster_unsafe::{ ERL_NIF_TERM, ErlNifResourceFlags, ErlNifResourceType };
 
-pub mod ruster_export {
+/*pub mod ruster_export {
     pub use super::ruster_unsafe::*;
-}
+}*/
 
 extern crate libc;
 pub use libc::{ c_char, size_t, c_int, c_uint, c_void };
@@ -41,10 +42,10 @@ pub mod codegen_runtime;
 mod macros;
 
 pub struct NifEnv {
-    pub env: *mut ruster_unsafe::ErlNifEnv,
+    pub env: NIF_ENV,
 }
 impl NifEnv {
-    pub fn as_c_arg(&self) -> *mut ruster_unsafe::ErlNifEnv {
+    pub fn as_c_arg(&self) -> NIF_ENV {
         self.env
     }
 }
@@ -59,30 +60,30 @@ impl NifError {
     pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
         NifTerm::new(env, match self {
             NifError::BadArg => 
-                unsafe { ruster_export::enif_make_badarg(env.as_c_arg()) },
+                unsafe { enif_make_badarg(env.as_c_arg()) },
             NifError::AllocFail =>
-                unsafe { ruster_export::enif_make_badarg(env.as_c_arg()) },
+                unsafe { enif_make_badarg(env.as_c_arg()) },
             NifError::Atom(name) => 
-                unsafe { ruster_export::enif_make_atom_len(env.as_c_arg(), 
-                                                           name.as_ptr() as *const u8, 
-                                                           name.len() as size_t) },
+                unsafe { enif_make_atom_len(env.as_c_arg(), 
+                                            name.as_ptr() as *const u8, 
+                                            name.len() as size_t) },
         })
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct NifTerm<'a> {
-    pub term: ERL_NIF_TERM,
+    pub term: NIF_TERM,
     env_life: PhantomData<&'a NifEnv>,
 }
 impl<'a> NifTerm<'a> {
-    pub fn new(_env: &'a NifEnv, inner: ERL_NIF_TERM) -> Self {
+    pub fn new(_env: &'a NifEnv, inner: NIF_TERM) -> Self {
         NifTerm {
             term: inner,
             env_life: PhantomData
         }
     }
-    pub fn as_c_arg(&self) -> ERL_NIF_TERM {
+    pub fn as_c_arg(&self) -> NIF_TERM {
         self.term
     }
 }

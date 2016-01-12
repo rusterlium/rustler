@@ -27,6 +27,11 @@ pub enum NIF_ERROR {
     BAD_ARG
 }
 
+pub type DEF_NIF_FUNC = ruster_unsafe::ErlNifFunc;
+pub type DEF_NIF_ENTRY = ruster_unsafe::ErlNifEntry;
+pub use self::ruster_unsafe::NIF_MAJOR_VERSION;
+pub use self::ruster_unsafe::NIF_MINOR_VERSION;
+pub use self::ruster_unsafe::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 
 pub unsafe fn enif_get_tuple(env: NIF_ENV, term: NIF_TERM, arity: *mut c_int, array: *mut *const NIF_TERM) -> c_int {
     ruster_unsafe::enif_get_tuple(env, term, arity, array)

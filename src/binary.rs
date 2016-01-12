@@ -1,16 +1,16 @@
 extern crate ruster_unsafe;
-use ruster_unsafe::ERL_NIF_TERM;
 
 use super::{ NifEnv, NifError, NifTerm };
 use libc::{ size_t, c_void };
 use std::mem::uninitialized;
 use std::marker::PhantomData;
+use ::wrapper::nif_interface::NIF_TERM;
 
 #[repr(C)]
 struct ErlNifBinary {
     pub size: size_t,
     pub data: *mut u8,
-    bin_term: ERL_NIF_TERM,
+    bin_term: NIF_TERM,
     ref_bin: *mut c_void,
 }
 impl ErlNifBinary {
