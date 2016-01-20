@@ -16,6 +16,7 @@ mod export;
 mod ex_struct;
 mod resource;
 mod util;
+mod tuple;
 
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
@@ -23,9 +24,13 @@ pub fn plugin_registrar(reg: &mut Registry) {
     
     //reg.register_macro("rustler_export_nifs", export::export_nifs_macro);
     reg.register_macro("rustler_export_nifs", export::export_nifs_macro);
+
     reg.register_syntax_extension(
         builder.name("ExStruct"),
         syntax::ext::base::MultiDecorator(Box::new(ex_struct::transcoder_decorator)));
+    reg.register_syntax_extension(
+        builder.name("NifTuple"),
+        syntax::ext::base::MultiDecorator(Box::new(tuple::transcoder_decorator)));
 
     reg.register_syntax_extension(
         builder.name("NifResource"),

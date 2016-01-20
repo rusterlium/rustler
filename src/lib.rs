@@ -26,8 +26,8 @@ pub mod resource;
 //pub use self::resource::{ open_resource_type_raw, alloc_resource_raw };
 //pub use self::resource::{ open_struct_resource_type, alloc_struct_resource, get_struct_resource };
 
-mod binary;
-pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
+pub mod binary;
+//pub use self::binary::{ NifBinary, alloc_binary, make_binary, get_binary };
 
 //#[macro_reexport]
 pub mod tuple;
@@ -77,6 +77,12 @@ pub struct NifTerm<'a> {
     env_life: PhantomData<&'a NifEnv>,
 }
 impl<'a> NifTerm<'a> {
+    pub unsafe fn new_raw<'b>(inner: NIF_TERM) -> NifTerm<'b> {
+        NifTerm {
+            term: inner,
+            env_life: PhantomData,
+        }
+    }
     pub fn new(_env: &'a NifEnv, inner: NIF_TERM) -> Self {
         NifTerm {
             term: inner,

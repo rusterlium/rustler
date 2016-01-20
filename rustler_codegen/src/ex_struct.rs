@@ -1,6 +1,6 @@
 use ::syntax::ptr::P;
-use ::syntax::ast::{MetaItem, MetaItem_, Item_, Ident, StructField, VariantData, Expr, Stmt};
-use ::syntax::codemap::{Span, Spanned};
+use ::syntax::ast::{MetaItem, Item_, Ident, StructField, VariantData, Expr, Stmt};
+use ::syntax::codemap::{Span};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
 use ::syntax::ext::build::AstBuilder;
 
@@ -32,15 +32,10 @@ pub fn transcoder_decorator(
                 }
                 let has_lifetime = generics.lifetimes.len() == 1;
 
-                if fields.len() > 0 && fields[0].node.kind.is_unnamed() {
-                    cx.span_err(span, "a tuple struct can't be converted to a elixir struct");
-                    return;
-                }
-
                 push(gen_decoder(cx, &item.ident, &fields, &ex_module_name, has_lifetime));
                 push(gen_encoder(cx, &item.ident, &fields, &ex_module_name, has_lifetime));
             },
-            _ => cx.span_err(span, "must decorate a struct"),
+            _ => cx.span_err(span, "must decorate a normal struct (not unit, not tuple)"),
         },
         _ => cx.span_err(span, "must decorate a struct"),
     }
@@ -70,7 +65,7 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 
     let decoder_ast = quote_item!(cx, 
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
-            fn decode(term: rustler::NifTerm, env: &'a rustler::NifEnv) -> Result<Self, rustler::NifError> {
+            fn decode(term: rustler::NifTerm<'a>, env: &rustler::NifEnv) -> Result<Self, rustler::NifError> {
                 match rustler::map::get_ex_struct_name(env, term) {
                     Some(atom) => {
                         if atom != rustler::atom::get_atom_init($ex_module_name) {

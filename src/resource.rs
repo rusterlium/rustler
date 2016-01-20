@@ -29,7 +29,7 @@ impl<'b, T> NifEncoder for ResourceTypeHolder<'b, T> where T: NifResourceStruct+
     }
 }
 impl<'a, T> NifDecoder<'a> for ResourceTypeHolder<'a, T> where T: NifResourceStruct+'a {
-    fn decode(term: NifTerm, env: &'a NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
         ResourceTypeHolder::from_term(env, term)
     }
 }
@@ -79,7 +79,7 @@ impl<'a, T> ResourceTypeHolder<'a, T> where T: NifResourceStruct {
             env_life: PhantomData,
         }
     }
-    fn from_term(env: &'a NifEnv, term: NifTerm) -> Result<Self, NifError> {
+    fn from_term(env: &NifEnv, term: NifTerm<'a>) -> Result<Self, NifError> {
         let res_resource = match ::wrapper::resource::get_resource(env.as_c_arg(), term.as_c_arg(), T::get_type().res) {
             Some(res) => res,
             None => return Err(NifError::BadArg),

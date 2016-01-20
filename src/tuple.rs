@@ -1,7 +1,5 @@
 use super::{ NifEnv, NifTerm, NifError };
 
-extern crate ruster_unsafe;
-
 /*pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
     let mut arity: c_int = 0;
     let mut array_ptr: *const ERL_NIF_TERM = unsafe { mem::uninitialized() };
@@ -15,11 +13,16 @@ extern crate ruster_unsafe;
     Ok(term_array.iter().map(|x| { NifTerm::new(env, *x) }).collect::<Vec<NifTerm>>())
 }*/
 
-pub fn get_tuple<'a>(env: &'a NifEnv, term: NifTerm) -> Result<Vec<NifTerm<'a>>, NifError> {
+pub fn get_tuple<'a>(env: &NifEnv, term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
     match ::wrapper::get_tuple(env.as_c_arg(), term.as_c_arg()) {
-        Ok(terms) => Ok(terms.iter().map(|x| { NifTerm::new(env, *x) }).collect::<Vec<NifTerm>>()),
+        Ok(terms) => Ok(terms.iter().map(|x| { unsafe { NifTerm::new_raw(*x) } }).collect::<Vec<NifTerm>>()),
         Err(_error) => Err(NifError::BadArg)
     }
+}
+
+pub fn make_tuple<'a>(env: &'a NifEnv, terms: &[NifTerm]) -> NifTerm<'a> {
+    let c_terms: Vec<::wrapper::nif_interface::NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
+    NifTerm::new(env, ::wrapper::tuple::make_tuple(env.as_c_arg(), &c_terms))
 }
 
 #[macro_export]

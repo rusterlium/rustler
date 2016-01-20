@@ -33,9 +33,6 @@ pub use self::ruster_unsafe::NIF_MAJOR_VERSION;
 pub use self::ruster_unsafe::NIF_MINOR_VERSION;
 pub use self::ruster_unsafe::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 
-pub unsafe fn enif_get_tuple(env: NIF_ENV, term: NIF_TERM, arity: *mut c_int, array: *mut *const NIF_TERM) -> c_int {
-    ruster_unsafe::enif_get_tuple(env, term, arity, array)
-}
 
 pub unsafe fn enif_make_badarg(env: NIF_ENV) -> NIF_TERM {
     ruster_unsafe::enif_make_badarg(env)
@@ -89,6 +86,14 @@ pub unsafe fn enif_make_map_update(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM
 }
 pub unsafe fn enif_make_map_remove(env: NIF_ENV, map_in: NIF_TERM, key: NIF_TERM, map_out: *mut NIF_TERM) -> c_int {
     ruster_unsafe::enif_make_map_remove(env, map_in, key, map_out)
+}
+
+// Tuple
+pub unsafe fn enif_get_tuple(env: NIF_ENV, term: NIF_TERM, arity: *mut c_int, array: *mut *const NIF_TERM) -> c_int {
+    ruster_unsafe::enif_get_tuple(env, term, arity, array)
+}
+pub unsafe fn enif_make_tuple_from_array(env: NIF_ENV, terms: *const NIF_TERM, terms_len: c_uint) -> NIF_TERM {
+    ruster_unsafe::enif_make_tuple_from_array(env, terms, terms_len)
 }
 
 // Resources

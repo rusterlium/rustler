@@ -2,9 +2,9 @@ use super::{ NifEnv, NifTerm };
 use ::atom::NifAtom;
 use ::wrapper::map;
 
-pub fn get_map_value<'a>(env: &'a NifEnv, term: NifTerm, key: NifTerm) -> Option<NifTerm<'a>> {
+pub fn get_map_value<'a>(env: &NifEnv, term: NifTerm<'a>, key: NifTerm) -> Option<NifTerm<'a>> {
     match ::wrapper::get_map_value(env.as_c_arg(), term.as_c_arg(), key.as_c_arg()) {
-        Some(value) => Some(NifTerm::new(env, value)),
+        Some(value) => Some(unsafe { NifTerm::new_raw(value) }),
         None => None,
     }
 }

@@ -1,4 +1,4 @@
-use ::syntax::ast::{MetaItem, MetaItem_, Ident};
+use ::syntax::ast::{MetaItem, MetaItem_};
 use ::syntax::codemap::{Spanned};
 use syntax::attr::AttrMetaMethods;
 

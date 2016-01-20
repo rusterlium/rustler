@@ -1,5 +1,5 @@
 use ::syntax::ext::base::{Annotatable, ExtCtxt, MacResult, MacEager};
-use ::syntax::ast::{Item_, MetaItem, Ident};
+use ::syntax::ast::{MetaItem};
 use ::syntax::codemap::{Span};
 use easy_plugin::{PluginResult};
 
@@ -8,7 +8,7 @@ use ::syntax::util::small_vector::{SmallVector};
 pub fn resource_struct_def_decorator(
     cx: &mut ExtCtxt,
     span: Span,
-    meta_item: &MetaItem,
+    _meta_item: &MetaItem,
     annotatable: &Annotatable,
     push: &mut FnMut(Annotatable)
 ) {
@@ -68,7 +68,7 @@ easy_plugin! {
         let env_ident = arguments.env;
         let struct_ident = arguments.struct_ident;
         let struct_ident_str = &*struct_ident.name.as_str();
-        let type_field_name_ident = builder.id(["_rustler_nif_struct_type_", struct_ident_str].concat());
+        //let type_field_name_ident = builder.id(["_rustler_nif_struct_type_", struct_ident_str].concat());
         let init_item = quote_stmt!(cx, {
             let res = match ::rustler::resource::open_struct_resource_type::<$struct_ident>($env_ident, $struct_ident_str, 
                                                                                             ::rustler::wrapper::nif_interface::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE) {
@@ -81,7 +81,6 @@ easy_plugin! {
             unsafe {
                 use ::rustler::resource::NifResourceStruct;
                 $struct_ident::set_type(res);
-                //$type_field_name_ident = Some(res);
             };
         }).unwrap();
 
