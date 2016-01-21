@@ -1,3 +1,8 @@
+
+//! A NIF resource allows you to safely store rust structs in a term, and therefore keep it across
+//! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
+//! more references to the resource.
+
 extern crate libc;
 use self::libc::{ c_void };
 

@@ -133,7 +133,7 @@ easy_plugin! {
                  major: rustler::wrapper::nif_interface::NIF_MAJOR_VERSION,
                  minor: rustler::wrapper::nif_interface::NIF_MINOR_VERSION,
                  name: $module_name_expr as *const u8,//b"test\0" as *const u8,
-                 num_of_funcs: $fun_exprs_len as rustler::c_int,
+                 num_of_funcs: $fun_exprs_len as rustler::codegen_runtime::c_int,
                  funcs: &$fun_list_ast as *const rustler::wrapper::nif_interface::DEF_NIF_FUNC,
                  load: Some(_rustler_nif_load_fun),
                  reload: None,
@@ -147,8 +147,8 @@ easy_plugin! {
         let nif_load_handler = arguments.load_fun;
         let nif_load_fun_item = quote_item!(context,
             extern "C" fn _rustler_nif_load_fun(env: rustler::wrapper::nif_interface::NIF_ENV,
-                                                _priv_data: *mut *mut rustler::c_void,
-                                                load_info: rustler::wrapper::nif_interface::NIF_TERM) -> rustler::c_int {
+                                                _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                                                load_info: rustler::wrapper::nif_interface::NIF_TERM) -> rustler::codegen_runtime::c_int {
                 rustler::codegen_runtime::handle_nif_init_call($nif_load_handler, env, load_info)
             }
         ).unwrap();
@@ -166,7 +166,7 @@ easy_plugin! {
             let int_fun_name_ident = builder.id(make_nif_int_id(&fun_name));
             quote_item!(context,
                 extern "C" fn $int_fun_name_ident(env: rustler::wrapper::nif_interface::NIF_ENV,
-                                     argc: rustler::c_int,
+                                     argc: rustler::codegen_runtime::c_int,
                                      argv: *const rustler::wrapper::nif_interface::NIF_TERM
                                      ) -> rustler::wrapper::nif_interface::NIF_TERM {
                     rustler::codegen_runtime::handle_nif_call($fun_name_ident, 0, env, argc, argv)

@@ -1,14 +1,12 @@
-/*
- * This file is meant to directly expose the C nif api. The functions in here
- * should be unsafe, and should not do any validation.
- * Currently we are using ruster_unsafe, but we do want to be able to easily
- * switch to something else in the future if required.
- * 
- * While reexporting from ruster_unsafe directly would remove a lot of code, it
- * is preferred to keep the function signatures in here for future use/reference.
- */
-
 #![allow(dead_code)]
+
+//! This module is meant to directly expose the C nif api. The functions in here
+//! should be unsafe, and should not do any validation.
+//! Currently we are using ruster_unsafe, but we do want to be able to easily
+//! switch to something else in the future if required.
+//! 
+//! While reexporting from ruster_unsafe directly would remove a lot of code, it
+//! is preferred to keep the function signatures in here for future use/reference.
 
 extern crate ruster_unsafe;
 extern crate libc;

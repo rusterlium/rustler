@@ -1,4 +1,5 @@
-use ::{NifEnv, NifTerm, NifError, c_int};
+use ::{NifEnv, NifTerm, NifError};
+pub use ::libc::{c_void, c_int};
 use ::atom::get_atom_init;
 //use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
 use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
