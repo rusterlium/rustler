@@ -3,7 +3,6 @@ extern crate ruster_unsafe;
 use super::{ NifEnv, NifError, NifTerm, NifEncoder, NifDecoder };
 use libc::{ size_t, c_void };
 use std::mem::uninitialized;
-use std::marker::PhantomData;
 use ::wrapper::nif_interface::NIF_TERM;
 
 #[repr(C)]
@@ -90,7 +89,7 @@ impl<'a> NifBinary<'a> {
     pub fn as_slice(&self) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size as usize) }
     }
-    pub fn get_term(&self, env: &'a NifEnv) -> NifTerm<'a> {
+    pub fn get_term(&self, _env: &'a NifEnv) -> NifTerm<'a> {
         self.term
     }
 }

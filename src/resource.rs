@@ -1,16 +1,12 @@
-extern crate ruster_unsafe;
-use self::ruster_unsafe::{ ErlNifResourceFlags, ErlNifResourceType };
-
 extern crate libc;
-use self::libc::{ c_void, size_t };
+use self::libc::{ c_void };
 
-use std::ffi::CString;
 use std::mem;
 use std::ptr;
 use std::marker::PhantomData;
 
 use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder };
-use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE, NIF_ENV };
+use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 
 pub struct NifStructResourceType<T> {
     pub res: NIF_RESOURCE_TYPE,
@@ -35,7 +31,7 @@ impl<'a, T> NifDecoder<'a> for ResourceTypeHolder<'a, T> where T: NifResourceStr
 }
 
 pub fn open_struct_resource_type<T: NifResourceStruct>(env: &NifEnv, name: &str,
-                                 flags: ErlNifResourceFlags) -> Option<NifStructResourceType<T>> {
+                                 flags: NifResourceFlags) -> Option<NifStructResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
                                                                                  Some(T::get_dtor()), flags);
     if res.is_some() {
@@ -55,7 +51,7 @@ pub fn get_alloc_size_struct<T>() -> usize {
 // This is unsafe as it allows us to do nasty things with pointers
 pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *mut c_void) -> *mut c_void {
     let offset = mem::align_of::<T>() - ((ptr as usize) % mem::align_of::<T>());
-    unsafe { ptr.offset(offset as isize) }
+    ptr.offset(offset as isize)
 }
 
 use std::sync::RwLock;

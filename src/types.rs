@@ -89,7 +89,7 @@ impl<'a> NifEncoder for NifTerm<'a> {
     }
 }
 impl<'a> NifDecoder<'a> for NifTerm<'a> {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, _env: &NifEnv) -> Result<Self, NifError> {
         Ok(term)
     }
 }
