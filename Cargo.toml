@@ -1,6 +1,6 @@
 [package]
 name = "ruster_unsafe"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 description = "Create Erlang NIF modules in Rust using the C NIF API."
 documentation = "http://goertzenator.github.io/ruster_unsafe/ruster_unsafe/index.html"
