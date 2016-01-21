@@ -5,9 +5,9 @@ matrix:
   allow_failures:
     - rust: nightly
 before_install:
-  - echo "deb http://packages.erlang-solutions.com/ubuntu precise contrib" | tee -a /etc/apt/sources.list
   - wget http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
   - sudo apt-key add erlang_solutions.asc
+  - sudo add-apt-repository "deb http://packages.erlang-solutions.com/ubuntu $(lsb_release -cs) contrib"
   - sudo apt-get -qq update
   - sudo apt-get install -y erlang
   - erl -version
