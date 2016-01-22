@@ -167,6 +167,7 @@ pub mod tuple;
 pub mod map;
 pub mod atom;
 pub mod codegen_runtime;
+pub mod ex_struct;
 
 pub type NifResult<T> = Result<T, NifError>;
 
@@ -245,3 +246,25 @@ impl<'a> NifTerm<'a> {
     }
 }
 
+/// Exports a given list of functions to a Erlang module.
+///
+/// This should be called exactly once in every NIF library. It will wrap and export the given rust
+/// functions into the Erlang module.
+/// 
+/// The first argument is a string specifying what Erlang/Elixir module you want the function
+/// exported into. In Erlang this will simply be the atom you named your module. In Elixir, all
+/// modules are prefixed with `Elixir.<module path>`
+/// 
+/// The second argument is a list of 3-tuples. Each tuple contains information on a single exported
+/// NIF function. The first tuple item is the name you want to export the function into, the second
+/// is the arity (number of arguments) of the exported function. The third argument is a
+/// indentifier of a rust function. This is where your actual NIF will be implemented.
+///
+/// The third argument is an `Option<fn(env: &NifEnv, load_info: NifTerm) -> bool>`. If this is
+/// `Some`, the function will execute when the NIF is first loaded by the BEAM.
+///
+/// WARNING: Only a stub, actual macro defined in compiler plugin.
+#[macro_export]
+macro_rules! rustler_export_nifs {
+    ($module_name:expr, [$(($fun_export_name:expr, $arity:expr, $rust_fn:ident)),*], $init_function:expr) => { /* ... */ }
+}

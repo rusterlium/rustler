@@ -1,3 +1,5 @@
+//! Functions used by runtime generated code. Should not be used.
+
 use ::{NifEnv, NifTerm, NifError};
 pub use ::libc::{c_void, c_int};
 use ::atom::get_atom_init;

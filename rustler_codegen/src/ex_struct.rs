@@ -66,7 +66,7 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     let decoder_ast = quote_item!(cx, 
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
             fn decode(term: rustler::NifTerm<'a>, env: &rustler::NifEnv) -> Result<Self, rustler::NifError> {
-                match rustler::map::get_ex_struct_name(env, term) {
+                match rustler::ex_struct::get_ex_struct_name(env, term) {
                     Some(atom) => {
                         if atom != rustler::atom::get_atom_init($ex_module_name) {
                             return Err(rustler::NifError::BadArg);
@@ -97,7 +97,7 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
         impl<'b> rustler::NifEncoder for $struct_typ {
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
                 use rustler::NifEncoder;
-                let mut map = rustler::map::make_ex_struct(env, $ex_module_name).expect("issue #1 on github");
+                let mut map = rustler::ex_struct::make_ex_struct(env, $ex_module_name).expect("issue #1 on github");
 
                 $field_defs
 

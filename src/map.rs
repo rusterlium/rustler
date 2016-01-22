@@ -1,5 +1,6 @@
+//! Utilities used to access and create Erlang maps.
+
 use super::{ NifEnv, NifTerm };
-use ::atom::NifAtom;
 use ::wrapper::map;
 
 pub fn get_map_value<'a>(env: &NifEnv, term: NifTerm<'a>, key: NifTerm) -> Option<NifTerm<'a>> {
@@ -7,19 +8,6 @@ pub fn get_map_value<'a>(env: &NifEnv, term: NifTerm<'a>, key: NifTerm) -> Optio
         Some(value) => Some(unsafe { NifTerm::new_raw(value) }),
         None => None,
     }
-}
-
-pub fn get_ex_struct_name(env: &NifEnv, map: NifTerm) -> Option<NifAtom> {
-    // In an Elixir struct the value in the __STRUCT__ field is always an atom.
-    match get_map_value(env, map, ::atom::get_atom_init("__struct__").to_term(env)) {
-        Some(term) => NifAtom::from_term(env, term),
-        None => None
-    }
-}
-
-pub fn make_ex_struct<'a>(env: &'a NifEnv, struct_module: &'static str) -> Option<NifTerm<'a>> {
-    let map = map_new(env);
-    map_put(env, map, ::atom::get_atom_init("__struct__").to_term(env), ::atom::get_atom_init(struct_module).to_term(env))
 }
 
 pub fn map_new<'a>(env: &'a NifEnv) -> NifTerm<'a> {
