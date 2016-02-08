@@ -11,31 +11,39 @@ pub trait NifDecoder<'a>: Sized+'a {
 }
 
 macro_rules! impl_number_transcoder {
-    ($typ:ty, $encode_fun:ident, $decode_fun:ident) => {
-        impl NifEncoder for $typ {
+    ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
+        impl NifEncoder for $dec_type {
             fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
                 #![allow(unused_unsafe)]
-                NifTerm::new(env, unsafe { ruster_unsafe::$encode_fun(env.env, *self) })
+                NifTerm::new(env, unsafe { ruster_unsafe::$encode_fun(env.env, *self as $nif_type) })
             }
         }
-        impl<'a> NifDecoder<'a> for $typ {
-            fn decode(term: NifTerm, env: &NifEnv) -> Result<$typ, NifError> {
+        impl<'a> NifDecoder<'a> for $dec_type {
+            fn decode(term: NifTerm, env: &NifEnv) -> Result<$dec_type, NifError> {
                 #![allow(unused_unsafe)]
-                let mut res: $typ = Default::default();
-                if unsafe { ruster_unsafe::$decode_fun(env.env, term.term, (&mut res) as *mut $typ) } == 0 {
+                let mut res: $nif_type = Default::default();
+                if unsafe { ruster_unsafe::$decode_fun(env.env, term.term, (&mut res) as *mut $nif_type) } == 0 {
                     return Err(NifError::BadArg);
                 }
-                Ok(res)
+                Ok(res as $dec_type)
             }
         }
     }
 }
 
-impl_number_transcoder!(libc::c_int, enif_make_int, enif_get_int);
-impl_number_transcoder!(libc::c_uint, enif_make_uint, enif_get_uint);
-impl_number_transcoder!(u64, enif_make_uint64, enif_get_uint64);
-impl_number_transcoder!(i64, enif_make_int64, enif_get_int64);
-impl_number_transcoder!(libc::c_double, enif_make_double, enif_get_double);
+// Base number types
+impl_number_transcoder!(i32, i32, enif_make_int, enif_get_int);
+impl_number_transcoder!(u32, u32, enif_make_uint, enif_get_uint);
+impl_number_transcoder!(i64, i64, enif_make_int64, enif_get_int64);
+impl_number_transcoder!(u64, u64, enif_make_uint64, enif_get_uint64);
+impl_number_transcoder!(f64, f64, enif_make_double, enif_get_double);
+
+// Casted number types
+impl_number_transcoder!(i8, i32, enif_make_int, enif_get_int);
+impl_number_transcoder!(u8, u32, enif_make_uint, enif_get_uint);
+impl_number_transcoder!(i16, i32, enif_make_int, enif_get_int);
+impl_number_transcoder!(u16, u32, enif_make_uint, enif_get_uint);
+impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
 
 use super::atom::{ get_atom };
 impl NifEncoder for bool {
