@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Rustler.Check do
   def check_env() do
     nif_version = :erlang.system_info(:nif_version)
     unless to_string(nif_version) in @supported_nif_versions do
-      Mix.raise "NIF version #{nif_version} is not supported by Rustler"
+      Mix.raise "NIF version #{nif_version} is not supported by Rustler. See https://github.com/hansihe/Rustler/blob/master/FAQ.md#unsuppored-nif-version"
     end
 
     rustc_exec = locate_executable!("rustc")
@@ -38,13 +38,13 @@ defmodule Mix.Tasks.Rustler.Check do
       {out, 0} -> out
       {out, code} ->
         Mix.Shell.IO.error "#{prog} output: \n#{out}"
-        Mix.raise "#{prog} failed with exit code: #{code}"
+        Mix.raise "#{prog} failed with exit code: #{code}. See https://github.com/hansihe/Rustler/blob/master/FAQ.md#other-problems"
     end
   end
 
   defp locate_executable!(name) do
     case System.find_executable(name) do
-      nil -> Mix.raise "Could not find '#{name}'."
+      nil -> Mix.raise "Could not find '#{name}'. See https://github.com/hansihe/Rustler/blob/master/FAQ.md#could-not-find-rustccargo"
       path -> path
     end
   end
@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Rustler.Check do
   # TODO: Validate version properly
   def check_rust_version!(%RustCVersion{branch: "nightly"}), do: :ok
   def check_rust_version!(%RustCVersion{branch: branch}) do
-    Mix.raise "Rustler needs the rust nightly branch, you have #{branch} installed."
+    Mix.raise "Rustler needs the rust nightly branch, you have #{branch} installed. See https://github.com/hansihe/Rustler/blob/master/FAQ.md#nightly-branch"
   end
 
   @rustc_version_regex ~r/^rustc (\d+).(\d+).(\d+)-(\S+) \((\w+) (\d+)-(\d+)-(\d+)\)/
