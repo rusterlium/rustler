@@ -1,6 +1,6 @@
 # Rustler
 
-[Documentation](http://rustler.rustbridge.io/) | [Getting Started]https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/Rustler_Example)
+[Documentation](http://rustler.rustbridge.io/) | [Getting Started](https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/Rustler_Example)
 
 Rustler is a library for writing Erlang NIFs in safe Rust code. That means
 there should be no ways to crash the BEAM (Erlang VM). The library provides
