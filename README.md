@@ -16,3 +16,9 @@ is favored as of now.
 * Interop - Decoding and encoding rust values into Erlang terms is as easy as a function call.
 * Type composition - Making a Rust struct encodable and decodable to Erlang or Elixir can be done with a single attribute.
 * Resource objects - Enables you to safely pass a reference to a Rust struct into Erlang code. The struct will be automatically dropped when it's no longer referenced.
+
+#### Getting started
+The easiest way of getting started, is using the Mix project generator.
+
+* Run `mix archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez` to install the tool.
+* Run `mix rustler.new <path>` and follow the instructions.

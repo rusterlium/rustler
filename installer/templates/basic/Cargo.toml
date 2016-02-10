@@ -1,0 +1,13 @@
+[package]
+name = "<%= library_name %>"
+version = "0.1.0"
+authors = []
+
+[lib]
+name = "<%= library_name %>"
+path = "src/nif.rs"
+crate_type = ["dylib"]
+
+[dependencies]
+rustler = "*"
+rustler_codegen = "*"

@@ -71,25 +71,22 @@ lazy_static! {
     };
 }
 
-pub fn init_atom(name: &'static str) {
+pub fn init_atom(name: &'static str) -> NifAtom {
     let mut atoms = ATOMS.write().unwrap();
     let mut env_guard = ATOM_ENV.lock().unwrap();
     let env = env_guard.deref_mut();
-    atoms.insert(name, unsafe { NifAtom::make_atom(env.env, name) });
+    let atom = unsafe { NifAtom::make_atom(env.env, name) };
+    atoms.insert(name, atom);
+    atom
 }
 
 pub fn get_atom(name: &str) -> Option<NifAtom> {
     ATOMS.read().unwrap().get(name).cloned()
 }
 pub fn get_atom_init(name: &'static str) -> NifAtom {
-    let mut atoms = ATOMS.write().unwrap();
-    if atoms.contains_key(name) {
-        atoms.get(name).unwrap().clone()
-    } else {
-        let mut env_guard = ATOM_ENV.lock().unwrap();
-        let env = env_guard.deref_mut();
-        let atom = unsafe { NifAtom::make_atom(env.env, name) };
-        atoms.insert(name, atom);
-        atom
+    match get_atom(name) {
+        Some(atom) => return atom,
+        _ => (),
     }
+    init_atom(name)
 }

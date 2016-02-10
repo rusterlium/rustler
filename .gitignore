@@ -27,3 +27,13 @@ Cargo.lock
 /rustler_codegen/target/
 /rustler_codegen/test/target/
 /rustler_codegen/Cargo.lock
+
+/_build
+/cover
+/deps
+erl_crash.dump
+*.ez
+
+/installer/_build
+/installer/cover
+/installer/deps
