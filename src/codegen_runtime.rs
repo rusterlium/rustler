@@ -8,6 +8,7 @@ use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
 use std::panic::recover;
 use ::wrapper::exception;
 use ::resource::NifResourceStruct;
+use ::NifEncoder;
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
@@ -26,7 +27,7 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> Result
     match result {
         Ok(res) => match res {
             Ok(ret) => ret.as_c_arg(),
-            Err(err) => err.to_term(&env).as_c_arg(),
+            Err(err) => err.encode(&env).as_c_arg(),
         },
         Err(_err) => {
             exception::throw(env.as_c_arg(), get_atom_init("nif_panic").to_term(&env).as_c_arg())

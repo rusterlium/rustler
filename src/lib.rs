@@ -195,9 +195,9 @@ pub enum NifError {
     /// Encodes the string into an atom and returns it from the NIF.
     Atom(&'static str),
 }
-impl NifError {
-    pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
-        NifTerm::new(env, match self {
+impl NifEncoder for NifError {
+    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+        NifTerm::new(env, match *self {
             NifError::BadArg => 
                 unsafe { enif_make_badarg(env.as_c_arg()) },
             NifError::AllocFail =>
