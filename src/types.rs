@@ -1,13 +1,13 @@
 extern crate ruster_unsafe;
 extern crate libc;
 
-use super::{ NifEnv, NifTerm, NifError };
+use super::{ NifEnv, NifTerm, NifError, NifResult };
 
 pub trait NifEncoder {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a>;
 }
 pub trait NifDecoder<'a>: Sized+'a {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError>;
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self>;
 }
 
 macro_rules! impl_number_transcoder {
@@ -19,7 +19,7 @@ macro_rules! impl_number_transcoder {
             }
         }
         impl<'a> NifDecoder<'a> for $dec_type {
-            fn decode(term: NifTerm, env: &NifEnv) -> Result<$dec_type, NifError> {
+            fn decode(term: NifTerm, env: &NifEnv) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
                 if unsafe { ruster_unsafe::$decode_fun(env.env, term.term, (&mut res) as *mut $nif_type) } == 0 {
@@ -48,6 +48,8 @@ impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
 use super::atom::{ get_atom };
 impl NifEncoder for bool {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+        // This should always succeed, if there these atoms
+        // are missing, something is seriously wrong, worthy of a panic.
         if *self {
             get_atom("true").unwrap().to_term(env)
         } else {
@@ -56,19 +58,19 @@ impl NifEncoder for bool {
     }
 }
 impl<'a> NifDecoder<'a> for bool {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<bool, NifError> {
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<bool> {
         Ok(super::atom::is_term_truthy(term, env))
     }
 }
 
 impl<'a> NifDecoder<'a> for String {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
         let string: &str = try!(NifDecoder::decode(term, env));
         Ok(string.to_string())
     }
 }
 impl<'a> NifDecoder<'a> for &'a str {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
         let binary = try!(::binary::NifBinary::from_term(term, env));
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
@@ -84,7 +86,7 @@ impl NifEncoder for str {
         let str_len = self.len();
         let mut bin = match ::binary::OwnedNifBinary::alloc(str_len) {
             Some(bin) => bin,
-            None => panic!("binary term alloc failed"),
+            None => panic!("binary term allocation fail"),
         };
         bin.as_mut_slice().write(self.as_bytes()).expect("memory copy of string failed");
         bin.release(env).get_term(env)
@@ -97,7 +99,7 @@ impl<'a> NifEncoder for NifTerm<'a> {
     }
 }
 impl<'a> NifDecoder<'a> for NifTerm<'a> {
-    fn decode(term: NifTerm<'a>, _env: &NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, _env: &NifEnv) -> NifResult<Self> {
         Ok(term)
     }
 }

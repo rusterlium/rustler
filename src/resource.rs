@@ -10,7 +10,7 @@ use std::mem;
 use std::ptr;
 use std::marker::PhantomData;
 
-use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder };
+use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 
 pub struct NifStructResourceType<T> {
@@ -30,7 +30,7 @@ impl<'b, T> NifEncoder for ResourceTypeHolder<'b, T> where T: NifResourceStruct+
     }
 }
 impl<'a, T> NifDecoder<'a> for ResourceTypeHolder<'a, T> where T: NifResourceStruct+'a {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
+    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
         ResourceTypeHolder::from_term(env, term)
     }
 }
