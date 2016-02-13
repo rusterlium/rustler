@@ -95,8 +95,7 @@ impl NifEncoder for str {
 
 impl<'a> NifEncoder for NifTerm<'a> {
     fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
-        assert!(self.get_env() == env);
-        NifTerm::new(env, self.as_c_arg())
+        self.in_env(env)
     }
 }
 impl<'a> NifDecoder<'a> for NifTerm<'a> {

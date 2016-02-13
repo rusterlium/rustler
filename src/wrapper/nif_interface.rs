@@ -44,6 +44,10 @@ pub unsafe fn enif_raise_exception(env: NIF_ENV, reason: NIF_TERM) -> NIF_TERM {
     ruster_unsafe::enif_raise_exception(env, reason)
 }
 
+pub unsafe fn enif_make_copy(dest_env: NIF_ENV, source_term: NIF_TERM) -> NIF_TERM {
+    ruster_unsafe::enif_make_copy(dest_env, source_term)
+}
+
 // Atoms
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     ruster_unsafe::enif_make_atom_len(env, string, length)

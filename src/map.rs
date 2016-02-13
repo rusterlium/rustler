@@ -5,7 +5,7 @@ use ::wrapper::map;
 
 pub fn get_map_value<'a>(term: NifTerm<'a>, key: NifTerm) -> Option<NifTerm<'a>> {
     match ::wrapper::get_map_value(term.env.as_c_arg(), term.as_c_arg(), key.as_c_arg()) {
-        Some(value) => Some(unsafe { NifTerm::new(term.env, value) }),
+        Some(value) => Some(NifTerm::new(term.env, value)),
         None => None,
     }
 }

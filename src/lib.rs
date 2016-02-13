@@ -238,6 +238,14 @@ impl<'a> NifTerm<'a> {
     pub fn lifetime_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
         NifTerm::new(env, self.as_c_arg())
     }
+
+    pub fn in_env<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        if self.get_env() == env {
+            self.lifetime_cast(env)
+        } else {
+            NifTerm::new(env, wrapper::copy_term(env.as_c_arg(), self.as_c_arg()))
+        }
+    }
 }
 
 /// Exports a given list of functions to a Erlang module.

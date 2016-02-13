@@ -2,7 +2,7 @@ use super::{ NifEnv, NifTerm, NifError };
 
 pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
     match ::wrapper::get_tuple(term.env.as_c_arg(), term.as_c_arg()) {
-        Ok(terms) => Ok(terms.iter().map(|x| { unsafe { NifTerm::new(term.env, *x) } }).collect::<Vec<NifTerm>>()),
+        Ok(terms) => Ok(terms.iter().map(|x| NifTerm::new(term.env, *x)).collect::<Vec<NifTerm>>()),
         Err(_error) => Err(NifError::BadArg)
     }
 }
