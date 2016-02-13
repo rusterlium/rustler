@@ -7,7 +7,7 @@ pub trait NifEncoder {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a>;
 }
 pub trait NifDecoder<'a>: Sized+'a {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self>;
+    fn decode(term: NifTerm<'a>) -> NifResult<Self>;
 }
 
 macro_rules! impl_number_transcoder {
@@ -19,10 +19,10 @@ macro_rules! impl_number_transcoder {
             }
         }
         impl<'a> NifDecoder<'a> for $dec_type {
-            fn decode(term: NifTerm, env: &NifEnv) -> NifResult<$dec_type> {
+            fn decode(term: NifTerm) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
-                if unsafe { ruster_unsafe::$decode_fun(env.env, term.term, (&mut res) as *mut $nif_type) } == 0 {
+                if unsafe { ruster_unsafe::$decode_fun(term.env.as_c_arg(), term.as_c_arg(), (&mut res) as *mut $nif_type) } == 0 {
                     return Err(NifError::BadArg);
                 }
                 Ok(res as $dec_type)
@@ -58,20 +58,20 @@ impl NifEncoder for bool {
     }
 }
 impl<'a> NifDecoder<'a> for bool {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<bool> {
-        Ok(super::atom::is_term_truthy(term, env))
+    fn decode(term: NifTerm<'a>) -> NifResult<bool> {
+        Ok(super::atom::is_term_truthy(term))
     }
 }
 
 impl<'a> NifDecoder<'a> for String {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
-        let string: &str = try!(NifDecoder::decode(term, env));
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        let string: &str = try!(NifDecoder::decode(term));
         Ok(string.to_string())
     }
 }
 impl<'a> NifDecoder<'a> for &'a str {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
-        let binary = try!(::binary::NifBinary::from_term(term, env));
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        let binary = try!(::binary::NifBinary::from_term(term));
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
             Err(_) => Err(NifError::BadArg),
@@ -95,11 +95,12 @@ impl NifEncoder for str {
 
 impl<'a> NifEncoder for NifTerm<'a> {
     fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        assert!(self.get_env() == env);
         NifTerm::new(env, self.as_c_arg())
     }
 }
 impl<'a> NifDecoder<'a> for NifTerm<'a> {
-    fn decode(term: NifTerm<'a>, _env: &NifEnv) -> NifResult<Self> {
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         Ok(term)
     }
 }

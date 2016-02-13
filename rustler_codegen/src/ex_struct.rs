@@ -49,10 +49,10 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
         let field_ident_str = field_ident.name.as_str();
         let field_encoder = quote_expr!(cx, 
             match rustler::NifDecoder::decode(
-                match rustler::map::get_map_value(env, term, rustler::atom::get_atom_init($field_ident_str).to_term(env)) {
+                match rustler::map::get_map_value(term, rustler::atom::get_atom_init($field_ident_str).to_term(env)) {
                     Some(term) => term,
                     None => return Err(rustler::NifError::BadArg),
-                    }, env) {
+                    }) {
                 Ok(res) => res,
                 Err(err) => return Err(err),
             }
@@ -65,8 +65,9 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 
     let decoder_ast = quote_item!(cx, 
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
-            fn decode(term: rustler::NifTerm<'a>, env: &rustler::NifEnv) -> Result<Self, rustler::NifError> {
-                match rustler::ex_struct::get_ex_struct_name(env, term) {
+            fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
+                let env = term.get_env();
+                match rustler::ex_struct::get_ex_struct_name(term) {
                     Some(atom) => {
                         if atom != rustler::atom::get_atom_init($ex_module_name) {
                             return Err(rustler::NifError::BadArg);
@@ -87,7 +88,7 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     let field_defs: Vec<P<Stmt>> = fields.iter().map(|field| {
         let field_ident = builder.id(field.node.ident().unwrap());
         let field_ident_str = field_ident.name.as_str();
-        quote_stmt!(cx, map = rustler::map::map_put(env, map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 
+        quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 
                                                     self.$field_ident.encode(env)).unwrap();).unwrap()
     }).collect();
 

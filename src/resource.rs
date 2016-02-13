@@ -26,12 +26,12 @@ pub trait NifResourceStruct: Sized {
 
 impl<'b, T> NifEncoder for ResourceTypeHolder<'b, T> where T: NifResourceStruct+'b {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
-        self.as_term(env)
+        self.as_term().lifetime_cast(env)
     }
 }
 impl<'a, T> NifDecoder<'a> for ResourceTypeHolder<'a, T> where T: NifResourceStruct+'a {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> NifResult<Self> {
-        ResourceTypeHolder::from_term(env, term)
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        ResourceTypeHolder::from_term(term)
     }
 }
 
@@ -64,12 +64,12 @@ use std::sync::RwLock;
 pub struct ResourceTypeHolder<'a, T> where T: NifResourceStruct {
     raw: *mut c_void,
     inner: *mut RwLock<T>,
-    env_life: PhantomData<&'a NifEnv>
+    env: &'a NifEnv,
 }
 
 use std::sync::{LockResult, RwLockReadGuard, RwLockWriteGuard};
 impl<'a, T> ResourceTypeHolder<'a, T> where T: NifResourceStruct {
-    pub fn new(_env: &'a NifEnv, data: T) -> Self {
+    pub fn new(env: &'a NifEnv, data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<RwLock<T>>();
         let mem_raw = ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size);
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<RwLock<T>>(mem_raw) } as *mut RwLock<T>;
@@ -77,11 +77,11 @@ impl<'a, T> ResourceTypeHolder<'a, T> where T: NifResourceStruct {
         ResourceTypeHolder {
             raw: mem_raw,
             inner: aligned_mem,
-            env_life: PhantomData,
+            env: env,
         }
     }
-    fn from_term(env: &NifEnv, term: NifTerm<'a>) -> Result<Self, NifError> {
-        let res_resource = match ::wrapper::resource::get_resource(env.as_c_arg(), term.as_c_arg(), T::get_type().res) {
+    fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
+        let res_resource = match ::wrapper::resource::get_resource(term.env.as_c_arg(), term.as_c_arg(), T::get_type().res) {
             Some(res) => res,
             None => return Err(NifError::BadArg),
         };
@@ -90,12 +90,12 @@ impl<'a, T> ResourceTypeHolder<'a, T> where T: NifResourceStruct {
         Ok(ResourceTypeHolder {
             raw: res_resource,
             inner: casted_ptr,
-            env_life: PhantomData,
+            env: term.env,
         })
     }
 
-    fn as_term<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
-        NifTerm::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw))
+    fn as_term(&self) -> NifTerm<'a> {
+        NifTerm::new(self.env, ::wrapper::resource::make_resource(self.env.as_c_arg(), self.raw))
     }
 
     fn as_c_arg(&mut self) -> *mut c_void {

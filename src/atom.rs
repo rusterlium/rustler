@@ -38,7 +38,7 @@ pub fn is_term_atom(env: &NifEnv, term: NifTerm) -> bool {
     ::wrapper::atom::is_term_atom(env.as_c_arg(), term.as_c_arg())
 }
 
-pub fn is_term_truthy(term: NifTerm, _env: &NifEnv) -> bool {
+pub fn is_term_truthy(term: NifTerm) -> bool {
     !((term.term == get_atom("false").unwrap().term) || (term.term == get_atom("nil").unwrap().term))
 }
 

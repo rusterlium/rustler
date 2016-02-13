@@ -157,8 +157,6 @@ extern crate lazy_static;
 
 extern crate libc;
 
-use std::marker::PhantomData;
-
 mod types;
 pub use self::types::{ NifEncoder, NifDecoder };
 pub mod resource;
@@ -175,6 +173,7 @@ pub type NifResult<T> = Result<T, NifError>;
 /// communicating with the BEAM, like decoding and encoding terms.
 ///
 /// There is no way to allocate a NifEnv at the moment, but this may be possible in the future.
+#[derive(PartialEq)]
 pub struct NifEnv {
     env: NIF_ENV,
 }
@@ -217,32 +216,27 @@ impl NifEncoder for NifError {
 #[derive(Clone, Copy)]
 pub struct NifTerm<'a> {
     term: NIF_TERM,
-    env_life: PhantomData<&'a NifEnv>,
+    env: &'a NifEnv,
 }
 impl<'a> NifTerm<'a> {
-    /// Constructs a new term from the raw term pointer `inner`, and associated with the given
-    /// lifetime.
-    ///
-    /// # Safety
-    /// This function is unsafe as it allows you to create NifTerms that outlive the NifEnv that
-    /// owns it. When using this caution must be taken that an appropriate lifetime is associated
-    /// with it.
-    pub unsafe fn new_raw<'b>(inner: NIF_TERM) -> NifTerm<'b> {
+    pub fn new(env: &'a NifEnv, inner: NIF_TERM) -> Self {
         NifTerm {
             term: inner,
-            env_life: PhantomData,
-        }
-    }
-    pub fn new(_env: &'a NifEnv, inner: NIF_TERM) -> Self {
-        NifTerm {
-            term: inner,
-            env_life: PhantomData
+            env: env,
         }
     }
     /// This extracts the raw term pointer. It is usually used in order to obtain a type that can
     /// be passed to calls into the erlang vm.
     pub fn as_c_arg(&self) -> NIF_TERM {
         self.term
+    }
+
+    pub fn get_env(&self) -> &NifEnv {
+        self.env
+    }
+
+    pub fn lifetime_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        NifTerm::new(env, self.as_c_arg())
     }
 }
 

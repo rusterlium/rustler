@@ -34,7 +34,7 @@ pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
 
     let field_decoders: Vec<P<Expr>> = fields.iter().enumerate().map(|(idx, _field)| {
         quote_expr!(cx,
-            match rustler::NifDecoder::decode(terms[$idx], env) {
+            match rustler::NifDecoder::decode(terms[$idx]) {
                 Ok(res) => res,
                 Err(err) => return Err(err),
             }
@@ -54,8 +54,8 @@ pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
 
     let decoder_ast = quote_item!(cx,
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
-            fn decode(term: rustler::NifTerm<'a>, env: &rustler::NifEnv) -> Result<Self, rustler::NifError> {
-                let terms = try!(rustler::tuple::get_tuple(env, term));
+            fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
+                let terms = try!(rustler::tuple::get_tuple(term));
                 if terms.len() != $field_num {
                     return Err(rustler::NifError::BadArg);
                 }

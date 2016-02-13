@@ -76,9 +76,9 @@ impl<'a> NifBinary<'a> {
             term: term,
         }
     }
-    pub fn from_term(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
+    pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { ruster_unsafe::enif_inspect_binary(env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
+        if unsafe { ruster_unsafe::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
             return Err(NifError::BadArg);
         }
         Ok(NifBinary {
@@ -95,7 +95,7 @@ impl<'a> NifBinary<'a> {
 }
 
 impl<'a> NifDecoder<'a> for NifBinary<'a> {
-    fn decode(term: NifTerm<'a>, env: &NifEnv) -> Result<Self, NifError> {
-        NifBinary::from_term(term, env)
+    fn decode(term: NifTerm<'a>) -> Result<Self, NifError> {
+        NifBinary::from_term(term)
     }
 }
