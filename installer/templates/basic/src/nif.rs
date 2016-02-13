@@ -12,7 +12,7 @@ rustler_export_nifs!(
 );
 
 fn add<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
-    let num1: i64 = try!(NifDecoder::decode(args[0], env));
-    let num2: i64 = try!(NifDecoder::decode(args[1], env));
+    let num1: i64 = try!(NifDecoder::decode(args[0]));
+    let num2: i64 = try!(NifDecoder::decode(args[1]));
     Ok((num1 + num2).encode(env))
 }
