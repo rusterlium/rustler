@@ -1,5 +1,5 @@
 use ::syntax::ptr::P;
-use ::syntax::ast::{MetaItem, Item_, Ident, StructField, VariantData, Expr, Stmt};
+use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData, Expr, Stmt};
 use ::syntax::codemap::{Span};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
 use ::syntax::ext::build::AstBuilder;
@@ -25,7 +25,7 @@ pub fn transcoder_decorator(
 
     match annotatable {
         &Annotatable::Item(ref item) => match &item.node {
-            &Item_::ItemStruct(VariantData::Struct(ref fields, _), ref generics) => {
+            &ItemKind::Struct(VariantData::Struct(ref fields, _), ref generics) => {
                 if generics.lifetimes.len() > 1 {
                     cx.span_err(span, "struct can only have one lifetime argument");
                     return;
@@ -85,7 +85,7 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_module_name: &str, has_lifetime: bool) -> Annotatable {
     let builder = ::aster::AstBuilder::new();
 
-    let field_defs: Vec<P<Stmt>> = fields.iter().map(|field| {
+    let field_defs: Vec<Stmt> = fields.iter().map(|field| {
         let field_ident = builder.id(field.node.ident().unwrap());
         let field_ident_str = field_ident.name.as_str();
         quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 

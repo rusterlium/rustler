@@ -3,7 +3,7 @@ use easy_plugin::{PluginResult};
 use ::syntax::codemap::{Span, Spanned};
 use ::syntax::ptr::P;
 use ::syntax::parse::token::{Token, DelimToken, Lit, IdentStyle};
-use ::syntax::ast::{TokenTree, Lit_, Delimited, Ident, Expr, Item};
+use ::syntax::ast::{LitKind, TokenTree, Delimited, Ident, Expr, Item};
 use ::syntax::ext::base::{ExtCtxt, MacResult, MacEager};
 use ::syntax::ext::build::AstBuilder;  // trait for expr_usize
 use ::rustc_plugin::Registry;
@@ -13,9 +13,9 @@ use ::syntax::util::small_vector::{SmallVector};
 use ::std::ascii::AsciiExt;
 use ::std::ffi::CString;
 
-fn string_from_spanned_literal(span: &Spanned<Lit_>, ascii_only: bool) -> PluginResult<String> {
+fn string_from_spanned_literal(span: &Spanned<LitKind>, ascii_only: bool) -> PluginResult<String> {
     let string = try!(match span {
-        &Spanned { node: Lit_::LitStr(ref string, _), span: _ } => Ok(string.to_string()),
+        &Spanned { node: LitKind::Str(ref string, _), span: _ } => Ok(string.to_string()),
         _ => Err((span.span.clone(), "must be string literal".to_string())),
     });
     if ascii_only && !string.is_ascii() {

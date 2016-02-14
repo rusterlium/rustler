@@ -1,5 +1,5 @@
 use ::syntax::ptr::P;
-use ::syntax::ast::{MetaItem, Item_, Ident, StructField, VariantData, Expr};
+use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData, Expr};
 use ::syntax::codemap::{Span};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
 use ::syntax::ext::build::AstBuilder;
@@ -13,7 +13,7 @@ pub fn transcoder_decorator(
 ) {
     match annotatable {
         &Annotatable::Item(ref item) => match &item.node {
-            &Item_::ItemStruct(VariantData::Struct(ref fields, _), ref generics) => {
+            &ItemKind::Struct(VariantData::Struct(ref fields, _), ref generics) => {
                 if generics.lifetimes.len() > 1 {
                     cx.span_err(span, "struct can only have one lifetime argument");
                     return;

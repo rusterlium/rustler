@@ -2,7 +2,7 @@
 name = "rustler"
 description = "Safe Rust wrappers for creating Erlang NIF functions"
 repository = "https://github.com/hansihe/Rustler"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Hansihe <me@hansihe.com>"]
 license = "BSD-2-Clause"
 
