@@ -16,138 +16,14 @@
 //! rustler_codegen library.
 //!
 //! # Getting Started
-//! When starting a project with Rustler, the first thing we need is Rust itself. Because this
-//! library uses compiler plugins for code generation, we need the nightly version of the rust
-//! compiler.  Rust nightly can be installed by following [the instructions on the install
-//! page](https://www.rust-lang.org/downloads.html#nightly). When using rust for more than testing,
-//! it is recommended to use [multirust](https://github.com/brson/multirust), which takes care of
-//! downloading, installing, updating and switching between different versions of rust.
-//! 
-//! ## Setting up the project
-//! Creating and managing a rust project is done with the `cargo` command line utility. Creating a
-//! new project is done with `cargo new <project_name>`. This will create a new folder with the
-//! project name, which contains the initial scaffold for a rust project.
+//! Rustler has a Mix archive that provides several commands which makes working with Rustler
+//! easier, including project generators, a tool for validating your Rust and Erlang environment,
+//! as well as build utilities. 
 //!
-//! Before we start writing rust code for our NIFs, we need to add the dependencies to the
-//! `Cargo.toml` file, as well as specify that we want to generate a dynamically linked library for
-//! the BEAM to load. Your `Cargo.toml` file should something like this when done:
-//!
-//! ```
-//! [package]
-//! name = "<project_name>"
-//! version = "0.1.0"
-//! authors = ["<you>"]
-//! 
-//! [lib]
-//! name = "<library name>"
-//! path = "src/lib.rs"
-//! crate_type = ["dylib"]
-//! 
-//! [dependencies]
-//! rustler = ">=0.5"
-//! rustler_codegen = ">=0.5"
-//! ```
-//! 
-//! At this point we can try running `cargo test` to verify that our project compiles, and to run
-//! the automatically generated test.
-//!
-//! ## Writing our NIF
-//! As we specified in the `Cargo.toml` file, the entry point to our NIF library is located at
-//! `src/lib.rs`. This file was automatically generated when we created the project. By default
-//! this file contains one test. Feel free to delete the test for now.
-//!
-//! To import the rustler library, add these lines to the top of the `lib.rs` file:
-//! 
-//! ```
-//! #![feature(plugin)]
-//! #![plugin(rustler_codegen)]
-//! 
-//! extern crate rustler;
-//! use rustler::{NifEnv, NifTerm, NifError, NifResult, NifDecoder, NifEncoder};
-//! ```
-//!
-//! To create a basic NIF, we need to add two more things to our `lib.rs` file, a function to
-//! execute, and the nif export. 
-//!
-//! ```
-//! rustler_export_nifs!(
-//!     "Elixir.OurNifModule",
-//!     [("square", 1, square)],
-//!     None
-//! );
-//!
-//! fn square<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
-//!     Err(NifError::BadArg)
-//! }
-//! ```
-//! 
-//! The first parameter in the `rustler_export_nifs!` macro is the name of the module we want to
-//! register our NIF in. Since all Elixir modules are prefixed with `Elixir`, this will register
-//! the nif library in the `OurNifModule` Elixir module.
-//! 
-//! The second argument is a list of tuples representing the functions we want to export. Each
-//! tuple consists of 3 elements, the name of the function as exposed to Erlang, the arity of our
-//! function, and the identifier of the function we define below.
-//! 
-//! The third argument is a function that will be executed when the NIF library is loaded. This is
-//! optional, and we will pass None fow now.
-//!
-//! We also define the `square` function itself. The function takes two arguments, and returns a
-//! result. The first argument is the nif environment, which represents the process the NIF is
-//! called in. The second argument is a list of terms. This list will always be of the same length
-//! as the arity we specified in the `rustler_export_nifs!` entry.
-//!
-//! The return type is either a NifTerm or a NifError. Right now we simply return a BadArg error.
-//!
-//! ## Running our NIF
-//! At this point our project should successfully compile with the `cargo build` command, and
-//! output a dynamically linked library that can be loaded by the BEAM.
-//!
-//! To test our NIF, we will write a simple `exs` script that loads and runs our NIF, we will name
-//! this file `run.exs`, and we will place it in our project root directory.
-//!
-//! ```elixir
-//! defmodule OurNifModule do
-//!     @on_load {:init, 0}
-//!
-//!     def init do
-//!         path = :filelib.wildcard('target/{debug,release}/lib<library_name>.*') |> hd 
-//!             |> :filename.rootname
-//!         :ok = :erlang.load_nif(path, 0)
-//!         :ok
-//!     end
-//!     
-//!     def square(_a), do: exit(:nif_not_loaded)
-//! end
-//! 
-//! IO.inspect OurNifModule.square(12)
-//! ```
-//!
-//! The Elixir code for running the NIF is very simple. We specify that we want our init function
-//! to run when the module is first loaded by using the @on_load attribute. In our init function we
-//! first find the path of the dynalically loaded library we genrated earlier when running `cargo
-//! build`. We then call `:erlang.load_nif/2 with our path and some optional data.
-//!
-//! If we try running it we will see that the OurNifModule.square function returns badarg. This is
-//! correct, as that is the error we returned from our rust function.
-//!
-//! ## Making our NIF useful
-//! Our nif now runs, but it doesn't really do anything useful yet. In order to do anything useful,
-//! we need to be able to accept input and produce output. This is generally done through the
-//! [NifEncoder](trait.NifEncoder.html) and [NifDecoder](trait.NifDecoder.html) traits.
-//!
-//! Let's try to extract number from the args. As rust is very close to the metal, and uses
-//! native types, while erlangs type system is a bit more lenient, we need to inform rust what type
-//! we want to extract from the term. If we type annotate the variable we put the decoded value
-//! into, the rust compiler is smart enough to propagate the type information, and everything else
-//! is handled for us.
-//!
-//! ```
-//! fn square<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
-//!     let number: i64 = NifDecoder::decode(args[0], env);
-//!     Ok(NifEncoder::encode(number * number))
-//! }
-//! ```
+//! As long as you have Elixir and Mix installed, you can install the archive by doing `mix
+//! archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez`.
+//! When the archive is installed, you can generate a new Rustler project by doing `mix rustler.new
+//! <path>`, and following the instructions.
 
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};
