@@ -13,11 +13,22 @@ use std::marker::PhantomData;
 use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 
+/// The NifResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
+/// is for. It serves as a holder for the information needed to interact with the Erlang VM about
+/// the resource type.
+/// 
+/// This is usually stored in an implementation of NifResourceTypeProvider.
 pub struct NifResourceType<T> {
     pub res: NIF_RESOURCE_TYPE,
     pub struct_type: PhantomData<T>,
 }
 
+/// This trait gets implemented for the type we want to put into a resource when a type
+/// is annotated with #[NifResource]. set_type is then later called on it by the
+/// resource_struct_init! macro when the type is made in on_load. It provides the 
+/// destructor and the NifResourceType.
+/// 
+/// In most cases the user should not have to worry about this.
 pub trait NifResourceTypeProvider: Sized {
     fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: NIF_RESOURCE_HANDLE);
     fn get_type<'a>() -> &'a NifResourceType<Self>;
@@ -35,6 +46,8 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider+
     }
 }
 
+/// This is the function that gets called from resource_struct_init! in on_load to create a new
+/// resource type.
 pub fn open_struct_resource_type<T: NifResourceTypeProvider>(env: &NifEnv, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
@@ -62,6 +75,8 @@ pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *mut c_void) -> *mut c_void {
 
 use std::sync::RwLock;
 
+/// This is the struct that holds a reference to a resource. It increments the refcounter for the
+/// resource instance on creation, and decrements when dropped.
 pub struct ResourceCell<T> where T: NifResourceTypeProvider {
     raw: *mut c_void,
     inner: *mut RwLock<T>,
@@ -69,6 +84,8 @@ pub struct ResourceCell<T> where T: NifResourceTypeProvider {
 
 use std::sync::{LockResult, RwLockReadGuard, RwLockWriteGuard};
 impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
+    /// Makes a new ResourceCell from the given type. Note that the type must have
+    /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<RwLock<T>>();
         let mem_raw = ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size);
@@ -114,6 +131,8 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
 }
 
 impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
+    /// For a ResourceCell this will simply increment the refcounter for the resource instance and
+    /// perform a fairly standard clone.
     fn clone(&self) -> Self {
         ::wrapper::resource::keep_resource(self.raw);
         ResourceCell {
@@ -124,6 +143,8 @@ impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
 }
 
 impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
+    /// When drop is called for a ResourceCell, the reference held to the resource by the Cell is
+    /// released.
     fn drop(&mut self) {
         unsafe { ::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
     }
