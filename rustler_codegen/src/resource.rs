@@ -22,7 +22,7 @@ pub fn resource_struct_def_decorator(
     // Static field for Nif Resource Type (Set in resource_struct_init!)
     push(Annotatable::Item(quote_item!(cx,
         #[allow(non_snake_case)]
-        static mut $type_field_name: Option<::rustler::resource::NifStructResourceType<$struct_ident>> = None;
+        static mut $type_field_name: Option<::rustler::resource::NifResourceType<$struct_ident>> = None;
     ).unwrap()));
 
     // Destructor for the type
@@ -34,17 +34,17 @@ pub fn resource_struct_def_decorator(
         }
     ).unwrap()));
 
-    // NifResourceStruct trait implementation
+    // NifResourceTypeProvider trait implementation
     push(Annotatable::Item(quote_item!(cx,
-        impl ::rustler::resource::NifResourceStruct for $struct_ident {
+        impl ::rustler::resource::NifResourceTypeProvider for $struct_ident {
             fn get_dtor() -> extern "C" fn(_env: ::rustler::wrapper::nif_interface::NIF_ENV, 
                                            handle: ::rustler::wrapper::nif_interface::NIF_RESOURCE_HANDLE) {
                 $dtor_name_ident
             }
-            fn get_type<'a>() -> &'a ::rustler::resource::NifStructResourceType<Self> {
+            fn get_type<'a>() -> &'a ::rustler::resource::NifResourceType<Self> {
                 unsafe { &$type_field_name }.as_ref().unwrap()
             }
-            unsafe fn set_type(typ: ::rustler::resource::NifStructResourceType<Self>) {
+            unsafe fn set_type(typ: ::rustler::resource::NifResourceType<Self>) {
                 $type_field_name = Some(typ)
             }
         }
@@ -79,7 +79,7 @@ easy_plugin! {
                 }
             };
             unsafe {
-                use ::rustler::resource::NifResourceStruct;
+                use ::rustler::resource::NifResourceTypeProvider;
                 $struct_ident::set_type(res);
             };
         }).unwrap();
