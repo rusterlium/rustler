@@ -32,14 +32,12 @@ pub fn transcoder_decorator(
 pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, is_tuple: bool, has_lifetime: bool) -> Annotatable {
     let builder = ::aster::AstBuilder::new();
 
+    // Make a decoder for each of the fields in the struct.
     let field_decoders: Vec<P<Expr>> = fields.iter().enumerate().map(|(idx, _field)| {
-        quote_expr!(cx,
-            match rustler::NifDecoder::decode(terms[$idx]) {
-                Ok(res) => res,
-                Err(err) => return Err(err),
-            }
-        )
+        quote_expr!(cx, try!(rustler::NifDecoder::decode(terms[$idx])))
     }).collect();
+
+    // Generate the struct constructor for the correct struct type (either tuple or named)
     let struct_def_ast = if is_tuple {
         unimplemented!();
     } else {
@@ -49,9 +47,15 @@ pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
         builder.expr().struct_path(struct_name.clone()).with_id_exprs(fields_def).build()
     };
 
-    let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'a>) } else { quote_ty!(cx, $struct_name) };
+    // If the struct has a lifetime argument, put that in the struct type.
+    let struct_typ = if has_lifetime { 
+        quote_ty!(cx, $struct_name<'a>) 
+    } else { 
+        quote_ty!(cx, $struct_name) 
+    };
     let field_num = field_decoders.len();
 
+    // The implementation itself
     let decoder_ast = quote_item!(cx,
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
             fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
@@ -69,6 +73,7 @@ pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
 pub fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, is_tuple: bool, has_lifetime: bool) -> Annotatable {
     let builder = ::aster::AstBuilder::new();
 
+    // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<P<Expr>> = fields.iter().map(|field| {
         let field_source = if is_tuple {
             unimplemented!();
@@ -79,9 +84,17 @@ pub fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
         quote_expr!(cx, $field_source.encode(env))
     }).collect();
 
+    // Build a slice ast from the field_encoders
     let arr_expr = builder.expr().slice().with_exprs(field_encoders).build();
-    let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'b>) } else { quote_ty!(cx, $struct_name) };
 
+    // If the struct has a lifetime argument, put that in the struct type.
+    let struct_typ = if has_lifetime { 
+        quote_ty!(cx, $struct_name<'b>) 
+    } else { 
+        quote_ty!(cx, $struct_name) 
+    };
+
+    // The implementation itself
     let encoder_ast = quote_item!(cx,
         impl<'b> rustler::NifEncoder for $struct_typ {
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {

@@ -111,16 +111,40 @@ impl<'a> NifTerm<'a> {
         self.env
     }
 
-    pub fn lifetime_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    /// This will coerce the NifTerm into the given NifEnv without providing any checks
+    /// or other operations. This is unsafe as it allows you to make a NifTerm usable
+    /// on an env other then the one that owns it.
+    /// 
+    /// The one case where this is acceptable to use is when we already know the NifEnv
+    /// is the same, but we need to coerce the lifetime.
+    pub unsafe fn env_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
         NifTerm::new(env, self.as_c_arg())
     }
 
+    /// Returns a representation of self in the given NifEnv.
+    ///
+    /// If the term is already is in the provided env, it will be directly returned. Otherwise
+    /// the term will be copied over.
     pub fn in_env<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
         if self.get_env() == env {
-            self.lifetime_cast(env)
+            unsafe { self.env_cast(env) }
         } else {
             NifTerm::new(env, wrapper::copy_term(env.as_c_arg(), self.as_c_arg()))
         }
+    }
+
+    /// Decodes the NifTerm into type T.
+    /// 
+    /// This should be used as the primary method of extracting the value from a NifTerm.
+    /// 
+    /// # Examples
+    ///
+    /// ```ignore
+    /// let term: NifTerm = ...;
+    /// let number: i32 = try!(term.decode());
+    /// ```
+    pub fn decode<T>(self) -> NifResult<T> where T: NifDecoder<'a> {
+        NifDecoder::decode(self)
     }
 }
 

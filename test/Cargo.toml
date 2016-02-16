@@ -10,3 +10,5 @@ crate-type = ["dylib"]
 
 [dependencies.rustler]
 path = "../"
+[dependencies.rustler_codegen]
+path = "../rustler_codegen/"

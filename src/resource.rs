@@ -26,7 +26,7 @@ pub trait NifResourceStruct: Sized {
 
 impl<'b, T> NifEncoder for ResourceTypeHolder<'b, T> where T: NifResourceStruct+'b {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
-        self.as_term().lifetime_cast(env)
+        self.as_term().in_env(env)
     }
 }
 impl<'a, T> NifDecoder<'a> for ResourceTypeHolder<'a, T> where T: NifResourceStruct+'a {
