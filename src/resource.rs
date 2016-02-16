@@ -114,6 +114,17 @@ impl<'a, T> ResourceTypeHolder<'a, T> where T: NifResourceStruct {
     }
 }
 
+impl<'a, T> Clone for ResourceTypeHolder<'a, T> where T: NifResourceStruct {
+    fn clone(&self) -> Self {
+        ::wrapper::resource::keep_resource(self.raw);
+        ResourceTypeHolder {
+            raw: self.raw,
+            inner: self.inner,
+            env: self.env,
+        }
+    }
+}
+
 impl<'a, T> Drop for ResourceTypeHolder<'a, T> where T: NifResourceStruct {
     fn drop(&mut self) {
         unsafe { ::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
