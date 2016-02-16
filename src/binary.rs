@@ -1,6 +1,6 @@
 extern crate ruster_unsafe;
 
-use super::{ NifEnv, NifError, NifTerm, NifEncoder, NifDecoder };
+use super::{ NifEnv, NifError, NifTerm, NifDecoder };
 use libc::{ size_t, c_void };
 use std::mem::uninitialized;
 use ::wrapper::nif_interface::NIF_TERM;

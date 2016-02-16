@@ -1,6 +1,6 @@
 //! Functions used by runtime generated code. Should not be used.
 
-use ::{NifEnv, NifTerm, NifError};
+use ::{NifEnv, NifTerm};
 pub use ::libc::{c_void, c_int};
 use ::atom::get_atom_init;
 //use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
