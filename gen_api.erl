@@ -9,7 +9,12 @@
 %% the Windows callback struct keeps proper integrity.  Such functions
 %% must begin with "dummy."
 %%
-api_list(Version, UlongSize, HasDirtySchedulers) when Version=={2,7} orelse Version=={2,8} -> [
+
+api_list(Version, UlongSize, HasDirtySchedulers)
+  when Version =:= {2,7};
+       Version =:= {2,8};
+       Version =:= {2,9};
+       Version =:= {2,10} -> [
 
     {"*mut c_void", "enif_priv_data", "arg1: *mut ErlNifEnv"},
     {"*mut c_void", "enif_alloc", "size: size_t"},
@@ -188,13 +193,33 @@ api_list(Version, UlongSize, HasDirtySchedulers) when Version=={2,7} orelse Vers
 
 
 
-    case Version of
-        {2,8} -> [
+    case lists:member(Version, [{2,8}, {2,9}, {2,10}]) of
+        true -> [
             {"c_int", "enif_has_pending_exception", "env: *mut ErlNifEnv, reason: *mut ERL_NIF_TERM"},
             {"ERL_NIF_TERM", "enif_raise_exception", "env: *mut ErlNifEnv, reason: ERL_NIF_TERM"}
         ];
-        _ -> []
+        false -> []
     end ++
+
+
+
+    case lists:member(Version, [{2,9}, {2,10}]) of
+        true -> [
+            {"c_int", "enif_getenv", "key: *const c_uchar, value: *mut c_uchar, value_size: *mut size_t"}
+        ];
+        false -> []
+    end ++
+
+
+    case lists:member(Version, [{2,10}]) of
+        true -> [
+            {"ErlNifTime", "enif_monotonic_time", "unit: ErlNifTimeUnit"},
+            {"ErlNifTime", "enif_time_offset", "unit: ErlNifTimeUnit"},
+            {"ErlNifTime", "enif_convert_time_unit", "time: ErlNifTime, from_unit: ErlNifTimeUnit, to_unit: ErlNifTimeUnit"}
+        ];
+        false -> []
+    end ++
+
 
     case HasDirtySchedulers of
         true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
@@ -305,10 +330,12 @@ get_nif_version() ->
 
 version_string2tuple("2.7") -> {2,7};
 version_string2tuple("2.8") -> {2,8};
+version_string2tuple("2.9") -> {2,9};
+version_string2tuple("2.10") -> {2,10};
 version_string2tuple(_) -> unsupported.
 
 check_version(unsupported) ->
-        io:format("Unsupported Erlang version.\n"),
+        io:format("Unsupported Erlang version.\nPlease report to get this version supported.\n"),
         halt(1);
 check_version(Version = {_,_}) -> Version.
 
