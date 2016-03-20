@@ -280,6 +280,23 @@ pub enum ErlNifMapIteratorEntry {
     ERL_NIF_MAP_ITERATOR_TAIL = 2,
 }
 
+/// See [ErlNifTime](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTime) in the Erlang docs.
+pub type ErlNifTime = i64;
+
+/// Error return value for `enif_monotonic_time()`, `enif_time_offset()`, and `enif_convert_time_unit()`.
+pub const ERL_NIF_TIME_ERROR:i64 = -9223372036854775808;
+//const ERL_NIF_TIME_ERROR:i64 = i64::min_value();  "error: const fn's not yet stable"
+
+/// See [ErlNifTimeUnit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTimeUnit) in the Erlang docs.
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub enum ErlNifTimeUnit {
+    // values yanked from https://github.com/erlang/otp/blob/7cb403e4aa044fd2cc7702dbe8e2d0eea68e81f3/erts/emulator/beam/erl_drv_nif.h#L132
+    ERL_NIF_SEC  = 0,
+    ERL_NIF_MSEC = 1,
+    ERL_NIF_USEC = 2,
+    ERL_NIF_NSEC = 3,
+}
 
 
 include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));

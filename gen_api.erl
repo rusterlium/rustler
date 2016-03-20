@@ -210,6 +210,15 @@ api_list(Version, Wordsize, HasDirtySchedulers)
     end ++
 
 
+    case lists:member(Version, [{2,10}]) of
+        true -> [
+            {"ErlNifTime", "enif_monotonic_time", "unit: ErlNifTimeUnit"},
+            {"ErlNifTime", "enif_time_offset", "unit: ErlNifTimeUnit"},
+            {"ErlNifTime", "enif_convert_time_unit", "time: ErlNifTime, from_unit: ErlNifTimeUnit, to_unit: ErlNifTimeUnit"}
+        ];
+        false -> []
+    end ++
+
 
     case HasDirtySchedulers of
         true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
@@ -322,6 +331,6 @@ version_string2tuple("2.10") -> {2,10};
 version_string2tuple(_) -> unsupported.
 
 check_version(unsupported) ->
-        io:format("Unsupported Erlang version.\n"),
+        io:format("Unsupported Erlang version.\nPlease report to get this version supported.\n"),
         halt(1);
 check_version(Version = {_,_}) -> Version.
