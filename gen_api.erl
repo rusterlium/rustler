@@ -272,8 +272,7 @@ nif_version_rust(Major, Minor) ->
      io_lib:format("pub const NIF_MINOR_VERSION: c_int = ~p;\n\n", [Minor])].
 
 api_bindings_rust("win32", Entries) ->
-    [ "#[allow(raw_pointer_derive)]\n",
-      "#[derive(Copy, Clone)]\n",
+    [ "#[derive(Copy, Clone)]\n",
       "pub struct TWinDynNifCallbacks {\n",
             [ case Return of
                   "" ->
