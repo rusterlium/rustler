@@ -10,12 +10,34 @@
 %% must begin with "dummy."
 %%
 
-api_list(Version, UlongSize, HasDirtySchedulers)
-  when Version =:= {2,7};
-       Version =:= {2,8};
-       Version =:= {2,9};
-       Version =:= {2,10} -> [
+-type api_opt() ::
+    exception              |  % enif_xxx_exception() functions
+    getenv                 |  % enif_getenv() functions
+    time                   |  % new timer API
+    {ulongsize, integer()} |  % number of bytes in a C ulong
+    dirty_schedulers       .  % enif_is_on_dirty_scheduler()
 
+
+version_opts("2.7")  -> [{major,2}, {minor,7} ];                           % erlang 17.3
+version_opts("2.8")  -> [{major,2}, {minor,8},  exception];                % erlang 18.0
+version_opts("2.9")  -> [{major,2}, {minor,9},  exception, getenv];        % erlang 18.2
+version_opts("2.10") -> [{major,2}, {minor,10}, exception, getenv, time];  % erlang 18.3
+version_opts(_) ->
+    io:format("Unsupported Erlang version.\nPlease report to get this version supported.\n"),
+    halt(1).
+
+ulong_opts("4") -> [{ulongsize, 4}];
+ulong_opts("8") -> [{ulongsize, 8}].
+
+dirty_scheduler_opts() ->
+    case catch erlang:system_info(dirty_cpu_schedulers) of
+                                 _X when is_integer(_X) -> [dirty_schedulers];
+                                 _ -> []
+                             end.
+
+
+-spec api_list([api_opt()]) -> [term()].
+api_list(Opts) -> [
     {"*mut c_void", "enif_priv_data", "arg1: *mut ErlNifEnv"},
     {"*mut c_void", "enif_alloc", "size: size_t"},
     {"", "enif_free", "ptr: *mut c_void"},
@@ -157,7 +179,7 @@ api_list(Version, UlongSize, HasDirtySchedulers)
     {"ERL_NIF_TERM", "enif_make_resource_binary", "arg1: *mut ErlNifEnv, obj: *mut c_void, data: *const c_void, size: size_t"}
     ] ++
 
-    case UlongSize of
+    case proplists:get_value(ulongsize, Opts) of
         8 -> [];
         4 ->
             [
@@ -192,8 +214,7 @@ api_list(Version, UlongSize, HasDirtySchedulers)
     ] ++
 
 
-
-    case lists:member(Version, [{2,8}, {2,9}, {2,10}]) of
+    case proplists:get_bool(exception, Opts) of
         true -> [
             {"c_int", "enif_has_pending_exception", "env: *mut ErlNifEnv, reason: *mut ERL_NIF_TERM"},
             {"ERL_NIF_TERM", "enif_raise_exception", "env: *mut ErlNifEnv, reason: ERL_NIF_TERM"}
@@ -203,7 +224,7 @@ api_list(Version, UlongSize, HasDirtySchedulers)
 
 
 
-    case lists:member(Version, [{2,9}, {2,10}]) of
+    case proplists:get_bool(getenv, Opts) of
         true -> [
             {"c_int", "enif_getenv", "key: *const c_uchar, value: *mut c_uchar, value_size: *mut size_t"}
         ];
@@ -211,7 +232,7 @@ api_list(Version, UlongSize, HasDirtySchedulers)
     end ++
 
 
-    case lists:member(Version, [{2,10}]) of
+    case proplists:get_bool(time, Opts) of
         true -> [
             {"ErlNifTime", "enif_monotonic_time", "unit: ErlNifTimeUnit"},
             {"ErlNifTime", "enif_time_offset", "unit: ErlNifTimeUnit"},
@@ -221,45 +242,33 @@ api_list(Version, UlongSize, HasDirtySchedulers)
     end ++
 
 
-    case HasDirtySchedulers of
+    case proplists:get_bool(dirty_schedulers, Opts) of
         true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
         false -> []
     end.
 
 
+
 main([UlongSizeT]) -> main([UlongSizeT,"."]);
 main([UlongSizeT, OutputDir]) ->
-
-    UlongSize = case UlongSizeT of
-        "4" -> 4;
-        "8" -> 8
-    end,
-
-    %% Collect and check erlang configuration
-    Version = get_nif_version(),
-    check_version(Version),
-
-    HasDirtySchedulers = case catch erlang:system_info(dirty_cpu_schedulers) of
-                             _X when is_integer(_X) -> true;
-                             _ -> false
-                         end,
-
+    %% Round up all configuration options
+    Version = (catch erlang:system_info(nif_version)),
+    Opts = version_opts(Version) ++ ulong_opts(UlongSizeT) ++ dirty_scheduler_opts(),
     %% Generate API list
-    Entries = api_list(Version, UlongSize, HasDirtySchedulers),
-
+    Entries = api_list(Opts),
     %% Generate Rust code
     Rust = [
-        nif_version_rust(Version),
+        nif_version_rust(proplists:get_value(major, Opts), proplists:get_value(minor, Opts)),
         api_bindings_rust(erlang:system_info(system_architecture), Entries),
-        int64_mappers_rust(UlongSize)
+        int64_mappers_rust(proplists:get_value(ulongsize, Opts))
     ],
-
+    %% And write it
     Filename = filename:join(OutputDir, "nif_api.snippet"),
     file:write_file(Filename, Rust),
     ok.
 
-nif_version_rust({Major, Minor}) ->
-    [io_lib:format("pub const NIF_MAJOR_VERSION: c_int = ~p;\n", [Major]),
+nif_version_rust(Major, Minor) ->
+    [io_lib:format("pub const NIF_MAJOR_VERSION: c_int = ~p;\n",   [Major]),
      io_lib:format("pub const NIF_MINOR_VERSION: c_int = ~p;\n\n", [Minor])].
 
 api_bindings_rust("win32", Entries) ->
@@ -276,7 +285,7 @@ api_bindings_rust("win32", Entries) ->
             "}\n\n",
 
             % The line below would be the "faithful" reproduction of the NIF Win API, but Rust
-            % is current not allowing statics to be uninitialized (1.3 beta).  Revisit this when
+            % is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
             % RFC911 is implemented (or some other mechanism)
             %"static mut WinDynNifCallbacks:TWinDynNifCallbacks = unsafe{std::mem::uninitialized()};\n\n",
 
@@ -323,22 +332,6 @@ strip_types_from_params(Params) ->
 join(List, Joiner) -> join([], List, Joiner).
 join(Acc, [H], _Joiner) -> lists:reverse([H|Acc]);
 join(Acc, [H|T], Joiner) -> join([Joiner, H|Acc], T, Joiner).
-
-get_nif_version() ->
-    Ver = (catch erlang:system_info(nif_version)),
-    version_string2tuple(Ver).
-
-version_string2tuple("2.7") -> {2,7};
-version_string2tuple("2.8") -> {2,8};
-version_string2tuple("2.9") -> {2,9};
-version_string2tuple("2.10") -> {2,10};
-version_string2tuple(_) -> unsupported.
-
-check_version(unsupported) ->
-        io:format("Unsupported Erlang version.\nPlease report to get this version supported.\n"),
-        halt(1);
-check_version(Version = {_,_}) -> Version.
-
 
 %% These functions are defined in the API above when sizeof(ulong)==8, or they map to
 %% long/ulong functions when sizeof(ulong)==4.
