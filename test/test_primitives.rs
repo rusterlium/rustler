@@ -6,7 +6,7 @@ extern crate rustler;
 use rustler::{NifEnv, NifTerm, NifError, NifEncoder, NifResult};
 
 rustler_export_nifs!(
-    "Elixir.RustlerNative",
+    "Elixir.PrimitivesTestNative",
     [("add_u32", 2, add_u32),
      ("add_i32", 2, add_i32),
      ("tuple_add", 1, tuple_add)],
@@ -30,4 +30,9 @@ fn add_i32<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
 fn tuple_add<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
     let tuple: AddTuple = try!(args[0].decode());
     Ok((tuple.lhs + tuple.rhs).encode(env))
+}
+
+fn echo_u8<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
+    let num: u8 = try!(args[0].decode());
+    Ok(num.encode(env))
 }

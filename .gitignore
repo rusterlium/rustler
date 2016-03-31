@@ -29,6 +29,7 @@ Cargo.lock
 /rustler_codegen/Cargo.lock
 
 /_build
+/test/_build
 /cover
 /deps
 erl_crash.dump

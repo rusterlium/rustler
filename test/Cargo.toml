@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["HansiHE <hansihe@hansihe.com>"]
 
 [lib]
-name = "rustler_test"
-path = "test.rs"
+name = "test_primitives"
+path = "test_primitives.rs"
 crate-type = ["dylib"]
 
 [dependencies.rustler]
