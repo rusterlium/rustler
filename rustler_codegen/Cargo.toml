@@ -10,7 +10,7 @@ license = "BSD-2-Clause"
 plugin = true
 
 [dependencies]
-easy-plugin = "0.2.9"
+easy-plugin = "0.3.0"
 aster = "0.14.0"
 
 #[dependencies.aster]
