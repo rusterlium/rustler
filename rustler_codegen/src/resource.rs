@@ -67,7 +67,7 @@ easy_plugin! {
 
         let env_ident = arguments.env;
         let struct_ident = arguments.struct_ident;
-        let struct_ident_str = &*struct_ident.name.as_str();
+        let struct_ident_str = &*struct_ident.node.name.as_str();
         //let type_field_name_ident = builder.id(["_rustler_nif_struct_type_", struct_ident_str].concat());
         let init_item = quote_stmt!(cx, {
             let res = match ::rustler::resource::open_struct_resource_type::<$struct_ident>($env_ident, $struct_ident_str, 

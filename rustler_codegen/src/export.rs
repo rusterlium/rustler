@@ -110,7 +110,7 @@ easy_plugin! {
 
         let vm_variant_expr = builder.expr().lit().byte_str(b"beam.vanilla\0".to_vec());
 
-        let funs = try!(parse_delim_fun_list(&arguments.functions));
+        let funs = try!(parse_delim_fun_list(&arguments.functions.node));
         let fun_list_entry_exprs: Vec<P<Expr>> = funs.iter().map(|x| {
             let name_c_str = CString::new((&x.name).clone()).unwrap();
             let name_bytes = name_c_str.as_bytes_with_nul();
