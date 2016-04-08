@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Rustler.Check do
 
   @shortdoc "Checks that the system has everything needed to build a Rustler project"
 
-  @supported_nif_versions ["2.7", "2.8", "2.9"]
+  @supported_nif_versions ["2.7", "2.8", "2.9", "2.10"]
 
   defmodule RustCVersion do
     defstruct major: nil, minor: nil, patch: nil, branch: nil, hash: nil, 

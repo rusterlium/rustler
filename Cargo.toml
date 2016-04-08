@@ -4,7 +4,7 @@ description = "Safe Rust wrappers for creating Erlang NIF functions"
 repository = "https://github.com/hansihe/Rustler"
 version = "0.8.0"
 authors = ["Hansihe <me@hansihe.com>"]
-license = "BSD-2-Clause"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 ruster_unsafe = ">=0.2"
