@@ -25,6 +25,8 @@ The easiest way of getting started, is using the Mix project generator.
 * Run `mix archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez` to install the tool.
 * Run `mix rustler.new <path>` and follow the instructions.
 
+NOTE: At the moment you need Rust nightly-2016-04-05. With [multirust](https://github.com/brson/multirust), you need to run `multirust override nightly-2016-04-05` in the generated project directory for things to work as expected.
+
 #### How it looks like
 This is the code for a minimal NIF that adds two numbers and returns the result.
 ```rust
