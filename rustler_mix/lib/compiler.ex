@@ -62,9 +62,19 @@ defmodule Mix.Tasks.Compile.Rustler do
     # TODO: Make build flavor specific
     Enum.map(Path.wildcard("#{target_dir}/#{compile_flavor}/lib#{lib_name}.*"), fn
       path ->
-        file_name = Path.basename(path)
+        file_name = platform_library_name(Path.basename(path))
         File.cp!(Path.absname(path), "#{Rustler.nif_lib_dir}/#{file_name}")
     end)
+  end
+
+  def platform_library_name(base_name) do
+    ext = Path.extname(base_name)
+    case ext do
+      # For macs we need to rename the .dylib so .so for the BEAM to load it.
+      # See issue #3.
+      ".dylib" -> Path.rootname(base_name) <> ".so"
+      _ -> base_name
+    end
   end
 
   def check_crate_env(crate) do
