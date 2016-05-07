@@ -1,7 +1,7 @@
 defmodule Rustler do
 
-  def rustler_version, do: "0.8.1"
-  def rust_version, do: "nightly-2016-04-05"
+  def rustler_version, do: "0.8.2"
+  def rust_version, do: "nightly-2016-05-07"
   def nif_versions, do: [
     '2.7',
     '2.8',

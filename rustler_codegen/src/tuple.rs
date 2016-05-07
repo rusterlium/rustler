@@ -42,7 +42,7 @@ pub fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
         unimplemented!();
     } else {
         let fields_def: Vec<(Ident, P<Expr>)> = field_decoders.iter().zip(fields).map(|(decoder, field)| {
-            (field.node.ident().unwrap().clone(), decoder.clone())
+            (field.ident.unwrap().clone(), decoder.clone())
         }).collect();
         builder.expr().struct_path(struct_name.clone()).with_id_exprs(fields_def).build()
     };
@@ -78,7 +78,7 @@ pub fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>,
         let field_source = if is_tuple {
             unimplemented!();
         } else {
-            let field_ident = field.node.ident().unwrap().clone();
+            let field_ident = field.ident.unwrap().clone();
             quote_expr!(cx, self.$field_ident)
         };
         quote_expr!(cx, $field_source.encode(env))

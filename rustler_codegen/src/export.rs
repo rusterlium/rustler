@@ -2,11 +2,10 @@ use easy_plugin::{PluginResult};
 
 use ::syntax::codemap::{Span, Spanned};
 use ::syntax::ptr::P;
-use ::syntax::parse::token::{Token, DelimToken, Lit, IdentStyle};
+use ::syntax::parse::token::{Token, DelimToken, Lit};
 use ::syntax::ast::{LitKind, TokenTree, Delimited, Ident, Expr, Item};
 use ::syntax::ext::base::{ExtCtxt, MacResult, MacEager};
 use ::syntax::ext::build::AstBuilder;  // trait for expr_usize
-use ::rustc_plugin::Registry;
 
 use ::syntax::util::small_vector::{SmallVector};
 
@@ -42,7 +41,7 @@ fn num_from_token(token: &TokenTree) -> PluginResult<String> {
 }
 fn ident_from_token(token: &TokenTree) -> PluginResult<String> {
     match token {
-        &TokenTree::Token(_, Token::Ident(Ident { ref name, ctxt: _ }, IdentStyle::Plain)) => Ok(name.as_str().to_string()),
+        &TokenTree::Token(_, Token::Ident(Ident { ref name, ctxt: _ })) => Ok(name.as_str().to_string()),
         _ => Err((token.get_span().clone(), "must be intent".to_string())),
     }
 }

@@ -45,7 +45,7 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     let builder = ::aster::AstBuilder::new();
 
     let field_defs: Vec<(Ident, P<Expr>)> = fields.iter().map(|field| {
-        let field_ident = builder.id(field.node.ident().unwrap());
+        let field_ident = builder.id(field.ident.unwrap());
         let field_ident_str = field_ident.name.as_str();
         let field_encoder = quote_expr!(cx, 
             match rustler::NifDecoder::decode(
@@ -86,7 +86,7 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
     let builder = ::aster::AstBuilder::new();
 
     let field_defs: Vec<Stmt> = fields.iter().map(|field| {
-        let field_ident = builder.id(field.node.ident().unwrap());
+        let field_ident = builder.id(field.ident.unwrap());
         let field_ident_str = field_ident.name.as_str();
         quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 
                                                     self.$field_ident.encode(env)).unwrap();).unwrap()

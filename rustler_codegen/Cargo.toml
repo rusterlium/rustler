@@ -2,7 +2,7 @@
 name = "rustler_codegen"
 description = "Compiler plugin for Rustler"
 repository = "https://github.com/hansihe/Rustler/tree/master/rustler_codegen"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "BSD-2-Clause"
 
@@ -10,8 +10,8 @@ license = "BSD-2-Clause"
 plugin = true
 
 [dependencies]
-easy-plugin = "=0.3.0"
-aster = "=0.14.0"
+easy-plugin = "=0.3.4"
+aster = "=0.16.0"
 
 #[dependencies.aster]
 #path = "../../rustler_vendor/aster/"

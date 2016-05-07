@@ -2,11 +2,11 @@
 name = "rustler"
 description = "Safe Rust wrappers for creating Erlang NIF functions"
 repository = "https://github.com/hansihe/Rustler"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-ruster_unsafe = ">=0.2"
+ruster_unsafe = ">=0.4"
 libc = ">=0.1"
 lazy_static = "0.1.*"
