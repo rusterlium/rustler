@@ -7,6 +7,8 @@ defmodule RustlerTest.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     compilers: [:rustler] ++ Mix.compilers,
+     rustler_crates: ["."],
      deps: deps]
   end
 
@@ -27,6 +29,6 @@ defmodule RustlerTest.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:rustler, path: "../rustler_mix"}]
   end
 end

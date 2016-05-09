@@ -48,12 +48,20 @@ pub unsafe fn enif_make_copy(dest_env: NIF_ENV, source_term: NIF_TERM) -> NIF_TE
     ruster_unsafe::enif_make_copy(dest_env, source_term)
 }
 
+// Term type checks
+pub unsafe fn enif_is_atom(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    ruster_unsafe::enif_is_atom(env, term)
+}
+pub unsafe fn enif_is_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    ruster_unsafe::enif_is_list(env, term)
+}
+pub unsafe fn enif_is_empty_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    ruster_unsafe::enif_is_empty_list(env, term)
+}
+
 // Atoms
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     ruster_unsafe::enif_make_atom_len(env, string, length)
-}
-pub unsafe fn enif_is_atom(env: NIF_ENV, term: NIF_TERM) -> c_int {
-    ruster_unsafe::enif_is_atom(env, term)
 }
 
 // Binaries
@@ -98,8 +106,16 @@ pub unsafe fn enif_make_tuple_from_array(env: NIF_ENV, terms: *const NIF_TERM, t
     ruster_unsafe::enif_make_tuple_from_array(env, terms, terms_len)
 }
 
+// List
+pub unsafe fn enif_get_list_cell(env: NIF_ENV, list: NIF_TERM, head: *mut NIF_TERM, tail: *mut NIF_TERM) -> c_int {
+    ruster_unsafe::enif_get_list_cell(env, list, head, tail)
+}
+pub unsafe fn enif_get_list_length(env: NIF_ENV, list: NIF_TERM, length: *mut c_uint) -> c_int {
+    ruster_unsafe::enif_get_list_length(env, list, length)
+}
+
 // Resources
-pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar, 
+pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar,
                                       dtor: Option<NifResourceDtor>, flags: NifResourceFlags, tried: *mut NifResourceFlags
                                       ) -> NIF_RESOURCE_TYPE {
     ruster_unsafe::enif_open_resource_type(env, module_str, name, dtor, flags, tried)

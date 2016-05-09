@@ -39,6 +39,7 @@ pub mod resource;
 pub mod binary;
 pub mod tuple;
 pub mod map;
+pub mod list;
 pub mod atom;
 pub mod codegen_runtime;
 pub mod ex_struct;
@@ -73,13 +74,13 @@ pub enum NifError {
 impl NifEncoder for NifError {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
         NifTerm::new(env, match *self {
-            NifError::BadArg => 
+            NifError::BadArg =>
                 unsafe { enif_make_badarg(env.as_c_arg()) },
             NifError::AllocFail =>
                 unsafe { enif_make_badarg(env.as_c_arg()) },
-            NifError::Atom(name) => 
-                unsafe { enif_make_atom_len(env.as_c_arg(), 
-                                            name.as_ptr() as *const u8, 
+            NifError::Atom(name) =>
+                unsafe { enif_make_atom_len(env.as_c_arg(),
+                                            name.as_ptr() as *const u8,
                                             name.len() as libc::size_t) },
         })
     }
@@ -107,7 +108,7 @@ impl<'a> NifTerm<'a> {
         self.term
     }
 
-    pub fn get_env(&self) -> &NifEnv {
+    pub fn get_env(&self) -> &'a NifEnv {
         self.env
     }
 
