@@ -2,44 +2,22 @@ defmodule NifNotLoadedError do
   defexception message: "nif not loaded"
 end
 
-defmodule TestLoadNif do
+require Rustler
 
-  defmacro __using__(opts) do
-    module_name = opts[:module]
-    {mod_name, _} = Code.eval_quoted(module_name)
+defmodule TestNative do
+  @on_load :load_nif
 
-    native_name = opts[:native]
-    functions = opts[:functions]
-
-    defmodule mod_name do
-
-      @on_load :_load_nif
-
-      quote do
-        def _load_nif do
-          :ok = :erlang.load_nif("./target/debug/lib#{unquote(native_name)}", [])
-        end
-      end
-      |> Code.eval_quoted([], __ENV__)
-
-      for {name, arity} <- functions do
-        args = Enum.map(1..arity, &(Macro.var(String.to_atom("_#{&1}"), nil)))
-        quote do
-          def unquote(name)(unquote_splicing(args)), do: throw(NifNotLoadedError)
-        end
-      end
-      |> Code.eval_quoted([], __ENV__)
-
-    end
-
-    #quote do
-    #  ExUnit.Callbacks.setup_all do
-    #    TestLoadNif.setup(unquote(module_name), unquote(native_name))
-    #    on_exit fn -> TestLoadNif.exit(unquote(module_name)) end
-    #    :ok
-    #  end
-    #end
-    nil
+  def load_nif do
+    Rustler.load_nif("test")
   end
+
+  defp err do
+    throw NifNotLoadedError
+  end
+
+  def add_u32(_, _), do: err
+  def add_i32(_, _), do: err
+  def tuple_add(_), do: err
+  def sum_list(_), do: err
 
 end

@@ -1,16 +1,15 @@
 defmodule PrimitivesTest do
   use ExUnit.Case, async: true
-  use TestLoadNif, [
-    module: PrimitivesTestNative, 
-    native: "test_primitives", 
-    functions: [
-      add_u32: 2,
-      add_i32: 2,
-      tuple_add: 1,
-    ],
-  ]
 
-  test "u8 decoding and encoding" do
-    PrimitivesTestNative.test(1, 2)
+  test "number decoding and encoding" do
+    assert 3 == TestNative.add_u32(1, 2)
+    assert 3 == TestNative.add_i32(6, -3)
+    assert -3 == TestNative.add_i32(3, -6)
+  end
+
+  test "number decoding should fail on invalid terms" do
+    assert_raise ArgumentError, fn -> TestNative.add_u32(-1, 1) end
+    assert_raise ArgumentError, fn -> TestNative.add_u32("1", 1) end
+    assert_raise ArgumentError, fn -> TestNative.add_i32(2147483648, 1) end
   end
 end

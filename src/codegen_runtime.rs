@@ -12,11 +12,11 @@ use ::{NifResult, NifEncoder};
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
-pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> NifResult<NifTerm<'a>>, 
-                       _arity: usize, r_env: NIF_ENV, 
+pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> NifResult<NifTerm<'a>>,
+                       _arity: usize, r_env: NIF_ENV,
                        argc: c_int, argv: *const NIF_TERM) -> NIF_TERM {
     let env = NifEnv { env: r_env };
-    
+
     let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
         .map(|x| NifTerm::new(&env, *x)).collect::<Vec<NifTerm>>();
 
@@ -30,7 +30,7 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> NifRes
     match result {
         Ok(res) => res,
         Err(_err) => {
-            exception::throw(env.as_c_arg(), 
+            exception::throw(env.as_c_arg(),
                              get_atom_init("nif_panic").to_term(&env).as_c_arg())
         },
     }
