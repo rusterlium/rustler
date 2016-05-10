@@ -8,7 +8,7 @@
 //! ways to crash the BEAM (Erlang VM). The library provides facilities for generating the
 //! boilerplate for interacting with the BEAM, handles encoding and decoding of Erlang terms, and
 //! catches rust panics before they unwind into C.
-//! 
+//!
 //! The library provides functionality for both Erlang and Elixir, however Elixir is favored as of
 //! now.
 //!
@@ -18,12 +18,21 @@
 //! # Getting Started
 //! Rustler has a Mix archive that provides several commands which makes working with Rustler
 //! easier, including project generators, a tool for validating your Rust and Erlang environment,
-//! as well as build utilities. 
+//! as well as build utilities.
 //!
 //! As long as you have Elixir and Mix installed, you can install the archive by doing `mix
 //! archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez`.
 //! When the archive is installed, you can generate a new Rustler project by doing `mix rustler.new
 //! <path>`, and following the instructions.
+//!
+//! # Integrating with a mix project
+//! For projects using mix, there is a helper package on hex, https://hex.pm/packages/rustler.
+//! This package contains a mix compiler that automates environment sanity checks, crate compilation
+//! and nif loading. If you are using mix, this package is highly recommended, as it will probably
+//! make your life easier.
+//!
+//! The primary feature of the rustler hex package is a mix compiler. The compiler takes care of
+//! compilation the nif crates of the project every time `mix compile` is run.
 
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};
