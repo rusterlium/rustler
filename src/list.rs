@@ -5,6 +5,33 @@
 use super::{ NifTerm, NifError, NifResult, NifDecoder };
 use ::wrapper::list;
 
+/// Enables iteration over the items in the list.
+///
+/// Although this behaves like a standard Rust iterator
+/// ([book](https://doc.rust-lang.org/book/iterators.html) /
+/// [docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html)), there are a couple of tricky
+/// parts to using it.
+///
+/// Because the iterator is an iterator over `NifTerm`s, you need to decode the terms before you
+/// can do anything with them.
+///
+/// An easy way to decode all terms in a list, is to use the `.map()` function of the iterator, and
+/// decode every entry in the list. This will produce an iterator of `Result`s, and will therefore
+/// not be directly usable in the way you might immediately expect.
+///
+/// For this case, the the `.collect()` function of rust iterators is useful, as it can lift
+/// the `Result`s out of the list. (Contains extra type annotations for clarity)
+///
+/// ```
+/// let list_iterator: NifListIterator = try!(list_term.decode());
+///
+/// let result: NifResult<Vec<i64>> = iter
+///     // Produces an iterator of NifResult<i64>
+///     .map(|x| x.decode::<i64>())
+///     // Lifts each value out of the result. Returns Ok(Vec<i64>) if successful, the first error
+///     // Error(NifError) on failure.
+///     .collect::<NifResult<Vec<i64>>>();
+/// ```
 pub struct NifListIterator<'a> {
     term: NifTerm<'a>,
 }
