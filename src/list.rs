@@ -15,6 +15,7 @@ use ::wrapper::list;
 /// Because the iterator is an iterator over `NifTerm`s, you need to decode the terms before you
 /// can do anything with them.
 ///
+/// ## Example
 /// An easy way to decode all terms in a list, is to use the `.map()` function of the iterator, and
 /// decode every entry in the list. This will produce an iterator of `Result`s, and will therefore
 /// not be directly usable in the way you might immediately expect.
