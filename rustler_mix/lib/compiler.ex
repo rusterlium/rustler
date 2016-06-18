@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Compile.Rustler do
   use Mix.Task
 
   alias Rustler.Compiler.Messages
-  alias Rustler.Compiler.Multirust
+  alias Rustler.Compiler.Rustup
 
   def throw_error(error_descr) do
     Mix.shell.error Messages.message(error_descr)
@@ -13,12 +13,11 @@ defmodule Mix.Tasks.Compile.Rustler do
     project = Mix.Project.config
     crates = project[:rustler_crates]
 
-    if Multirust.version == :none do
-      throw_error(:multirust_not_installed)
+    if Rustup.version == :none do
+      throw_error(:rustup_not_installed)
     end
 
-    rust_versions = Multirust.rust_versions
-    unless Rustler.rust_version in rust_versions do
+    unless Rustup.version_installed?(Rustler.rust_version) do
       throw_error({:rust_version_not_installed, Rustler.rust_version})
     end
 
@@ -52,7 +51,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     target_dir = "#{Rustler.nif_lib_dir}/#{crate}_target"
 
     Mix.shell.info "Compiling NIF crate '#{crate}' (#{compile_flavor})..."
-    case Multirust.compile_with(crate, Rustler.rust_version, compiler_flags,
+    case Rustup.compile_with(crate, Rustler.rust_version, compiler_flags,
                                 [{"CARGO_TARGET_DIR", target_dir}],
                                 IO.stream(:stdio, :line)) do
       {_, 0} -> nil

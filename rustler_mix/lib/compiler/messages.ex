@@ -1,11 +1,11 @@
 defmodule Rustler.Compiler.Messages do
 
-  def message(:multirust_not_installed) do
+  def message(:rustup_not_installed) do
     """
-    Multirust could not be found on your machine.
+    Rustup could not be found on your machine.
     It is required for building NIF crates automatically.
 
-    Follow the instructions in https://github.com/brson/multirust to install it.
+    Follow the instructions in https://www.rustup.rs/ to install it.
     """
   end
 
@@ -55,7 +55,7 @@ defmodule Rustler.Compiler.Messages do
   def message({:rust_version_not_installed, needed_version}) do
     """
     Required Rust toolchain version #{needed_version} is not installed.
-    It can be installed by running 'multirust update #{needed_version}'.
+    It can be installed by running 'rustup update #{needed_version}'.
     """
   end
 
