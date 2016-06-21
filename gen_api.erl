@@ -14,6 +14,7 @@
     exception              |  % enif_xxx_exception() functions
     getenv                 |  % enif_getenv() functions
     time                   |  % new timer API
+    snprintf               |  % enif_snprintf()
     {ulongsize, integer()} |  % number of bytes in a C ulong
     dirty_schedulers       .  % enif_is_on_dirty_scheduler()
 
@@ -22,8 +23,13 @@ version_opts("2.7")  -> [{major,2}, {minor,7} ];                           % erl
 version_opts("2.8")  -> [{major,2}, {minor,8},  exception];                % erlang 18.0
 version_opts("2.9")  -> [{major,2}, {minor,9},  exception, getenv];        % erlang 18.2
 version_opts("2.10") -> [{major,2}, {minor,10}, exception, getenv, time];  % erlang 18.3
+
+% erlang 19rc2. Note: dirty scheduler API no longer optional.
+version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,
+                         dirty_schedulers, snprintf];
+
 version_opts(_) ->
-    io:format("Unsupported Erlang version.\nPlease report to get this version supported.\n"),
+    io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
     halt(1).
 
 ulong_opts("4") -> [{ulongsize, 4}];
@@ -245,6 +251,13 @@ api_list(Opts) -> [
     case proplists:get_bool(dirty_schedulers, Opts) of
         true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
         false -> []
+    end ++
+
+    case proplists:get_bool(snprintf, Opts) of
+        true -> [
+            {"", "dummy_enif_snprintf", ""} % Can't support variable arguments
+        ];
+        false -> []
     end.
 
 
@@ -302,7 +315,7 @@ api_bindings_rust("win32", Entries) ->
             ];
 
 api_bindings_rust(_Arch, Entries) ->
-    [ 
+    [
         "extern \"C\" {\n",
              [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
                 case Return of
