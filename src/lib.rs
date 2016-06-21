@@ -112,32 +112,21 @@ extern "C" fn native_add(env: *mut ErlNifEnv,
 # fn main(){}
 ```
 
-# Examples
-
-For a complete example see (ruster_demo)
-
-# Notes and Limitations
-- Tested on Linux, but any unix should be fine.
-- Windows support is planned but not currently implemented.
-- The NIF threading API is not implemented since Rust provides its own excellent, portable threading API.  But this could be implemented if there is a need.
-- Varargs NIF functions are not implemented.
-- ruster_unsafe is based on work by Radosław Szymczyszyn (https://github.com/lavrin/erlang-rust-nif)
-
 */
 
 extern crate libc;
 
-/// libc type used in NIF callback functions.
+/// libc types
 pub use libc::c_int;
-/// libc type used in NIF callback functions.
 pub use libc::c_void;
-use libc::c_uint;
-use libc::c_char;
-use libc::c_uchar;
-use libc::size_t;
-use libc::c_ulong;
-use libc::c_long;
-use libc::c_double;
+pub use libc::c_uint;
+pub use libc::c_char;
+pub use libc::c_uchar;
+pub use libc::size_t;
+pub use libc::c_ulong;
+pub use libc::c_long;
+pub use libc::c_double;
+
 use std::option::Option;
 
 #[allow(non_camel_case_types)]
@@ -146,10 +135,11 @@ pub type ERL_NIF_UINT = size_t;
 
 
 #[allow(non_camel_case_types)]
-pub type ERL_NIF_TERM = *const c_void;
-//pub type ERL_NIF_TERM = ERL_NIF_UINT;
+//pub type ERL_NIF_TERM = *const c_void;
+pub type ERL_NIF_TERM = ERL_NIF_UINT;
 
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
+#[derive(Debug)]
 #[allow(missing_copy_implementations)]
 #[repr(C)]
 pub struct ErlNifEnv {dummy:c_int}
@@ -167,6 +157,7 @@ pub struct ErlNifFunc {
 
 // #[allow(missing_copy_implementations)]
 #[doc(hidden)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct ErlNifEntry {
     pub major:        c_int,
@@ -185,6 +176,7 @@ pub struct ErlNifEntry {
 
 /// See [ErlNifBinary](http://www.erlang.org/doc/man/erl_nif.html#ErlNifBinary) in the Erlang docs.
 #[allow(missing_copy_implementations)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct ErlNifBinary {
     pub size: size_t,
@@ -203,7 +195,7 @@ pub struct ErlNifResourceType {dummy:c_int}
 pub type ErlNifResourceDtor = extern "C" fn(arg1: *mut ErlNifEnv, arg2: *mut c_void) -> ();
 
 /// See [ErlNifResourceFlags](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceFlags) in the Erlang docs.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifResourceFlags {
     ERL_NIF_RT_CREATE = 1,
@@ -211,7 +203,7 @@ pub enum ErlNifResourceFlags {
 }
 
 /// See [ErlNifCharEncoding](http://www.erlang.org/doc/man/erl_nif.html#ErlNifCharEncoding) in the Erlang docs.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifCharEncoding {
     ERL_NIF_LATIN1 = 1,
@@ -219,7 +211,7 @@ pub enum ErlNifCharEncoding {
 }
 
 /// See [ErlNifPid](http://www.erlang.org/doc/man/erl_nif.html#ErlNifPid) in the Erlang docs.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifPid {
     pid: ERL_NIF_TERM,
