@@ -1,6 +1,6 @@
 
-extern crate ruster_unsafe;
-use ruster_unsafe::*;
+extern crate erlang_nif_sys;
+use erlang_nif_sys::*;
 
 use std::process::Command;
 use std::env;

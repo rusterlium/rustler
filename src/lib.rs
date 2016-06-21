@@ -3,7 +3,7 @@ Low level Rust bindings to the [Erlang NIF API](http://www.erlang.org/doc/man/er
 
 # NIF Crate
 
-A NIF module is built by creating a new crate that uses `ruster_unsafe` as a dependency.
+A NIF module is built by creating a new crate that uses `erlang_nif-sys` as a dependency.
 (more)
 
 # NIF Functions
@@ -11,8 +11,8 @@ A NIF module is built by creating a new crate that uses `ruster_unsafe` as a dep
 All NIF functions must have the following signature:
 
 ```
-extern crate ruster_unsafe;
-use ruster_unsafe::*;
+extern crate erlang_nif_sys;
+use erlang_nif_sys::*;
 # fn main(){}
 extern "C" fn my_nif(env: *mut ErlNifEnv,
                      argc: c_int,
@@ -28,8 +28,8 @@ extern "C" fn my_nif(env: *mut ErlNifEnv,
 ## For the Impatient
 ```
 #[macro_use]
-extern crate ruster_unsafe;
-use ruster_unsafe::*;
+extern crate erlang_nif_sys;
+use erlang_nif_sys::*;
 
 nif_init!(b"my_nif_module\0", Some(load), None, None, None,
     nif!(b"my_nif_fun1\0", 1, my_nif_fun1),
@@ -43,7 +43,7 @@ nif_init!(b"my_nif_module\0", Some(load), None, None, None,
 
 ## Details
 
-The `ruster_unsafe` analog of [`ERL_NIF_INIT()`](http://www.erlang.org/doc/man/erl_nif_init.html) is `nif_init!` which has the following form:
+The `erlang_nif-sys` analog of [`ERL_NIF_INIT()`](http://www.erlang.org/doc/man/erl_nif_init.html) is `nif_init!` which has the following form:
 
 `nif_init!(module_name, load, reload, upgrade, unload, niffunc0, niffunc1, ...)`
 
@@ -54,8 +54,8 @@ load, reload, upgrade, and unload are optional functions.  See [load](http://www
 in the Erlang docs.  Stub implementations in Rust are:
 
 ```
-# extern crate ruster_unsafe;
-# use ruster_unsafe::*;
+# extern crate erlang_nif_sys;
+# use erlang_nif_sys::*;
 extern "C" fn load(env: *mut ErlNifEnv,
                    priv_data: *mut *mut c_void,
                    load_info: ERL_NIF_TERM)-> c_int { 0 }
@@ -90,8 +90,8 @@ Below is an example of invoking NIF APIs along with an approach for dealing with
 the the `args` parameter.
 
 ```
-extern crate ruster_unsafe;
-use ruster_unsafe::*;
+extern crate erlang_nif_sys;
+use erlang_nif_sys::*;
 use std::mem::uninitialized;
 extern "C" fn native_add(env: *mut ErlNifEnv,
                          argc: c_int,
