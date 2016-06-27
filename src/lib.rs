@@ -114,29 +114,21 @@ extern "C" fn native_add(env: *mut ErlNifEnv,
 
 */
 
-extern crate libc;
+pub use std::os::raw::{c_int, c_void, c_uint, c_char, c_uchar, c_ulong, c_long, c_double};
 
-/// libc types
-pub use libc::c_int;
-pub use libc::c_void;
-pub use libc::c_uint;
-pub use libc::c_char;
-pub use libc::c_uchar;
-pub use libc::size_t;
-pub use libc::c_ulong;
-pub use libc::c_long;
-pub use libc::c_double;
+#[allow(non_camel_case_types)]
+pub type size_t = usize;
 
 use std::option::Option;
 
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
-//type ERL_NIF_UINT = usize;  // complains about non-ffi type.
 
-
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
 #[allow(non_camel_case_types)]
-//pub type ERL_NIF_TERM = *const c_void;
-pub type ERL_NIF_TERM = ERL_NIF_UINT;
+pub struct ERL_NIF_TERM(ERL_NIF_UINT);
+
 
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
 #[derive(Debug)]

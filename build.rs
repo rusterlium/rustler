@@ -3,7 +3,7 @@
 // Execute Erlang script to generate API lists and extract config.
 //
 
-extern crate libc;
+use std::os::raw::c_ulong;
 use std::process::Command;
 use std::env;
 use std::path::Path;
@@ -13,7 +13,7 @@ fn main() {
 	let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
 
 	// get size of C long
-	let ulong_size = std::mem::size_of::<libc::c_ulong>();
+	let ulong_size = std::mem::size_of::<c_ulong>();
 
 	// setup output directory
 	let out_dir = env::var("OUT_DIR")
