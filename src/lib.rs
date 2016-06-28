@@ -100,7 +100,7 @@ extern "C" fn native_add(env: *mut ErlNifEnv,
         let mut a:c_int = uninitialized();
         let mut b:c_int = uninitialized();
         if argc == 2 &&
-           0 != enif_get_int(env, *args, &mut a) && 
+           0 != enif_get_int(env, *args, &mut a) &&
            0 != enif_get_int(env, *args.offset(1), &mut b) {
             enif_make_int(env, a+b)
          }

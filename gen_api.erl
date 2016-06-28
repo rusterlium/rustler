@@ -160,12 +160,12 @@ api_list(Opts) -> [
     {"ERL_NIF_TERM", "enif_make_tuple_from_array", "arg1: *mut ErlNifEnv, arr: *const ERL_NIF_TERM, cnt: c_uint"},
     {"ERL_NIF_TERM", "enif_make_list_from_array", "arg1: *mut ErlNifEnv, arr: *const ERL_NIF_TERM, cnt: c_uint"},
     {"c_int", "enif_is_empty_list", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
-    {"*mut ErlNifResourceType", "enif_open_resource_type", "arg1: *mut ErlNifEnv, module_str: *const c_uchar, name_str: *const c_uchar, dtor: Option<extern \"C\" fn (arg1: *mut ErlNifEnv, arg2: *mut c_void)>, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
-    {"*mut c_void", "enif_alloc_resource", "_type: *mut ErlNifResourceType, size: size_t"},
-    {"", "enif_release_resource", "obj: *mut c_void"},
-    {"ERL_NIF_TERM", "enif_make_resource", "arg1: *mut ErlNifEnv, obj: *mut c_void"},
-    {"c_int", "enif_get_resource", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM, _type: *mut ErlNifResourceType, objp: *mut *mut c_void"},
-    {"size_t", "enif_sizeof_resource", "obj: *mut c_void"},
+    {"*const ErlNifResourceType", "enif_open_resource_type", "arg1: *mut ErlNifEnv, module_str: *const c_uchar, name_str: *const c_uchar, dtor: Option<extern \"C\" fn (arg1: *mut ErlNifEnv, arg2: *mut c_void)>, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
+    {"*mut c_void", "enif_alloc_resource", "_type: *const ErlNifResourceType, size: size_t"},
+    {"", "enif_release_resource", "obj: *const c_void"},
+    {"ERL_NIF_TERM", "enif_make_resource", "arg1: *mut ErlNifEnv, obj: *const c_void"},
+    {"c_int", "enif_get_resource", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM, _type: *const ErlNifResourceType, objp: *mut *const c_void"},
+    {"size_t", "enif_sizeof_resource", "obj: *const c_void"},
     {"*mut c_uchar", "enif_make_new_binary", "arg1: *mut ErlNifEnv, size: size_t, termp: *mut ERL_NIF_TERM"},
     {"c_int", "enif_is_list", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
     {"c_int", "enif_is_tuple", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
@@ -181,8 +181,8 @@ api_list(Opts) -> [
     {"ERL_NIF_TERM", "enif_make_copy", "dst_env: *mut ErlNifEnv, src_term: ERL_NIF_TERM"},
     {"*mut ErlNifPid", "enif_self", "caller_env: *mut ErlNifEnv, pid: *mut ErlNifPid"},
     {"c_int", "enif_get_local_pid", "env: *mut ErlNifEnv, arg1: ERL_NIF_TERM, pid: *mut ErlNifPid"},
-    {"", "enif_keep_resource", "obj: *mut c_void"},
-    {"ERL_NIF_TERM", "enif_make_resource_binary", "arg1: *mut ErlNifEnv, obj: *mut c_void, data: *const c_void, size: size_t"}
+    {"", "enif_keep_resource", "obj: *const c_void"},
+    {"ERL_NIF_TERM", "enif_make_resource_binary", "arg1: *mut ErlNifEnv, obj: *const c_void, data: *const c_void, size: size_t"}
     ] ++
 
     case proplists:get_value(ulongsize, Opts) of
