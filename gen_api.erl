@@ -347,11 +347,8 @@ join(Acc, [H|T], Joiner) -> join([Joiner, H|Acc], T, Joiner).
 
 %% These functions are defined in the API above when sizeof(ulong)==8, or they map to
 %% long/ulong functions when sizeof(ulong)==4.
-int64_mappers_rust(4) -> join([
-    "use libc::c_ulonglong;",
-    "use libc::c_longlong;"
-    ],
-    "\n");
+int64_mappers_rust(4) ->
+    "use std::os::raw::{c_ulonglong, c_longlong};";
 
 int64_mappers_rust(8) -> join([
     "/// See [enif_make_int64](http://www.erlang.org/doc/man/erl_nif.html#enif_make_int64) at erlang.org",
