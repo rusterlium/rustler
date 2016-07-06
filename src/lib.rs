@@ -145,7 +145,6 @@ pub struct ErlNifFunc {
     pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
     pub flags:    c_uint,
 }
-// unsafe impl Sync for ErlNifFunc {}
 
 // #[allow(missing_copy_implementations)]
 #[doc(hidden)]
@@ -164,7 +163,8 @@ pub struct ErlNifEntry {
     pub vm_variant: *const u8,
     pub options: c_uint,
 }
-//unsafe impl Sync for ErlNifEntry {}
+
+pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
 
 /// See [ErlNifBinary](http://www.erlang.org/doc/man/erl_nif.html#ErlNifBinary) in the Erlang docs.
 #[allow(missing_copy_implementations)]
@@ -326,7 +326,7 @@ macro_rules! nif_init {
             upgrade : $upgrade,
             unload :  $unload,
             vm_variant : b"beam.vanilla\0" as *const u8,
-            options: 0,
+            options: ERL_NIF_ENTRY_OPTIONS,
         };
 
         #[cfg(unix)]

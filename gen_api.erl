@@ -271,6 +271,7 @@ main([UlongSizeT, OutputDir]) ->
     Entries = api_list(Opts),
     %% Generate Rust code
     Rust = [
+        nif_entry_options_rust(Opts),
         nif_version_rust(proplists:get_value(major, Opts), proplists:get_value(minor, Opts)),
         api_bindings_rust(erlang:system_info(system_architecture), Entries),
         int64_mappers_rust(proplists:get_value(ulongsize, Opts))
@@ -279,6 +280,14 @@ main([UlongSizeT, OutputDir]) ->
     Filename = filename:join(OutputDir, "nif_api.snippet"),
     file:write_file(Filename, Rust),
     ok.
+
+nif_entry_options_rust(Opts) ->
+    DirtySchedulers = proplists:get_bool(dirty_schedulers, Opts),
+    case DirtySchedulers of
+        true -> "pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;\n";
+        false-> "pub const ERL_NIF_ENTRY_OPTIONS: c_uint = 0;\n"
+    end.
+
 
 nif_version_rust(Major, Minor) ->
     [io_lib:format("pub const NIF_MAJOR_VERSION: c_int = ~p;\n",   [Major]),
