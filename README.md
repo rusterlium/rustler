@@ -7,6 +7,8 @@ See the [crate documention](http://goertzenator.github.io/erlang_nif-sys/erlang_
 
 See examples of use:
  - [rust.mk](https://github.com/goertzenator/rust.mk) for a sample Rust NIF module.
+ - [rebar3_rust](https://github.com/sdwolf/rebar3_rust) a rebar3 plugin inspired by `rust.mk` that helps integrate Rust code inside Erlang projects.
  - [Rustler](https://github.com/hansihe/Rustler)
+ - [rustfromerl](https://github.com/sdwolf/rustfromerl) a demo project showing performance differences between Erlang code and a simmilar Rust NIF implementation.
 
 Thanks go to Radosław Szymczyszyn for bootstrapping me on this Rust FFI adventure and providing the original [automatic bindings](https://github.com/lavrin/erlang-rust-nif/blob/master/rust_src/src/c.rs).
