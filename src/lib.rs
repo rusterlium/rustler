@@ -328,7 +328,7 @@ macro_rules! nif_init {
             upgrade : $upgrade,
             unload :  $unload,
             vm_variant : b"beam.vanilla\0" as *const u8,
-            options: ERL_NIF_ENTRY_OPTIONS,
+            options: $crate::ERL_NIF_ENTRY_OPTIONS,
         };
 
         #[cfg(unix)]
