@@ -124,10 +124,12 @@ use std::option::Option;
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
 
-#[derive(Debug, Copy, Clone)]
-#[repr(C)]
 #[allow(non_camel_case_types)]
-pub struct ERL_NIF_TERM(ERL_NIF_UINT);
+pub type ERL_NIF_TERM = ERL_NIF_UINT;
+
+//#[derive(Debug, Copy, Clone)]
+//#[repr(C)]
+//pub struct ERL_NIF_TERM(ERL_NIF_UINT);  // Don't do this, 32 bin calling convention is different for structs and ints.
 
 
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
