@@ -3,15 +3,13 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-extern crate libc;
-use self::libc::{ c_void };
-
 use std::mem;
 use std::ptr;
 use std::marker::PhantomData;
 
 use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
-use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
+use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
+use ::wrapper::nif_interface::{ c_void };
 
 /// The NifResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
@@ -30,7 +28,7 @@ pub struct NifResourceType<T> {
 /// 
 /// In most cases the user should not have to worry about this.
 pub trait NifResourceTypeProvider: Sized {
-    fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: NIF_RESOURCE_HANDLE);
+    fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
     fn get_type<'a>() -> &'a NifResourceType<Self>;
     unsafe fn set_type(typ: NifResourceType<Self>);
 }
@@ -68,7 +66,7 @@ fn get_alloc_size_struct<T>() -> usize {
 
 /// Exported for use by codegen_runtime
 /// This is unsafe as it allows us to do nasty things with pointers
-pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *mut c_void) -> *mut c_void {
+pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
     let offset = mem::align_of::<T>() - ((ptr as usize) % mem::align_of::<T>());
     ptr.offset(offset as isize)
 }
@@ -78,7 +76,7 @@ use std::sync::RwLock;
 /// This is the struct that holds a reference to a resource. It increments the refcounter for the
 /// resource instance on creation, and decrements when dropped.
 pub struct ResourceCell<T> where T: NifResourceTypeProvider {
-    raw: *mut c_void,
+    raw: *const c_void,
     inner: *mut RwLock<T>,
 }
 
@@ -114,7 +112,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
         NifTerm::new(env, raw_term)
     }
 
-    fn as_c_arg(&mut self) -> *mut c_void {
+    fn as_c_arg(&mut self) -> *const c_void {
         self.raw
     }
 

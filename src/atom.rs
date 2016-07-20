@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use std::ops::DerefMut;
 
 use super::{ NifTerm, NifEnv };
-use ::libc::size_t;
+use ::wrapper::nif_interface::size_t;
 use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF_TERM };
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where

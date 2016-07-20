@@ -1,8 +1,8 @@
-extern crate ruster_unsafe;
+extern crate erlang_nif_sys;
 
 use super::{ NifEnv, NifError, NifTerm, NifDecoder };
-use libc::{ size_t, c_void };
 use std::mem::uninitialized;
+use ::wrapper::nif_interface::{ size_t, c_void };
 use ::wrapper::nif_interface::NIF_TERM;
 
 #[repr(C)]
@@ -22,8 +22,8 @@ impl ErlNifBinary {
             ref_bin: uninitialized(),
         }
     }
-    fn as_c_arg(&mut self) -> *mut ruster_unsafe::ErlNifBinary {
-        (self as *mut ErlNifBinary) as *mut ruster_unsafe::ErlNifBinary
+    fn as_c_arg(&mut self) -> *mut erlang_nif_sys::ErlNifBinary {
+        (self as *mut ErlNifBinary) as *mut erlang_nif_sys::ErlNifBinary
     }
 }
 
@@ -39,7 +39,7 @@ pub struct NifBinary<'a> {
 impl Drop for OwnedNifBinary {
     fn drop(&mut self) {
         if self.release {
-            unsafe { ruster_unsafe::enif_release_binary(self.inner.as_c_arg()) };
+            unsafe { erlang_nif_sys::enif_release_binary(self.inner.as_c_arg()) };
         }
     }
 }
@@ -47,7 +47,7 @@ impl Drop for OwnedNifBinary {
 impl<'a> OwnedNifBinary {
     pub fn alloc(size: usize) -> Option<OwnedNifBinary> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { ruster_unsafe::enif_alloc_binary(
+        if unsafe { erlang_nif_sys::enif_alloc_binary(
                 size as size_t, 
                 binary.as_c_arg()) } == 0 {
             return None;
@@ -70,7 +70,7 @@ impl<'a> OwnedNifBinary {
 impl<'a> NifBinary<'a> {
     pub fn from_owned(mut bin: OwnedNifBinary, env: &'a NifEnv) -> Self {
         bin.release = false;
-        let term = NifTerm::new(env, unsafe { ruster_unsafe::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
+        let term = NifTerm::new(env, unsafe { erlang_nif_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
         NifBinary {
             inner: bin.inner.clone(),
             term: term,
@@ -78,7 +78,7 @@ impl<'a> NifBinary<'a> {
     }
     pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { ruster_unsafe::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
+        if unsafe { erlang_nif_sys::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
             return Err(NifError::BadArg);
         }
         Ok(NifBinary {

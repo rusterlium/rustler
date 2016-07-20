@@ -1,4 +1,3 @@
-#![feature(recover)]
 #![allow(non_camel_case_types)]
 
 //! [Github](https://github.com/hansihe/Rustler)
@@ -72,7 +71,7 @@
 //! The actual loading is done by calling `Rustler.load_nif("<LIBRARY_NAME>")` in the module you
 //! want to load the NIF in. This is usually done in the `@on_load` module hook.
 //!
-//! ```
+//! ```elixir
 //! defmodule MyProject.NativeModule do
 //!   @on_load :load_nif
 //!
@@ -91,11 +90,10 @@
 
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};
+pub use wrapper::nif_interface::size_t;
 
 #[macro_use]
 extern crate lazy_static;
-
-extern crate libc;
 
 mod types;
 pub use self::types::{ NifEncoder, NifDecoder };
@@ -145,7 +143,7 @@ impl NifEncoder for NifError {
             NifError::Atom(name) =>
                 unsafe { enif_make_atom_len(env.as_c_arg(),
                                             name.as_ptr() as *const u8,
-                                            name.len() as libc::size_t) },
+                                            name.len() as size_t) },
         })
     }
 }
@@ -232,6 +230,6 @@ impl<'a> NifTerm<'a> {
 ///
 /// WARNING: Only a stub, actual macro defined in compiler plugin.
 #[macro_export]
-macro_rules! rustler_export_nifs {
+macro_rules! _rustler_export_nifs {
     ($module_name:expr, [$(($fun_export_name:expr, $arity:expr, $rust_fn:ident)),*], $init_function:expr) => { /* ... */ }
 }

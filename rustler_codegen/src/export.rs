@@ -3,7 +3,8 @@ use easy_plugin::{PluginResult};
 use ::syntax::codemap::{Span, Spanned};
 use ::syntax::ptr::P;
 use ::syntax::parse::token::{Token, DelimToken, Lit};
-use ::syntax::ast::{LitKind, TokenTree, Delimited, Ident, Expr, Item};
+use ::syntax::ast::{LitKind, /*TokenTree, Delimited,*/ Ident, Expr, Item};
+use ::syntax::tokenstream::{TokenTree, Delimited};
 use ::syntax::ext::base::{ExtCtxt, MacResult, MacEager};
 use ::syntax::ext::build::AstBuilder;  // trait for expr_usize
 

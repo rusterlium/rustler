@@ -1,14 +1,15 @@
 //! Functions used by runtime generated code. Should not be used.
 
 use ::{NifEnv, NifTerm};
-pub use ::libc::{c_void, c_int};
 use ::atom::get_atom_init;
-//use ::ruster_export::{ErlNifEnv, ERL_NIF_TERM};
-use ::wrapper::nif_interface::{NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
-use std::panic::recover;
+use ::wrapper::nif_interface::{MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
+use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
 use ::{NifResult, NifEncoder};
+
+// Exports for runtime
+pub use ::wrapper::nif_interface::{c_int, c_void};
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
@@ -20,7 +21,7 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> NifRes
     let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
         .map(|x| NifTerm::new(&env, *x)).collect::<Vec<NifTerm>>();
 
-    let result: ::std::thread::Result<NIF_TERM> = recover(|| {
+    let result: ::std::thread::Result<NIF_TERM> = catch_unwind(|| {
         match function(&env, &terms) {
             Ok(ret) => ret.as_c_arg(),
             Err(err) => err.encode(&env).as_c_arg(),
@@ -53,7 +54,7 @@ pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm) -> 
 use std::sync::RwLock;
 use std;
 use ::resource::align_alloced_mem_for_struct;
-pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: NIF_RESOURCE_HANDLE) {
+pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
     let aligned = align_alloced_mem_for_struct::<RwLock<T>>(handle);
     let res = aligned as *mut RwLock<T>;
     std::mem::drop(std::ptr::read(res));
