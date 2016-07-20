@@ -18,6 +18,11 @@ defmodule TestNative do
   def add_u32(_, _), do: err
   def add_i32(_, _), do: err
   def tuple_add(_), do: err
+
   def sum_list(_), do: err
+
+  def resource_make(), do: err
+  def resource_set_integer_field(_, _), do: err
+  def resource_get_integer_field(_), do: err
 
 end

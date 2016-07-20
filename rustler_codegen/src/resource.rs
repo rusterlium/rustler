@@ -29,7 +29,7 @@ pub fn resource_struct_def_decorator(
     push(Annotatable::Item(quote_item!(cx,
         #[allow(non_snake_case)]
         extern "C" fn $dtor_name_ident(env: ::rustler::wrapper::nif_interface::NIF_ENV, 
-                                       obj: ::rustler::wrapper::nif_interface::NIF_RESOURCE_HANDLE) {
+                                       obj: ::rustler::wrapper::nif_interface::MUTABLE_NIF_RESOURCE_HANDLE) {
             unsafe { ::rustler::codegen_runtime::handle_drop_resource_struct_handle::<$struct_ident>(env, obj) }
         }
     ).unwrap()));
@@ -38,7 +38,7 @@ pub fn resource_struct_def_decorator(
     push(Annotatable::Item(quote_item!(cx,
         impl ::rustler::resource::NifResourceTypeProvider for $struct_ident {
             fn get_dtor() -> extern "C" fn(_env: ::rustler::wrapper::nif_interface::NIF_ENV, 
-                                           handle: ::rustler::wrapper::nif_interface::NIF_RESOURCE_HANDLE) {
+                                           handle: ::rustler::wrapper::nif_interface::MUTABLE_NIF_RESOURCE_HANDLE) {
                 $dtor_name_ident
             }
             fn get_type<'a>() -> &'a ::rustler::resource::NifResourceType<Self> {
