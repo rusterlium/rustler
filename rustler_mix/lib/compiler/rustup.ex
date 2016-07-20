@@ -33,7 +33,7 @@ defmodule Rustler.Compiler.Rustup do
   end
 
   def compile_with(path, version, args \\ [], env \\ [], into \\ "") do
-    System.cmd(rustup_binary, IO.inspect(["run", version, "cargo", "build" | args]),
+    System.cmd(rustup_binary, ["run", version, "cargo", "build" | args],
                cd: path, into: into, env: env)
   end
 

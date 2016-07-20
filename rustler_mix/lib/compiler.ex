@@ -12,6 +12,7 @@ defmodule Mix.Tasks.Compile.Rustler do
   def run(_args) do
     project = Mix.Project.config
     crates = project[:rustler_crates]
+    base_project_dir = File.cwd!
 
     if Rustup.version == :none do
       throw_error(:rustup_not_installed)
@@ -29,12 +30,14 @@ defmodule Mix.Tasks.Compile.Rustler do
     File.mkdir_p!(Rustler.nif_lib_dir)
 
     is_release = System.get_env("RUSTLER_DEBUG") != "true"
-    compile_crates(crates, is_release)
+    compile_crates(base_project_dir, crates, is_release)
   end
 
   def compile_crates(nil, _), do: throw_error(:no_crates_property)
-  def compile_crates(crates, release) do
-    Enum.map(crates, &compile_crate(&1, release))
+  def compile_crates(base_project_dir, crates, release) do
+    Enum.map(crates, fn crate ->
+      compile_crate(base_project_dir <> crate, release)
+    end)
   end
 
   def compile_crate(crate, release) do
@@ -55,7 +58,7 @@ defmodule Mix.Tasks.Compile.Rustler do
                                 [{"CARGO_TARGET_DIR", target_dir}],
                                 IO.stream(:stdio, :line)) do
       {_, 0} -> nil
-      _ -> raise "Compile error"
+      {_, code} -> raise "Compile error (exit code #{code})"
     end
 
     # TODO: Make build flavor specific
