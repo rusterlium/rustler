@@ -25,4 +25,6 @@ defmodule TestNative do
   def resource_set_integer_field(_, _), do: err
   def resource_get_integer_field(_), do: err
 
+  def make_shorter_subbinary(_), do: err
+
 end

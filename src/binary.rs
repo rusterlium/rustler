@@ -1,9 +1,8 @@
-extern crate erlang_nif_sys;
-
-use super::{ NifEnv, NifError, NifTerm, NifDecoder };
+use super::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
 use std::mem::uninitialized;
 use ::wrapper::nif_interface::{ size_t, c_void };
-use ::wrapper::nif_interface::NIF_TERM;
+use ::wrapper::nif_interface::{ NIF_TERM, NIF_BINARY };
+use ::wrapper::nif_interface;
 
 #[repr(C)]
 #[derive(Clone)]
@@ -22,8 +21,8 @@ impl ErlNifBinary {
             ref_bin: uninitialized(),
         }
     }
-    fn as_c_arg(&mut self) -> *mut erlang_nif_sys::ErlNifBinary {
-        (self as *mut ErlNifBinary) as *mut erlang_nif_sys::ErlNifBinary
+    fn as_c_arg(&mut self) -> NIF_BINARY {
+        (self as *mut ErlNifBinary) as NIF_BINARY
     }
 }
 
@@ -39,7 +38,7 @@ pub struct NifBinary<'a> {
 impl Drop for OwnedNifBinary {
     fn drop(&mut self) {
         if self.release {
-            unsafe { erlang_nif_sys::enif_release_binary(self.inner.as_c_arg()) };
+            unsafe { nif_interface::enif_release_binary(self.inner.as_c_arg()) };
         }
     }
 }
@@ -47,7 +46,7 @@ impl Drop for OwnedNifBinary {
 impl<'a> OwnedNifBinary {
     pub fn alloc(size: usize) -> Option<OwnedNifBinary> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { erlang_nif_sys::enif_alloc_binary(
+        if unsafe { nif_interface::enif_alloc_binary(
                 size as size_t, 
                 binary.as_c_arg()) } == 0 {
             return None;
@@ -70,7 +69,7 @@ impl<'a> OwnedNifBinary {
 impl<'a> NifBinary<'a> {
     pub fn from_owned(mut bin: OwnedNifBinary, env: &'a NifEnv) -> Self {
         bin.release = false;
-        let term = NifTerm::new(env, unsafe { erlang_nif_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
+        let term = NifTerm::new(env, unsafe { nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
         NifBinary {
             inner: bin.inner.clone(),
             term: term,
@@ -78,7 +77,7 @@ impl<'a> NifBinary<'a> {
     }
     pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { erlang_nif_sys::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
+        if unsafe { nif_interface::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
             return Err(NifError::BadArg);
         }
         Ok(NifBinary {
@@ -89,13 +88,28 @@ impl<'a> NifBinary<'a> {
     pub fn as_slice(&self) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size as usize) }
     }
-    pub fn get_term(&self, _env: &'a NifEnv) -> NifTerm<'a> {
-        self.term
+    pub fn get_term<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        self.term.in_env(env)
+    }
+    pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<NifBinary<'a>> {
+        let min_len = length.checked_add(offset);
+        if try!(min_len.ok_or(NifError::BadArg)) > self.inner.size {
+            return Err(NifError::BadArg);
+        }
+
+        let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.env.as_c_arg(), self.inner.bin_term, offset, length) };
+        // This should never fail, as we are always passing in a binary term.
+        Ok(NifBinary::from_term(NifTerm::new(self.term.env, raw_term)).ok().unwrap())
     }
 }
 
 impl<'a> NifDecoder<'a> for NifBinary<'a> {
     fn decode(term: NifTerm<'a>) -> Result<Self, NifError> {
         NifBinary::from_term(term)
+    }
+}
+impl<'a> NifEncoder for NifBinary<'a> {
+    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        self.get_term(env)
     }
 }

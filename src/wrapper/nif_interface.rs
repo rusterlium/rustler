@@ -82,6 +82,9 @@ pub unsafe fn enif_make_binary(env: NIF_ENV, bin_ref: NIF_BINARY) -> NIF_TERM {
 pub unsafe fn enif_inspect_binary(env: NIF_ENV, term: NIF_TERM, bin_ref: NIF_BINARY) -> c_int {
     erlang_nif_sys::enif_inspect_binary(env, term, bin_ref)
 }
+pub unsafe fn enif_make_sub_binary(env: NIF_ENV, bin_term: NIF_TERM, pos: size_t, size: size_t) -> NIF_TERM {
+    erlang_nif_sys::enif_make_sub_binary(env, bin_term, pos, size)
+}
 
 // Maps
 pub unsafe fn enif_get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: *mut NIF_TERM) -> c_int {
