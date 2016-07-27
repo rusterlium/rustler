@@ -9,3 +9,7 @@ license = "MIT/Apache-2.0"
 keywords = ["FFI", "Erlang", "NIF"]
 
 build = "build.rs"
+
+
+[package.metadata.release]
+upload-doc = true
