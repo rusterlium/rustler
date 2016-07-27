@@ -14,20 +14,18 @@
     exception              |  % enif_xxx_exception() functions
     getenv                 |  % enif_getenv() functions
     time                   |  % new timer API
-    snprintf               |  % enif_snprintf()
     {ulongsize, integer()} |  % number of bytes in a C ulong
-    dirty_schedulers       .  % enif_is_on_dirty_scheduler()
+    dirty_schedulers       |  % enif_is_on_dirty_scheduler().  Only for 2.7-2.10
+    dirty_scheduler_opt    |  % dirty scheduler nifentry option flag.  For >=2.7
+    nif_2_11               .  % general 2.11 API additions
 
 
 version_opts("2.7")  -> [{major,2}, {minor,7} ];                           % erlang 17.3
 version_opts("2.8")  -> [{major,2}, {minor,8},  exception];                % erlang 18.0
 version_opts("2.9")  -> [{major,2}, {minor,9},  exception, getenv];        % erlang 18.2
 version_opts("2.10") -> [{major,2}, {minor,10}, exception, getenv, time];  % erlang 18.3
-
-% erlang 19rc2. Note: dirty scheduler API no longer optional.
-version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,
-                         dirty_schedulers, snprintf];
-
+version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,   % erlang 19.0
+                        dirty_scheduler_opt, nif_2_11];
 version_opts(_) ->
     io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
     halt(1).
@@ -35,9 +33,16 @@ version_opts(_) ->
 ulong_opts("4") -> [{ulongsize, 4}];
 ulong_opts("8") -> [{ulongsize, 8}].
 
+
+dirty_scheduler_opts("2.7") -> dirty_scheduler_opts();
+dirty_scheduler_opts("2.8") -> dirty_scheduler_opts();
+dirty_scheduler_opts("2.9") -> dirty_scheduler_opts();
+dirty_scheduler_opts("2.10") -> dirty_scheduler_opts();
+dirty_scheduler_opts(_) -> []. % dirty schedulers non-optional in 2.11
+
 dirty_scheduler_opts() ->
     case catch erlang:system_info(dirty_cpu_schedulers) of
-                                 _X when is_integer(_X) -> [dirty_schedulers];
+                                 _X when is_integer(_X) -> [dirty_schedulers, dirty_scheduler_opt];
                                  _ -> []
                              end.
 
@@ -253,8 +258,20 @@ api_list(Opts) -> [
         false -> []
     end ++
 
-    case proplists:get_bool(snprintf, Opts) of
+
+    case proplists:get_bool(nif_2_11, Opts) of
         true -> [
+            {"ERL_NIF_TERM", "enif_now_time", "env: *mut ErlNifEnv"},
+            {"ERL_NIF_TERM", "enif_cpu_time", "env: *mut ErlNifEnv"},
+            {"ERL_NIF_TERM", "enif_make_unique_integer", "env: *mut ErlNifEnv, properties: ErlNifUniqueInteger"},
+            {"c_int", "enif_is_current_process_alive", "env: *mut ErlNifEnv"},
+            {"c_int", "enif_is_process_alive", "env: *mut ErlNifEnv, pid: *const ErlNifPid"},
+            {"c_int", "enif_is_port_alive", "env: *mut ErlNifEnv, port_id: *const ErlNifPort"},
+            {"c_int", "enif_get_local_port", "env: *mut ErlNifEnv, term: ERL_NIF_TERM, port_id: *mut ErlNifPort"},
+            {"c_int", "enif_term_to_binary", "env: *mut ErlNifEnv, term: ERL_NIF_TERM, bin: *mut ErlNifBinary"},
+            {"usize", "enif_binary_to_term", "env: *mut ErlNifEnv, data: *const c_uchar, sz: usize, term: *mut ERL_NIF_TERM, opts: ErlNifBinaryToTerm"},
+            {"c_int", "enif_port_command", "env: *mut ErlNifEnv, to_port: *const ErlNifPort, msg_env: *mut ErlNifEnv, msg: ERL_NIF_TERM"},
+            {"c_int", "enif_thread_type", ""},
             {"", "dummy_enif_snprintf", ""} % Can't support variable arguments
         ];
         false -> []
@@ -266,7 +283,7 @@ main([UlongSizeT]) -> main([UlongSizeT,"."]);
 main([UlongSizeT, OutputDir]) ->
     %% Round up all configuration options
     Version = (catch erlang:system_info(nif_version)),
-    Opts = version_opts(Version) ++ ulong_opts(UlongSizeT) ++ dirty_scheduler_opts(),
+    Opts = version_opts(Version) ++ ulong_opts(UlongSizeT) ++ dirty_scheduler_opts(Version),
     %% Generate API list
     Entries = api_list(Opts),
     %% Generate Rust code
@@ -282,8 +299,8 @@ main([UlongSizeT, OutputDir]) ->
     ok.
 
 nif_entry_options_rust(Opts) ->
-    DirtySchedulers = proplists:get_bool(dirty_schedulers, Opts),
-    case DirtySchedulers of
+    DirtySchedulerOpt = proplists:get_bool(dirty_scheduler_opt, Opts),
+    case DirtySchedulerOpt of
         true -> "pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;\n";
         false-> "pub const ERL_NIF_ENTRY_OPTIONS: c_uint = 0;\n"
     end.

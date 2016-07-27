@@ -236,8 +236,9 @@ pub struct ErlNifSysInfo {
 //     ERL_NIF_DIRTY_JOB_IO_BOUND = 2,
 // }
 
-pub const ERL_NIF_DIRTY_JOB_CPU_BOUND:c_uint = 1;
-pub const ERL_NIF_DIRTY_JOB_IO_BOUND:c_uint = 2;
+pub type ErlNifDirtyTaskFlags = c_uint;
+pub const ERL_NIF_DIRTY_JOB_CPU_BOUND: ErlNifDirtyTaskFlags = 1;
+pub const ERL_NIF_DIRTY_JOB_IO_BOUND: ErlNifDirtyTaskFlags = 2;
 
 
 /// See [ErlNifMapIterator](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMapIterator) in the Erlang docs.
@@ -264,7 +265,7 @@ pub enum ErlNifMapIteratorEntry {
 pub type ErlNifTime = i64;
 
 /// Error return value for `enif_monotonic_time()`, `enif_time_offset()`, and `enif_convert_time_unit()`.
-pub const ERL_NIF_TIME_ERROR:i64 = -9223372036854775808;
+pub const ERL_NIF_TIME_ERROR: i64 = -9223372036854775808;
 //const ERL_NIF_TIME_ERROR:i64 = i64::min_value();  "error: const fn's not yet stable"
 
 /// See [ErlNifTimeUnit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTimeUnit) in the Erlang docs.
@@ -277,6 +278,35 @@ pub enum ErlNifTimeUnit {
     ERL_NIF_USEC = 2,
     ERL_NIF_NSEC = 3,
 }
+
+/// See [ErlNifUniqueInteger](http://erlang.org/doc/man/erl_nif.html#ErlNifUniqueInteger) in the Erlang docs.
+pub type ErlNifUniqueInteger = c_int;
+pub const ERL_NIF_UNIQUE_POSITIVE: ErlNifUniqueInteger  = (1 << 0);
+pub const ERL_NIF_UNIQUE_MONOTONIC: ErlNifUniqueInteger = (1 << 1);
+// ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L203
+// FIXME: Should actually be C enum, but repr(C) enums in Rust can't be used as bitfields.
+//        Fix if the right abstraction ever lands in Rust.
+
+
+/// See [ErlNifPort](http://erlang.org/doc/man/erl_nif.html#ErlNifPort) in the Erlang docs.
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct ErlNifPort {
+    port_id: ERL_NIF_TERM,  // internal, may change
+}
+// ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L155
+
+
+/// See [ErlNifBinaryToTerm](http://erlang.org/doc/man/erl_nif.html#ErlNifBinaryToTerm) in the Erlang docs.
+pub type ErlNifBinaryToTerm = c_int;
+pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x20000000;
+
+
+pub const ERL_NIF_THR_UNDEFINED: c_int =  0;
+pub const ERL_NIF_THR_NORMAL_SCHEDULER: c_int =  1;
+pub const ERL_NIF_THR_DIRTY_CPU_SCHEDULER: c_int =  2;
+pub const ERL_NIF_THR_DIRTY_IO_SCHEDULER: c_int =  3;
+
 
 
 include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
