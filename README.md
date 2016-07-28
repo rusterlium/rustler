@@ -1,6 +1,6 @@
 # Rustler
 
-[Documentation](http://rustler.rustbridge.io/) | [Getting Started](https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/Rustler_Example)
+[Documentation](http://rustler.rustbridge.io/) | [Getting Started](https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/NifIo)
 
 [![Build Status](https://travis-ci.org/hansihe/Rustler.svg?branch=master)](https://travis-ci.org/hansihe/Rustler)
 
@@ -20,12 +20,12 @@ is favored as of now.
 * Resource objects - Enables you to safely pass a reference to a Rust struct into Erlang code. The struct will be automatically dropped when it's no longer referenced.
 
 #### Getting started
-The easiest way of getting started, is using the Mix project generator.
+The easiest way of getting started is the [rustler elixir library](https://hex.pm/packages/rustler).
 
-* Run `mix archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez` to install the tool.
-* Run `mix rustler.new <path>` and follow the instructions.
+* Add the [rustler elixir library](https://hex.pm/packages/rustler) as a dependency of your project.
+* Run `mix rustler.new` to generate a new NIF in your project. Follow the instructions.
 
-NOTE: At the moment you need Rust nightly-2016-05-07. With [multirust](https://github.com/brson/multirust), you need to run `multirust override nightly-2016-05-07` in the generated project directory for things to work as expected.
+NOTE: If you have previously used Rustler, you need to run `mix archive.uninstall rustler_installer.ez` to remove it before generating the NIF.
 
 #### How it looks like
 This is the code for a minimal NIF that adds two numbers and returns the result.

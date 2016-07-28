@@ -5,9 +5,9 @@ authors = []
 
 [lib]
 name = "<%= library_name %>"
-path = "src/nif.rs"
+path = "src/lib.rs"
 crate_type = ["dylib"]
 
 [dependencies]
-rustler = "*"
-rustler_codegen = "*"
+rustler = "=<%= rustler_version %>"
+rustler_codegen = "=<%= rustler_version %>"

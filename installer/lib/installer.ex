@@ -1,2 +1,0 @@
-defmodule Installer do
-end

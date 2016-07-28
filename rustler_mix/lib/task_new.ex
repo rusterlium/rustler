@@ -13,11 +13,10 @@ defmodule Mix.Tasks.Rustler.New do
   @basic [
     {:eex, "basic/README.md", "README.md"},
     {:eex, "basic/Cargo.toml", "Cargo.toml"},
-    {:eex, "basic/src/nif.rs", "src/nif.rs"},
-    {:eex, "basic/demo.exs", "demo.exs"},
+    {:eex, "basic/src/lib.rs", "src/lib.rs"},
   ]
 
-  root = Path.expand("../templates", __DIR__)
+  root = Path.join(:code.priv_dir(:rustler), "templates/")
   for {format, source, _} <- @basic do
     unless format == :keep do
       @external_resource Path.join(root, source)
@@ -30,17 +29,13 @@ defmodule Mix.Tasks.Rustler.New do
   def run(argv) do
     {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
 
-    case argv do
-      [path] ->
-        module = prompt("This is the name of the Elixir module the NIF module will be registered to.\nModule name")
+    module = prompt("This is the name of the Elixir module the NIF module will be registered to.\nModule name")
 
-        name = prompt_default("This is the name used for the generated Rust crate. The default is most likely fine.\nLibrary name", format_module_name_as_name(module))
-        check_module_name_validity!(module)
+    name = prompt_default("This is the name used for the generated Rust crate. The default is most likely fine.\nLibrary name", format_module_name_as_name(module))
+    check_module_name_validity!(module)
 
-        new(path, module, name, opts)
-      _ ->
-        Mix.Task.run "help", ["rustler.new"]
-    end
+    path = Path.join([File.cwd!, "crates/", name])
+    new(path, module, name, opts)
   end
 
   def new(path, module, name, opts) do
@@ -52,6 +47,7 @@ defmodule Mix.Tasks.Rustler.New do
       native_module: module_elixir,
       module: module,
       library_name: name,
+      rustler_version: Rustler.rustler_version,
     ]
 
     copy_from path, binding, @basic

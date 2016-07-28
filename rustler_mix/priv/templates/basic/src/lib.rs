@@ -1,5 +1,11 @@
+#![feature(link_args)]
 #![feature(plugin)]
+// Rustler compiler plugin
 #![plugin(rustler_codegen)]
+// Necessary hack for building on Mac
+#[cfg(target_os="macos")]
+#[link_args = "-flat_namespace -undefined suppress"]
+extern {}
 
 #[macro_use]
 extern crate rustler;
