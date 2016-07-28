@@ -6,7 +6,7 @@ authors = []
 [lib]
 name = "<%= library_name %>"
 path = "src/lib.rs"
-crate_type = ["dylib"]
+crate-type = ["dylib"]
 
 [dependencies]
 rustler = "=<%= rustler_version %>"

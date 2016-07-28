@@ -46,10 +46,12 @@ kv_key ->
     lit_string_literal : {literal, extract_token('$1')}.
 
 array ->
+    '[' ']' : {array, []}.
+array ->
     '[' array_elems ']' : {array, '$2'}.
 
 array_elems ->
-    value ',' array_elems : ['$1'] ++ '3'.
+    value ',' array_elems : ['$1'] ++ '$3'.
 array_elems ->
     value : ['$1'].
 
