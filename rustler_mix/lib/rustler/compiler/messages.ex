@@ -29,7 +29,7 @@ defmodule Rustler.Compiler.Messages do
     Add some crate directories under :rustler_crates in the mix.exs project definition to compile them.
 
     Example:
-    rustler_crates: ["my_nif_crate/"]
+    rustler_crates: ["/native/my_nif_crate"]
     """
   end
 

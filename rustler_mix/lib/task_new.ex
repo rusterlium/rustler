@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Rustler.New do
     name = prompt_default("This is the name used for the generated Rust crate. The default is most likely fine.\nLibrary name", format_module_name_as_name(module))
     check_module_name_validity!(module)
 
-    path = Path.join([File.cwd!, "crates/", name])
+    path = Path.join([File.cwd!, "native/", name])
     new(path, module, name, opts)
   end
 

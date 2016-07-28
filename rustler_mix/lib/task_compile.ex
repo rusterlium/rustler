@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   def check_crate_env(crate) do
     unless File.dir?(crate) do
-      Mix.shell.error Messages.message(:no_crates_property_message)
+      throw_error({:nonexistent_crate_directory, crate})
     end
 
     cargo_data =
