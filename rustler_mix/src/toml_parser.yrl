@@ -7,7 +7,7 @@ inline_table inline_table_elems.
 
 Terminals
 key_bare lit_string_basic lit_string_basic_multi lit_string_literal lit_string_literal_multi
-lit_integer lit_float lit_datetime1 lit_datetime2 lit_datetime3
+lit_integer lit_float lit_datetime1 lit_datetime2 lit_datetime3 lit_boolean
 '=' '[' ']' '{' '}' '.' ','.
 
 Rootsymbol root.
@@ -53,6 +53,8 @@ array ->
 array_elems ->
     value ',' array_elems : ['$1'] ++ '$3'.
 array_elems ->
+    value ',' : ['$1'].
+array_elems ->
     value : ['$1'].
 
 inline_table ->
@@ -81,6 +83,8 @@ value ->
     lit_integer : {val_integer, extract_token('$1')}.
 value ->
     lit_float : {val_float, extract_token('$1')}.
+value ->
+    lit_boolean : {val_boolean, extract_token('$1')}.
 
 value ->
     lit_datetime1 : {val_datetime1, extract_token('$1')}.

@@ -28,6 +28,7 @@ Rules.
 {STRING_LITERAL} : {token, {lit_string_literal, TokenLine, TokenChars}}.
 {STRING_LITERAL_MULTI} : {token, {lit_string_literal_multi, TokenLine, TokenChars}}.
 
+{BOOLEAN} : {token, {lit_boolean, TokenLine, TokenChars}}.
 {INTEGER} : {token, {lit_integer, TokenLine, TokenChars}}.
 {FLOAT} : {token, {lit_float, TokenLine, TokenChars}}.
 {BARE_KEY} : {token, {key_bare, TokenLine, TokenChars}}.

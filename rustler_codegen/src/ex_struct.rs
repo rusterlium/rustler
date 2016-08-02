@@ -2,9 +2,6 @@ use ::syntax::ptr::P;
 use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData, Expr, Stmt};
 use ::syntax::codemap::{Span};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
-use ::syntax::ext::build::AstBuilder;
-
-use syntax::attr::AttrMetaMethods;
 
 use ::util::{get_meta_item_value};
 
@@ -46,10 +43,10 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 
     let field_defs: Vec<(Ident, P<Expr>)> = fields.iter().map(|field| {
         let field_ident = builder.id(field.ident.unwrap());
-        let field_ident_str = field_ident.name.as_str();
+        let field_ident_str_lit = builder.lit().str(field.ident.unwrap());
         let field_encoder = quote_expr!(cx, 
             match rustler::NifDecoder::decode(
-                match rustler::map::get_map_value(term, rustler::atom::get_atom_init($field_ident_str).to_term(env)) {
+                match rustler::map::get_map_value(term, rustler::atom::get_atom_init($field_ident_str_lit).to_term(env)) {
                     Some(term) => term,
                     None => return Err(rustler::NifError::BadArg),
                     }) {
@@ -63,13 +60,14 @@ fn gen_decoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 
     let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'a>) } else { quote_ty!(cx, $struct_name) };
 
+    let ex_module_name_str = builder.lit().str(ex_module_name);
     let decoder_ast = quote_item!(cx, 
         impl<'a> rustler::NifDecoder<'a> for $struct_typ {
             fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
                 let env = term.get_env();
                 match rustler::ex_struct::get_ex_struct_name(term) {
                     Some(atom) => {
-                        if atom != rustler::atom::get_atom_init($ex_module_name) {
+                        if atom != rustler::atom::get_atom_init($ex_module_name_str) {
                             return Err(rustler::NifError::BadArg);
                         }
                     },
@@ -87,18 +85,18 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
 
     let field_defs: Vec<Stmt> = fields.iter().map(|field| {
         let field_ident = builder.id(field.ident.unwrap());
-        let field_ident_str = field_ident.name.as_str();
-        quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_ident_str).to_term(env), 
+        let field_str_lit = builder.lit().str(field.ident.unwrap());
+        quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_str_lit).to_term(env), 
                                                     self.$field_ident.encode(env)).unwrap();).unwrap()
     }).collect();
 
     let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'b>) } else { quote_ty!(cx, $struct_name) };
+    let ex_module_name_str_lit = builder.lit().str(ex_module_name);
 
     let encoder_ast = quote_item!(cx,
         impl<'b> rustler::NifEncoder for $struct_typ {
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
-                use rustler::NifEncoder;
-                let mut map = rustler::ex_struct::make_ex_struct(env, $ex_module_name).expect("issue #1 on github");
+                let mut map = rustler::ex_struct::make_ex_struct(env, $ex_module_name_str_lit).expect("issue #1 on github");
 
                 $field_defs
 

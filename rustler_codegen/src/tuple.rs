@@ -2,7 +2,6 @@ use ::syntax::ptr::P;
 use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData, Expr};
 use ::syntax::codemap::{Span};
 use ::syntax::ext::base::{Annotatable, ExtCtxt};
-use ::syntax::ext::build::AstBuilder;
 
 pub fn transcoder_decorator(
     cx: &mut ExtCtxt,

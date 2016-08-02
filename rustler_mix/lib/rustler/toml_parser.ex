@@ -53,6 +53,9 @@ defmodule Rustler.TomlParser do
     {num, ""} = Integer.parse(raw_num)
     num
   end
+  def proc_val({:val_boolean, bool}) do
+    bool
+  end
   def proc_val({:array, arr_ast}) do
     # TODO: Validate types
     Enum.map(arr_ast, fn
