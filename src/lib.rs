@@ -15,78 +15,12 @@
 //! rustler_codegen library.
 //!
 //! # Getting Started
-//! Rustler has a Mix archive that provides several commands which makes working with Rustler
-//! easier, including project generators, a tool for validating your Rust and Erlang environment,
-//! as well as build utilities.
+//! There is a [`:rustler`](https://hex.pm/packages/rustler) package on hex.pm that provides
+//! functionality which makes working with Rustler easier, including project generators, an
+//! automatic NIF compiler for Mix, and utilities for loading the compiled NIF.
 //!
-//! As long as you have Elixir and Mix installed, you can install the archive by doing `mix
-//! archive.install https://github.com/hansihe/rustler_archives/raw/master/rustler_installer.ez`.
-//! When the archive is installed, you can generate a new Rustler project by doing `mix rustler.new
-//! <path>`, and following the instructions.
-//!
-//! # Integrating with a mix project
-//! For projects using mix, there is a [helper package on hex](https://hex.pm/packages/rustler).
-//! This package contains a mix compiler that automates environment sanity checks, crate compilation
-//! and nif loading. If you are using mix, this package is highly recommended, as it will probably
-//! make your life easier.
-//!
-//! To enable automatic compilation of your Rust NIFs do the following:
-//!
-//! 1. Add the [rustler package](https://hex.pm/packages/rustler) to the dependencies section of
-//!    your mix.exs.
-//! 2. Add the `:rustler` compiler to the `compilers` list in your project function. If no 
-//!    `compilers` key exists, you should add this: `compilers: [:rustler] ++ Mix.compilers`.
-//! 3. To actually make a crate compile, you should add a `rustler_crates: ["CRATE_PATH"]`
-//!    key to your project function. `CRATE_PATH` should be a relative path to the directory
-//!    containing the `Cargo.toml` from the top directory of your mix project.
-//!
-//! When finished, your mix.exs should look something like this (some parts omitted):
-//!
-//! ```elixir
-//! defmodule YourProject.Mixfile do
-//!   use Mix.Project
-//! 
-//!   def project do
-//!     [app: :your_project,
-//!      [...]
-//!      compilers: [:rustler] ++ Mix.compilers,
-//!      rustler_crates: ["."],
-//!      deps: deps]
-//!   end
-//!
-//!   [...]
-//! 
-//!   defp deps do
-//!     [{:rustler, "~> 0.0.7"}]
-//!   end
-//! end
-//! ```
-//!
-//! You should then try to do `mix compile`. If there are any more issues with your environment,
-//! the rustler compiler plugin should give you instructions on how to fix them.
-//!
-//! ### Loading the NIF
-//! Loading a Rustler NIF is done in almost the same way as normal NIFs.
-//!
-//! The actual loading is done by calling `Rustler.load_nif("<LIBRARY_NAME>")` in the module you
-//! want to load the NIF in. This is usually done in the `@on_load` module hook.
-//!
-//! ```elixir
-//! defmodule MyProject.NativeModule do
-//!   @on_load :load_nif
-//!
-//!   defp load_nif do
-//!     :ok = Rustler.load_nif("<LIBRARY_NAME>")
-//!   end
-//!
-//!   // When loading a NIF module, dummy clauses for all NIF functions are required.
-//!   // NIF dummies usually just error out when called when the NIF is not loaded, as that should
-//!   // never normally happen.
-//!   def my_native_function(_arg1, _arg2), do: exit(:nif_not_loaded)
-//! end
-//! ```
-//!
-//! Note that `<LIBRARY_NAME>` is the name in the `[lib]` section of your `Cargo.toml`.
+//! For more information about this, see [the documentation for
+//! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};

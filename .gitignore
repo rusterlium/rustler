@@ -38,3 +38,5 @@ erl_crash.dump
 /installer/_build
 /installer/cover
 /installer/deps
+
+/rustler_mix/doc

@@ -7,7 +7,13 @@ defmodule Rustler.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     name: "Rustler Mix",
+     source_url: "https://github.com/hansihe/Rustler",
+     homepage_url: "https://github.com/hansihe/Rustler",
      deps: deps,
+     docs: [
+       extras: ["guides/Basics.md"],
+     ],
      package: package,
      description: description]
   end
@@ -29,7 +35,7 @@ defmodule Rustler.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:ex_doc, "~> 0.12", only: :dev}]
   end
 
   defp description do

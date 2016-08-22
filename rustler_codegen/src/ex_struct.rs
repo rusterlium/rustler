@@ -89,6 +89,7 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
         quote_stmt!(cx, map = rustler::map::map_put(map, rustler::atom::get_atom_init($field_str_lit).to_term(env), 
                                                     self.$field_ident.encode(env)).unwrap();).unwrap()
     }).collect();
+    let field_defs_block = builder.block().with_stmts(field_defs).build();
 
     let struct_typ = if has_lifetime { quote_ty!(cx, $struct_name<'b>) } else { quote_ty!(cx, $struct_name) };
     let ex_module_name_str_lit = builder.lit().str(ex_module_name);
@@ -98,7 +99,7 @@ fn gen_encoder(cx: &ExtCtxt, struct_name: &Ident, fields: &Vec<StructField>, ex_
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
                 let mut map = rustler::ex_struct::make_ex_struct(env, $ex_module_name_str_lit).expect("issue #1 on github");
 
-                $field_defs
+                $field_defs_block
 
                 map
             }

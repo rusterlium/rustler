@@ -8,7 +8,11 @@ defmodule RustlerTest.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      compilers: [:rustler] ++ Mix.compilers,
-     rustler_crates: ["/"],
+     rustler_crates: [
+       test_nif: [
+         path: "/",
+       ],
+     ],
      deps: deps]
   end
 

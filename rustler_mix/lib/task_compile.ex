@@ -5,8 +5,10 @@ defmodule Mix.Tasks.Compile.Rustler do
   alias Rustler.Compiler.Rustup
 
   def run(_args) do
-    app = Mix.Project.config[:app]
-    crates_config = Application.get_env(app, :rustler_crates)
+    crates_config = Mix.Project.config[:rustler_crates]
+    if !crates_config do
+      throw_error(:no_config)
+    end
     Enum.map(crates_config, &compile_crate_config/1)
   end
 

@@ -2,11 +2,21 @@
 name = "test"
 version = "0.1.0"
 authors = ["HansiHE <hansihe@hansihe.com>"]
+build = "build.rs"
 
 [lib]
 name = "test"
 path = "src/lib.rs"
 crate-type = ["dylib"]
+
+[features]
+default = ["with-syntex"]
+with-syntex = [
+    "rustler_codegen/with-syntex",
+]
+
+[build-dependencies.rustler_codegen]
+path = "../rustler_codegen"
 
 [dependencies.rustler]
 path = "../"
