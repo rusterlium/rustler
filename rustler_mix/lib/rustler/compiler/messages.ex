@@ -33,6 +33,12 @@ defmodule Rustler.Compiler.Messages do
     """
   end
 
+  def message(:no_config) do
+  """
+  Add your crate to the 'rustler_crates' attribute in the project function.
+  """
+  end
+
   def message({:differing_versions, crate, rustler_version, codegen_version}) do
     """
     The '#{crate}' crate should have the same rustler and rustler_codegen version in its Cargo.toml:
