@@ -3,7 +3,7 @@ defmodule Rustler.Mixfile do
 
   def project do
     [app: :rustler,
-     version: "0.3.2",
+     version: "0.4.0",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -13,6 +13,7 @@ defmodule Rustler.Mixfile do
      deps: deps,
      docs: [
        extras: ["guides/Basics.md"],
+       source_root: "./rustler_mix",
      ],
      package: package,
      description: description]

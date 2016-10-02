@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the NifListIterator.
 
-use super::{ NifTerm, NifError, NifResult, NifDecoder };
+use super::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
 use ::wrapper::list;
 
 /// Enables iteration over the items in the list.
@@ -84,5 +84,30 @@ impl<'a> NifDecoder<'a> for NifListIterator<'a> {
             Some(iter) => Ok(iter),
             None => Err(NifError::BadArg)
         }
+    }
+}
+
+//impl<'a, T> NifEncoder for Iterator<Item = T> where T: NifEncoder {
+//    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+//        let term_arr: Vec<::wrapper::nif_interface::NIF_TERM> =
+//            self.map(|x| x.encode(env).as_c_arg()).collect();
+//    }
+//}
+
+impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
+    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
+            self.iter().map(|x| x.encode(env).as_c_arg()).collect();
+        NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array))
+    }
+}
+
+impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        let iter: NifListIterator = try!(term.decode());
+        let res: NifResult<Self> = iter
+            .map(|x| x.decode::<T>())
+            .collect();
+        res
     }
 }

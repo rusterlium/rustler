@@ -121,6 +121,9 @@ pub unsafe fn enif_get_list_cell(env: NIF_ENV, list: NIF_TERM, head: *mut NIF_TE
 pub unsafe fn enif_get_list_length(env: NIF_ENV, list: NIF_TERM, length: *mut c_uint) -> c_int {
     erlang_nif_sys::enif_get_list_length(env, list, length)
 }
+pub unsafe fn enif_make_list_from_array(env: NIF_ENV, arr: *const NIF_TERM, cnt: c_uint) -> NIF_TERM {
+    erlang_nif_sys::enif_make_list_from_array(env, arr, cnt)
+}
 
 // Resources
 pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar,

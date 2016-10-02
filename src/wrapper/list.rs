@@ -19,3 +19,8 @@ pub fn get_list_cell(env: NIF_ENV, list: NIF_TERM) -> Option<(NIF_TERM, NIF_TERM
     }
     Some((head, tail))
 }
+
+pub fn make_list(env: NIF_ENV, arr: &[NIF_TERM]) -> NIF_TERM {
+    // FIXME?: Should we downcast like this?
+    unsafe { nif_interface::enif_make_list_from_array(env, arr.as_ptr(), arr.len() as u32) }
+}

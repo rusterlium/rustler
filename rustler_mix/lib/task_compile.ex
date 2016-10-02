@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       throw_error(:rustup_not_installed)
     end
     unless Rustup.version_installed?(version) do
-      throw_error({:rust_version_not_installed, Rustler.rust_version})
+      throw_error({:rust_version_not_installed, version})
     end
 
     ["rustup", "run", version, "cargo", "rustc"]
