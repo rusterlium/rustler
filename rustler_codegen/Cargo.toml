@@ -21,13 +21,13 @@ with-syntex = [
 ]
 
 [build-dependencies]
-easy-plugin = "=0.9.1"
-synthax = "=0.3.2"
+easy-plugin = "=0.11.0"
+synthax = "=0.3.3"
 
 [dependencies]
-easy-plugin = "=0.9.1"
-aster = "=0.25.0"
-synthax = "=0.3.2"
+easy-plugin = "=0.11.0"
+aster = "=0.29.0"
+synthax = "=0.3.3"
 
 syntex = { version = "*", optional = true }
 syntex_syntax = { version = "*", optional = true }
