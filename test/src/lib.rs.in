@@ -4,7 +4,7 @@ mod test_primitives;
 use test_primitives::{add_u32, add_i32, tuple_add};
 
 mod test_list;
-use test_list::{sum_list};
+use test_list::{sum_list, make_list};
 
 mod test_resource;
 use test_resource::on_load as resource_on_load;
@@ -19,6 +19,7 @@ rustler_export_nifs!(
      ("add_i32", 2, add_i32),
      ("tuple_add", 1, tuple_add),
      ("sum_list", 1, sum_list),
+     ("make_list", 0, make_list),
      ("resource_make", 0, resource_make),
      ("resource_set_integer_field", 2, resource_set_integer_field),
      ("resource_get_integer_field", 1, resource_get_integer_field),

@@ -14,3 +14,8 @@ pub fn sum_list<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'
         Err(err) => Err(err),
     }
 }
+
+pub fn make_list<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
+    let list = vec![1, 2, 3];
+    Ok(list.encode(env))
+}

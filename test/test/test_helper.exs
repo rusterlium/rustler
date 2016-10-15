@@ -20,6 +20,7 @@ defmodule TestNative do
   def tuple_add(_), do: err
 
   def sum_list(_), do: err
+  def make_list(), do: err
 
   def resource_make(), do: err
   def resource_set_integer_field(_, _), do: err

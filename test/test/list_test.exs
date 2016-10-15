@@ -12,4 +12,12 @@ defmodule ListTest do
   test "list iteration fails on invalid entries" do
     assert_raise ArgumentError, fn -> TestNative.sum_list([1, 4, :invalid, 2]) end
   end
+
+  test "simple list construction" do
+    assert TestNative.make_list == [1, 2, 3]
+  end
+
+  test "simple list construction with sum" do
+    assert TestNative.sum_list(TestNative.make_list) == 6
+  end
 end
