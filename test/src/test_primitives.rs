@@ -14,7 +14,7 @@ pub fn add_i32<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a
     Ok((lhs + rhs).encode(env))
 }
 
-#[NifTuple] struct AddTuple { lhs: i32, rhs: i32 }
+#[derive(NifTuple)] struct AddTuple { lhs: i32, rhs: i32 }
 pub fn tuple_add<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
     let tuple: AddTuple = try!(args[0].decode());
     Ok((tuple.lhs + tuple.rhs).encode(env))

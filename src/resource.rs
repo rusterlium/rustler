@@ -28,9 +28,10 @@ pub struct NifResourceType<T> {
 /// 
 /// In most cases the user should not have to worry about this.
 pub trait NifResourceTypeProvider: Sized {
-    fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
+    //fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
+    extern "C" fn destructor(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
     fn get_type<'a>() -> &'a NifResourceType<Self>;
-    unsafe fn set_type(typ: NifResourceType<Self>);
+    //unsafe fn set_type(typ: NifResourceType<Self>);
 }
 
 impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider {
@@ -49,7 +50,7 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider+
 pub fn open_struct_resource_type<T: NifResourceTypeProvider>(env: &NifEnv, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
-                                                                                 Some(T::get_dtor()), flags);
+                                                                                 Some(T::destructor), flags);
     if res.is_some() {
         Some(NifResourceType {
             res: res.unwrap(),
@@ -145,5 +146,39 @@ impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
     /// released.
     fn drop(&mut self) {
         unsafe { ::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
+    }
+}
+
+#[macro_export]
+macro_rules! resource_struct_init {
+    ($struct_name:ident, $env: ident) => {
+        {
+            static mut struct_type: Option<::rustler::resource::NifResourceType<$struct_name>> = None;
+            
+            let temp_struct_type = 
+                match ::rustler::resource::open_struct_resource_type::<$struct_name>(
+                    $env, 
+                    stringify!($struct_name),
+                    ::rustler::wrapper::nif_interface::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
+                    ) {
+                    Some(inner) => inner,
+                    None => {
+                        println!("Failure in creating resource type");
+                        return false;
+                    }
+                };
+            unsafe { struct_type = Some(temp_struct_type) };
+
+            impl ::rustler::resource::NifResourceTypeProvider for $struct_name {
+                extern "C" fn destructor(
+                    env: ::rustler::wrapper::nif_interface::NIF_ENV,
+                    obj: ::rustler::wrapper::nif_interface::MUTABLE_NIF_RESOURCE_HANDLE) {
+                    unsafe { ::rustler::codegen_runtime::handle_drop_resource_struct_handle::<$struct_name>(env, obj) };
+                }
+                fn get_type<'a>() -> &'a ::rustler::resource::NifResourceType<Self> {
+                    unsafe { &struct_type }.as_ref().unwrap()
+                }
+            }
+        }
     }
 }

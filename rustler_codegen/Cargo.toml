@@ -5,7 +5,6 @@ repository = "https://github.com/hansihe/Rustler/tree/master/rustler_codegen"
 version = "0.12.0"
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "BSD-2-Clause"
-build = "build.rs"
 
 [lib]
 plugin = true
@@ -13,21 +12,13 @@ plugin = true
 [features]
 default = ["with-syntex"]
 with-syntex = [
-    "synthax/syntex",
-    "easy-plugin/stable",
     "syntex",
     "syntex_syntax",
-    "aster/with-syntex",
 ]
 
-[build-dependencies]
-easy-plugin = "=0.11.1"
-synthax = "=0.3.4"
-
 [dependencies]
-easy-plugin = "=0.11.1"
-aster = "=0.29.0"
-synthax = "=0.3.4"
-
 syntex = { version = "0.*", optional = true }
 syntex_syntax = { version = "0.*", optional = true }
+
+syn = { version = "=0.9", features = ["aster", "visit"] }
+quote = "=0.3"

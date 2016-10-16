@@ -3,7 +3,7 @@ use rustler::NifEncoder;
 use rustler::{NifEnv, NifTerm, NifResult};
 use rustler::resource::ResourceCell;
 
-#[NifResource]
+//#[NifResource]
 struct TestResource {
     test_field: i32
 }
