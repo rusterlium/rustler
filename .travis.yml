@@ -22,3 +22,6 @@ before_install:
 script:
   - cargo build --verbose
   - cd test && mix test
+
+after_script:
+  - tree
