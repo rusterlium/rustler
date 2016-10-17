@@ -9,17 +9,17 @@ defmodule Rustler do
     '2.11',
   ]
 
-  def nif_lib_dir do
-    Mix.Project.build_path <> "/rustler"
+  def nif_lib_dir(application) do
+    to_string(:code.priv_dir(application)) <> "/rustler"
   end
 
-  def nif_lib_path(lib_name) do
-    "#{nif_lib_dir}/lib#{lib_name}"
+  def nif_lib_path(application, lib_name) do
+    "#{nif_lib_dir(application)}/lib#{lib_name}"
   end
 
-  defmacro load_nif(lib_name, load_args \\ nil) do
+  defmacro load_nif(app_name, lib_name, load_args \\ nil) do
     quote do
-      :erlang.load_nif(Rustler.nif_lib_path(unquote(lib_name)), unquote(load_args))
+      :erlang.load_nif(Rustler.nif_lib_path(unquote(app_name), unquote(lib_name)), unquote(load_args))
     end
   end
 

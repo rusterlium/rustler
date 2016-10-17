@@ -5,14 +5,25 @@ defmodule Mix.Tasks.Compile.Rustler do
   alias Rustler.Compiler.Rustup
 
   def run(_args) do
+    app = Mix.Project.config[:app]
     crates_config = Mix.Project.config[:rustler_crates]
     if !crates_config do
       throw_error(:no_config)
     end
-    Enum.map(crates_config, &compile_crate_config/1)
+    Enum.map(crates_config, &compile_crate_config(app, &1))
   end
 
-  def compile_crate_config({id, config}) do
+  def priv_path do
+    Path.expand("priv")
+  end
+
+  def nif_lib_dir do
+    path = Path.join(priv_path, "rustler")
+    File.mkdir_p!(path)
+    path
+  end
+
+  def compile_crate_config(app, {id, config}) do
     crate_path = Keyword.get(config, :path)
     Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
 
@@ -24,7 +35,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     |> make_build_mode_flag(build_mode)
 
     crate_full_path = File.cwd! <> crate_path
-    target_dir = Rustler.nif_lib_dir <> crate_path
+    target_dir = Mix.Project.build_path <> "/rustler" <> crate_path
 
     cargo_data = check_crate_env(crate_full_path)
     lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
@@ -46,7 +57,7 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     {src_ext, dst_ext} = dll_extension
     compiled_lib = "#{target_dir}/#{Atom.to_string(build_mode)}/lib#{lib_name}.#{src_ext}"
-    destination_lib = "#{Rustler.nif_lib_dir}/lib#{lib_name}.#{dst_ext}"
+    destination_lib = "#{nif_lib_dir}/lib#{lib_name}.#{dst_ext}"
     File.cp!(compiled_lib, destination_lib)
   end
 

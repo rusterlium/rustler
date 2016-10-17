@@ -10,6 +10,7 @@ defmodule RustlerTest.Mixfile do
      compilers: [:rustler] ++ Mix.compilers,
      rustler_crates: [
        test_nif: [
+         application: :rustler_test,
          path: "/",
        ],
      ],

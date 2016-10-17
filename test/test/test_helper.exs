@@ -8,7 +8,7 @@ defmodule TestNative do
   @on_load :load_nif
 
   def load_nif do
-    Rustler.load_nif("test")
+    Rustler.load_nif(:rustler_test, "test")
   end
 
   defp err do
