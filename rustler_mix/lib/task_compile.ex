@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
     |> make_features_flag(Keyword.get(config, :features, []))
     |> make_build_mode_flag(build_mode)
+    |> make_platform_hacks(:os.type)
 
     crate_full_path = File.cwd! <> crate_path
     target_dir = Mix.Project.build_path <> "/rustler" <> crate_path
@@ -73,6 +74,12 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     ["rustup", "run", version, "cargo", "rustc"]
   end
+
+  defp make_platform_hacks(args, {:unix, :darwin}) do
+    # Fix for https://github.com/hansihe/Rustler/issues/12
+    args ++ ["--", "--codegen", "link-args='-flat_namespace -undefined suppress'"]
+  end
+  defp make_platform_hacks(args, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args ++ []
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
