@@ -13,7 +13,7 @@ defmodule Rustler.Mixfile do
      deps: deps,
      docs: [
        extras: ["guides/Basics.md"],
-       source_root: "./rustler_mix",
+       source_url_pattern: "https://github.com/hansihe/Rustler/blob/master/rustler_mix/%{path}#L%{line}"
      ],
      package: package,
      description: description]
