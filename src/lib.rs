@@ -25,6 +25,7 @@
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, NIF_TERM, enif_make_badarg, enif_make_atom_len};
 pub use wrapper::nif_interface::size_t;
+pub use wrapper::nif_interface::ErlNifTaskFlags;
 
 #[macro_use]
 extern crate lazy_static;

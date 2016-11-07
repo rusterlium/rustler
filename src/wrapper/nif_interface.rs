@@ -36,6 +36,12 @@ pub use self::erlang_nif_sys::NIF_MAJOR_VERSION;
 pub use self::erlang_nif_sys::NIF_MINOR_VERSION;
 pub use self::erlang_nif_sys::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 
+#[repr(C)]
+pub enum ErlNifTaskFlags {
+    ERL_NIF_NORMAL_JOB = 0,
+    ERL_NIF_DIRTY_JOB_CPU_BOUND = 1,
+    ERL_NIF_DIRTY_JOB_IO_BOUND = 2
+}
 
 pub unsafe fn enif_make_badarg(env: NIF_ENV) -> NIF_TERM {
     erlang_nif_sys::enif_make_badarg(env)
