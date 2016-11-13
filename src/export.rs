@@ -17,6 +17,9 @@
 #[macro_export]
 macro_rules! rustler_export_nifs {
     ($name:expr, [$( ($nif_name:expr, $nif_arity:expr, $nif_fun:path) ),*], $on_load:expr) => (
+        rustler_export_nifs!($name, [$( ($nif_name, $nif_arity, $nif_fun, rustler::wrapper::nif_interface::ErlNifTaskFlags::ERL_NIF_NORMAL_JOB) ),*], $on_load);
+    );
+    ($name:expr, [$( ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr) ),*], $on_load:expr) => (
         static mut NIF_ENTRY: Option<rustler::wrapper::nif_interface::DEF_NIF_ENTRY> = None;
 
         #[no_mangle]
@@ -47,7 +50,7 @@ macro_rules! rustler_export_nifs {
                                 }
                             nif_func
                         },
-                        flags: 0,
+                        flags: $nif_flag as u32,
                     }
                  ),*
             ];
@@ -71,5 +74,5 @@ macro_rules! rustler_export_nifs {
 
             unsafe { NIF_ENTRY.as_ref().unwrap() }
         }
-        );
+    );
 }
