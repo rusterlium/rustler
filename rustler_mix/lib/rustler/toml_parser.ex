@@ -62,6 +62,9 @@ defmodule Rustler.TomlParser do
       item -> proc_val(item)
     end)
   end
+  def proc_val(any) do
+    any
+  end
 
   # Pass 2: Fuck it for now
 
