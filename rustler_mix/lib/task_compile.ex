@@ -46,8 +46,9 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     [cmd_bin | args] = compile_command
     compile_return = System.cmd(cmd_bin, args, [
-      cd: crate_full_path, 
-      env: [{"CARGO_TARGET_DIR", target_dir}], 
+      cd: crate_full_path,
+      stderr_to_stdout: true,
+      env: [{"CARGO_TARGET_DIR", target_dir}],
       into: IO.stream(:stdio, :line),
     ])
 
@@ -77,7 +78,7 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp make_platform_hacks(args, {:unix, :darwin}) do
     # Fix for https://github.com/hansihe/Rustler/issues/12
-    args ++ ["--", "--codegen", "link-args='-flat_namespace -undefined suppress'"]
+    args ++ ["--", "--codegen", "link-args=-flat_namespace -undefined suppress"]
   end
   defp make_platform_hacks(args, _), do: args
 
