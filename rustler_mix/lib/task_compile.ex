@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp make_platform_hacks(args, {:unix, :darwin}) do
     # Fix for https://github.com/hansihe/Rustler/issues/12
-    args ++ ["--", "--codegen", "link-args='-flat_namespace -undefined suppress'"]
+    args ++ ["--", "--codegen", "link-args=-flat_namespace -undefined suppress"]
   end
   defp make_platform_hacks(args, _), do: args
 
