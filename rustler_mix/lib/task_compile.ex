@@ -46,8 +46,9 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     [cmd_bin | args] = compile_command
     compile_return = System.cmd(cmd_bin, args, [
-      cd: crate_full_path, 
-      env: [{"CARGO_TARGET_DIR", target_dir}], 
+      cd: crate_full_path,
+      stderr_to_stdout: true,
+      env: [{"CARGO_TARGET_DIR", target_dir}],
       into: IO.stream(:stdio, :line),
     ])
 
