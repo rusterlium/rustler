@@ -26,7 +26,7 @@ use ::wrapper::list;
 /// ```
 /// let list_iterator: NifListIterator = try!(list_term.decode());
 ///
-/// let result: NifResult<Vec<i64>> = iter
+/// let result: NifResult<Vec<i64>> = list_interator
 ///     // Produces an iterator of NifResult<i64>
 ///     .map(|x| x.decode::<i64>())
 ///     // Lifts each value out of the result. Returns Ok(Vec<i64>) if successful, the first error
