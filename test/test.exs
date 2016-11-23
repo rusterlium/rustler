@@ -5,8 +5,8 @@ end
 
 defmodule RustlerNative do
   def load do
-    path = :filelib.wildcard('target/debug/librustler_test.*') |> hd |> :filename.rootname
-    :ok = :erlang.load_nif(path, 0)
+    require Rustler
+    :ok = Rustler.load_nif(:rustler_test, "rustler_test")
   end
 
   def add_u32(_lhs, _rhs), do: throw(:no_nif)
