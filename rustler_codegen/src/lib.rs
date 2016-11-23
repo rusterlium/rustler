@@ -26,10 +26,10 @@ mod map;
 
 #[cfg(feature = "with-syntex")]
 pub fn expand<S, D>(src: S, dst: D) -> Result<(), syntex::Error>
-    where S: AsRef<Path>, D: AsRef<Path> 
+    where S: AsRef<Path>, D: AsRef<Path>
 {
     let mut reg = syntex::Registry::new();
-    
+
     reg.add_decorator("derive_NifMap", map_transcoder_decorator_shim);
     reg.add_decorator("derive_NifTuple", tuple_transcoder_decorator_shim);
 

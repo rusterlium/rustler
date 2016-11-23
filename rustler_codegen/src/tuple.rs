@@ -1,4 +1,4 @@
-use ::syn::{self, aster, Field, VariantData, Ident};
+use ::syn::{self, Field, VariantData, Ident};
 use ::quote::{self, Tokens};
 
 pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str> {
@@ -26,7 +26,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
         let decoder = quote! { try!(rustler::NifDecoder::decode(terms[#idx])) };
-        
+
         if is_tuple {
             unimplemented!();
         } else {
@@ -36,9 +36,9 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     }).collect();
 
     // If the struct has a lifetime argument, put that in the struct type.
-    let struct_typ = if has_lifetime { 
+    let struct_typ = if has_lifetime {
         quote! { #struct_name <'a> }
-    } else { 
+    } else {
         quote! { #struct_name }
     };
 
@@ -80,9 +80,9 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     };
 
     // If the struct has a lifetime argument, put that in the struct type.
-    let struct_typ = if has_lifetime { 
+    let struct_typ = if has_lifetime {
         quote! { #struct_name <'b> }
-    } else { 
+    } else {
         quote! { #struct_name }
     };
 

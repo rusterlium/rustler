@@ -17,6 +17,7 @@ defmodule RustlerTest do
   def add_u32(_, _), do: err
   def add_i32(_, _), do: err
   def tuple_add(_), do: err
+  def echo_u8(_), do: err
 
   def sum_list(_), do: err
   def make_list(), do: err

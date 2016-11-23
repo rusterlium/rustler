@@ -5,6 +5,7 @@ defmodule RustlerTest.PrimitivesTest do
     assert 3 == RustlerTest.add_u32(1, 2)
     assert 3 == RustlerTest.add_i32(6, -3)
     assert -3 == RustlerTest.add_i32(3, -6)
+    assert 3 == RustlerTest.echo_u8(3)
   end
 
   test "number decoding should fail on invalid terms" do
