@@ -14,7 +14,7 @@ mod test_binary;
 use test_binary::make_shorter_subbinary;
 
 rustler_export_nifs!(
-    "Elixir.TestNative",
+    "Elixir.RustlerTest",
     [("add_u32", 2, add_u32),
      ("add_i32", 2, add_i32),
      ("tuple_add", 1, tuple_add),

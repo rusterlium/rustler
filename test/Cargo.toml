@@ -1,11 +1,11 @@
 [package]
-name = "test"
+name = "rustler_test"
 version = "0.1.0"
 authors = ["HansiHE <hansihe@hansihe.com>"]
 build = "build.rs"
 
 [lib]
-name = "test"
+name = "rustler_test"
 path = "src/lib.rs"
 crate-type = ["dylib"]
 
