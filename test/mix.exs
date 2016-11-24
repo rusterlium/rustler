@@ -21,6 +21,6 @@ defmodule RustlerTest.Mixfile do
   end
 
   defp rustler_crates do
-    [rustler_test: [path: "/"]]
+    [rustler_test: [path: "/", mode: :debug]]
   end
 end
