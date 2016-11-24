@@ -5,7 +5,7 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.make_shorter_subbinary("test") == "es"
   end
 
-  test "unvalid subbinary creation" do
-    assert_raise ArgumentError, fn -> RustlerTest.make_shorter_subbinary("t") end
+  test "invalid subbinary creation" do
+    assert_raise ErlangError, fn -> RustlerTest.make_shorter_subbinary("t") end
   end
 end
