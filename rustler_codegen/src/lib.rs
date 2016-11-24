@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "with-syntex"), feature(plugin, plugin_registrar, quote, rustc_private))]
 
 extern crate syn;
-use syn::aster;
+//use syn::aster;
 #[macro_use]
 extern crate quote;
 

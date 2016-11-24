@@ -25,11 +25,11 @@ defmodule Mix.Tasks.Rustler.New do
       def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
     end
   end
-  
+
   @switches []
 
   def run(argv) do
-    {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
+    {opts, _argv, _} = OptionParser.parse(argv, switches: @switches)
 
     module = prompt("This is the name of the Elixir module the NIF module will be registered to.\nModule name")
 
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Rustler.New do
     new(path, module, name, opts)
   end
 
-  def new(path, module, name, opts) do
+  def new(path, module, name, _opts) do
 
     module_elixir = "Elixir." <> module
 
