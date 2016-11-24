@@ -1,4 +1,3 @@
-use rustler;
 use rustler::NifEncoder;
 use rustler::{NifEnv, NifTerm, NifResult};
 use rustler::resource::ResourceCell;
@@ -13,7 +12,7 @@ pub fn on_load(env: &NifEnv) -> bool {
     true
 }
 
-pub fn resource_make<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
+pub fn resource_make<'a>(env: &'a NifEnv, _args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
     let data = TestResource {
         test_field: 0,
     };

@@ -70,7 +70,7 @@ defmodule Rustler.TomlParser do
 
   def get_table_vals(data, path) do
     found = Enum.find(data, fn
-      {:table, inner_path, values} -> path == inner_path
+      {:table, inner_path, _values} -> path == inner_path
       _ -> false
     end)
 

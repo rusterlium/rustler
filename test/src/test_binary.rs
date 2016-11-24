@@ -1,5 +1,4 @@
-use rustler;
-use rustler::{NifEnv, NifTerm, NifError, NifEncoder, NifResult};
+use rustler::{NifEnv, NifTerm, NifEncoder, NifResult};
 use rustler::binary::NifBinary;
 
 pub fn make_shorter_subbinary<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {

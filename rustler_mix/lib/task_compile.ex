@@ -1,15 +1,16 @@
 defmodule Mix.Tasks.Compile.Rustler do
   use Mix.Task
 
-  alias Rustler.Compiler.Messages
-  alias Rustler.Compiler.Rustup
+  alias Rustler.Compiler.{Messages, Rustup}
 
   def run(_args) do
     app = Mix.Project.config[:app]
     crates_config = Mix.Project.config[:rustler_crates]
-    if !crates_config do
+
+    unless crates_config do
       throw_error(:no_config)
     end
+
     Enum.map(crates_config, &compile_crate_config(app, &1))
   end
 
@@ -23,28 +24,31 @@ defmodule Mix.Tasks.Compile.Rustler do
     path
   end
 
-  def compile_crate_config(app, {id, config}) do
+  def compile_crate_config(_app, {id, config}) do
     crate_path = Keyword.get(config, :path)
-    Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
-
     build_mode = Keyword.get(config, :mode, :release)
 
-    compile_command = make_base_command(Keyword.get(config, :cargo, :system))
-    |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
-    |> make_features_flag(Keyword.get(config, :features, []))
-    |> make_build_mode_flag(build_mode)
-    |> make_platform_hacks(:os.type)
+    Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
+
+    compile_command =
+      make_base_command(Keyword.get(config, :cargo, :system))
+      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
+      |> make_features_flag(Keyword.get(config, :features, []))
+      |> make_build_mode_flag(build_mode)
+      |> make_platform_hacks(:os.type)
 
     crate_full_path = File.cwd! <> crate_path
     target_dir = Mix.Project.build_path <> "/rustler" <> crate_path
 
     cargo_data = check_crate_env(crate_full_path)
     lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
+
     if lib_name == nil do
       throw_error({:cargo_no_library, crate_path})
     end
 
     [cmd_bin | args] = compile_command
+
     compile_return = System.cmd(cmd_bin, args, [
       cd: crate_full_path,
       stderr_to_stdout: true,
@@ -58,7 +62,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     end
 
     {src_ext, dst_ext} = dll_extension
-    compiled_lib = "#{target_dir}/#{Atom.to_string(build_mode)}/lib#{lib_name}.#{src_ext}"
+    compiled_lib = "#{target_dir}/#{build_mode}/lib#{lib_name}.#{src_ext}"
     destination_lib = "#{nif_lib_dir}/lib#{lib_name}.#{dst_ext}"
     File.cp!(compiled_lib, destination_lib)
   end
@@ -69,6 +73,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     if Rustup.version == :none do
       throw_error(:rustup_not_installed)
     end
+
     unless Rustup.version_installed?(version) do
       throw_error({:rust_version_not_installed, version})
     end
@@ -120,5 +125,4 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     cargo_data
   end
-
 end

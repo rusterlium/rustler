@@ -21,17 +21,9 @@ extern crate syntex_syntax as syntax;
 #[cfg(feature = "stable")]
 use std::path::Path;
 
-
-
-
-
-
-
-
 mod ex_struct {
     use ::syntax::ptr::P;
-    use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData,
-                        Expr, Stmt};
+    use ::syntax::ast::{MetaItem, ItemKind, Ident, StructField, VariantData, Expr, Stmt};
     use ::syntax::codemap::{Span};
     use ::syntax::ext::base::{Annotatable, ExtCtxt};
     use ::util::{get_meta_item_value};

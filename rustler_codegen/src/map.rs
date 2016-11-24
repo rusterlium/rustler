@@ -1,4 +1,4 @@
-use ::syn::{self, aster, Field, VariantData, Ident};
+use ::syn::{self, Field, VariantData, Ident};
 use ::quote::{self, Tokens};
 
 pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str> {
@@ -30,12 +30,12 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, has_lifetime: bool)
             #ident: {
                 match rustler::NifDecoder::decode(
                     match rustler::map::get_map_value(
-                        term, 
-                        rustler::atom::get_atom_init(#ident_str).to_term(env)) 
+                        term,
+                        rustler::atom::get_atom_init(#ident_str).to_term(env))
                     {
                         Some(term) => term,
                         None => return Err(rustler::NifError::BadArg),
-                    }) 
+                    })
                 {
                     Ok(res) => res,
                     Err(err) => return Err(err),
@@ -66,7 +66,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, has_lifetime: bool)
         let field_ident_str = field_ident.to_string();
         quote! {
             map = rustler::map::map_put(
-                map, 
+                map,
                 rustler::atom::get_atom_init(#field_ident_str).to_term(env),
                 self.#field_ident.encode(env)
                 ).unwrap();
@@ -81,7 +81,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, has_lifetime: bool)
 
     quote! {
         impl<'a> rustler::codegen_runtime::GeneratedNifTranscoder<'a, rustler::codegen_runtime::MapType> {
-            
+
         }
         impl<'b> rustler::NifEncoder for #struct_type {
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
