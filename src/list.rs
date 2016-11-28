@@ -4,6 +4,7 @@
 
 use super::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
 use ::wrapper::list;
+use ::wrapper::check;
 
 /// Enables iteration over the items in the list.
 ///
@@ -42,7 +43,7 @@ impl<'a> NifListIterator<'a> {
     fn new(term: NifTerm<'a>) -> Option<Self> {
         let term_c = term.as_c_arg();
         let env_c = term.get_env().as_c_arg();
-        if list::is_list(env_c, term_c) || list::is_empty_list(env_c, term_c) {
+        if check::is_list(env_c, term_c) || check::is_empty_list(env_c, term_c) {
             let iter = NifListIterator {
                 term: term,
             };
@@ -67,7 +68,7 @@ impl<'a> Iterator for NifListIterator<'a> {
                 Some(NifTerm::new(self.term.get_env(), head))
             }
             None => {
-                if list::is_empty_list(env.as_c_arg(), self.term.as_c_arg()) {
+                if check::is_empty_list(env.as_c_arg(), self.term.as_c_arg()) {
                     // We reached the end of the list, finish the iterator.
                     None
                 } else {

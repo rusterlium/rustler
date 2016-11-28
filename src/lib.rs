@@ -40,6 +40,7 @@ pub mod list;
 pub mod atom;
 pub mod codegen_runtime;
 pub mod ex_struct;
+pub mod dynamic;
 
 mod export;
 
@@ -131,6 +132,10 @@ impl<'a> NifTerm<'a> {
         } else {
             NifTerm::new(env, wrapper::copy_term(env.as_c_arg(), self.as_c_arg()))
         }
+    }
+
+    pub fn get_type(&self) -> dynamic::TermType {
+        dynamic::get_type(self)
     }
 
     /// Decodes the NifTerm into type T.

@@ -24,6 +24,8 @@ pub mod resource;
 
 pub mod list;
 
+pub mod check;
+
 use ::wrapper::nif_interface::{ NIF_ENV, NIF_TERM, enif_make_copy };
 pub fn copy_term(dest: NIF_ENV, term: NIF_TERM) -> NIF_TERM {
     unsafe { enif_make_copy(dest, term) }
