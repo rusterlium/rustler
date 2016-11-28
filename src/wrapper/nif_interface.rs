@@ -63,11 +63,35 @@ pub unsafe fn enif_make_copy(dest_env: NIF_ENV, source_term: NIF_TERM) -> NIF_TE
 pub unsafe fn enif_is_atom(env: NIF_ENV, term: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_is_atom(env, term)
 }
-pub unsafe fn enif_is_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
-    erlang_nif_sys::enif_is_list(env, term)
+pub unsafe fn enif_is_binary(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_binary(env, term)
 }
 pub unsafe fn enif_is_empty_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_is_empty_list(env, term)
+}
+pub unsafe fn enif_is_exception(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_exception(env, term)
+}
+pub unsafe fn enif_is_fun(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_fun(env, term)
+}
+pub unsafe fn enif_is_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_list(env, term)
+}
+pub unsafe fn enif_is_map(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_map(env, term)
+}
+pub unsafe fn enif_is_pid(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_pid(env, term)
+}
+pub unsafe fn enif_is_port(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_port(env, term)
+}
+pub unsafe fn enif_is_ref(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_ref(env, term)
+}
+pub unsafe fn enif_is_tuple(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_tuple(env, term)
 }
 
 // Atoms
