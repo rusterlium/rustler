@@ -211,6 +211,11 @@ pub struct ErlNifPid {
     pid: ERL_NIF_TERM,
 }
 
+/// See [enif_make_pid](http://erlang.org/doc/man/erl_nif.html#enif_make_pid) in the Erlang docs
+pub fn enif_make_pid(_env: *mut ErlNifEnv, pid: & ErlNifPid) -> ERL_NIF_TERM {
+    pid.pid
+}
+
 /// See [ErlNifSysInfo](http://www.erlang.org/doc/man/erl_nif.html#ErlNifSysInfo) in the Erlang docs.
 #[allow(missing_copy_implementations)]
 #[repr(C)]
@@ -378,4 +383,3 @@ macro_rules! nif_init {
         }
     )
 }
-
