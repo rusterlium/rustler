@@ -14,4 +14,4 @@ include!(concat!(env!("OUT_DIR"), "/lib.rs"));
 // If we are on nightly, we include the file directly.
 // The rust compiler will then report errors in that file.
 #[cfg(not(feature = "with-syntex"))]
-include!("lib.rs.in");
+include!("lib.in.rs");

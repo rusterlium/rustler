@@ -1,4 +1,4 @@
-// When writing your NIF you should edit `lib.rs.in`. This is done
+// When writing your NIF you should edit `lib.in.rs`. This is done
 // to support both compilation with and without syntex.
 
 // Enable the rustler_codegen compiler plugin if we are not using
@@ -17,4 +17,4 @@ include!(concat!(env!("OUT_DIR"), "/lib.rs"));
 // If we are on nightly, we include the file directly.
 // The rust compiler will then report errors in that file.
 #[cfg(not(feature = "with-syntex"))]
-include!("lib.rs.in");
+include!("lib.in.rs");
