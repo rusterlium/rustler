@@ -13,7 +13,7 @@ before_install:
   - wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
   - sudo dpkg -i erlang-solutions_1.0_all.deb
   - sudo apt-get -qq update
-  - sudo apt-get install -y erlang elixir tree
+  - sudo apt-get install -y --no-install-recommends erlang elixir tree
   - mix local.hex --force
   - erl -version
   - elixir --version
