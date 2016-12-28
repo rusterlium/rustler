@@ -5,6 +5,7 @@
 
 use std::mem;
 use std::ptr;
+use std::ops::Deref;
 use std::marker::PhantomData;
 
 use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
@@ -34,12 +35,12 @@ pub trait NifResourceTypeProvider: Sized {
     //unsafe fn set_type(typ: NifResourceType<Self>);
 }
 
-impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider+'a {
+impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider + Sync + 'a {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         ResourceCell::from_term(term)
     }
@@ -72,24 +73,21 @@ pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_vo
     ptr.offset(offset as isize)
 }
 
-use std::sync::RwLock;
-
 /// This is the struct that holds a reference to a resource. It increments the refcounter for the
 /// resource instance on creation, and decrements when dropped.
-pub struct ResourceCell<T> where T: NifResourceTypeProvider {
+pub struct ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     raw: *const c_void,
-    inner: *mut RwLock<T>,
+    inner: *mut T,
 }
 
-use std::sync::{LockResult, RwLockReadGuard, RwLockWriteGuard};
-impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// Makes a new ResourceCell from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
-        let alloc_size = get_alloc_size_struct::<RwLock<T>>();
+        let alloc_size = get_alloc_size_struct::<T>();
         let mem_raw = ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size);
-        let aligned_mem = unsafe { align_alloced_mem_for_struct::<RwLock<T>>(mem_raw) } as *mut RwLock<T>;
-        unsafe { ptr::write(aligned_mem, RwLock::new(data)) };
+        let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) } as *mut T;
+        unsafe { ptr::write(aligned_mem, data) };
         ResourceCell {
             raw: mem_raw,
             inner: aligned_mem,
@@ -101,7 +99,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
             None => return Err(NifError::BadArg),
         };
         ::wrapper::resource::keep_resource(res_resource);
-        let casted_ptr = unsafe { align_alloced_mem_for_struct::<RwLock<T>>(res_resource) } as *mut RwLock<T>;
+        let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) } as *mut T;
         Ok(ResourceCell {
             raw: res_resource,
             inner: casted_ptr,
@@ -117,19 +115,20 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
         self.raw
     }
 
-    pub fn read(&self) -> LockResult<RwLockReadGuard<T>> {
-        self.get_rwlock().read()
-    }
-    pub fn write(&self) -> LockResult<RwLockWriteGuard<T>> {
-        self.get_rwlock().write()
-    }
-
-    pub fn get_rwlock(&self) -> &RwLock<T> {
+    fn inner(&self) -> &T {
         unsafe { &*self.inner }
     }
 }
 
-impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        self.inner()
+    }
+}
+
+impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// For a ResourceCell this will simply increment the refcounter for the resource instance and
     /// perform a fairly standard clone.
     fn clone(&self) -> Self {
@@ -141,7 +140,7 @@ impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// When drop is called for a ResourceCell, the reference held to the resource by the Cell is
     /// released.
     fn drop(&mut self) {
