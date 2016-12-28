@@ -34,11 +34,11 @@ impl NifAtom {
     }
 }
 
-pub fn is_term_atom(env: &NifEnv, term: NifTerm) -> bool {
+pub fn is_atom(env: &NifEnv, term: NifTerm) -> bool {
     ::wrapper::check::is_atom(env.as_c_arg(), term.as_c_arg())
 }
 
-pub fn is_term_truthy(term: NifTerm) -> bool {
+pub fn is_truthy(term: NifTerm) -> bool {
     !((term.term == get_atom("false").unwrap().term) || (term.term == get_atom("nil").unwrap().term))
 }
 
@@ -62,7 +62,7 @@ lazy_static! {
         map.insert("true", unsafe { NifAtom::make_atom(env.env, "true") });
         map.insert("false", unsafe { NifAtom::make_atom(env.env, "false") });
         map.insert("nil", unsafe { NifAtom::make_atom(env.env, "nil") });
-        
+
         RwLock::new(map)
     };
 
