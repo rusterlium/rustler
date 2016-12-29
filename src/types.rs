@@ -58,7 +58,7 @@ impl NifEncoder for bool {
 }
 impl<'a> NifDecoder<'a> for bool {
     fn decode(term: NifTerm<'a>) -> NifResult<bool> {
-        Ok(super::atom::is_term_truthy(term))
+        Ok(super::atom::is_truthy(term))
     }
 }
 

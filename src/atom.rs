@@ -27,7 +27,7 @@ impl NifAtom {
         }
     }
     pub fn from_term(env: &NifEnv, term: NifTerm) -> Option<Self> {
-        match is_term_atom(env, term) {
+        match is_atom(env, term) {
             true => Some(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
             false => None
         }
