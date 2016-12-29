@@ -55,7 +55,7 @@ use std::sync::RwLock;
 use std;
 use ::resource::align_alloced_mem_for_struct;
 pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
-    let aligned = align_alloced_mem_for_struct::<RwLock<T>>(handle);
-    let res = aligned as *mut RwLock<T>;
+    let aligned = align_alloced_mem_for_struct::<Box<T>>(handle);
+    let res = aligned as *mut Box<T>;
     std::mem::drop(std::ptr::read(res));
 }

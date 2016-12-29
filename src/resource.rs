@@ -77,29 +77,32 @@ pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_vo
 /// resource instance on creation, and decrements when dropped.
 pub struct ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     raw: *const c_void,
-    inner: *mut T,
+    inner: *mut Box<T>,
 }
 
 impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// Makes a new ResourceCell from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
-        let alloc_size = get_alloc_size_struct::<T>();
+        let alloc_size = get_alloc_size_struct::<Box<T>>();
         let mem_raw = ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size);
-        let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) } as *mut T;
-        unsafe { ptr::write(aligned_mem, data) };
+        let aligned_mem = unsafe { align_alloced_mem_for_struct::<Box<T>>(mem_raw) } as *mut Box<T>;
+
+        unsafe { ptr::write(aligned_mem, Box::new(data)) };
+
         ResourceCell {
             raw: mem_raw,
             inner: aligned_mem,
         }
     }
+
     fn from_term(term: NifTerm) -> Result<Self, NifError> {
         let res_resource = match ::wrapper::resource::get_resource(term.env.as_c_arg(), term.as_c_arg(), T::get_type().res) {
             Some(res) => res,
             None => return Err(NifError::BadArg),
         };
         ::wrapper::resource::keep_resource(res_resource);
-        let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) } as *mut T;
+        let casted_ptr = unsafe { align_alloced_mem_for_struct::<Box<T>>(res_resource) } as *mut Box<T>;
         Ok(ResourceCell {
             raw: res_resource,
             inner: casted_ptr,
@@ -153,7 +156,7 @@ macro_rules! resource_struct_init {
     ($struct_name:ident, $env: ident) => {
         {
             static mut struct_type: Option<::rustler::resource::NifResourceType<$struct_name>> = None;
-            
+
             let temp_struct_type = 
                 match ::rustler::resource::open_struct_resource_type::<$struct_name>(
                     $env, 
