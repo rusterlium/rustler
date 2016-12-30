@@ -51,7 +51,6 @@ pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm) -> 
 }
 
 
-use std::sync::RwLock;
 use std;
 use ::resource::align_alloced_mem_for_struct;
 pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
