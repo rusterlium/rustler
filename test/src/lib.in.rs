@@ -13,6 +13,9 @@ use test_resource::{resource_make, resource_set_integer_field, resource_get_inte
 mod test_binary;
 use test_binary::make_shorter_subbinary;
 
+mod test_atom;
+use test_atom::atom_to_string;
+
 rustler_export_nifs!(
     "Elixir.RustlerTest",
     [("add_u32", 2, add_u32),
@@ -24,7 +27,8 @@ rustler_export_nifs!(
      ("resource_make", 0, resource_make),
      ("resource_set_integer_field", 2, resource_set_integer_field),
      ("resource_get_integer_field", 1, resource_get_integer_field),
-     ("make_shorter_subbinary", 1, make_shorter_subbinary)],
+     ("make_shorter_subbinary", 1, make_shorter_subbinary),
+     ("atom_to_string", 1, atom_to_string)],
     Some(on_load)
 );
 
