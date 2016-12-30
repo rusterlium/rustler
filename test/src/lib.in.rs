@@ -6,6 +6,9 @@ use test_primitives::{add_u32, add_i32, tuple_add, echo_u8};
 mod test_list;
 use test_list::{sum_list, make_list};
 
+mod test_map;
+use test_map::{sum_map_values, map_entries_sorted};
+
 mod test_resource;
 use test_resource::on_load as resource_on_load;
 use test_resource::{resource_make, resource_set_integer_field, resource_get_integer_field};
@@ -28,7 +31,9 @@ rustler_export_nifs!(
      ("resource_set_integer_field", 2, resource_set_integer_field),
      ("resource_get_integer_field", 1, resource_get_integer_field),
      ("make_shorter_subbinary", 1, make_shorter_subbinary),
-     ("atom_to_string", 1, atom_to_string)],
+     ("atom_to_string", 1, atom_to_string),
+     ("sum_map_values", 1, sum_map_values),
+     ("map_entries_sorted", 1, map_entries_sorted)],
     Some(on_load)
 );
 
