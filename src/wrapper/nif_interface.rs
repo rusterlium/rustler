@@ -177,6 +177,18 @@ pub unsafe fn enif_keep_resource(obj: NIF_RESOURCE_HANDLE) {
     erlang_nif_sys::enif_keep_resource(obj)
 }
 
+pub use self::erlang_nif_sys::{
+    ErlNifCharEncoding,
+    ErlNifMapIterator,
+    ErlNifMapIteratorEntry,
+    enif_get_atom,
+    enif_get_atom_length,
+    enif_map_iterator_create,
+    enif_map_iterator_get_pair,
+    enif_map_iterator_next,
+    enif_map_iterator_destroy,
+};
+
 // Numbers
 macro_rules! wrap_number {
     ($typ: ty, $encode: ident, $decode: ident) => {

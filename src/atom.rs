@@ -4,8 +4,17 @@ use std::sync::Mutex;
 use std::ops::DerefMut;
 
 use super::{ NifTerm, NifEnv };
-use ::wrapper::nif_interface::size_t;
-use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF_TERM };
+use wrapper::nif_interface::{
+    ErlNifCharEncoding,
+    NIF_ENV,
+    NIF_TERM,
+    c_uint,
+    enif_alloc_env,
+    enif_get_atom,
+    enif_get_atom_length,
+    enif_make_atom_len,
+    size_t,
+};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -31,6 +40,38 @@ impl NifAtom {
             true => Some(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
             false => None
         }
+    }
+
+    /// Get the contents of this atom as a string.
+    ///
+    /// (This is slow, and for most cases, unnecessary. For example, if you
+    /// need to know whether or not this atom is `true`, try comparing it to
+    /// `get_atom_init("true")`.)
+    ///
+    pub fn to_string(&self, env: &NifEnv) -> String {
+        // Determine the length of the atom, in bytes.
+        let mut len = 0;
+        let success = unsafe {
+            enif_get_atom_length(env.as_c_arg(), self.term, &mut len,
+                                 ErlNifCharEncoding::ERL_NIF_LATIN1)
+        };
+        assert_eq!(success, 1);
+
+        // Get the bytes from the atom into a buffer.
+        // enif_get_atom() writes a null terminated string,
+        // so add 1 to the atom's length to make room for it.
+        let mut bytes: Vec<u8> = Vec::with_capacity(len as usize + 1);
+        let nbytes = unsafe {
+            enif_get_atom(env.as_c_arg(), self.term, bytes.as_mut_ptr(), len + 1,
+                          ErlNifCharEncoding::ERL_NIF_LATIN1)
+        };
+        assert!(nbytes as c_uint == len + 1);
+        unsafe {
+            bytes.set_len(len as usize);  // ignore the null byte
+        }
+
+        // Convert the Latin-1 bytes to String.
+        bytes.into_iter().map(|b| b as char).collect()
     }
 }
 
