@@ -98,6 +98,9 @@ pub unsafe fn enif_is_tuple(env: NIF_ENV, term: NIF_TERM) -> c_int {
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     erlang_nif_sys::enif_make_atom_len(env, string, length)
 }
+pub unsafe fn enif_get_atom_latin1(env: NIF_ENV, term: NIF_TERM, buf: *mut u8, size: c_uint) -> c_int {
+    erlang_nif_sys::enif_get_atom(env, term, buf, size, erlang_nif_sys::ErlNifCharEncoding::ERL_NIF_LATIN1)
+}
 
 // Binaries
 pub unsafe fn enif_release_binary(bin_ref: NIF_BINARY) {
@@ -153,6 +156,9 @@ pub unsafe fn enif_get_list_length(env: NIF_ENV, list: NIF_TERM, length: *mut c_
 }
 pub unsafe fn enif_make_list_from_array(env: NIF_ENV, arr: *const NIF_TERM, cnt: c_uint) -> NIF_TERM {
     erlang_nif_sys::enif_make_list_from_array(env, arr, cnt)
+}
+pub unsafe fn enif_make_list_cell(env: NIF_ENV, head: NIF_TERM, tail: NIF_TERM) -> NIF_TERM {
+    erlang_nif_sys::enif_make_list_cell(env, head, tail)
 }
 
 // Resources
