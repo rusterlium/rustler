@@ -41,6 +41,7 @@ pub mod atom;
 pub mod codegen_runtime;
 pub mod ex_struct;
 pub mod dynamic;
+pub mod schedule;
 
 mod export;
 
