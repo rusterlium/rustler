@@ -7,6 +7,6 @@ defmodule RustlerTest.AtomTest do
   end
 
   test "atom to string for non-unicode should panic" do
-    assert catch_error(RustlerTest.atom_to_string(:erlang.list_to_atom([197]))) == :nif_panic
+    assert catch_error(RustlerTest.atom_to_string(:erlang.list_to_atom([197]))) == :badarg
   end
 end
