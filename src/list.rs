@@ -120,8 +120,8 @@ impl<'a> NifTerm<'a> {
     /// See documentation for NifListIterator for more information.
     ///
     /// Returns None if the term is not a list.
-    pub fn into_list_iterator(self) -> Option<NifListIterator<'a>> {
-        NifListIterator::new(self)
+    pub fn into_list_iterator(self) -> NifResult<NifListIterator<'a>> {
+        NifListIterator::new(self).ok_or(NifError::BadArg)
     }
 
     /// Returns the length of a list term.
@@ -132,8 +132,9 @@ impl<'a> NifTerm<'a> {
     /// ```elixir
     /// length(self_term)
     /// ```
-    pub fn list_length(self) -> Option<usize> {
+    pub fn list_length(self) -> NifResult<usize> {
         list::get_list_length(self.get_env().as_c_arg(), self.as_c_arg())
+            .ok_or(NifError::BadArg)
     }
 
     /// Unpacks a single cell at the head of a list term,
@@ -146,10 +147,11 @@ impl<'a> NifTerm<'a> {
     /// [head, tail] = self_term
     /// {head, tail}
     /// ```
-    pub fn list_get_cell(self) -> Option<(NifTerm<'a>, NifTerm<'a>)> {
+    pub fn list_get_cell(self) -> NifResult<(NifTerm<'a>, NifTerm<'a>)> {
         let env = self.get_env();
         list::get_list_cell(env.as_c_arg(), self.as_c_arg())
             .map(|(t1, t2)| (NifTerm::new(env, t1), NifTerm::new(env, t2)))
+            .ok_or(NifError::BadArg)
     }
 
 }

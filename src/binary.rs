@@ -113,3 +113,12 @@ impl<'a> NifEncoder for NifBinary<'a> {
         self.get_term(env)
     }
 }
+
+/// ## Binary terms
+impl<'a> NifTerm<'a> {
+
+    pub fn into_binary(self) -> NifResult<NifBinary<'a>> {
+        NifBinary::from_term(self)
+    }
+
+}

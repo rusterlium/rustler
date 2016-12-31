@@ -3,7 +3,7 @@ use std::sync::RwLock;
 use std::sync::Mutex;
 use std::ops::DerefMut;
 
-use super::{ NifTerm, NifEnv };
+use super::{ NifTerm, NifEnv, NifResult, NifError };
 use ::wrapper::nif_interface::size_t;
 use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF_TERM };
 
@@ -31,10 +31,10 @@ impl NifAtom {
             term: term
         }
     }
-    pub fn from_term(env: &NifEnv, term: NifTerm) -> Option<Self> {
-        match is_atom(env, term) {
-            true => Some(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
-            false => None
+    pub fn from_term(term: NifTerm) -> NifResult<Self> {
+        match term.is_atom() {
+            true => Ok(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
+            false => Err(NifError::BadArg)
         }
     }
 }
@@ -50,9 +50,9 @@ impl<'a> NifTerm<'a> {
     ///
     /// Will return None if the term is not an atom or if the term is not
     /// valid UTF-8.
-
-    pub fn atom_to_string(self) -> Option<String> {
+    pub fn atom_to_string(self) -> NifResult<String> {
         ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())
+            .ok_or(NifError::BadArg)
     }
 
 }
@@ -75,7 +75,6 @@ struct PrivNifEnvWrapper {
 unsafe impl Send for PrivNifEnvWrapper {}
 
 lazy_static! {
-    //static ref ATOMS: Mutex<RefCell<HashMap<&'static str, NifAtom>>> = Mutex::new(RefCell::new(HashMap::new()));
     static ref ATOMS: RwLock<HashMap<&'static str, NifAtom>> = {
         let mut map = HashMap::new();
 
@@ -85,6 +84,7 @@ lazy_static! {
         map.insert("true", unsafe { NifAtom::make_atom(env.env, "true") });
         map.insert("false", unsafe { NifAtom::make_atom(env.env, "false") });
         map.insert("nil", unsafe { NifAtom::make_atom(env.env, "nil") });
+        map.insert("__struct__", unsafe { NifAtom::make_atom(env.env, "__struct__") });
 
         RwLock::new(map)
     };
@@ -106,6 +106,7 @@ pub fn init_atom(name: &'static str) -> NifAtom {
 pub fn get_atom(name: &str) -> Option<NifAtom> {
     ATOMS.read().unwrap().get(name).cloned()
 }
+
 pub fn get_atom_init(name: &'static str) -> NifAtom {
     match get_atom(name) {
         Some(atom) => return atom,

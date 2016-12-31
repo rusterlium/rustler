@@ -24,15 +24,16 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm>) -> NifRes
     let result: ::std::thread::Result<NIF_TERM> = catch_unwind(|| {
         match function(&env, &terms) {
             Ok(ret) => ret.as_c_arg(),
-            Err(err) => err.encode(&env).as_c_arg(),
+            Err(err) => unsafe { err.encode(&env) }.as_c_arg(),
         }
     });
 
     match result {
         Ok(res) => res,
         Err(_err) => {
-            exception::throw(env.as_c_arg(),
-                             get_atom_init("nif_panic").to_term(&env).as_c_arg())
+            exception::raise_exception(
+                env.as_c_arg(),
+                get_atom_init("nif_panic").to_term(&env).as_c_arg())
         },
     }
 }

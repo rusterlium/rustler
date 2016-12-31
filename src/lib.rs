@@ -24,7 +24,7 @@
 
 #[doc(hidden)]
 pub mod wrapper;
-use wrapper::nif_interface::{NIF_ENV, enif_make_badarg, enif_make_atom_len};
+use wrapper::nif_interface::{NIF_ENV};
 pub use wrapper::nif_interface::size_t;
 pub use wrapper::nif_interface::ErlNifTaskFlags;
 
@@ -66,29 +66,48 @@ impl NifEnv {
     }
 }
 
-/// Represents usual errors that can happen in a nif. This enables you to return an error from
-/// anywhere, even places where you don't have an NifEnv availible.
-#[derive(Clone, Copy)]
+/// Represents usual errors that can happen in a nif. This enables you
+/// to return an error from anywhere, even places where you don't have
+/// an NifEnv availible.
 pub enum NifError {
-    /// Returned when the NIF has been called with the wrong number or type of arguments.
+    /// Returned when the NIF has been called with the wrong number or type of
+    /// arguments.
     BadArg,
-    /// Returned when an allocation fails. Example: binary term, resource struct
-    AllocFail,
     /// Encodes the string into an atom and returns it from the NIF.
     Atom(&'static str),
-}
-impl NifEncoder for NifError {
-    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
-        NifTerm::new(env, match *self {
-            NifError::BadArg =>
-                unsafe { enif_make_badarg(env.as_c_arg()) },
-            NifError::AllocFail =>
-                unsafe { enif_make_badarg(env.as_c_arg()) },
-            NifError::Atom(name) =>
-                unsafe { enif_make_atom_len(env.as_c_arg(),
-                                            name.as_ptr() as *const u8,
-                                            name.len() as size_t) },
-        })
-    }
+    RaiseAtom(&'static str),
+    RaiseTerm(Box<NifEncoder>),
 }
 
+impl NifError {
+
+    /// Unsafe because it allows you to do things that are non-rusty.
+    /// (Like raising an exception from anywhere, without having it
+    /// be the return value)
+    unsafe fn encode<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+        match self {
+            NifError::BadArg =>{
+                let exception = wrapper::exception::raise_badarg(env.as_c_arg());
+                NifTerm::new(env, exception)
+            },
+            NifError::Atom(atom_str) => {
+                atom::get_atom_init(atom_str).to_term(env)
+            },
+            NifError::RaiseAtom(atom_str) => {
+                let atom = atom::get_atom_init(atom_str).to_term(env);
+                let exception = wrapper::exception::raise_exception(
+                    env.as_c_arg(),
+                    atom.as_c_arg());
+                NifTerm::new(env, exception)
+            },
+            NifError::RaiseTerm(ref term_unencoded) => {
+                let term = term_unencoded.encode(env);
+                let exception = wrapper::exception::raise_exception(
+                    env.as_c_arg(),
+                    term.as_c_arg());
+                NifTerm::new(env, exception)
+            },
+        }
+    }
+
+}
