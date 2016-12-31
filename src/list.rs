@@ -112,3 +112,44 @@ impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
         res
     }
 }
+
+/// ## List terms
+impl<'a> NifTerm<'a> {
+
+    /// Returns an iterator over a list term.
+    /// See documentation for NifListIterator for more information.
+    ///
+    /// Returns None if the term is not a list.
+    pub fn into_list_iterator(self) -> Option<NifListIterator<'a>> {
+        NifListIterator::new(self)
+    }
+
+    /// Returns the length of a list term.
+    ///
+    /// Returns None if the term is not a list.
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// length(self_term)
+    /// ```
+    pub fn list_length(self) -> Option<usize> {
+        list::get_list_length(self.get_env().as_c_arg(), self.as_c_arg())
+    }
+
+    /// Unpacks a single cell at the head of a list term,
+    /// and returns the result as a tuple of (head, tail).
+    ///
+    /// Returns None if the term is not a list.
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// [head, tail] = self_term
+    /// {head, tail}
+    /// ```
+    pub fn list_get_cell(self) -> Option<(NifTerm<'a>, NifTerm<'a>)> {
+        let env = self.get_env();
+        list::get_list_cell(env.as_c_arg(), self.as_c_arg())
+            .map(|(t1, t2)| (NifTerm::new(env, t1), NifTerm::new(env, t2)))
+    }
+
+}

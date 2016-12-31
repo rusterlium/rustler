@@ -22,10 +22,14 @@
 //! For more information about this, see [the documentation for
 //! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
+#[doc(hidden)]
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV, enif_make_badarg, enif_make_atom_len};
 pub use wrapper::nif_interface::size_t;
 pub use wrapper::nif_interface::ErlNifTaskFlags;
+
+#[doc(hidden)]
+pub mod codegen_runtime;
 
 #[macro_use]
 extern crate lazy_static;
@@ -40,7 +44,7 @@ pub mod tuple;
 pub mod map;
 pub mod list;
 pub mod atom;
-pub mod codegen_runtime;
+
 pub mod ex_struct;
 pub mod dynamic;
 

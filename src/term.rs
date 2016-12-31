@@ -31,7 +31,7 @@ impl<'a> NifTerm<'a> {
     /// This will coerce the NifTerm into the given NifEnv without providing any checks
     /// or other operations. This is unsafe as it allows you to make a NifTerm usable
     /// on an env other then the one that owns it.
-    /// 
+    ///
     /// The one case where this is acceptable to use is when we already know the NifEnv
     /// is the same, but we need to coerce the lifetime.
     pub unsafe fn env_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
@@ -50,14 +50,10 @@ impl<'a> NifTerm<'a> {
         }
     }
 
-    pub fn get_type(&self) -> ::dynamic::TermType {
-        ::dynamic::get_type(self)
-    }
-
     /// Decodes the NifTerm into type T.
-    /// 
+    ///
     /// This should be used as the primary method of extracting the value from a NifTerm.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```ignore

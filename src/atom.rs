@@ -39,7 +39,17 @@ impl NifAtom {
     }
 }
 
+/// ## Atom terms
 impl<'a> NifTerm<'a> {
+
+    /// When the term is an atom, this method will return the string
+    /// representation of it.
+    ///
+    /// If you only need to test for equality, comparing the terms directly
+    /// is much faster.
+    ///
+    /// Will return None if the term is not an atom or if the term is not
+    /// valid UTF-8.
 
     pub fn atom_to_string(self) -> Option<String> {
         ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())

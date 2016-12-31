@@ -17,17 +17,18 @@ use ::wrapper::nif_interface::{ c_void };
 /// the resource type.
 /// 
 /// This is usually stored in an implementation of NifResourceTypeProvider.
+#[doc(hidden)]
 pub struct NifResourceType<T> {
     pub res: NIF_RESOURCE_TYPE,
     pub struct_type: PhantomData<T>,
 }
 
-/// This trait gets implemented for the type we want to put into a resource when a type
-/// is annotated with #[NifResource]. set_type is then later called on it by the
-/// resource_struct_init! macro when the type is made in on_load. It provides the 
-/// destructor and the NifResourceType.
-/// 
+/// This trait gets implemented for the type we want to put into a resource when
+/// resource_struct_init! is called on it. It provides the destructor and the
+/// NifResourceType.
+///
 /// In most cases the user should not have to worry about this.
+#[doc(hidden)]
 pub trait NifResourceTypeProvider: Sized {
     //fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
     extern "C" fn destructor(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
@@ -48,6 +49,7 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
 
 /// This is the function that gets called from resource_struct_init! in on_load to create a new
 /// resource type.
+#[doc(hidden)]
 pub fn open_struct_resource_type<T: NifResourceTypeProvider>(env: &NifEnv, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
@@ -68,6 +70,7 @@ fn get_alloc_size_struct<T>() -> usize {
 
 /// Exported for use by codegen_runtime
 /// This is unsafe as it allows us to do nasty things with pointers
+#[doc(hidden)]
 pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
     let offset = mem::align_of::<T>() - ((ptr as usize) % mem::align_of::<T>());
     ptr.offset(offset as isize)
