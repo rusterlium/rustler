@@ -13,7 +13,12 @@ use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF
 pub struct NifAtom {
     term: NIF_TERM,
 }
+
 impl NifAtom {
+    pub fn as_c_arg(&self) -> NIF_TERM {
+        self.term
+    }
+
     pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
         NifTerm::new(env, self.term)
     }
@@ -34,12 +39,20 @@ impl NifAtom {
     }
 }
 
+impl<'a> NifTerm<'a> {
+
+    pub fn atom_to_string(self) -> Option<String> {
+        ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())
+    }
+
+}
+
 pub fn is_atom(env: &NifEnv, term: NifTerm) -> bool {
     ::wrapper::check::is_atom(env.as_c_arg(), term.as_c_arg())
 }
 
 pub fn is_truthy(term: NifTerm) -> bool {
-    !((term.term == get_atom("false").unwrap().term) || (term.term == get_atom("nil").unwrap().term))
+    !((term.as_c_arg() == get_atom("false").unwrap().as_c_arg()) || (term.as_c_arg() == get_atom("nil").unwrap().as_c_arg()))
 }
 
 // This should be safe to do because atoms are never removed/changed once they are created.

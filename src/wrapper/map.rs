@@ -35,3 +35,23 @@ pub fn map_put(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: NIF_TERM) -> O
     }
     Some(result)
 }
+
+pub fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
+    let mut result: NIF_TERM = unsafe { mem::uninitialized() };
+    let success = unsafe { nif_interface::enif_make_map_remove(env, map, key, &mut result as *mut NIF_TERM) };
+
+    if success != 1 {
+        return None;
+    }
+    Some(result)
+}
+
+pub fn map_update(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, new_value: NIF_TERM) -> Option<NIF_TERM> {
+    let mut result: NIF_TERM = unsafe { mem::uninitialized() };
+    let success = unsafe { nif_interface::enif_make_map_update(env, map, key, new_value, &mut result as *mut NIF_TERM) };
+
+    if success != 1 {
+        return None;
+    }
+    Some(result)
+}

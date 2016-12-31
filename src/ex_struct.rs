@@ -8,17 +8,18 @@
 
 use super::{ NifEnv, NifTerm };
 use ::atom::NifAtom;
-use ::map::{ get_map_value, map_put, map_new };
+use ::map::{ map_new };
 
 pub fn get_ex_struct_name(map: NifTerm) -> Option<NifAtom> {
+    let env = map.get_env();
     // In an Elixir struct the value in the __struct__ field is always an atom.
-    match get_map_value(map, ::atom::get_atom_init("__struct__").to_term(map.env)) {
-        Some(term) => NifAtom::from_term(map.env, term),
+    match map.map_get(::atom::get_atom_init("__struct__").to_term(env)) {
+        Some(term) => NifAtom::from_term(env, term),
         None => None
     }
 }
 
 pub fn make_ex_struct<'a>(env: &'a NifEnv, struct_module: &'static str) -> Option<NifTerm<'a>> {
     let map = map_new(env);
-    map_put(map, ::atom::get_atom_init("__struct__").to_term(env), ::atom::get_atom_init(struct_module).to_term(env))
+    map.map_put(::atom::get_atom_init("__struct__").to_term(env), ::atom::get_atom_init(struct_module).to_term(env))
 }

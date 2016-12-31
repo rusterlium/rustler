@@ -97,7 +97,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 
     fn from_term(term: NifTerm) -> Result<Self, NifError> {
-        let res_resource = match ::wrapper::resource::get_resource(term.env.as_c_arg(), term.as_c_arg(), T::get_type().res) {
+        let res_resource = match ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) {
             Some(res) => res,
             None => return Err(NifError::BadArg),
         };
