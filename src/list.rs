@@ -164,4 +164,11 @@ impl<'a> NifTerm<'a> {
             .ok_or(NifError::BadArg)
     }
 
+    /// Adds `head` in a list cell with `self` as tail.
+    pub fn list_prepend(self, head: NifTerm<'a>) -> NifTerm<'a> {
+        let env = self.get_env();
+        let term = list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
+        NifTerm::new(env, term)
+    }
+
 }
