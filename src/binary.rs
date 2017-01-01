@@ -77,7 +77,7 @@ impl<'a> NifBinary<'a> {
     }
     pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { nif_interface::enif_inspect_binary(term.env.as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
+        if unsafe { nif_interface::enif_inspect_binary(term.get_env().as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
             return Err(NifError::BadArg);
         }
         Ok(NifBinary {
@@ -97,9 +97,9 @@ impl<'a> NifBinary<'a> {
             return Err(NifError::BadArg);
         }
 
-        let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.env.as_c_arg(), self.inner.bin_term, offset, length) };
+        let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.get_env().as_c_arg(), self.inner.bin_term, offset, length) };
         // This should never fail, as we are always passing in a binary term.
-        Ok(NifBinary::from_term(NifTerm::new(self.term.env, raw_term)).ok().unwrap())
+        Ok(NifBinary::from_term(NifTerm::new(self.term.get_env(), raw_term)).ok().unwrap())
     }
 }
 
@@ -112,4 +112,13 @@ impl<'a> NifEncoder for NifBinary<'a> {
     fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
         self.get_term(env)
     }
+}
+
+/// ## Binary terms
+impl<'a> NifTerm<'a> {
+
+    pub fn into_binary(self) -> NifResult<NifBinary<'a>> {
+        NifBinary::from_term(self)
+    }
+
 }

@@ -4,7 +4,7 @@
 //! should be unsafe, and should not do any validation.
 //! Currently we are using erlang_nif_sys, but we do want to be able to easily
 //! switch to something else in the future if required.
-//! 
+//!
 //! While reexporting from erlang_nif_sys directly would remove a lot of code, it
 //! is preferred to keep the function signatures in here for future use/reference.
 
@@ -98,6 +98,9 @@ pub unsafe fn enif_is_tuple(env: NIF_ENV, term: NIF_TERM) -> c_int {
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     erlang_nif_sys::enif_make_atom_len(env, string, length)
 }
+pub unsafe fn enif_get_atom_latin1(env: NIF_ENV, term: NIF_TERM, buf: *mut u8, size: c_uint) -> c_int {
+    erlang_nif_sys::enif_get_atom(env, term, buf, size, erlang_nif_sys::ErlNifCharEncoding::ERL_NIF_LATIN1)
+}
 
 // Binaries
 pub unsafe fn enif_release_binary(bin_ref: NIF_BINARY) {
@@ -154,6 +157,9 @@ pub unsafe fn enif_get_list_length(env: NIF_ENV, list: NIF_TERM, length: *mut c_
 pub unsafe fn enif_make_list_from_array(env: NIF_ENV, arr: *const NIF_TERM, cnt: c_uint) -> NIF_TERM {
     erlang_nif_sys::enif_make_list_from_array(env, arr, cnt)
 }
+pub unsafe fn enif_make_list_cell(env: NIF_ENV, head: NIF_TERM, tail: NIF_TERM) -> NIF_TERM {
+    erlang_nif_sys::enif_make_list_cell(env, head, tail)
+}
 
 // Resources
 pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar,
@@ -175,6 +181,20 @@ pub unsafe fn enif_release_resource(obj: NIF_RESOURCE_HANDLE) {
 }
 pub unsafe fn enif_keep_resource(obj: NIF_RESOURCE_HANDLE) {
     erlang_nif_sys::enif_keep_resource(obj)
+}
+
+// Scheduling
+pub unsafe fn enif_consume_timeslice(env: NIF_ENV, percent: c_int) -> c_int {
+    erlang_nif_sys::enif_consume_timeslice(env, percent)
+}
+
+pub unsafe fn enif_schedule_nif(env: NIF_ENV,
+                                fun_name: *const c_uchar,
+                                flags: c_int,
+                                dtor: Option<extern fn(env: NIF_ENV, argc: c_int, argv: *const NIF_TERM)>,
+                                argc: c_int,
+                                argv: *const NIF_TERM) -> NIF_TERM {
+    erlang_nif_sys::enif_schedule_nif(env, fun_name, flags, dtor, argc, argv)
 }
 
 // Numbers

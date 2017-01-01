@@ -27,4 +27,6 @@ defmodule RustlerTest do
   def resource_get_integer_field(_), do: err
 
   def make_shorter_subbinary(_), do: err
+
+  def atom_to_string(_), do: err
 end
