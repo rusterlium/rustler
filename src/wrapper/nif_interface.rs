@@ -160,6 +160,9 @@ pub unsafe fn enif_make_list_from_array(env: NIF_ENV, arr: *const NIF_TERM, cnt:
 pub unsafe fn enif_make_list_cell(env: NIF_ENV, head: NIF_TERM, tail: NIF_TERM) -> NIF_TERM {
     erlang_nif_sys::enif_make_list_cell(env, head, tail)
 }
+pub unsafe fn enif_make_reverse_list(env: NIF_ENV, list_in: NIF_TERM, list_out: *mut NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_make_reverse_list(env, list_in, list_out)
+}
 
 // Resources
 pub unsafe fn enif_open_resource_type(env: NIF_ENV, module_str: *const c_uchar, name: *const c_uchar,

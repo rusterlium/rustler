@@ -32,3 +32,12 @@ pub fn make_list_cell(env: NIF_ENV, head: NIF_TERM, tail: NIF_TERM) -> NIF_TERM 
     unsafe { nif_interface::enif_make_list_cell(env, head, tail) }
 }
 
+pub fn make_reverse_list(env: NIF_ENV, list: NIF_TERM) -> Option<NIF_TERM> {
+    let mut list_out: NIF_TERM = unsafe { mem::uninitialized() };
+    let success = unsafe { nif_interface::enif_make_reverse_list(env, list, &mut list_out as *mut NIF_TERM) };
+
+    if success != 1 {
+        return None;
+    }
+    Some(list_out)
+}

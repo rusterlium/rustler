@@ -154,4 +154,14 @@ impl<'a> NifTerm<'a> {
             .ok_or(NifError::BadArg)
     }
 
+    /// Makes a copy of the self list term and reverses it.
+    ///
+    /// Returns Err(NifError::BadArg) if the term is not a list.
+    pub fn list_reverse(self) -> NifResult<NifTerm<'a>> {
+        let env = self.get_env();
+        list::make_reverse_list(env.as_c_arg(), self.as_c_arg())
+            .map(|t| NifTerm::new(env, t))
+            .ok_or(NifError::BadArg)
+    }
+
 }
