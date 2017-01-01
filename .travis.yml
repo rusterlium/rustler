@@ -26,5 +26,5 @@ script:
 after_script:
   - tree
 
-addons:
-  artifacts: true
+#addons:
+#  artifacts: true
