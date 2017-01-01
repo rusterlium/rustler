@@ -12,8 +12,8 @@ impl<'a> NifTerm<'a> {
 
     /// Gets the value corresponding to a key in a map term.
     ///
-    /// Returns None if the term is not a list or if the key doesn't
-    /// exist in the map.
+    /// Returns Err(NifError::BadArg) if the term is not a map or if
+    /// key doesn't exist in the map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -29,7 +29,7 @@ impl<'a> NifTerm<'a> {
 
     /// Gets the size of a map term.
     ///
-    /// Returns None if the term is not a map.
+    /// Returns Err(NifError::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -43,7 +43,7 @@ impl<'a> NifTerm<'a> {
     /// Makes a copy of the self map term and sets key to value.
     /// If the value already exists, it is overwritten.
     ///
-    /// Returns None if the term is not a map.
+    /// Returns Err(NifError::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -64,7 +64,7 @@ impl<'a> NifTerm<'a> {
     /// Makes a copy of the self map term and removes key. If the key
     /// doesn't exist, the original map is returned.
     ///
-    /// Returns None if the term is not a map.
+    /// Returns Err(NifError::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -83,7 +83,8 @@ impl<'a> NifTerm<'a> {
 
     /// Makes a copy of the self map term where key is set to value.
     ///
-    /// Returns None if the term is not a map or if key doesn't exist.
+    /// Returns Err(NifError::BadArg) if the term is not a map of if key
+    /// doesn't exist.
     pub fn map_update(self, key: NifTerm, new_value: NifTerm) -> NifResult<NifTerm<'a>> {
         let map_env = self.get_env();
 
