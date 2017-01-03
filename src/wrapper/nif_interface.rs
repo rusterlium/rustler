@@ -101,6 +101,9 @@ pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t
 pub unsafe fn enif_get_atom_latin1(env: NIF_ENV, term: NIF_TERM, buf: *mut u8, size: c_uint) -> c_int {
     erlang_nif_sys::enif_get_atom(env, term, buf, size, erlang_nif_sys::ErlNifCharEncoding::ERL_NIF_LATIN1)
 }
+pub unsafe fn enif_get_atom_length_latin1(env: NIF_ENV, term: NIF_TERM, len: *mut c_uint) -> c_int {
+    erlang_nif_sys::enif_get_atom_length(env, term, len, erlang_nif_sys::ErlNifCharEncoding::ERL_NIF_LATIN1)
+}
 
 // Binaries
 pub unsafe fn enif_release_binary(bin_ref: NIF_BINARY) {
@@ -185,6 +188,15 @@ pub unsafe fn enif_release_resource(obj: NIF_RESOURCE_HANDLE) {
 pub unsafe fn enif_keep_resource(obj: NIF_RESOURCE_HANDLE) {
     erlang_nif_sys::enif_keep_resource(obj)
 }
+
+pub use self::erlang_nif_sys::{
+    ErlNifMapIterator,
+    ErlNifMapIteratorEntry,
+    enif_map_iterator_create,
+    enif_map_iterator_get_pair,
+    enif_map_iterator_next,
+    enif_map_iterator_destroy,
+};
 
 // Scheduling
 pub unsafe fn enif_consume_timeslice(env: NIF_ENV, percent: c_int) -> c_int {
