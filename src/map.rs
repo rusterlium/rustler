@@ -101,7 +101,7 @@ impl<'a> NifTerm<'a> {
 
 pub struct NifMapIterator<'a> {
     env: &'a NifEnv,
-    iter: map::MapIterator
+    iter: map::ErlNifMapIterator
 }
 
 impl<'a> NifMapIterator<'a> {
