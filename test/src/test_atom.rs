@@ -1,11 +1,10 @@
-use rustler::{NifEnv, NifTerm, NifError, NifEncoder, NifResult};
-use rustler::atom::NifAtom;
+use rustler::NifEncoder;
+use rustler::{NifEnv, NifTerm, NifResult};
+
+pub fn on_load(env: &NifEnv) {
+}
 
 pub fn atom_to_string<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
-    let atom: NifAtom = match NifAtom::from_term(env, args[0]) {
-        Some(atom) => atom,
-        None => return Err(NifError::BadArg)
-    };
-    let string = atom.to_string(env);
-    Ok(string.encode(env))
+    let atom_string = try!(args[0].atom_to_string());
+    Ok(atom_string.encode(env))
 }

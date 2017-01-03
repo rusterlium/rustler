@@ -16,7 +16,7 @@ pub enum TermType {
     Unknown
 }
 
-pub fn get_type(term: &NifTerm) -> TermType {
+pub fn get_type(term: NifTerm) -> TermType {
     let c_term = term.as_c_arg();
     let c_env = term.get_env().as_c_arg();
 
@@ -45,4 +45,36 @@ pub fn get_type(term: &NifTerm) -> TermType {
     } else {
         TermType::Unknown
     }
+}
+
+macro_rules! impl_check {
+    ($check_fun:ident) => {
+        pub fn $check_fun(self) -> bool {
+            check::$check_fun(self.get_env().as_c_arg(), self.as_c_arg())
+        }
+    }
+}
+
+/// ## Type checks
+impl<'a> NifTerm<'a> {
+
+    /// Returns an enum representing which type the term is.
+    /// Note that using the individual `is_*` functions is more
+    /// efficient for checking a single type.
+    pub fn get_type(self) -> TermType {
+        get_type(self)
+    }
+
+    impl_check!(is_atom);
+    impl_check!(is_binary);
+    impl_check!(is_empty_list);
+    impl_check!(is_exception);
+    impl_check!(is_fun);
+    impl_check!(is_list);
+    impl_check!(is_map);
+    impl_check!(is_pid);
+    impl_check!(is_port);
+    impl_check!(is_ref);
+    impl_check!(is_tuple);
+
 }

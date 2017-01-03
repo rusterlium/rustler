@@ -10,14 +10,13 @@ mod test_map;
 use test_map::{sum_map_values, map_entries_sorted};
 
 mod test_resource;
-use test_resource::on_load as resource_on_load;
 use test_resource::{resource_make, resource_set_integer_field, resource_get_integer_field};
 
 mod test_binary;
 use test_binary::make_shorter_subbinary;
 
 mod test_atom;
-use test_atom::atom_to_string;
+use test_atom::{atom_to_string};
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -27,17 +26,18 @@ rustler_export_nifs!(
      ("echo_u8", 1, echo_u8),
      ("sum_list", 1, sum_list),
      ("make_list", 0, make_list),
+     ("sum_map_values", 1, sum_map_values),
+     ("map_entries_sorted", 1, map_entries_sorted),
      ("resource_make", 0, resource_make),
      ("resource_set_integer_field", 2, resource_set_integer_field),
      ("resource_get_integer_field", 1, resource_get_integer_field),
-     ("make_shorter_subbinary", 1, make_shorter_subbinary),
      ("atom_to_string", 1, atom_to_string),
-     ("sum_map_values", 1, sum_map_values),
-     ("map_entries_sorted", 1, map_entries_sorted)],
+     ("make_shorter_subbinary", 1, make_shorter_subbinary)],
     Some(on_load)
 );
 
 fn on_load(env: &NifEnv, _load_info: NifTerm) -> bool {
-    resource_on_load(env);
+    test_resource::on_load(env);
+    test_atom::on_load(env);
     true
 }
