@@ -6,7 +6,7 @@ use ::wrapper::nif_interface::{MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
 use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
-use ::{NifResult, NifEncoder};
+use ::NifResult;
 
 // Exports for runtime
 pub use ::wrapper::nif_interface::{c_int, c_void};

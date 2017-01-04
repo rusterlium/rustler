@@ -25,14 +25,19 @@ use ::wrapper::check;
 /// the `Result`s out of the list. (Contains extra type annotations for clarity)
 ///
 /// ```
+/// # use rustler::{NifTerm, NifResult};
+/// # use rustler::list::NifListIterator;
+/// # fn list_iterator_example(list_term: NifTerm) -> NifResult<Vec<i64>> {
 /// let list_iterator: NifListIterator = try!(list_term.decode());
 ///
-/// let result: NifResult<Vec<i64>> = list_interator
+/// let result: NifResult<Vec<i64>> = list_iterator
 ///     // Produces an iterator of NifResult<i64>
 ///     .map(|x| x.decode::<i64>())
 ///     // Lifts each value out of the result. Returns Ok(Vec<i64>) if successful, the first error
 ///     // Error(NifError) on failure.
 ///     .collect::<NifResult<Vec<i64>>>();
+/// # result
+/// # }
 /// ```
 pub struct NifListIterator<'a> {
     term: NifTerm<'a>,

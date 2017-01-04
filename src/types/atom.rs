@@ -4,8 +4,13 @@ use std::sync::Mutex;
 use std::ops::DerefMut;
 
 use ::{ NifTerm, NifEnv, NifResult, NifError };
-use ::wrapper::nif_interface::size_t;
-use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF_TERM };
+use ::wrapper::nif_interface::{
+    NIF_ENV,
+    NIF_TERM,
+    enif_make_atom_len,
+    enif_alloc_env,
+    size_t,
+};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -48,11 +53,9 @@ impl<'a> NifTerm<'a> {
     /// If you only need to test for equality, comparing the terms directly
     /// is much faster.
     ///
-    /// Will return None if the term is not an atom or if the term is not
-    /// valid UTF-8.
-    pub fn atom_to_string(self) -> NifResult<String> {
+    /// Will return None if the term is not an atom.
+    pub fn atom_to_string(&self) -> NifResult<String> {
         ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())
-            .ok_or(NifError::BadArg)
     }
 
 }

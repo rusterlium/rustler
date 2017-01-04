@@ -1,6 +1,6 @@
 //! Utilities used to access and create Erlang maps.
 
-use ::{ NifEnv, NifTerm, NifResult, NifError };
+use ::{ NifEnv, NifTerm, NifResult, NifError, NifDecoder };
 use ::wrapper::map;
 
 pub fn map_new<'a>(env: &'a NifEnv) -> NifTerm<'a> {
@@ -97,4 +97,51 @@ impl<'a> NifTerm<'a> {
         }
     }
 
+}
+
+pub struct NifMapIterator<'a> {
+    env: &'a NifEnv,
+    iter: map::ErlNifMapIterator
+}
+
+impl<'a> NifMapIterator<'a> {
+    pub fn new(map: NifTerm<'a>) -> Option<NifMapIterator<'a>> {
+        let env = map.get_env();
+        unsafe {
+            map::map_iterator_create(env.as_c_arg(), map.as_c_arg())
+        }.map(|iter| NifMapIterator { env: env, iter: iter })
+    }
+}
+
+impl<'a> Drop for NifMapIterator<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            map::map_iterator_destroy(self.env.as_c_arg(), &mut self.iter);
+        }
+    }
+}
+
+impl<'a> Iterator for NifMapIterator<'a> {
+    type Item = (NifTerm<'a>, NifTerm<'a>);
+
+    fn next(&mut self) -> Option<(NifTerm<'a>, NifTerm<'a>)> {
+        unsafe {
+            map::map_iterator_get_pair(self.env.as_c_arg(), &mut self.iter)
+        }.map(|(key, value)| {
+            unsafe {
+                map::map_iterator_next(self.env.as_c_arg(), &mut self.iter);
+            }
+            (NifTerm::new(self.env, key),
+             NifTerm::new(self.env, value))
+        })
+    }
+}
+
+impl<'a> NifDecoder<'a> for NifMapIterator<'a> {
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        match NifMapIterator::new(term) {
+            Some(iter) => Ok(iter),
+            None => Err(NifError::BadArg)
+        }
+    }
 }
