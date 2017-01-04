@@ -3,7 +3,7 @@ use std::sync::RwLock;
 use std::sync::Mutex;
 use std::ops::DerefMut;
 
-use super::{ NifTerm, NifEnv, NifResult, NifError };
+use ::{ NifTerm, NifEnv, NifResult, NifError };
 use ::wrapper::nif_interface::size_t;
 use ::wrapper::nif_interface::{ enif_make_atom_len, enif_alloc_env, NIF_ENV, NIF_TERM };
 

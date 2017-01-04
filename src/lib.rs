@@ -34,18 +34,14 @@ pub mod codegen_runtime;
 #[macro_use]
 extern crate lazy_static;
 
+pub mod types;
+
 mod term;
+
 pub use term::{ NifTerm };
-mod types;
 pub use types::{ NifEncoder, NifDecoder };
 pub mod resource;
-pub mod binary;
-pub mod tuple;
-pub mod map;
-pub mod list;
-pub mod atom;
 
-pub mod ex_struct;
 pub mod dynamic;
 pub mod schedule;
 
@@ -92,10 +88,10 @@ impl NifError {
                 NifTerm::new(env, exception)
             },
             NifError::Atom(atom_str) => {
-                atom::get_atom_init(atom_str).to_term(env)
+                types::atom::get_atom_init(atom_str).to_term(env)
             },
             NifError::RaiseAtom(atom_str) => {
-                let atom = atom::get_atom_init(atom_str).to_term(env);
+                let atom = types::atom::get_atom_init(atom_str).to_term(env);
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     atom.as_c_arg());

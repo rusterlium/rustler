@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the NifListIterator.
 
-use super::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
+use ::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
 use ::wrapper::list;
 use ::wrapper::check;
 

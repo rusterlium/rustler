@@ -1,7 +1,7 @@
 //! Functions used by runtime generated code. Should not be used.
 
 use ::{NifEnv, NifTerm};
-use ::atom::get_atom_init;
+use ::types::atom::get_atom_init;
 use ::wrapper::nif_interface::{MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
 use std::panic::catch_unwind;
 use ::wrapper::exception;

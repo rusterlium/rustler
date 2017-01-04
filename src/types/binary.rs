@@ -1,4 +1,4 @@
-use super::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
+use ::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
 use std::mem::uninitialized;
 use ::wrapper::nif_interface::{ size_t, c_void };
 use ::wrapper::nif_interface::{ NIF_TERM, NIF_BINARY };

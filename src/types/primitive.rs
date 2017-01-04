@@ -1,13 +1,5 @@
 extern crate erlang_nif_sys;
-
-use super::{ NifEnv, NifTerm, NifError, NifResult };
-
-pub trait NifEncoder {
-    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a>;
-}
-pub trait NifDecoder<'a>: Sized+'a {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self>;
-}
+use ::{ NifEnv, NifTerm, NifEncoder, NifDecoder, NifResult, NifError };
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
@@ -59,46 +51,5 @@ impl NifEncoder for bool {
 impl<'a> NifDecoder<'a> for bool {
     fn decode(term: NifTerm<'a>) -> NifResult<bool> {
         Ok(super::atom::is_truthy(term))
-    }
-}
-
-impl<'a> NifDecoder<'a> for String {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        let string: &str = try!(NifDecoder::decode(term));
-        Ok(string.to_string())
-    }
-}
-impl<'a> NifDecoder<'a> for &'a str {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        let binary = try!(::binary::NifBinary::from_term(term));
-        match ::std::str::from_utf8(binary.as_slice()) {
-            Ok(string) => Ok(string),
-            Err(_) => Err(NifError::BadArg),
-        }
-    }
-}
-
-use std::io::Write;
-
-impl NifEncoder for str {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
-        let str_len = self.len();
-        let mut bin = match ::binary::OwnedNifBinary::alloc(str_len) {
-            Some(bin) => bin,
-            None => panic!("binary term allocation fail"),
-        };
-        bin.as_mut_slice().write(self.as_bytes()).expect("memory copy of string failed");
-        bin.release(env).get_term(env)
-    }
-}
-
-impl<'a> NifEncoder for NifTerm<'a> {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
-        self.in_env(env)
-    }
-}
-impl<'a> NifDecoder<'a> for NifTerm<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        Ok(term)
     }
 }
