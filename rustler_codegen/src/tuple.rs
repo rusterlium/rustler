@@ -48,7 +48,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     quote! {
         impl<'a> rustler::NifDecoder<'a> for #struct_typ {
             fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
-                let terms = try!(rustler::tuple::get_tuple(term));
+                let terms = try!(rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num {
                     return Err(rustler::NifError::BadArg);
                 }
@@ -92,7 +92,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
             fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
                 use rustler::NifEncoder;
                 let arr = #field_list_ast;
-                rustler::tuple::make_tuple(env, &arr)
+                rustler::types::tuple::make_tuple(env, &arr)
             }
         }
     }

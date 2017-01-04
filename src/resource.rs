@@ -158,11 +158,11 @@ impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
 macro_rules! resource_struct_init {
     ($struct_name:ident, $env: ident) => {
         {
-            static mut struct_type: Option<::rustler::resource::NifResourceType<$struct_name>> = None;
+            static mut STRUCT_TYPE: Option<::rustler::resource::NifResourceType<$struct_name>> = None;
 
-            let temp_struct_type = 
+            let temp_struct_type =
                 match ::rustler::resource::open_struct_resource_type::<$struct_name>(
-                    $env, 
+                    $env,
                     stringify!($struct_name),
                     ::rustler::wrapper::nif_interface::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
@@ -172,7 +172,7 @@ macro_rules! resource_struct_init {
                         return false;
                     }
                 };
-            unsafe { struct_type = Some(temp_struct_type) };
+            unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
             impl ::rustler::resource::NifResourceTypeProvider for $struct_name {
                 extern "C" fn destructor(
@@ -181,7 +181,7 @@ macro_rules! resource_struct_init {
                     unsafe { ::rustler::codegen_runtime::handle_drop_resource_struct_handle::<$struct_name>(env, obj) };
                 }
                 fn get_type<'a>() -> &'a ::rustler::resource::NifResourceType<Self> {
-                    unsafe { &struct_type }.as_ref().unwrap()
+                    unsafe { &STRUCT_TYPE }.as_ref().unwrap()
                 }
             }
         }
