@@ -16,10 +16,7 @@
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
 #[macro_export]
 macro_rules! rustler_export_nifs {
-    ($name:expr, [$( ($nif_name:expr, $nif_arity:expr, $nif_fun:path) ),*], $on_load:expr) => (
-        rustler_export_nifs!($name, [$( ($nif_name, $nif_arity, $nif_fun, rustler::wrapper::nif_interface::ErlNifTaskFlags::ERL_NIF_NORMAL_JOB) ),*], $on_load);
-    );
-    ($name:expr, [$( ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr) ),*], $on_load:expr) => (
+    ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
         static mut NIF_ENTRY: Option<rustler::wrapper::nif_interface::DEF_NIF_ENTRY> = None;
 
         #[no_mangle]
@@ -36,23 +33,7 @@ macro_rules! rustler_export_nifs {
                 }
 
             let fun_entries = [
-                $(
-                    rustler::wrapper::nif_interface::DEF_NIF_FUNC {
-                        name: ::std::ffi::CString::new($nif_name).unwrap().into_raw() as *const u8,
-                        arity: $nif_arity,
-                        function: {
-                            extern "C" fn nif_func(
-                                env: rustler::wrapper::nif_interface::NIF_ENV,
-                                argc: rustler::codegen_runtime::c_int,
-                                argv: *const rustler::wrapper::nif_interface::NIF_TERM)
-                                -> rustler::wrapper::nif_interface::NIF_TERM {
-                                    rustler::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
-                                }
-                            nif_func
-                        },
-                        flags: $nif_flag as u32,
-                    }
-                 ),*
+                $(rustler_export_nifs!(internal, $exported_nif)),*
             ];
             let fun_entries_len = fun_entries.len();
             let fun_entries_ptr = Box::into_raw(Box::new(fun_entries));
@@ -74,5 +55,26 @@ macro_rules! rustler_export_nifs {
 
             unsafe { NIF_ENTRY.as_ref().unwrap() }
         }
-    );
+    };
+
+    (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
+        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, rustler::wrapper::nif_interface::ErlNifTaskFlags::ERL_NIF_NORMAL_JOB))
+    };
+    (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
+        rustler::wrapper::nif_interface::DEF_NIF_FUNC {
+            name: ::std::ffi::CString::new($nif_name).unwrap().into_raw() as *const u8,
+            arity: $nif_arity,
+            function: {
+                extern "C" fn nif_func(
+                    env: rustler::wrapper::nif_interface::NIF_ENV,
+                    argc: rustler::codegen_runtime::c_int,
+                    argv: *const rustler::wrapper::nif_interface::NIF_TERM)
+                    -> rustler::wrapper::nif_interface::NIF_TERM {
+                    rustler::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
+                }
+                nif_func
+            },
+            flags: $nif_flag as u32,
+        }
+    };
 }
