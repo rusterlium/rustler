@@ -15,14 +15,14 @@ pub mod tuple;
 pub mod elixir_struct;
 
 pub trait NifEncoder {
-    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a>;
+    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a>;
 }
 pub trait NifDecoder<'a>: Sized+'a {
     fn decode(term: NifTerm<'a>) -> NifResult<Self>;
 }
 
 impl<'a> NifEncoder for NifTerm<'a> {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.in_env(env)
     }
 }

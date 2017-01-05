@@ -3,6 +3,7 @@
 use ::{NifEnv, NifTerm};
 use ::types::atom::get_atom_init;
 use ::wrapper::nif_interface::{MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
+use std::marker::PhantomData;
 use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
@@ -13,18 +14,18 @@ pub use ::wrapper::nif_interface::{c_int, c_void};
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
-pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>>,
+pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>>,
                        _arity: usize, r_env: NIF_ENV,
                        argc: c_int, argv: *const NIF_TERM) -> NIF_TERM {
-    let env = NifEnv { env: r_env };
+    let env = NifEnv { env: r_env, id: PhantomData };
 
     let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
-        .map(|x| NifTerm::new(&env, *x)).collect::<Vec<NifTerm>>();
+        .map(|x| NifTerm::new(env, *x)).collect::<Vec<NifTerm>>();
 
     let result: ::std::thread::Result<NIF_TERM> = catch_unwind(|| {
-        match function(&env, &terms) {
+        match function(env, &terms) {
             Ok(ret) => ret.as_c_arg(),
-            Err(err) => unsafe { err.encode(&env) }.as_c_arg(),
+            Err(err) => unsafe { err.encode(env) }.as_c_arg(),
         }
     });
 
@@ -33,19 +34,19 @@ pub fn handle_nif_call(function: for<'a> fn(&'a NifEnv, &Vec<NifTerm<'a>>) -> Ni
         Err(_err) => {
             exception::raise_exception(
                 env.as_c_arg(),
-                get_atom_init("nif_panic").to_term(&env).as_c_arg())
+                get_atom_init("nif_panic").to_term(env).as_c_arg())
         },
     }
 }
 
-pub fn handle_nif_init_call(function: Option<for<'a> fn(&'a NifEnv, NifTerm<'a>) -> bool>,
+pub fn handle_nif_init_call(function: Option<for<'a> fn(NifEnv<'a>, NifTerm<'a>) -> bool>,
                             r_env: NIF_ENV,
                             load_info: NIF_TERM) -> c_int {
-    let env = NifEnv { env: r_env };
-    let term = NifTerm::new(&env, load_info);
+    let env = NifEnv { env: r_env, id: PhantomData };
+    let term = NifTerm::new(env, load_info);
 
     if let Some(inner) = function {
-        if inner(&env, term) { 0 } else { 1 }
+        if inner(env, term) { 0 } else { 1 }
     } else {
         0
     }

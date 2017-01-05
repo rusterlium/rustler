@@ -52,7 +52,7 @@ pub fn resource_struct_def_decorator(
 
     /*push(Annotatable::Item(quote_item!(cx,
         impl rustler::NifEncoder for $struct_ident {
-            fn encode<'a>(&self, env: &'a rustler::NifEnv) -> NifTerm<'a> {
+            fn encode<'a>(&self, env: rustler::NifEnv<'a>) -> NifTerm<'a> {
                 
             }
         }

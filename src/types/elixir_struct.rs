@@ -17,7 +17,7 @@ pub fn get_ex_struct_name(map: NifTerm) -> NifResult<NifAtom> {
         .and_then(|e| NifAtom::from_term(e))
 }
 
-pub fn make_ex_struct<'a>(env: &'a NifEnv, struct_module: &'static str) -> NifResult<NifTerm<'a>> {
+pub fn make_ex_struct<'a>(env: NifEnv<'a>, struct_module: &'static str) -> NifResult<NifTerm<'a>> {
     let map = map_new(env);
 
     let struct_atom = get_atom("__struct__").unwrap().to_term(env);

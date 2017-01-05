@@ -3,7 +3,7 @@
 use ::{ NifEnv, NifTerm, NifResult, NifError, NifDecoder };
 use ::wrapper::map;
 
-pub fn map_new<'a>(env: &'a NifEnv) -> NifTerm<'a> {
+pub fn map_new<'a>(env: NifEnv<'a>) -> NifTerm<'a> {
     NifTerm::new(env, map::map_new(env.as_c_arg()))
 }
 
@@ -49,7 +49,7 @@ impl<'a> NifTerm<'a> {
     /// ```elixir
     /// Map.put(self_term, key, value)
     /// ```
-    pub fn map_put(self, key: NifTerm, value: NifTerm) -> NifResult<NifTerm<'a>> {
+    pub fn map_put(self, key: NifTerm<'a>, value: NifTerm<'a>) -> NifResult<NifTerm<'a>> {
         let map_env = self.get_env();
 
         assert!(map_env == key.get_env(), "key is from different environment as map");
@@ -70,7 +70,7 @@ impl<'a> NifTerm<'a> {
     /// ```elixir
     /// Map.delete(self_term, key)
     /// ```
-    pub fn map_remove(self, key: NifTerm) -> NifResult<NifTerm<'a>> {
+    pub fn map_remove(self, key: NifTerm<'a>) -> NifResult<NifTerm<'a>> {
         let map_env = self.get_env();
 
         assert!(map_env == key.get_env(), "key is from different environment as map");
@@ -85,7 +85,7 @@ impl<'a> NifTerm<'a> {
     ///
     /// Returns Err(NifError::BadArg) if the term is not a map of if key
     /// doesn't exist.
-    pub fn map_update(self, key: NifTerm, new_value: NifTerm) -> NifResult<NifTerm<'a>> {
+    pub fn map_update(self, key: NifTerm<'a>, new_value: NifTerm<'a>) -> NifResult<NifTerm<'a>> {
         let map_env = self.get_env();
 
         assert!(map_env == key.get_env(), "key is from different environment as map");
@@ -100,7 +100,7 @@ impl<'a> NifTerm<'a> {
 }
 
 pub struct NifMapIterator<'a> {
-    env: &'a NifEnv,
+    env: NifEnv<'a>,
     iter: map::ErlNifMapIterator
 }
 

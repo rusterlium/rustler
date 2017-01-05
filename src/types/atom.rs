@@ -24,7 +24,7 @@ impl NifAtom {
         self.term
     }
 
-    pub fn to_term<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+    pub fn to_term<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
         NifTerm::new(env, self.term)
     }
     unsafe fn make_atom(env: NIF_ENV, name: &str) -> Self {
