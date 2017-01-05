@@ -19,6 +19,7 @@ pub type NIF_ENV = *mut erlang_nif_sys::ErlNifEnv;
 pub type NIF_TERM = size_t;
 pub type NIF_BINARY = *mut erlang_nif_sys::ErlNifBinary;
 pub type NIF_RESOURCE_TYPE = *const erlang_nif_sys::ErlNifResourceType;
+pub type NIF_PID = *const erlang_nif_sys::ErlNifPid;
 
 pub type NIF_RESOURCE_HANDLE = *const c_void;
 pub type MUTABLE_NIF_RESOURCE_HANDLE = *mut c_void;
@@ -210,6 +211,14 @@ pub unsafe fn enif_schedule_nif(env: NIF_ENV,
                                 argc: c_int,
                                 argv: *const NIF_TERM) -> NIF_TERM {
     erlang_nif_sys::enif_schedule_nif(env, fun_name, flags, dtor, argc, argv)
+}
+
+// Processes
+pub unsafe fn enif_send(env: NIF_ENV,
+                        to_pid: NIF_PID,
+                        msg_env: NIF_ENV,
+                        msg: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_send(env, to_pid, msg_env, msg)
 }
 
 // Numbers
