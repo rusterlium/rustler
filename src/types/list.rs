@@ -26,7 +26,7 @@ use ::wrapper::check;
 ///
 /// ```
 /// # use rustler::{NifTerm, NifResult};
-/// # use rustler::list::NifListIterator;
+/// # use rustler::types::list::NifListIterator;
 /// # fn list_iterator_example(list_term: NifTerm) -> NifResult<Vec<i64>> {
 /// let list_iterator: NifListIterator = try!(list_term.decode());
 ///
