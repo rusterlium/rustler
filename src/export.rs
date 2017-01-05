@@ -58,7 +58,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, rustler::schedule::NifScheduleFlags::NORMAL))
+        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, rustler::schedule::NifScheduleFlags::Normal))
     };
     (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         rustler::wrapper::nif_interface::DEF_NIF_FUNC {
