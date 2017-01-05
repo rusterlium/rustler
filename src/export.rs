@@ -2,11 +2,11 @@
 ///
 /// This should be called exactly once in every NIF library. It will wrap and export the given rust
 /// functions into the Erlang module.
-/// 
+///
 /// The first argument is a string specifying what Erlang/Elixir module you want the function
 /// exported into. In Erlang this will simply be the atom you named your module. In Elixir, all
 /// modules are prefixed with `Elixir.<module path>`
-/// 
+///
 /// The second argument is a list of 3-tuples. Each tuple contains information on a single exported
 /// NIF function. The first tuple item is the name you want to export the function into, the second
 /// is the arity (number of arguments) of the exported function. The third argument is a
@@ -58,7 +58,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, rustler::wrapper::nif_interface::ErlNifTaskFlags::ERL_NIF_NORMAL_JOB))
+        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, rustler::schedule::NifScheduleFlags::Normal))
     };
     (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         rustler::wrapper::nif_interface::DEF_NIF_FUNC {
