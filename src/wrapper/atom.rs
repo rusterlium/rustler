@@ -2,6 +2,7 @@ use super::nif_interface;
 use super::nif_interface::{ NIF_ENV, NIF_TERM, c_uint };
 use {NifResult, NifError};
 
+#[allow(dead_code)]
 pub fn make_atom(env: NIF_ENV, name: &str) -> NIF_TERM {
     unsafe { nif_interface::enif_make_atom_len(env, name.as_ptr() as *const u8, name.len() as usize) }
 }

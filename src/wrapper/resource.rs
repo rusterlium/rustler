@@ -43,9 +43,12 @@ pub fn alloc_resource(typ: NIF_RESOURCE_TYPE, size: usize) -> NIF_RESOURCE_HANDL
 pub fn make_resource(env: NIF_ENV, obj: NIF_RESOURCE_HANDLE) -> NIF_TERM {
     unsafe { nif_interface::enif_make_resource(env, obj) }
 }
+
+#[allow(dead_code)]
 pub fn release_resource(obj: NIF_RESOURCE_HANDLE) {
     unsafe { nif_interface::enif_release_resource(obj) }
 }
+
 pub fn keep_resource(obj: NIF_RESOURCE_HANDLE) {
     unsafe { nif_interface::enif_keep_resource(obj) }
 }
