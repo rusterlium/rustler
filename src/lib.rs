@@ -64,7 +64,6 @@ type EnvId<'a> = PhantomData<*mut &'a u8>;
 pub struct NifEnv<'a> {
     env: NIF_ENV,
     id: EnvId<'a>
-}
 
 /// Two environments are equal if they're the same `NIF_ENV` value.
 ///
