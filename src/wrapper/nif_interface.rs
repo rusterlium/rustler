@@ -194,6 +194,8 @@ pub use self::erlang_nif_sys::{
     ErlNifMapIterator,
     ErlNifMapIteratorEntry,
     ErlNifPid,
+    enif_clear_env,
+    enif_free_env,
     enif_self,
     enif_map_iterator_create,
     enif_map_iterator_get_pair,
