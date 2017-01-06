@@ -4,7 +4,7 @@ use ::{ NifEnv, NifTerm, NifEncoder, NifDecoder, NifResult, NifError };
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl NifEncoder for $dec_type {
-            fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+            fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
                 #![allow(unused_unsafe)]
                 NifTerm::new(env, unsafe { erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type) })
             }
@@ -38,7 +38,7 @@ impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
 
 use super::atom::{ get_atom };
 impl NifEncoder for bool {
-    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         // This should always succeed, if there these atoms
         // are missing, something is seriously wrong, worthy of a panic.
         if *self {

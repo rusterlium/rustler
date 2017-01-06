@@ -22,6 +22,8 @@
 //! For more information about this, see [the documentation for
 //! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
+use std::marker::PhantomData;
+
 #[doc(hidden)]
 pub mod wrapper;
 use wrapper::nif_interface::{NIF_ENV};
@@ -50,21 +52,39 @@ mod export;
 
 pub type NifResult<T> = Result<T, NifError>;
 
+
+/// Private type system hack to help ensure that each environment exposed to safe Rust code is
+/// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
+/// purpose is to make `NifEnv<'a>` and `NifTerm<'a>` *invariant* w.r.t. `'a`, so that Rust won't
+/// auto-convert a `NifEnv<'a>` to a `NifEnv<'b>`.
+type EnvId<'a> = PhantomData<*mut &'a u8>;
+
 /// On each NIF call, a NifEnv is passed in. The NifEnv is used for most operations that involve
 /// communicating with the BEAM, like decoding and encoding terms.
 ///
 /// There is no way to allocate a NifEnv at the moment, but this may be possible in the future.
-#[derive(PartialEq)]
-pub struct NifEnv {
+#[derive(Clone, Copy)]
+pub struct NifEnv<'a> {
     env: NIF_ENV,
+    id: EnvId<'a>
 }
-impl NifEnv {
+
+/// Two environments are equal if they're the same `NIF_ENV` value.
+///
+/// A `NifEnv<'a>` is equal to a `NifEnv<'b>` iff `'a` and `'b` are the same lifetime.
+impl<'a, 'b> PartialEq<NifEnv<'b>> for NifEnv<'a> {
+    fn eq(&self, other: &NifEnv<'b>) -> bool {
+        self.env == other.env
+    }
+}
+
+impl<'a> NifEnv<'a> {
     pub fn as_c_arg(&self) -> NIF_ENV {
         self.env
     }
 
     /// Convenience method for building a tuple `{error, Reason}`.
-    pub fn error_tuple<'a, T>(&'a self, reason: T) -> NifTerm<'a>
+    pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
         where T: NifEncoder
     {
         let error = types::atom::get_atom_init("error").to_term(self);
@@ -91,7 +111,7 @@ impl NifError {
     /// Unsafe because it allows you to do things that are non-rusty.
     /// (Like raising an exception from anywhere, without having it
     /// be the return value)
-    unsafe fn encode<'a>(self, env: &'a NifEnv) -> NifTerm<'a> {
+    unsafe fn encode<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
         match self {
             NifError::BadArg =>{
                 let exception = wrapper::exception::raise_badarg(env.as_c_arg());

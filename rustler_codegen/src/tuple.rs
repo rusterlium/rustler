@@ -89,7 +89,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     // The implementation itself
     quote! {
         impl<'b> rustler::NifEncoder for #struct_typ {
-            fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
+            fn encode<'a>(&self, env: rustler::NifEnv<'a>) -> rustler::NifTerm<'a> {
                 use rustler::NifEncoder;
                 let arr = #field_list_ast;
                 rustler::types::tuple::make_tuple(env, &arr)

@@ -8,7 +8,7 @@ pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
     }
 }
 
-pub fn make_tuple<'a>(env: &'a NifEnv, terms: &[NifTerm]) -> NifTerm<'a> {
+pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[NifTerm]) -> NifTerm<'a> {
     let c_terms: Vec<::wrapper::nif_interface::NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
     NifTerm::new(env, ::wrapper::tuple::make_tuple(env.as_c_arg(), &c_terms))
 }

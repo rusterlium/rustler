@@ -84,7 +84,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, has_lifetime: bool)
 
         }
         impl<'b> rustler::NifEncoder for #struct_type {
-            fn encode<'a>(&self, env: &'a rustler::NifEnv) -> rustler::NifTerm<'a> {
+            fn encode<'a>(&self, env: rustler::NifEnv<'a>) -> rustler::NifTerm<'a> {
                 let mut map = rustler::map::map_new(env);
                 #(field_defs)*
                 map

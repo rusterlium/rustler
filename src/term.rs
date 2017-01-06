@@ -8,11 +8,11 @@ use ::wrapper::nif_interface::{NIF_TERM};
 #[derive(Clone, Copy)]
 pub struct NifTerm<'a> {
     term: NIF_TERM,
-    env: &'a NifEnv,
+    env: NifEnv<'a>,
 }
 
 impl<'a> NifTerm<'a> {
-    pub fn new(env: &'a NifEnv, inner: NIF_TERM) -> Self {
+    pub fn new(env: NifEnv<'a>, inner: NIF_TERM) -> Self {
         NifTerm {
             term: inner,
             env: env,
@@ -24,7 +24,7 @@ impl<'a> NifTerm<'a> {
         self.term
     }
 
-    pub fn get_env(&self) -> &'a NifEnv {
+    pub fn get_env(&self) -> NifEnv<'a> {
         self.env
     }
 
@@ -34,7 +34,7 @@ impl<'a> NifTerm<'a> {
     ///
     /// The one case where this is acceptable to use is when we already know the NifEnv
     /// is the same, but we need to coerce the lifetime.
-    pub unsafe fn env_cast<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    pub unsafe fn env_cast<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         NifTerm::new(env, self.as_c_arg())
     }
 
@@ -42,7 +42,7 @@ impl<'a> NifTerm<'a> {
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
     /// the term will be copied over.
-    pub fn in_env<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    pub fn in_env<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         if self.get_env() == env {
             unsafe { self.env_cast(env) }
         } else {

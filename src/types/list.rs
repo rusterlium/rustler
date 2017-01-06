@@ -94,14 +94,14 @@ impl<'a> NifDecoder<'a> for NifListIterator<'a> {
 }
 
 //impl<'a, T> NifEncoder for Iterator<Item = T> where T: NifEncoder {
-//    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+//    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
 //        let term_arr: Vec<::wrapper::nif_interface::NIF_TERM> =
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
 
 impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array))

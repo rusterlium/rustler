@@ -20,7 +20,7 @@ impl<'a> NifDecoder<'a> for &'a str {
 use std::io::Write;
 
 impl NifEncoder for str {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let str_len = self.len();
         let mut bin = match OwnedNifBinary::alloc(str_len) {
             Some(bin) => bin,

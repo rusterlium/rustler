@@ -62,12 +62,12 @@ impl<'a> OwnedNifBinary {
     pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
         unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size as usize) }
     }
-    pub fn release<'b>(self, env: &'b NifEnv) -> NifBinary<'b> {
+    pub fn release<'b>(self, env: NifEnv<'b>) -> NifBinary<'b> {
         NifBinary::from_owned(self, env)
     }
 }
 impl<'a> NifBinary<'a> {
-    pub fn from_owned(mut bin: OwnedNifBinary, env: &'a NifEnv) -> Self {
+    pub fn from_owned(mut bin: OwnedNifBinary, env: NifEnv<'a>) -> Self {
         bin.release = false;
         let term = NifTerm::new(env, unsafe { nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
         NifBinary {
@@ -88,7 +88,7 @@ impl<'a> NifBinary<'a> {
     pub fn as_slice(&self) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size as usize) }
     }
-    pub fn get_term<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    pub fn get_term<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.term.in_env(env)
     }
     pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<NifBinary<'a>> {
@@ -109,7 +109,7 @@ impl<'a> NifDecoder<'a> for NifBinary<'a> {
     }
 }
 impl<'a> NifEncoder for NifBinary<'a> {
-    fn encode<'b>(&self, env: &'b NifEnv) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.get_term(env)
     }
 }

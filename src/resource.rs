@@ -37,7 +37,7 @@ pub trait NifResourceTypeProvider: Sized {
 }
 
 impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
-    fn encode<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.as_term(env)
     }
 }
@@ -50,7 +50,7 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
 /// This is the function that gets called from resource_struct_init! in on_load to create a new
 /// resource type.
 #[doc(hidden)]
-pub fn open_struct_resource_type<T: NifResourceTypeProvider>(env: &NifEnv, name: &str,
+pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: NifEnv<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
                                                                                  Some(T::destructor), flags);
@@ -112,7 +112,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
         })
     }
 
-    fn as_term<'a>(&self, env: &'a NifEnv) -> NifTerm<'a> {
+    fn as_term<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         let raw_term = ::wrapper::resource::make_resource(env.as_c_arg(), self.raw);
         NifTerm::new(env, raw_term)
     }
