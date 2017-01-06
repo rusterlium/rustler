@@ -43,6 +43,7 @@ pub mod resource;
 
 pub mod dynamic;
 pub mod schedule;
+pub mod env;
 pub mod thread;
 
 mod export;
@@ -76,6 +77,22 @@ impl<'a, 'b> PartialEq<NifEnv<'b>> for NifEnv<'a> {
 }
 
 impl<'a> NifEnv<'a> {
+    /// Create a new NifEnv. For the `_lifetime_marker` argument, pass a
+    /// reference to any local variable that has its own lifetime, different
+    /// from all other `NifEnv` values. The purpose of the argument is to make
+    /// it easier to know for sure that the `NifEnv` you're creating has a
+    /// unique lifetime (i.e. that you're following the most important safety
+    /// rule of Rustler).
+    ///
+    /// # Unsafe
+    /// Don't create multiple `NifEnv`s with the same lifetime.
+    unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> NifEnv<'a> {
+        NifEnv {
+            env: env,
+            id: PhantomData
+        }
+    }
+
     pub fn as_c_arg(&self) -> NIF_ENV {
         self.env
     }

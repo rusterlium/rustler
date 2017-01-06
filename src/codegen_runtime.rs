@@ -2,7 +2,6 @@
 
 use ::{NifEnv, NifTerm};
 use ::types::atom::get_atom_init;
-use std::marker::PhantomData;
 use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
@@ -19,7 +18,8 @@ pub use ::wrapper::nif_interface::{
 pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>>,
                        _arity: usize, r_env: NIF_ENV,
                        argc: c_int, argv: *const NIF_TERM) -> NIF_TERM {
-    let env = NifEnv { env: r_env, id: PhantomData };
+    let env_lifetime = ();
+    let env = unsafe { NifEnv::new(&env_lifetime, r_env) };
 
     let terms = unsafe { ::std::slice::from_raw_parts(argv, argc as usize) }.iter()
         .map(|x| NifTerm::new(env, *x)).collect::<Vec<NifTerm>>();
@@ -44,7 +44,8 @@ pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> Ni
 pub fn handle_nif_init_call(function: Option<for<'a> fn(NifEnv<'a>, NifTerm<'a>) -> bool>,
                             r_env: NIF_ENV,
                             load_info: NIF_TERM) -> c_int {
-    let env = NifEnv { env: r_env, id: PhantomData };
+    let env_lifetime = ();
+    let env = unsafe { NifEnv::new(&env_lifetime, r_env) };
     let term = NifTerm::new(env, load_info);
 
     if let Some(inner) = function {

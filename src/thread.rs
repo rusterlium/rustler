@@ -1,10 +1,10 @@
 use ::{ NifEnv, NifTerm, NifEncoder };
+use ::env::OwnedEnv;
 use ::wrapper::nif_interface::{ self, ErlNifPid };
 use ::types::atom;
 use std::mem;
 use std::thread;
 use std::panic;
-use std::marker::PhantomData;
 
 /// Return the calling process's pid.
 fn caller<'a>(caller_env: NifEnv<'a>) -> ErlNifPid {
@@ -40,34 +40,23 @@ pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
           S: JobSpawner,
 {
     let pid = caller(env);
-
     S::spawn(move || {
-        let env = NifEnv {
-            env: unsafe { nif_interface::enif_alloc_env() },
-            id: PhantomData
-        };
-
-        let message = match panic::catch_unwind(|| thread_fn(env)) {
-            Ok(term) => term,
-            Err(err) => {
-                // Try to get an error message from Rust.
-                let reason =
-                    if let Some(string) = err.downcast_ref::<String>() {
-                        string.encode(env)
-                    } else if let Some(&s) = err.downcast_ref::<&'static str>() {
-                        s.encode(env)
-                    } else {
-                        atom::get_atom_init("nif_panic").to_term(env)
-                    };
-                env.error_tuple(reason)
+        OwnedEnv::new().send(pid, |env| {
+            match panic::catch_unwind(|| thread_fn(env)) {
+                Ok(term) => term,
+                Err(err) => {
+                    // Try to get an error message from Rust.
+                    let reason =
+                        if let Some(string) = err.downcast_ref::<String>() {
+                            string.encode(env)
+                        } else if let Some(&s) = err.downcast_ref::<&'static str>() {
+                            s.encode(env)
+                        } else {
+                            atom::get_atom_init("nif_panic").to_term(env)
+                        };
+                    env.error_tuple(reason)
+                }
             }
-        };
-
-        unsafe {
-            nif_interface::enif_send(env.as_c_arg(),
-                                     &pid,
-                                     env.as_c_arg(),
-                                     message.as_c_arg());
-        }
+        });
     });
 }
