@@ -2,15 +2,17 @@
 
 use ::{NifEnv, NifTerm};
 use ::types::atom::get_atom_init;
-use ::wrapper::nif_interface::{MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_TERM};
 use std::marker::PhantomData;
 use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
 use ::NifResult;
 
-// Exports for runtime
-pub use ::wrapper::nif_interface::{c_int, c_void};
+// Names used by the `rustler_export_nifs!` macro or other generated code.
+pub use ::wrapper::nif_interface::{
+    c_int, c_void, DEF_NIF_ENTRY, DEF_NIF_FUNC,
+    NIF_ENV, NIF_TERM, NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
+    MUTABLE_NIF_RESOURCE_HANDLE };
 
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.

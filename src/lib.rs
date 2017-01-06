@@ -24,11 +24,8 @@
 
 use std::marker::PhantomData;
 
-#[doc(hidden)]
-pub mod wrapper;
-use wrapper::nif_interface::{NIF_ENV};
-pub use wrapper::nif_interface::size_t;
-pub use wrapper::nif_interface::ErlNifTaskFlags;
+mod wrapper;
+use wrapper::nif_interface::NIF_ENV;
 
 #[doc(hidden)]
 pub mod codegen_runtime;

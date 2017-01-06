@@ -12,6 +12,9 @@ use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 use ::wrapper::nif_interface::{ c_void };
 
+/// Re-export a type used by the `resource_struct_init!` macro.
+pub use ::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
+
 /// The NifResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
 /// the resource type.
@@ -158,13 +161,13 @@ impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
 macro_rules! resource_struct_init {
     ($struct_name:ident, $env: ident) => {
         {
-            static mut STRUCT_TYPE: Option<::rustler::resource::NifResourceType<$struct_name>> = None;
+            static mut STRUCT_TYPE: Option<$crate::resource::NifResourceType<$struct_name>> = None;
 
             let temp_struct_type =
-                match ::rustler::resource::open_struct_resource_type::<$struct_name>(
+                match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
                     stringify!($struct_name),
-                    ::rustler::wrapper::nif_interface::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
+                    $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,
                     None => {
@@ -174,13 +177,13 @@ macro_rules! resource_struct_init {
                 };
             unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
-            impl ::rustler::resource::NifResourceTypeProvider for $struct_name {
+            impl $crate::resource::NifResourceTypeProvider for $struct_name {
                 extern "C" fn destructor(
-                    env: ::rustler::wrapper::nif_interface::NIF_ENV,
-                    obj: ::rustler::wrapper::nif_interface::MUTABLE_NIF_RESOURCE_HANDLE) {
-                    unsafe { ::rustler::codegen_runtime::handle_drop_resource_struct_handle::<$struct_name>(env, obj) };
+                    env: $crate::codegen_runtime::NIF_ENV,
+                    obj: $crate::codegen_runtime::MUTABLE_NIF_RESOURCE_HANDLE) {
+                    unsafe { $crate::codegen_runtime::handle_drop_resource_struct_handle::<$struct_name>(env, obj) };
                 }
-                fn get_type<'a>() -> &'a ::rustler::resource::NifResourceType<Self> {
+                fn get_type<'a>() -> &'a $crate::resource::NifResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref().unwrap()
                 }
             }
