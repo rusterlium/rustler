@@ -32,4 +32,7 @@ defmodule RustlerTest do
   def make_shorter_subbinary(_), do: err
 
   def atom_to_string(_), do: err
+
+  def threaded_fac(_), do: err
+  def threaded_sleep(_), do: err
 end

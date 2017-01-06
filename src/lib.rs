@@ -44,6 +44,7 @@ pub mod resource;
 
 pub mod dynamic;
 pub mod schedule;
+pub mod thread;
 
 mod export;
 
@@ -60,6 +61,15 @@ pub struct NifEnv {
 impl NifEnv {
     pub fn as_c_arg(&self) -> NIF_ENV {
         self.env
+    }
+
+    /// Convenience method for building a tuple `{error, Reason}`.
+    pub fn error_tuple<'a, T>(&'a self, reason: T) -> NifTerm<'a>
+        where T: NifEncoder
+    {
+        let error = types::atom::get_atom_init("error").to_term(self);
+        let reason_term = reason.encode(self);
+        types::tuple::make_tuple(self, &[error, reason_term])
     }
 }
 
