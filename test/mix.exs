@@ -20,7 +20,16 @@ defmodule RustlerTest.Mixfile do
     [{:rustler, path: "../rustler_mix"}]
   end
 
+  defp rust_nightly? do
+    {version, 0} = System.cmd("rustc", ["--version"])
+    version |> String.contains?("nightly")
+  end
+
   defp rustler_crates do
-    [rustler_test: [path: "/", mode: :debug]]
+    [rustler_test: [
+        path: "/",
+        mode: :debug,
+        default_flags: !rust_nightly?,
+    ]]
   end
 end
