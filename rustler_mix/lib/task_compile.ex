@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Compile.Rustler do
   end
 
   def nif_lib_dir do
-    path = Path.join(priv_path, "rustler")
+    path = Path.join(priv_path(), "rustler")
     File.mkdir_p!(path)
     path
   end
@@ -61,9 +61,9 @@ defmodule Mix.Tasks.Compile.Rustler do
       {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
     end
 
-    {src_ext, dst_ext} = dll_extension
+    {src_ext, dst_ext} = dll_extension()
     compiled_lib = "#{target_dir}/#{build_mode}/lib#{lib_name}.#{src_ext}"
-    destination_lib = "#{nif_lib_dir}/lib#{lib_name}.#{dst_ext}"
+    destination_lib = "#{nif_lib_dir()}/lib#{lib_name}.#{dst_ext}"
     File.cp!(compiled_lib, destination_lib)
   end
 
