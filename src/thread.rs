@@ -15,6 +15,17 @@ fn caller<'a>(caller_env: NifEnv<'a>) -> ErlNifPid {
     pid
 }
 
+pub trait JobSpawner {
+    fn spawn<F: FnOnce() + Send + panic::UnwindSafe + 'static>(job: F);
+}
+
+pub struct ThreadSpawner;
+impl JobSpawner for ThreadSpawner {
+    fn spawn<F: FnOnce() + Send + panic::UnwindSafe + 'static>(job: F) {
+        thread::spawn(job);
+    }
+}
+
 /// Implements threaded NIFs.
 ///
 /// This spawns a thread that calls the given closure `thread_fn`. When the closure returns, the
@@ -24,11 +35,13 @@ fn caller<'a>(caller_env: NifEnv<'a>) -> ErlNifPid {
 /// Note that the thread creates a new `NifEnv` and passes it to the closure, so the closure
 /// runs under a separate environment, not under `env`.
 ///
-pub fn spawn<'a, F>(env: NifEnv<'a>, thread_fn: F)
+pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
     where F: for<'b> FnOnce(NifEnv<'b>) -> NifTerm<'b> + Send + panic::UnwindSafe + 'static,
+          S: JobSpawner,
 {
     let pid = caller(env);
-    thread::spawn(move || {
+
+    S::spawn(move || {
         let env = NifEnv {
             env: unsafe { nif_interface::enif_alloc_env() },
             id: PhantomData
