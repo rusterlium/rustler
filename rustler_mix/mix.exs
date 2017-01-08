@@ -10,13 +10,13 @@ defmodule Rustler.Mixfile do
      name: "Rustler Mix",
      source_url: "https://github.com/hansihe/Rustler",
      homepage_url: "https://github.com/hansihe/Rustler",
-     deps: deps,
+     deps: deps(),
      docs: [
        extras: ["guides/Basics.md"],
        source_url_pattern: "https://github.com/hansihe/Rustler/blob/master/rustler_mix/%{path}#L%{line}"
      ],
-     package: package,
-     description: description]
+     package: package(),
+     description: description()]
   end
 
   # Configuration for the OTP application
