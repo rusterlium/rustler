@@ -50,6 +50,10 @@ fn add<'a>(env: &'a NifEnv, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
 }
 ```
 
+#### Community
+
+You can find us in `#rustler` on [freenode](http://freenode.net/) or [the elixir-lang slack](https://elixir-slackin.herokuapp.com/).
+
 #### License
 
 Licensed under either of
