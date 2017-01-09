@@ -36,5 +36,6 @@ defmodule RustlerTest do
   def threaded_fac(_), do: err
   def threaded_sleep(_), do: err
 
+  def send_all(_, _), do: err
   def sublists(_), do: err
 end

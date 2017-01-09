@@ -22,7 +22,7 @@ mod test_thread;
 use test_thread::{threaded_fac, threaded_sleep};
 
 mod test_env;
-use test_env::{sublists};
+use test_env::{send_all, sublists};
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -41,6 +41,7 @@ rustler_export_nifs!(
      ("make_shorter_subbinary", 1, make_shorter_subbinary),
      ("threaded_fac", 1, threaded_fac),
      ("threaded_sleep", 1, threaded_sleep),
+     ("send_all", 2, send_all),
      ("sublists", 1, sublists)],
     Some(on_load)
 );
