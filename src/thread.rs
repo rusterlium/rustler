@@ -1,19 +1,8 @@
 use ::{ NifEnv, NifTerm, NifEncoder };
 use ::env::OwnedEnv;
-use ::wrapper::nif_interface::{ self, ErlNifPid };
 use ::types::atom;
-use std::mem;
 use std::thread;
 use std::panic;
-
-/// Return the calling process's pid.
-fn caller<'a>(caller_env: NifEnv<'a>) -> ErlNifPid {
-    let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
-    unsafe {
-        nif_interface::enif_self(caller_env.as_c_arg(), &mut pid);
-    }
-    pid
-}
 
 pub trait JobSpawner {
     fn spawn<F: FnOnce() + Send + panic::UnwindSafe + 'static>(job: F);
@@ -39,7 +28,7 @@ pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
     where F: for<'b> FnOnce(NifEnv<'b>) -> NifTerm<'b> + Send + panic::UnwindSafe + 'static,
           S: JobSpawner,
 {
-    let pid = caller(env);
+    let pid = env.pid();
     S::spawn(move || {
         OwnedEnv::new().send(pid, |env| {
             match panic::catch_unwind(|| thread_fn(env)) {
