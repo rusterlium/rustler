@@ -11,7 +11,7 @@ pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<NifTe
     }
 
     let n: u64 = args[0].decode()?;
-    thread::spawn(env, move |thread_env| {
+    thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
         let result = (1 .. n + 1).fold(1, mul);
         result.encode(thread_env)
     });
@@ -24,7 +24,7 @@ pub fn threaded_sleep<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<Nif
 
     let q = msec / 1000;
     let r = (msec % 1000) as u32;
-    thread::spawn(env, move |thread_env| {
+    thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
         std::thread::sleep(std::time::Duration::new(q as u64, r * 1_000_000));
         msec.encode(thread_env)
     });
