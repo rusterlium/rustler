@@ -7,22 +7,13 @@
 //! 
 //! Making the apis nice to use from rust should be done in the root rustler crate.
 
-
 pub mod nif_interface;
-
 pub mod tuple;
-pub use self::tuple::{ get_tuple };
-
 pub mod map;
-
 pub mod atom;
-
 pub mod exception;
-
 pub mod resource;
-
 pub mod list;
-
 pub mod check;
 
 use ::wrapper::nif_interface::{ NIF_ENV, NIF_TERM, enif_make_copy };
