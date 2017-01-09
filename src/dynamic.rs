@@ -17,30 +17,27 @@ pub enum TermType {
 }
 
 pub fn get_type(term: NifTerm) -> TermType {
-    let c_term = term.as_c_arg();
-    let c_env = term.get_env().as_c_arg();
-
-    if check::is_atom(c_env, c_term) {
+    if term.is_atom() {
         TermType::Atom
-    } else if check::is_binary(c_env, c_term) {
+    } else if term.is_binary() {
         TermType::Binary
-    } else if check::is_empty_list(c_env, c_term) {
+    } else if term.is_empty_list() {
         TermType::EmptyList
-    } else if check::is_exception(c_env, c_term) {
+    } else if term.is_exception() {
         TermType::Exception
-    } else if check::is_fun(c_env, c_term) {
+    } else if term.is_fun() {
         TermType::Fun
-    } else if check::is_list(c_env, c_term) {
+    } else if term.is_list() {
         TermType::List
-    } else if check::is_map(c_env, c_term) {
+    } else if term.is_map() {
         TermType::Map
-    } else if check::is_pid(c_env, c_term) {
+    } else if term.is_pid() {
         TermType::Pid
-    } else if check::is_port(c_env, c_term) {
+    } else if term.is_port() {
         TermType::Port
-    } else if check::is_ref(c_env, c_term) {
+    } else if term.is_ref() {
         TermType::Ref
-    } else if check::is_tuple(c_env, c_term) {
+    } else if term.is_tuple() {
         TermType::Tuple
     } else {
         TermType::Unknown
@@ -50,7 +47,7 @@ pub fn get_type(term: NifTerm) -> TermType {
 macro_rules! impl_check {
     ($check_fun:ident) => {
         pub fn $check_fun(self) -> bool {
-            check::$check_fun(self.get_env().as_c_arg(), self.as_c_arg())
+            unsafe { check::$check_fun(self.get_env().as_c_arg(), self.as_c_arg()) }
         }
     }
 }

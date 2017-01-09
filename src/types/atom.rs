@@ -60,10 +60,6 @@ impl<'a> NifTerm<'a> {
 
 }
 
-pub fn is_atom(env: &NifEnv, term: NifTerm) -> bool {
-    ::wrapper::check::is_atom(env.as_c_arg(), term.as_c_arg())
-}
-
 pub fn is_truthy(term: NifTerm) -> bool {
     !((term.as_c_arg() == get_atom("false").unwrap().as_c_arg()) || (term.as_c_arg() == get_atom("nil").unwrap().as_c_arg()))
 }
