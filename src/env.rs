@@ -2,7 +2,25 @@ use ::{ NifEnv, NifTerm };
 use wrapper::copy_term;
 use wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 pub use wrapper::nif_interface::ErlNifPid;
+use std::mem;
 use std::sync::{Arc, Weak};
+
+impl<'a> NifEnv<'a> {
+    /// Return the calling process's pid.
+    ///
+    /// # Panics
+    ///
+    /// Panics if this environment is process-independent.  (The only way to get such an
+    /// environment is to use `OwnedEnv`.  The `NifEnv` that Rustler passes to NIFs when they're
+    /// called is always associated with the calling Erlang process.)
+    pub fn pid(self) -> ErlNifPid {
+        let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
+        if unsafe { nif_interface::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
+            panic!("environment is process-independent");
+        }
+        pid
+    }
+}
 
 
 // Helper function used by save() and load().
