@@ -21,7 +21,6 @@ macro_rules! rustler_export_nifs {
 
         #[no_mangle]
         pub extern "C" fn nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
-            // TODO: If a NIF ever gets unloaded, there will be a memory leak! Fix this!
             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
 
             extern "C" fn nif_load(
@@ -32,23 +31,21 @@ macro_rules! rustler_export_nifs {
                     $crate::codegen_runtime::handle_nif_init_call($on_load, env, load_info)
                 }
 
-            let fun_entries = [
+            const FUN_ENTRIES: &'static [$crate::codegen_runtime::DEF_NIF_FUNC] = &[
                 $(rustler_export_nifs!(internal, $exported_nif)),*
             ];
-            let fun_entries_len = fun_entries.len();
-            let fun_entries_ptr = Box::into_raw(Box::new(fun_entries));
 
             let entry = $crate::codegen_runtime::DEF_NIF_ENTRY {
                 major: $crate::codegen_runtime::NIF_MAJOR_VERSION,
                 minor: $crate::codegen_runtime::NIF_MINOR_VERSION,
-                name: ::std::ffi::CString::new($name).unwrap().into_raw() as *const u8,
-                num_of_funcs: fun_entries_len as $crate::codegen_runtime::c_int,
-                funcs: fun_entries_ptr as *const $crate::codegen_runtime::DEF_NIF_FUNC,
+                name: concat!($name, "\x00") as *const str as *const u8,
+                num_of_funcs: FUN_ENTRIES.len() as $crate::codegen_runtime::c_int,
+                funcs: FUN_ENTRIES.as_ptr(),
                 load: Some(nif_load),
                 reload: None,
                 upgrade: None,
                 unload: None,
-                vm_variant: b"beam.vanilla\x00" as *const u8,
+                vm_variant: b"beam.vanilla\x00".as_ptr(),
                 options: 0,
             };
             unsafe { NIF_ENTRY = Some(entry) };
@@ -62,7 +59,7 @@ macro_rules! rustler_export_nifs {
     };
     (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
-            name: ::std::ffi::CString::new($nif_name).unwrap().into_raw() as *const u8,
+            name: concat!($nif_name, "\x00") as *const str as *const u8,
             arity: $nif_arity,
             function: {
                 extern "C" fn nif_func(
