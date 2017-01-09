@@ -1,4 +1,4 @@
-use rustler::{ NifEnv, NifTerm, NifResult, NifEncoder, NifDecoder };
+use rustler::{ NifEnv, NifTerm, NifResult, NifEncoder };
 use rustler::thread;
 use std;
 

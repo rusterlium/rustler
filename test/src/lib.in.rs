@@ -21,6 +21,9 @@ use test_atom::{atom_to_string};
 mod test_thread;
 use test_thread::{threaded_fac, threaded_sleep};
 
+mod test_env;
+use test_env::{sublists};
+
 rustler_export_nifs!(
     "Elixir.RustlerTest",
     [("add_u32", 2, add_u32),
@@ -37,7 +40,8 @@ rustler_export_nifs!(
      ("atom_to_string", 1, atom_to_string),
      ("make_shorter_subbinary", 1, make_shorter_subbinary),
      ("threaded_fac", 1, threaded_fac),
-     ("threaded_sleep", 1, threaded_sleep)],
+     ("threaded_sleep", 1, threaded_sleep),
+     ("sublists", 1, sublists)],
     Some(on_load)
 );
 
