@@ -24,7 +24,7 @@ impl<'a> NifEnv<'a> {
 
 
 // Helper function used by save() and load().
-fn nif_term_into_env<'a>(term: NIF_TERM, src_env: NIF_ENV, dest_env: NIF_ENV) -> NIF_TERM {
+unsafe fn nif_term_into_env<'a>(term: NIF_TERM, src_env: NIF_ENV, dest_env: NIF_ENV) -> NIF_TERM {
     if src_env == dest_env {
         term
     } else {
@@ -133,7 +133,7 @@ impl OwnedEnv {
     /// If you try, the `.load()` call will panic.
     pub fn save<'a>(&self, term: NifTerm<'a>) -> SavedTerm {
         SavedTerm {
-            term: nif_term_into_env(term.as_c_arg(), term.get_env().as_c_arg(), *self.env),
+            term: unsafe { nif_term_into_env(term.as_c_arg(), term.get_env().as_c_arg(), *self.env) },
             env_generation: Arc::downgrade(&self.env),
         }
     }
@@ -170,7 +170,7 @@ impl SavedTerm {
             None =>
                 panic!("term is from a cleared or dropped OwnedEnv"),
             Some(env_arc) =>
-                NifTerm::new(env, nif_term_into_env(self.term, *env_arc, env.as_c_arg()))
+                NifTerm::new(env, unsafe { nif_term_into_env(self.term, *env_arc, env.as_c_arg()) })
         }
     }
 }
