@@ -3,8 +3,8 @@ use ::wrapper::nif_interface;
 
 macro_rules! impl_check_fun {
     ($name:ident, $inner:path) => {
-        pub fn $name(env: NIF_ENV, term: NIF_TERM) -> bool {
-            (unsafe { $inner(env, term) } == 1)
+        pub unsafe fn $name(env: NIF_ENV, term: NIF_TERM) -> bool {
+            $inner(env, term) == 1
         }
     }
 }

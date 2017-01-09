@@ -46,7 +46,7 @@ impl<'a> NifTerm<'a> {
         if self.get_env() == env {
             unsafe { self.env_cast(env) }
         } else {
-            NifTerm::new(env, ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg()))
+            NifTerm::new(env, unsafe { ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg()) })
         }
     }
 

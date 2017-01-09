@@ -13,7 +13,7 @@ macro_rules! impl_number_transcoder {
             fn decode(term: NifTerm) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
-                if unsafe { erlang_nif_sys::$decode_fun(term.get_env().as_c_arg(), term.as_c_arg(), (&mut res) as *mut $nif_type) } == 0 {
+                if unsafe { erlang_nif_sys::$decode_fun(term.get_env().as_c_arg(), term.as_c_arg(), &mut res) } == 0 {
                     return Err(NifError::BadArg);
                 }
                 Ok(res as $dec_type)

@@ -55,8 +55,9 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
 #[doc(hidden)]
 pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: NifEnv<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
-    let res: Option<NIF_RESOURCE_TYPE> = ::wrapper::resource::open_resource_type(env.as_c_arg(), name, 
-                                                                                 Some(T::destructor), flags);
+    let res: Option<NIF_RESOURCE_TYPE> = unsafe {
+        ::wrapper::resource::open_resource_type(env.as_c_arg(), name, Some(T::destructor), flags)
+    };
     if res.is_some() {
         Some(NifResourceType {
             res: res.unwrap(),
@@ -91,7 +92,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<Box<T>>();
-        let mem_raw = ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size);
+        let mem_raw = unsafe { ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<Box<T>>(mem_raw) } as *mut Box<T>;
 
         unsafe { ptr::write(aligned_mem, Box::new(data)) };
@@ -103,11 +104,11 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 
     fn from_term(term: NifTerm) -> Result<Self, NifError> {
-        let res_resource = match ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) {
+        let res_resource = match unsafe { ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) } {
             Some(res) => res,
             None => return Err(NifError::BadArg),
         };
-        ::wrapper::resource::keep_resource(res_resource);
+        unsafe { ::wrapper::resource::keep_resource(res_resource); }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<Box<T>>(res_resource) } as *mut Box<T>;
         Ok(ResourceCell {
             raw: res_resource,
@@ -116,7 +117,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 
     fn as_term<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-        let raw_term = ::wrapper::resource::make_resource(env.as_c_arg(), self.raw);
+        let raw_term = unsafe { ::wrapper::resource::make_resource(env.as_c_arg(), self.raw) };
         NifTerm::new(env, raw_term)
     }
 
@@ -141,7 +142,7 @@ impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// For a ResourceCell this will simply increment the refcounter for the resource instance and
     /// perform a fairly standard clone.
     fn clone(&self) -> Self {
-        ::wrapper::resource::keep_resource(self.raw);
+        unsafe { ::wrapper::resource::keep_resource(self.raw); }
         ResourceCell {
             raw: self.raw,
             inner: self.inner,

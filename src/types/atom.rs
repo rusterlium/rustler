@@ -9,7 +9,6 @@ use ::wrapper::nif_interface::{
     NIF_TERM,
     enif_make_atom_len,
     enif_alloc_env,
-    size_t,
 };
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
@@ -28,7 +27,7 @@ impl NifAtom {
         NifTerm::new(env, self.term)
     }
     unsafe fn make_atom(env: NIF_ENV, name: &str) -> Self {
-        NifAtom::from_nif_term(enif_make_atom_len(env, name.as_ptr() as *const u8, name.len() as size_t))
+        NifAtom::from_nif_term(enif_make_atom_len(env, name.as_ptr() as *const u8, name.len()))
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
@@ -55,13 +54,9 @@ impl<'a> NifTerm<'a> {
     ///
     /// Will return None if the term is not an atom.
     pub fn atom_to_string(&self) -> NifResult<String> {
-        ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())
+        unsafe { ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
     }
 
-}
-
-pub fn is_atom(env: &NifEnv, term: NifTerm) -> bool {
-    ::wrapper::check::is_atom(env.as_c_arg(), term.as_c_arg())
 }
 
 pub fn is_truthy(term: NifTerm) -> bool {

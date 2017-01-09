@@ -33,7 +33,7 @@ pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> Ni
 
     match result {
         Ok(res) => res,
-        Err(_err) => {
+        Err(_err) => unsafe {
             exception::raise_exception(
                 env.as_c_arg(),
                 get_atom_init("nif_panic").to_term(env).as_c_arg())
