@@ -55,7 +55,7 @@ impl<'a> NifTerm<'a> {
     ///
     /// Will return None if the term is not an atom.
     pub fn atom_to_string(&self) -> NifResult<String> {
-        ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg())
+        unsafe { ::wrapper::atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
     }
 
 }
