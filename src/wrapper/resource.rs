@@ -21,8 +21,7 @@ pub unsafe fn open_resource_type(env: NIF_ENV, name: &str, dtor: Option<NifResou
     let name_p: *const u8 = CString::new(name).unwrap().as_bytes_with_nul().as_ptr();
     let res = {
         let mut tried: NifResourceFlags = mem::uninitialized();
-        nif_interface::enif_open_resource_type(env, module_p, name_p, dtor, flags,
-                                               (&mut tried as *mut NifResourceFlags))
+        nif_interface::enif_open_resource_type(env, module_p, name_p, dtor, flags, &mut tried)
     };
 
     if res.is_null() {
@@ -35,7 +34,7 @@ pub unsafe fn open_resource_type(env: NIF_ENV, name: &str, dtor: Option<NifResou
 // Functionally incomplete
 pub unsafe fn get_resource(env: NIF_ENV, term: NIF_TERM, typ: NIF_RESOURCE_TYPE) -> Option<NIF_RESOURCE_HANDLE> {
     let mut ret_obj: NIF_RESOURCE_HANDLE = mem::uninitialized();
-    let res = nif_interface::enif_get_resource(env, term, typ, &mut ret_obj as *mut NIF_RESOURCE_HANDLE);
+    let res = nif_interface::enif_get_resource(env, term, typ, &mut ret_obj);
 
     if res == 0 {
         None

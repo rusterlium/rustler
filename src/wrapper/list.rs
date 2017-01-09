@@ -5,7 +5,7 @@ use std::mem;
 pub unsafe fn get_list_cell(env: NIF_ENV, list: NIF_TERM) -> Option<(NIF_TERM, NIF_TERM)> {
     let mut head: NIF_TERM = mem::uninitialized();
     let mut tail: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_get_list_cell(env, list, &mut head as *mut NIF_TERM, &mut tail as *mut NIF_TERM);
+    let success = nif_interface::enif_get_list_cell(env, list, &mut head, &mut tail);
 
     if success != 1 {
         return None;
@@ -15,7 +15,7 @@ pub unsafe fn get_list_cell(env: NIF_ENV, list: NIF_TERM) -> Option<(NIF_TERM, N
 
 pub unsafe fn get_list_length(env: NIF_ENV, list: NIF_TERM) -> Option<usize> {
     let mut len: u32 = 0;
-    let success = nif_interface::enif_get_list_length(env, list, &mut len as *mut u32);
+    let success = nif_interface::enif_get_list_length(env, list, &mut len);
 
     if success != 1 {
         return None;
@@ -34,7 +34,7 @@ pub unsafe fn make_list_cell(env: NIF_ENV, head: NIF_TERM, tail: NIF_TERM) -> NI
 
 pub unsafe fn make_reverse_list(env: NIF_ENV, list: NIF_TERM) -> Option<NIF_TERM> {
     let mut list_out: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_make_reverse_list(env, list, &mut list_out as *mut NIF_TERM);
+    let success = nif_interface::enif_make_reverse_list(env, list, &mut list_out);
 
     if success != 1 {
         return None;

@@ -5,7 +5,7 @@ use std::mem;
 
 pub unsafe fn get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
     let mut result: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_get_map_value(env, map, key, &mut result as *mut NIF_TERM);
+    let success = nif_interface::enif_get_map_value(env, map, key, &mut result);
 
     if success != 1 {
         return None;
@@ -15,12 +15,12 @@ pub unsafe fn get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Optio
 
 pub unsafe fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Option<usize> {
     let mut size: nif_interface::size_t = mem::uninitialized();
-    let success = nif_interface::enif_get_map_size(env, map, &mut size as *mut nif_interface::size_t);
+    let success = nif_interface::enif_get_map_size(env, map, &mut size);
 
     if success != 1 {
         return None;
     }
-    Some(size as usize)
+    Some(size)
 }
 
 pub unsafe fn map_new(env: NIF_ENV) -> NIF_TERM {
@@ -29,7 +29,7 @@ pub unsafe fn map_new(env: NIF_ENV) -> NIF_TERM {
 
 pub unsafe fn map_put(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: NIF_TERM) -> Option<NIF_TERM> {
     let mut result: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_make_map_put(env, map, key, value, &mut result as *mut NIF_TERM);
+    let success = nif_interface::enif_make_map_put(env, map, key, value, &mut result);
 
     if success != 1 {
         return None;
@@ -39,7 +39,7 @@ pub unsafe fn map_put(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, value: NIF_TER
 
 pub unsafe fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
     let mut result: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_make_map_remove(env, map, key, &mut result as *mut NIF_TERM);
+    let success = nif_interface::enif_make_map_remove(env, map, key, &mut result);
 
     if success != 1 {
         return None;
@@ -49,7 +49,7 @@ pub unsafe fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<N
 
 pub unsafe fn map_update(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM, new_value: NIF_TERM) -> Option<NIF_TERM> {
     let mut result: NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_make_map_update(env, map, key, new_value, &mut result as *mut NIF_TERM);
+    let success = nif_interface::enif_make_map_update(env, map, key, new_value, &mut result);
 
     if success != 1 {
         return None;

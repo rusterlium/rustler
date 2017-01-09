@@ -46,9 +46,7 @@ impl Drop for OwnedNifBinary {
 impl<'a> OwnedNifBinary {
     pub fn alloc(size: usize) -> Option<OwnedNifBinary> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { nif_interface::enif_alloc_binary(
-                size as size_t, 
-                binary.as_c_arg()) } == 0 {
+        if unsafe { nif_interface::enif_alloc_binary(size, binary.as_c_arg()) } == 0 {
             return None;
         }
         Some(OwnedNifBinary {
@@ -57,10 +55,10 @@ impl<'a> OwnedNifBinary {
         })
     }
     pub fn as_slice(&self) -> &'a [u8] {
-        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size as usize) }
+        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
     }
     pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
-        unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size as usize) }
+        unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size) }
     }
     pub fn release<'b>(self, env: NifEnv<'b>) -> NifBinary<'b> {
         NifBinary::from_owned(self, env)
@@ -86,7 +84,7 @@ impl<'a> NifBinary<'a> {
         })
     }
     pub fn as_slice(&self) -> &'a [u8] {
-        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size as usize) }
+        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
     }
     pub fn get_term<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.term.in_env(env)

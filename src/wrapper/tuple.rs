@@ -5,9 +5,7 @@ use std::mem;
 pub unsafe fn get_tuple<'a>(env: NIF_ENV, term: NIF_TERM) -> Result<&'a [NIF_TERM], NIF_ERROR> {
     let mut arity: c_int = 0;
     let mut array_ptr: *const NIF_TERM = mem::uninitialized();
-    let success = nif_interface::enif_get_tuple(env, term,
-                                                &mut arity as *mut c_int,
-                                                &mut array_ptr as *mut *const NIF_TERM);
+    let success = nif_interface::enif_get_tuple(env, term, &mut arity, &mut array_ptr);
     if success != 1 {
         return Err(NIF_ERROR::BAD_ARG);
     }
