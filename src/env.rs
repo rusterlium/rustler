@@ -3,6 +3,17 @@ use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 use ::types::pid::NifPid;
 use std::sync::{Arc, Weak};
 
+impl<'a> NifEnv<'a> {
+    /// Send a message to a process.
+    pub fn send(self, pid: &NifPid, message: NifTerm<'a>) {
+        // Implementation note: As of ERTS 8.0 (Erlang/OTP 19), there is another way to do this:
+        // pass a null pointer to the `msg_env` parameter of `enif_send()`. That might be
+        // faster. For now, we copy the term into a process-independent environment, then send it.
+        OwnedEnv::new().send(pid, |env| message.in_env(env))
+    }
+}
+
+
 /// A process-independent environment.
 ///
 /// An owned environment is a place where Erlang terms can be created outside of a NIF call. Rust
