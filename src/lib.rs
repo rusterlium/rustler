@@ -102,8 +102,7 @@ impl<'a> NifEnv<'a> {
         where T: NifEncoder
     {
         let error = types::atom::get_atom_init("error").to_term(self);
-        let reason_term = reason.encode(self);
-        types::tuple::make_tuple(self, &[error, reason_term])
+        (error, reason).encode(self)
     }
 }
 
