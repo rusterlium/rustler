@@ -11,6 +11,7 @@ pub mod map;
 pub mod primitive;
 pub mod string;
 pub mod tuple;
+pub mod pid;
 
 pub mod elixir_struct;
 

@@ -30,7 +30,7 @@ pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
 {
     let pid = env.pid();
     S::spawn(move || {
-        OwnedEnv::new().send(pid, |env| {
+        OwnedEnv::new().send(&pid, |env| {
             match panic::catch_unwind(|| thread_fn(env)) {
                 Ok(term) => term,
                 Err(err) => {
