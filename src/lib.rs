@@ -22,6 +22,9 @@
 //! For more information about this, see [the documentation for
 //! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
+#[macro_use(enif_snprintf)]
+extern crate erlang_nif_sys;
+
 use std::marker::PhantomData;
 
 mod wrapper;

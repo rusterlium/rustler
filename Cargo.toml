@@ -7,5 +7,5 @@ authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-erlang_nif-sys = ">=0.5.4"
+erlang_nif-sys = ">=0.6.0"
 lazy_static = "0.1.*"

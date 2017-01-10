@@ -17,6 +17,7 @@ mod test_atom;
 mod test_thread;
 mod test_env;
 mod test_codegen;
+mod test_term;
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -27,6 +28,8 @@ rustler_export_nifs!(
 
         ("sum_list", 1, test_list::sum_list),
         ("make_list", 0, test_list::make_list),
+
+        ("term_debug", 1, test_term::term_debug),
 
         ("sum_map_values", 1, test_map::sum_map_values),
         ("map_entries_sorted", 1, test_map::map_entries_sorted),

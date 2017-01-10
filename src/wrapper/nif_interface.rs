@@ -8,7 +8,7 @@
 //! While reexporting from erlang_nif_sys directly would remove a lot of code, it
 //! is preferred to keep the function signatures in here for future use/reference.
 
-extern crate erlang_nif_sys;
+use ::erlang_nif_sys;
 extern crate std;
 //extern crate libc;
 //pub use libc::{ c_int, c_uint, c_double, size_t, c_void, c_uchar };
@@ -24,7 +24,7 @@ pub type NIF_PID = *const erlang_nif_sys::ErlNifPid;
 pub type NIF_RESOURCE_HANDLE = *const c_void;
 pub type MUTABLE_NIF_RESOURCE_HANDLE = *mut c_void;
 
-pub type NifResourceDtor = extern "C" fn(r_env: NIF_ENV, obj: MUTABLE_NIF_RESOURCE_HANDLE) -> ();
+pub type NifResourceDtor = unsafe extern "C" fn(r_env: NIF_ENV, obj: MUTABLE_NIF_RESOURCE_HANDLE) -> ();
 pub type NifResourceFlags = erlang_nif_sys::ErlNifResourceFlags;
 
 pub enum NIF_ERROR {
@@ -230,7 +230,7 @@ pub unsafe fn enif_consume_timeslice(env: NIF_ENV, percent: c_int) -> c_int {
 pub unsafe fn enif_schedule_nif(env: NIF_ENV,
                                 fun_name: *const c_uchar,
                                 flags: c_int,
-                                dtor: Option<extern fn(env: NIF_ENV, argc: c_int, argv: *const NIF_TERM)>,
+                                dtor: Option<unsafe extern fn(env: NIF_ENV, argc: c_int, argv: *const NIF_TERM)>,
                                 argc: c_int,
                                 argv: *const NIF_TERM) -> NIF_TERM {
     erlang_nif_sys::enif_schedule_nif(env, fun_name, flags, dtor, argc, argv)
