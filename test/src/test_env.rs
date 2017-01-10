@@ -13,7 +13,7 @@ pub fn sublists<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTe
     })?;
 
     thread::spawn(move || {
-        my_env.send(pid, |env| {
+        my_env.send(&pid, |env| {
             let result: NifResult<NifTerm> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
                 let iter: NifListIterator = try!(reversed_list.decode());
