@@ -1,36 +1,18 @@
 use ::{ NifEnv, NifTerm };
-use wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
-pub use wrapper::nif_interface::ErlNifPid;
-use std::mem;
+use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
+use ::types::pid::NifPid;
 use std::sync::{Arc, Weak};
-
-impl<'a> NifEnv<'a> {
-    /// Return the calling process's pid.
-    ///
-    /// # Panics
-    ///
-    /// Panics if this environment is process-independent.  (The only way to get such an
-    /// environment is to use `OwnedEnv`.  The `NifEnv` that Rustler passes to NIFs when they're
-    /// called is always associated with the calling Erlang process.)
-    pub fn pid(self) -> ErlNifPid {
-        let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
-        if unsafe { nif_interface::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
-            panic!("environment is process-independent");
-        }
-        pid
-    }
-}
-
 
 /// A process-independent environment.
 ///
 /// An owned environment is a place where Erlang terms can be created outside of a NIF call. Rust
 /// code can use an owned environment to build a message and send it to an Erlang process.
 ///
-///     use rustler::env::{OwnedEnv, ErlNifPid};
+///     use rustler::env::OwnedEnv;
+///     use rustler::types::pid::NifPid;
 ///     use rustler::NifEncoder;
 ///
-///     fn send_string_to_pid(data: &str, pid: ErlNifPid) {
+///     fn send_string_to_pid(data: &str, pid: &NifPid) {
 ///         let mut msg_env = OwnedEnv::new();
 ///         msg_env.send(pid, |env| data.encode(env));
 ///     }
@@ -64,7 +46,7 @@ impl OwnedEnv {
     ///
     /// After the closure runs and the message is sent, the environment is cleared as though by
     /// calling the `.clear()` method.
-    pub fn send<F>(&mut self, recipient: ErlNifPid, closure: F)
+    pub fn send<F>(&mut self, recipient: &NifPid, closure: F)
         where F: for<'a> FnOnce(NifEnv<'a>) -> NifTerm<'a>
     {
         let env_lifetime = ();
@@ -74,7 +56,7 @@ impl OwnedEnv {
 
         self.env = Arc::new(c_env);
         unsafe {
-            nif_interface::enif_send(*self.env, &recipient, *self.env, message.as_c_arg());
+            nif_interface::enif_send(*self.env, recipient.as_c_arg(), *self.env, message.as_c_arg());
         }
     }
 

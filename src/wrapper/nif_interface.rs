@@ -196,11 +196,13 @@ pub use self::erlang_nif_sys::{
     ErlNifPid,
     enif_clear_env,
     enif_free_env,
-    enif_self,
+    enif_get_local_pid,
+    enif_make_pid,
     enif_map_iterator_create,
+    enif_map_iterator_destroy,
     enif_map_iterator_get_pair,
     enif_map_iterator_next,
-    enif_map_iterator_destroy,
+    enif_self,
 };
 
 // Scheduling
