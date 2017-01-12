@@ -7,7 +7,7 @@
 //! `#[ExStruct(module = "Elixir.TheStructModule")]`.
 
 use ::{ NifEnv, NifTerm, NifResult };
-use super::atom::{ self, NifAtom, get_atom_init };
+use super::atom::{ self, NifAtom };
 use super::map::{ map_new };
 
 pub fn get_ex_struct_name(map: NifTerm) -> NifResult<NifAtom> {
@@ -17,11 +17,11 @@ pub fn get_ex_struct_name(map: NifTerm) -> NifResult<NifAtom> {
         .and_then(|e| NifAtom::from_term(e))
 }
 
-pub fn make_ex_struct<'a>(env: NifEnv<'a>, struct_module: &'static str) -> NifResult<NifTerm<'a>> {
+pub fn make_ex_struct<'a>(env: NifEnv<'a>, struct_module: &str) -> NifResult<NifTerm<'a>> {
     let map = map_new(env);
 
     let struct_atom = atom::__struct__().to_term(env);
-    let module_atom = get_atom_init(struct_module).to_term(env);
+    let module_atom = NifAtom::from_str(env, struct_module)?.to_term(env);
 
     map.map_put(struct_atom, module_atom)
 }

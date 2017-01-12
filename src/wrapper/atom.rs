@@ -2,9 +2,8 @@ use super::nif_interface;
 use super::nif_interface::{ NIF_ENV, NIF_TERM, c_uint };
 use {NifResult, NifError};
 
-#[allow(dead_code)]
-pub unsafe fn make_atom(env: NIF_ENV, name: &str) -> NIF_TERM {
-    nif_interface::enif_make_atom_len(env, name.as_ptr() as *const u8, name.len())
+pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
+    nif_interface::enif_make_atom_len(env, name.as_ptr(), name.len())
 }
 
 /// Get the contents of this atom as a string.

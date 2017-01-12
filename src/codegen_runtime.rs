@@ -1,8 +1,8 @@
 //! Functions used by runtime generated code. Should not be used.
 
 use ::{NifEnv, NifTerm};
-use ::types::atom::get_atom_init;
 use std::panic::catch_unwind;
+use ::types::atom::NifAtom;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
 use ::NifResult;
@@ -36,7 +36,7 @@ pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> Ni
         Err(_err) => unsafe {
             exception::raise_exception(
                 env.as_c_arg(),
-                get_atom_init("nif_panic").to_term(env).as_c_arg())
+                NifAtom::from_bytes(env, b"nif_panic").ok().unwrap().as_c_arg())
         },
     }
 }

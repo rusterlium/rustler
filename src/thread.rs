@@ -1,6 +1,6 @@
 use ::{ NifEnv, NifTerm, NifEncoder };
 use ::env::OwnedEnv;
-use ::types::atom;
+use ::types::atom::NifAtom;
 use std::thread;
 use std::panic;
 
@@ -41,7 +41,7 @@ pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
                         } else if let Some(&s) = err.downcast_ref::<&'static str>() {
                             s.encode(env)
                         } else {
-                            atom::get_atom_init("nif_panic").to_term(env)
+                            NifAtom::from_bytes(env, b"nif_panic").ok().unwrap().to_term(env)
                         };
                     env.error_tuple(reason)
                 }
