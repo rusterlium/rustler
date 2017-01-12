@@ -158,19 +158,22 @@ pub struct SavedTerm {
 unsafe impl Send for SavedTerm {}
 
 impl SavedTerm {
-    /// Load this saved term into any `NifEnv`.
-    ///
-    /// If `env` isn't in the same `OwnedEnv` where this term was saved, the term will be copied.
+    /// Load this saved term back into its environment.
     ///
     /// # Panics
-    /// Panics if the `OwnedEnv` where this term was saved has been cleared or dropped.
+    ///
+    /// `env` must be the `NifEnv` of a `.run()` or `.send()` call on the
+    /// `OwnedEnv` where this term was saved, and the `OwnedEnv` must not have
+    /// been cleared or dropped since then. Otherwise this method will panic.
     pub fn load<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         // Check that the saved term is still valid.
         match self.env_generation.upgrade() {
             None =>
                 panic!("term is from a cleared or dropped OwnedEnv"),
-            Some(env_arc) =>
-                unsafe { NifTerm::new(env, nif_term_into_env(self.term, *env_arc, env.as_c_arg())) }
+            Some(ref env_arc) if **env_arc == env.as_c_arg() =>
+                unsafe { NifTerm::new(env, self.term) },
+            _ =>
+                panic!("can't load SavedTerm into a different environment"),
         }
     }
 }
