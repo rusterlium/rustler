@@ -17,7 +17,8 @@ impl NifAtom {
     }
 
     pub fn to_term<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
-        NifTerm::new(env, self.term)
+        // Safe because atoms are not associated with any environment.
+        unsafe { NifTerm::new(env, self.term) }
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {

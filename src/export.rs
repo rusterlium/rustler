@@ -28,8 +28,10 @@ macro_rules! rustler_export_nifs {
                 _priv_data: *mut *mut $crate::codegen_runtime::c_void,
                 load_info: $crate::codegen_runtime::NIF_TERM)
                 -> $crate::codegen_runtime::c_int {
+                unsafe {
                     $crate::codegen_runtime::handle_nif_init_call($on_load, env, load_info)
                 }
+            }
 
             const FUN_ENTRIES: &'static [$crate::codegen_runtime::DEF_NIF_FUNC] = &[
                 $(rustler_export_nifs!(internal, $exported_nif)),*
@@ -67,7 +69,9 @@ macro_rules! rustler_export_nifs {
                     argc: $crate::codegen_runtime::c_int,
                     argv: *const $crate::codegen_runtime::NIF_TERM)
                     -> $crate::codegen_runtime::NIF_TERM {
-                    $crate::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
+                    unsafe {
+                        $crate::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
+                    }
                 }
                 nif_func
             },

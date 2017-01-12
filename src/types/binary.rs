@@ -67,7 +67,7 @@ impl<'a> OwnedNifBinary {
 impl<'a> NifBinary<'a> {
     pub fn from_owned(mut bin: OwnedNifBinary, env: NifEnv<'a>) -> Self {
         bin.release = false;
-        let term = NifTerm::new(env, unsafe { nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()) });
+        let term = unsafe { NifTerm::new(env, nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg())) };
         NifBinary {
             inner: bin.inner.clone(),
             term: term,
@@ -96,8 +96,9 @@ impl<'a> NifBinary<'a> {
         }
 
         let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.get_env().as_c_arg(), self.inner.bin_term, offset, length) };
+        let term = unsafe { NifTerm::new(self.term.get_env(), raw_term) };
         // This should never fail, as we are always passing in a binary term.
-        Ok(NifBinary::from_term(NifTerm::new(self.term.get_env(), raw_term)).ok().unwrap())
+        Ok(NifBinary::from_term(term).ok().unwrap())
     }
 }
 

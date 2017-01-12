@@ -65,10 +65,10 @@ impl<'a> Iterator for NifListIterator<'a> {
         let cell = unsafe { list::get_list_cell(env.as_c_arg(), self.term.as_c_arg()) };
 
         match cell {
-            Some((head, tail)) => {
+            Some((head, tail)) => unsafe {
                 self.term = NifTerm::new(self.term.get_env(), tail);
                 Some(NifTerm::new(self.term.get_env(), head))
-            }
+            },
             None => {
                 if self.term.is_empty_list() {
                     // We reached the end of the list, finish the iterator.
@@ -101,7 +101,7 @@ impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        NifTerm::new(env, unsafe { list::make_list(env.as_c_arg(), &term_array) })
+        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
 
@@ -151,9 +151,11 @@ impl<'a> NifTerm<'a> {
     /// ```
     pub fn list_get_cell(self) -> NifResult<(NifTerm<'a>, NifTerm<'a>)> {
         let env = self.get_env();
-        unsafe { list::get_list_cell(env.as_c_arg(), self.as_c_arg()) }
-            .map(|(t1, t2)| (NifTerm::new(env, t1), NifTerm::new(env, t2)))
-            .ok_or(NifError::BadArg)
+        unsafe {
+            list::get_list_cell(env.as_c_arg(), self.as_c_arg())
+                .map(|(t1, t2)| (NifTerm::new(env, t1), NifTerm::new(env, t2)))
+                .ok_or(NifError::BadArg)
+        }
     }
 
     /// Makes a copy of the self list term and reverses it.
@@ -161,16 +163,20 @@ impl<'a> NifTerm<'a> {
     /// Returns Err(NifError::BadArg) if the term is not a list.
     pub fn list_reverse(self) -> NifResult<NifTerm<'a>> {
         let env = self.get_env();
-        unsafe { list::make_reverse_list(env.as_c_arg(), self.as_c_arg()) }
-            .map(|t| NifTerm::new(env, t))
-            .ok_or(NifError::BadArg)
+        unsafe {
+            list::make_reverse_list(env.as_c_arg(), self.as_c_arg())
+                .map(|t| NifTerm::new(env, t))
+                .ok_or(NifError::BadArg)
+        }
     }
 
     /// Adds `head` in a list cell with `self` as tail.
     pub fn list_prepend(self, head: NifTerm<'a>) -> NifTerm<'a> {
         let env = self.get_env();
-        let term = unsafe { list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg()) };
-        NifTerm::new(env, term)
+        unsafe {
+            let term = list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
+            NifTerm::new(env, term)
+        }
     }
 
 }
