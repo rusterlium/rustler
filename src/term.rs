@@ -28,23 +28,17 @@ impl<'a> NifTerm<'a> {
         self.env
     }
 
-    /// This will coerce the NifTerm into the given NifEnv without providing any checks
-    /// or other operations. This is unsafe as it allows you to make a NifTerm usable
-    /// on an env other then the one that owns it.
-    ///
-    /// The one case where this is acceptable to use is when we already know the NifEnv
-    /// is the same, but we need to coerce the lifetime.
-    pub unsafe fn env_cast<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
-        NifTerm::new(env, self.as_c_arg())
-    }
-
     /// Returns a representation of self in the given NifEnv.
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
     /// the term will be copied over.
     pub fn in_env<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         if self.get_env() == env {
-            unsafe { self.env_cast(env) }
+            // It's safe to create a new NifTerm<'b> without copying because we
+            // just proved that the same environment is associated with both 'a
+            // and 'b.  (They are either exactly the same lifetime, or the
+            // lifetimes of two .run() calls on the same OwnedEnv.)
+            NifTerm::new(env, self.as_c_arg())
         } else {
             NifTerm::new(env, unsafe { ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg()) })
         }
