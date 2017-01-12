@@ -1,5 +1,6 @@
 extern crate erlang_nif_sys;
 use ::{ NifEnv, NifTerm, NifEncoder, NifDecoder, NifResult, NifError };
+use ::types::atom;
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
@@ -36,20 +37,17 @@ impl_number_transcoder!(i16, i32, enif_make_int, enif_get_int);
 impl_number_transcoder!(u16, u32, enif_make_uint, enif_get_uint);
 impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
 
-use super::atom::{ get_atom };
 impl NifEncoder for bool {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-        // This should always succeed, if there these atoms
-        // are missing, something is seriously wrong, worthy of a panic.
         if *self {
-            get_atom("true").unwrap().to_term(env)
+            atom::true_().to_term(env)
         } else {
-            get_atom("false").unwrap().to_term(env)
+            atom::false_().to_term(env)
         }
     }
 }
 impl<'a> NifDecoder<'a> for bool {
     fn decode(term: NifTerm<'a>) -> NifResult<bool> {
-        Ok(super::atom::is_truthy(term))
+        Ok(atom::is_truthy(term))
     }
 }

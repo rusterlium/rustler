@@ -33,6 +33,7 @@ pub mod codegen_runtime;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
 pub mod types;
 
 mod term;
@@ -101,7 +102,7 @@ impl<'a> NifEnv<'a> {
     pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
         where T: NifEncoder
     {
-        let error = types::atom::get_atom_init("error").to_term(self);
+        let error = types::atom::error().to_term(self);
         (error, reason).encode(self)
     }
 }
