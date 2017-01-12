@@ -4,6 +4,7 @@ use ::{
     NifResult,
 };
 
+#[macro_use]
 pub mod atom;
 pub mod binary;
 pub mod list;

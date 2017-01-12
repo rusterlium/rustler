@@ -1,4 +1,4 @@
-//! Utilities used to create and access data spesific to Elixir structs. Keep in mind that an
+//! Utilities used to create and access data specific to Elixir structs. Keep in mind that an
 //! Elixir struct is a normal Erlang map, and functions from the `map` module can be used.
 //! 
 //! # Elixir struct transcoders
@@ -7,20 +7,20 @@
 //! `#[ExStruct(module = "Elixir.TheStructModule")]`.
 
 use ::{ NifEnv, NifTerm, NifResult };
-use super::atom::{ NifAtom, get_atom, get_atom_init };
+use super::atom::{ self, NifAtom, get_atom_init };
 use super::map::{ map_new };
 
 pub fn get_ex_struct_name(map: NifTerm) -> NifResult<NifAtom> {
     let env = map.get_env();
     // In an Elixir struct the value in the __struct__ field is always an atom.
-    map.map_get(get_atom("__struct__").unwrap().to_term(env))
+    map.map_get(atom::__struct__().to_term(env))
         .and_then(|e| NifAtom::from_term(e))
 }
 
 pub fn make_ex_struct<'a>(env: NifEnv<'a>, struct_module: &'static str) -> NifResult<NifTerm<'a>> {
     let map = map_new(env);
 
-    let struct_atom = get_atom("__struct__").unwrap().to_term(env);
+    let struct_atom = atom::__struct__().to_term(env);
     let module_atom = get_atom_init(struct_module).to_term(env);
 
     map.map_put(struct_atom, module_atom)
