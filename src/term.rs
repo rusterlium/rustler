@@ -12,7 +12,13 @@ pub struct NifTerm<'a> {
 }
 
 impl<'a> NifTerm<'a> {
-    pub fn new(env: NifEnv<'a>, inner: NIF_TERM) -> Self {
+
+    /// Create a `NifTerm` from a raw `NIF_TERM`.
+    ///
+    /// # Unsafe
+    /// The caller must ensure that `env` is the environment that `inner` belongs to,
+    /// unless `inner` is an atom term.
+    pub unsafe fn new(env: NifEnv<'a>, inner: NIF_TERM) -> Self {
         NifTerm {
             term: inner,
             env: env,
@@ -38,9 +44,9 @@ impl<'a> NifTerm<'a> {
             // just proved that the same environment is associated with both 'a
             // and 'b.  (They are either exactly the same lifetime, or the
             // lifetimes of two .run() calls on the same OwnedEnv.)
-            NifTerm::new(env, self.as_c_arg())
+            unsafe { NifTerm::new(env, self.as_c_arg()) }
         } else {
-            NifTerm::new(env, unsafe { ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg()) })
+            unsafe { NifTerm::new(env, ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg())) }
         }
     }
 

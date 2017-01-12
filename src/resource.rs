@@ -117,8 +117,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 
     fn as_term<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-        let raw_term = unsafe { ::wrapper::resource::make_resource(env.as_c_arg(), self.raw) };
-        NifTerm::new(env, raw_term)
+        unsafe { NifTerm::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw)) }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {

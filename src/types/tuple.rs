@@ -9,9 +9,11 @@ use ::wrapper::nif_interface::NIF_TERM;
 /// `badarg` if `term` is not a tuple.
 pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
     let env = term.get_env();
-    match unsafe { tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) } {
-        Ok(terms) => Ok(terms.iter().map(|x| NifTerm::new(env, *x)).collect::<Vec<NifTerm>>()),
-        Err(_error) => Err(NifError::BadArg)
+    unsafe {
+        match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
+            Ok(terms) => Ok(terms.iter().map(|x| NifTerm::new(env, *x)).collect::<Vec<NifTerm>>()),
+            Err(_error) => Err(NifError::BadArg)
+        }
     }
 }
 
@@ -19,7 +21,7 @@ pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
 /// use `NifEncoder` instead.)
 pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[NifTerm]) -> NifTerm<'a> {
     let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
-    NifTerm::new(env, unsafe { tuple::make_tuple(env.as_c_arg(), &c_terms) })
+    unsafe { NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
 
 /// Helper macro to emit tuple-like syntax. Wraps its arguments in parentheses, and adds a comma if
@@ -46,9 +48,9 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         {
             fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
                 let arr = [ $( NifEncoder::encode(&self.$index, env).as_c_arg() ),* ];
-                NifTerm::new(env, unsafe {
-                    tuple::make_tuple(env.as_c_arg(), &arr)
-                })
+                unsafe {
+                    NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &arr))
+                }
             }
         }
 
@@ -59,9 +61,10 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
             {
                 match unsafe { tuple::get_tuple(term.get_env().as_c_arg(), term.as_c_arg()) } {
                     Ok(elements) if elements.len() == count!( $( $index ),* ) =>
-                        Ok(tuple!( $( (
-                            <$tyvar as NifDecoder>::decode(
-                                NifTerm::new(term.get_env(), elements[$index]))? ) ),* )),
+                        Ok(tuple!( $(
+                            (<$tyvar as NifDecoder>::decode(
+                                unsafe { NifTerm::new(term.get_env(), elements[$index]) })?)
+                        ),* )),
                     _ =>
                         Err(NifError::BadArg),
                 }

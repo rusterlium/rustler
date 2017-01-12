@@ -170,7 +170,7 @@ impl SavedTerm {
             None =>
                 panic!("term is from a cleared or dropped OwnedEnv"),
             Some(env_arc) =>
-                NifTerm::new(env, unsafe { nif_term_into_env(self.term, *env_arc, env.as_c_arg()) })
+                unsafe { NifTerm::new(env, nif_term_into_env(self.term, *env_arc, env.as_c_arg())) }
         }
     }
 }

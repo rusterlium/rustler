@@ -6,8 +6,7 @@ macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl NifEncoder for $dec_type {
             fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-                #![allow(unused_unsafe)]
-                NifTerm::new(env, unsafe { erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type) })
+                unsafe { NifTerm::new(env, erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type)) }
             }
         }
         impl<'a> NifDecoder<'a> for $dec_type {
