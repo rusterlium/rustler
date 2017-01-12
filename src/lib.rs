@@ -33,6 +33,7 @@ pub mod codegen_runtime;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
 pub mod types;
 
 mod term;
@@ -101,7 +102,7 @@ impl<'a> NifEnv<'a> {
     pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
         where T: NifEncoder
     {
-        let error = types::atom::get_atom_init("error").to_term(self);
+        let error = types::atom::error().to_term(self);
         let reason_term = reason.encode(self);
         types::tuple::make_tuple(self, &[error, reason_term])
     }
@@ -127,15 +128,17 @@ impl NifError {
     /// be the return value)
     unsafe fn encode<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
         match self {
-            NifError::BadArg =>{
+            NifError::BadArg => {
                 let exception = wrapper::exception::raise_badarg(env.as_c_arg());
                 NifTerm::new(env, exception)
             },
             NifError::Atom(atom_str) => {
-                types::atom::get_atom_init(atom_str).to_term(env)
+                types::atom::NifAtom::from_str(env, atom_str)
+                    .ok().expect("NifError::Atom: bad atom").to_term(env)
             },
             NifError::RaiseAtom(atom_str) => {
-                let atom = types::atom::get_atom_init(atom_str).to_term(env);
+                let atom = types::atom::NifAtom::from_str(env, atom_str)
+                    .ok().expect("NifError::RaiseAtom: bad argument");
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     atom.as_c_arg());

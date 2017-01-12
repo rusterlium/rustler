@@ -1,5 +1,6 @@
 use rustler::{ NifEnv, NifTerm, NifResult, NifEncoder };
 use rustler::thread;
+use rustler::types::atom;
 use std;
 
 pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
@@ -16,7 +17,7 @@ pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<NifTe
         result.encode(thread_env)
     });
 
-    Ok("spawned".encode(env))
+    Ok(atom::ok().to_term(env))
 }
 
 pub fn threaded_sleep<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<NifTerm<'a>> {
@@ -29,5 +30,5 @@ pub fn threaded_sleep<'a>(env: NifEnv<'a>, args: &Vec<NifTerm>) -> NifResult<Nif
         msec.encode(thread_env)
     });
 
-    Ok("spawned".encode(env))
+    Ok(atom::ok().to_term(env))
 }
