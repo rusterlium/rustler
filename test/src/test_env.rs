@@ -65,5 +65,5 @@ pub fn sublists<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTe
         });
     });
 
-    Ok(atom::get_atom_init("ok").to_term(env))
+    Ok(atom::ok().to_term(env))
 }
