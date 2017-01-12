@@ -2,10 +2,12 @@
 
 use ::{NifEnv, NifTerm};
 use ::types::atom::get_atom_init;
-use std::panic::catch_unwind;
 use ::wrapper::exception;
 use ::resource::NifResourceTypeProvider;
 use ::NifResult;
+use std::cell::Cell;
+use std::panic::catch_unwind;
+use std::ptr;
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
 pub use ::wrapper::nif_interface::{
@@ -13,11 +15,37 @@ pub use ::wrapper::nif_interface::{
     NIF_ENV, NIF_TERM, NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
     MUTABLE_NIF_RESOURCE_HANDLE };
 
+thread_local! {
+    /// The NIF_ENV for the current NIF call on this thread, if any. Otherwise null. This is never
+    /// set to an `OwnedEnv`.
+    ///
+    /// With use this to obey the documented contract for `enif_send`. See the implementation of
+    /// `OwnedEnv::send()`.
+    static CALLING_PROCESS_ENV: Cell<NIF_ENV> = Cell::new(ptr::null_mut());
+}
+
+/// The NIF_ENV for the current NIF call on this thread, if any. Otherwise null.
+pub fn get_calling_process_env() -> NIF_ENV {
+    CALLING_PROCESS_ENV.with(|current| current.get())
+}
+
+/// A value that does something when it's dropped.
+struct OnDrop<F: FnMut()>(F);
+
+impl<F: FnMut()> Drop for OnDrop<F> {
+    fn drop(&mut self) { self.0(); }
+}
+
 // This is the last level of rust safe rust code before the BEAM.
 // No panics should go above this point, as they will unwrap into the C code and ruin the day.
 pub fn handle_nif_call(function: for<'a> fn(NifEnv<'a>, &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>>,
                        _arity: usize, r_env: NIF_ENV,
                        argc: c_int, argv: *const NIF_TERM) -> NIF_TERM {
+    CALLING_PROCESS_ENV.with(|current| current.set(r_env));
+    let _reset_calling_process = OnDrop(|| {
+        CALLING_PROCESS_ENV.with(|current| current.set(ptr::null_mut()))
+    });
+
     let env_lifetime = ();
     let env = unsafe { NifEnv::new(&env_lifetime, r_env) };
 

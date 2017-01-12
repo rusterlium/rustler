@@ -77,8 +77,9 @@ impl OwnedEnv {
         let message = closure(env);
 
         self.env = Arc::new(c_env);
+        let sender_env = ::codegen_runtime::get_calling_process_env();
         unsafe {
-            nif_interface::enif_send(*self.env, recipient.as_c_arg(), *self.env, message.as_c_arg());
+            nif_interface::enif_send(sender_env, recipient.as_c_arg(), *self.env, message.as_c_arg());
         }
     }
 
