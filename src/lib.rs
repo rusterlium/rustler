@@ -122,9 +122,11 @@ pub enum NifError {
 
 impl NifError {
 
-    /// Unsafe because it allows you to do things that are non-rusty.
-    /// (Like raising an exception from anywhere, without having it
-    /// be the return value)
+    /// # Unsafe
+    ///
+    /// If `self` is a `BadArg`, `RaiseAtom`, or `RaiseTerm` value, then the
+    /// term returned from this method must not be used except as the return
+    /// value from the calling NIF.
     unsafe fn encode<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
         match self {
             NifError::BadArg => {
