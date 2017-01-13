@@ -29,7 +29,7 @@ defmodule RustlerTest.Mixfile do
     [rustler_test: [
         path: "/",
         mode: :debug,
-        default_flags: !rust_nightly?,
+        default_flags: !rust_nightly?(),
     ]]
   end
 end
