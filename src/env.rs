@@ -1,5 +1,4 @@
 use ::{ NifEnv, NifTerm };
-use wrapper::copy_term;
 use wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 pub use wrapper::nif_interface::ErlNifPid;
 use std::mem;
@@ -19,16 +18,6 @@ impl<'a> NifEnv<'a> {
             panic!("environment is process-independent");
         }
         pid
-    }
-}
-
-
-// Helper function used by save() and load().
-unsafe fn nif_term_into_env<'a>(term: NIF_TERM, src_env: NIF_ENV, dest_env: NIF_ENV) -> NIF_TERM {
-    if src_env == dest_env {
-        term
-    } else {
-        copy_term(dest_env, term)
     }
 }
 
@@ -133,7 +122,7 @@ impl OwnedEnv {
     /// If you try, the `.load()` call will panic.
     pub fn save<'a>(&self, term: NifTerm<'a>) -> SavedTerm {
         SavedTerm {
-            term: unsafe { nif_term_into_env(term.as_c_arg(), term.get_env().as_c_arg(), *self.env) },
+            term: self.run(|env| term.in_env(env).as_c_arg()),
             env_generation: Arc::downgrade(&self.env),
         }
     }
