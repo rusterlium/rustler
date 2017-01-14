@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     Enum.map(crates, &compile_crate/1)
   end
 
-  defp priv_dir, do: "priv/crates"
+  defp priv_dir, do: "priv/native"
 
   def compile_crate({id, config}) do
     crate_path = Keyword.get(config, :path)
