@@ -40,7 +40,7 @@ pub fn sublists<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTe
     thread::spawn(move || {
         // Use `.send()` to get a `NifEnv` from our `OwnedEnv`,
         // run some rust code, and finally send the result back to `pid`.
-        my_env.send(&pid, |env| {
+        my_env.send_and_clear(&pid, |env| {
             let result: NifResult<NifTerm> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
                 let iter: NifListIterator = try!(reversed_list.decode());

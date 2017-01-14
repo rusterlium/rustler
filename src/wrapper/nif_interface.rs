@@ -203,6 +203,10 @@ pub use self::erlang_nif_sys::{
     enif_map_iterator_get_pair,
     enif_map_iterator_next,
     enif_self,
+    ERL_NIF_THR_UNDEFINED,
+    ERL_NIF_THR_NORMAL_SCHEDULER,
+    ERL_NIF_THR_DIRTY_CPU_SCHEDULER,
+    ERL_NIF_THR_DIRTY_IO_SCHEDULER,
 };
 
 // Scheduling
@@ -225,6 +229,12 @@ pub unsafe fn enif_send(env: NIF_ENV,
                         msg_env: NIF_ENV,
                         msg: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_send(env, to_pid, msg_env, msg)
+}
+
+pub fn enif_thread_type() -> c_int {
+    // Safe because this function isn't actually unsafe. It's marked unsafe
+    // because all C functions are marked unsafe by default.
+    unsafe { erlang_nif_sys::enif_thread_type() }
 }
 
 // Numbers
