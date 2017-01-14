@@ -4,27 +4,17 @@ defmodule Mix.Tasks.Compile.Rustler do
   alias Rustler.Compiler.{Messages, Rustup}
 
   def run(_args) do
-    app = Mix.Project.config[:app]
-    crates_config = Mix.Project.config[:rustler_crates]
+    config = Mix.Project.config()
+    crates = Keyword.get(config, :rustler_crates) || raise_missing_crates()
 
-    unless crates_config do
-      throw_error(:no_config)
-    end
+    File.mkdir_p!(priv_dir())
 
-    Enum.map(crates_config, &compile_crate_config(app, &1))
+    Enum.map(crates, &compile_crate/1)
   end
 
-  def priv_path do
-    Path.expand("priv")
-  end
+  defp priv_dir, do: "priv/native"
 
-  def nif_lib_dir do
-    path = Path.join(priv_path(), "rustler")
-    File.mkdir_p!(path)
-    path
-  end
-
-  def compile_crate_config(_app, {id, config}) do
+  def compile_crate({id, config}) do
     crate_path = Keyword.get(config, :path)
     build_mode = Keyword.get(config, :mode, :release)
 
@@ -35,10 +25,10 @@ defmodule Mix.Tasks.Compile.Rustler do
       |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
       |> make_features_flag(Keyword.get(config, :features, []))
       |> make_build_mode_flag(build_mode)
-      |> make_platform_hacks(:os.type)
+      |> make_platform_hacks(:os.type())
 
     crate_full_path = File.cwd! <> crate_path
-    target_dir = Mix.Project.build_path <> "/rustler" <> crate_path
+    target_dir = Mix.Project.build_path() <> "/rustler_crates/#{id}"
 
     cargo_data = check_crate_env(crate_full_path)
     lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
@@ -63,7 +53,8 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     {src_ext, dst_ext} = dll_extension()
     compiled_lib = "#{target_dir}/#{build_mode}/lib#{lib_name}.#{src_ext}"
-    destination_lib = "#{nif_lib_dir()}/lib#{lib_name}.#{dst_ext}"
+    destination_lib = "#{priv_dir()}/lib#{lib_name}.#{dst_ext}"
+
     File.cp!(compiled_lib, destination_lib)
   end
 
@@ -124,5 +115,11 @@ defmodule Mix.Tasks.Compile.Rustler do
       end
 
     cargo_data
+  end
+
+  defp raise_missing_crates do
+    Mix.raise """
+    Missing required :rustler_crates option in mix.exs.
+    """
   end
 end
