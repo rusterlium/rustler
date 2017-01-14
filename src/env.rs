@@ -1,23 +1,55 @@
 use ::{ NifEnv, NifTerm };
 use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 use ::types::pid::NifPid;
+use std::ptr;
 use std::sync::{Arc, Weak};
 
 impl<'a> NifEnv<'a> {
     /// Send a message to a process.
+    ///
+    /// The Erlang VM imposes some odd restrictions on sending messages.
+    /// You can send messages in either of these situations:
+    ///
+    /// *   The current thread is managed by the Erlang VM, and `self` is the
+    ///     environment of the calling process (that is, the environment that
+    ///     Rustler passed in to your NIF); *or*
+    ///
+    /// *   The current thread is *not* managed by the Erlang VM.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the above rules are broken (by trying to send a message from
+    /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
+    ///
     pub fn send(self, pid: &NifPid, message: NifTerm<'a>) {
-        // Implementation note: As of ERTS 8.0 (Erlang/OTP 19), there is another way to do this:
-        // pass a null pointer to the `msg_env` parameter of `enif_send()`. That might be
-        // faster. For now, we copy the term into a process-independent environment, then send it.
-        OwnedEnv::new().send(pid, |env| message.in_env(env))
+        let thread_type = nif_interface::enif_thread_type();
+        let env =
+            if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
+                ptr::null_mut()
+            } else if thread_type == nif_interface::ERL_NIF_THR_NORMAL_SCHEDULER ||
+                      thread_type == nif_interface::ERL_NIF_THR_DIRTY_CPU_SCHEDULER ||
+                      thread_type == nif_interface::ERL_NIF_THR_DIRTY_IO_SCHEDULER {
+                // Panic if `self` is not the environment of the calling process.
+                self.pid();
+
+                self.as_c_arg()
+            } else {
+                panic!("NifEnv::send(): unrecognized calling thread type");
+            };
+
+        // Send the message.
+        unsafe {
+            nif_interface::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
+        }
     }
 }
 
 
-/// A process-independent environment.
+/// A process-independent environment, a place where Erlang terms can be created outside of a NIF
+/// call.
 ///
-/// An owned environment is a place where Erlang terms can be created outside of a NIF call. Rust
-/// code can use an owned environment to build a message and send it to an Erlang process.
+/// Rust code can use an owned environment to build a message and send it to an
+/// Erlang process.
 ///
 ///     use rustler::env::OwnedEnv;
 ///     use rustler::types::pid::NifPid;
@@ -25,11 +57,11 @@ impl<'a> NifEnv<'a> {
 ///
 ///     fn send_string_to_pid(data: &str, pid: &NifPid) {
 ///         let mut msg_env = OwnedEnv::new();
-///         msg_env.send(pid, |env| data.encode(env));
+///         msg_env.send_and_clear(pid, |env| data.encode(env));
 ///     }
 ///
-/// There's no way to run Erlang code in an owned environment. It's not a process. It's just a
-/// workspace for building terms.
+/// There's no way to run Erlang code in an `OwnedEnv`. It's not a process. It's just a workspace
+/// for building terms.
 pub struct OwnedEnv {
     env: Arc<NIF_ENV>
 }
@@ -53,21 +85,30 @@ impl OwnedEnv {
         closure(env)
     }
 
-    /// Run a closure that produces a term, then send the term to another process.
+    /// Send a message from a Rust thread to an Erlang process.
     ///
-    /// After the closure runs and the message is sent, the environment is cleared as though by
-    /// calling the `.clear()` method.
-    pub fn send<F>(&mut self, recipient: &NifPid, closure: F)
+    /// The environment is cleared as though by calling the `.clear()` method.
+    /// To avoid that, use `env.send(pid, term)` instead.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a thread that is managed by the Erlang VM. You
+    /// can only use this method on a thread that was created by other
+    /// means. (This curious restriction is imposed by the Erlang VM.)
+    ///
+    pub fn send_and_clear<F>(&mut self, recipient: &NifPid, closure: F)
         where F: for<'a> FnOnce(NifEnv<'a>) -> NifTerm<'a>
     {
-        let env_lifetime = ();
-        let c_env = *self.env;
-        let env = unsafe { NifEnv::new(&env_lifetime, c_env) };
-        let message = closure(env);
+        if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {
+            panic!("send_and_clear: current thread is managed");
+        }
 
-        self.env = Arc::new(c_env);
+        let message = self.run(|env| closure(env).as_c_arg());
+
+        let c_env = *self.env;
+        self.env = Arc::new(c_env);  // invalidate SavedTerms
         unsafe {
-            nif_interface::enif_send(*self.env, recipient.as_c_arg(), *self.env, message.as_c_arg());
+            nif_interface::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
         }
     }
 
