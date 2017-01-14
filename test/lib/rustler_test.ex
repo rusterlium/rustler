@@ -3,12 +3,7 @@ defmodule NifNotLoadedError do
 end
 
 defmodule RustlerTest do
-  @on_load :load_nif
-
-  def load_nif do
-    require Rustler
-    Rustler.load_nif(:rustler_test, "rustler_test")
-  end
+  use Rustler, otp_app: :rustler_test
 
   defp err do
     throw NifNotLoadedError
