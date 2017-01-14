@@ -13,13 +13,14 @@ defmodule Rustler do
   This allows the module to be configured like so:
 
       config :my_nif, MyNIF,
-        lib: "libmy_nif",
+        crate: :my_nif,
         load_data: [1, 2, 3]
 
   Configuration options:
 
-    * `:lib` - the name of the shared object (dynamic library) if different from
-      your `otp_app` value. (default: `"libotp_app"`)
+    * `:crate` - the name of the Rust crate (as an atom), if different from your
+      `otp_app` value. If you have more than one crate in your project, you will
+      need to be explicit about which crate you intend to use.
 
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)
@@ -27,7 +28,7 @@ defmodule Rustler do
   Either of the above options can be passed directly into the `use` macro like so:
 
       defmodule MyNIF do
-        use Rustler, otp_app: :my_nif, lib: "libsomething", load_data: :something
+        use Rustler, otp_app: :my_nif, crate: :some_other_crate, load_data: :something
       end
 
   """
@@ -67,10 +68,12 @@ defmodule Rustler do
     otp_app = Keyword.fetch!(opts, :otp_app)
     config  = Application.get_env(otp_app, mod, [])
 
-    lib = opts[:lib] || config[:lib] || "lib" <> to_string(otp_app)
+    crate = to_string(opts[:crate] || config[:crate] || otp_app)
+    crate = if String.starts_with?(crate, "lib"), do: crate, else: "lib" <> crate
+
     priv_dir = otp_app |> :code.priv_dir() |> to_string()
     load_data = opts[:load_data] || config[:load_data] || 0
-    so_path = "#{priv_dir}/rustler/#{lib}"
+    so_path = "#{priv_dir}/rustler/#{crate}"
 
     {so_path, load_data}
   end
