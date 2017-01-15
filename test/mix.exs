@@ -27,7 +27,7 @@ defmodule RustlerTest.Mixfile do
 
   defp rustler_crates do
     [rustler_test: [
-        path: "/",
+        path: ".",
         mode: :debug,
         default_flags: !rust_nightly?(),
     ]]

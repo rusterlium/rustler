@@ -27,8 +27,9 @@ defmodule Mix.Tasks.Compile.Rustler do
       |> make_build_mode_flag(build_mode)
       |> make_platform_hacks(:os.type())
 
-    crate_full_path = File.cwd! <> crate_path
-    target_dir = Mix.Project.build_path() <> "/rustler_crates/#{id}"
+    crate_full_path = Path.expand(crate_path, File.cwd!)
+    target_dir = Path.join([Mix.Project.build_path(), "rustler_crates",
+                            Atom.to_string(id)])
 
     cargo_data = check_crate_env(crate_full_path)
     lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
@@ -52,8 +53,9 @@ defmodule Mix.Tasks.Compile.Rustler do
     end
 
     {src_ext, dst_ext} = dll_extension()
-    compiled_lib = "#{target_dir}/#{build_mode}/lib#{lib_name}.#{src_ext}"
-    destination_lib = "#{priv_dir()}/lib#{lib_name}.#{dst_ext}"
+    compiled_lib = Path.join([target_dir, Atom.to_string(build_mode),
+                              "lib#{lib_name}.#{src_ext}"])
+    destination_lib = Path.join(priv_dir(), "lib#{lib_name}.#{dst_ext}")
 
     File.cp!(compiled_lib, destination_lib)
   end
