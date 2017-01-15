@@ -13,6 +13,8 @@ they unwind into C.
 The library provides functionality for both Erlang and Elixir, however Elixir
 is favored as of now.
 
+**The current relase on crates.io is very old because we are in the middle of some big changes. If you want to use the project now you should use git master, but be prepared for breaking changes.**
+
 #### Features:
 * Safety - The code you write in a Rust NIF should never be able to crash the BEAM.
 * Interop - Decoding and encoding rust values into Erlang terms is as easy as a function call.
