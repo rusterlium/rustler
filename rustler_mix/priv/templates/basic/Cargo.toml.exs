@@ -10,7 +10,6 @@ path = "src/lib.rs"
 crate-type = ["dylib"]
 
 [features]
-
 # Compile with syntex by default. This will make the build process work on
 # Rust stable in exchange of worse error messages.
 #
@@ -22,7 +21,7 @@ crate-type = ["dylib"]
 default = ["with-syntex"]
 
 with-syntex = [
-    "rustler_codegen/with-syntex",
+  "rustler_codegen/with-syntex",
 ]
 
 [build-dependencies]
@@ -32,3 +31,4 @@ rustler_codegen = "<%= rustler_version %>"
 [dependencies]
 rustler = "<%= rustler_version %>"
 rustler_codegen = "<%= rustler_version %>"
+lazy_static = "0.2"
