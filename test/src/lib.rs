@@ -3,8 +3,8 @@
 #![cfg_attr(not(feature = "with-syntex"), feature(plugin))]
 #![cfg_attr(not(feature = "with-syntex"), plugin(rustler_codegen))]
 
-#[macro_use]
-extern crate rustler;
+#[macro_use] extern crate rustler;
+#[macro_use] extern crate lazy_static;
 
 // If we are using syntex, include the expanded file. This is what
 // causes bad error messages.

@@ -76,6 +76,12 @@ impl NifEncoder for NifAtom {
     }
 }
 
+impl<'a> PartialEq<NifTerm<'a>> for NifAtom {
+    fn eq(&self, other: &NifTerm<'a>) -> bool {
+        self.as_c_arg() == other.as_c_arg()
+    }
+}
+
 /// ## Atom terms
 impl<'a> NifTerm<'a> {
 

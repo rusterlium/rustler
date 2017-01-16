@@ -10,4 +10,10 @@ defmodule RustlerTest.AtomTest do
   test "atom to string for non-atom should raise" do
     assert catch_error(RustlerTest.atom_to_string("already a string")) == :badarg
   end
+
+  test "term equals ok" do
+    assert RustlerTest.atom_equals_ok(:ok)
+    refute RustlerTest.atom_equals_ok(:fish)
+    refute RustlerTest.atom_equals_ok("ok")
+  end
 end

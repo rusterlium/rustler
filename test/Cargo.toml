@@ -18,6 +18,9 @@ with-syntex = [
 [build-dependencies.rustler_codegen]
 path = "../rustler_codegen"
 
+[dependencies]
+lazy_static = "*"
+
 [dependencies.rustler]
 path = "../"
 [dependencies.rustler_codegen]
