@@ -11,12 +11,13 @@ A NIF module is built by creating a new crate that uses `erlang_nif-sys` as a de
 All NIF functions must have the following signature:
 
 ```
+#[macro_use]
 extern crate erlang_nif_sys;
 use erlang_nif_sys::*;
-# fn main(){}
-extern "C" fn my_nif(env: *mut ErlNifEnv,
-                     argc: c_int,
-                     args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+# fn main(){} //0
+fn my_nif(env: *mut ErlNifEnv,
+          argc: c_int,
+          args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
     // ...
 #   unsafe{enif_make_badarg(env)}
 }
@@ -31,57 +32,69 @@ extern "C" fn my_nif(env: *mut ErlNifEnv,
 extern crate erlang_nif_sys;
 use erlang_nif_sys::*;
 
-nif_init!(b"my_nif_module\0", Some(load), None, None, None,
-    nif!(b"my_nif_fun1\0", 1, my_nif_fun1),
-    nif!(b"my_dirty_fun2\0", 1, my_dirty_fun2, ERL_NIF_DIRTY_JOB_CPU_BOUND)
+nif_init!("my_nif_module",[
+        ("my_nif_fun1", 1, my_nif_fun1),
+        ("my_dirty_fun2", 1, my_dirty_fun2, ERL_NIF_DIRTY_JOB_CPU_BOUND)
+    ],
+    {load: my_load}
 );
-# fn main(){}
-# extern "C" fn load(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int { 0 }
-# extern "C" fn my_nif_fun1(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
-# extern "C" fn my_dirty_fun2(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
+# fn main(){} //1
+# fn my_load(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int { 0 }
+# fn my_nif_fun1(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
+# fn my_dirty_fun2(_: *mut ErlNifEnv,_: c_int,args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {unsafe{*args}}
 ```
 
 ## Details
 
 The `erlang_nif-sys` analog of [`ERL_NIF_INIT()`](http://www.erlang.org/doc/man/erl_nif_init.html) is `nif_init!` which has the following form:
 
-`nif_init!(module_name, load, reload, upgrade, unload, niffunc0, niffunc1, ...)`
+`nif_init!(module_name, [nif_funcs], {options})`
 
-`module_name` must be a null-terminated byte array, for example `b"mynifmodule\0"`.
+`module_name` must be a string literal, for example `"mynifmodule"`.
 
-load, reload, upgrade, and unload are optional functions.  See [load](http://www.erlang.org/doc/man/erl_nif.html#load), [reload](http://www.erlang.org/doc/man/erl_nif.html#reload),
-[upgrade](http://www.erlang.org/doc/man/erl_nif.html#upgrade), and [unload](http://www.erlang.org/doc/man/erl_nif.html#unload)
-in the Erlang docs.  Stub implementations in Rust are:
+
+`nif_funcs` declares all the exported NIF functions for this module.  Each entry is declared as
+
+`(name, arity, function, flags)`
+
+`name` is a string literal indicating the name of the function as seen from Erlang code.
+`arity` is an integer indicating how many parameter this function takes as seen from Erlang code.
+`function` is the Rust implentation of the NIF and must be of the form
+`Fn(env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM) -> ERL_NIF_TERM`.  This is usually a plain
+Rust function, but closures are permitted.
+`flags` is optional and allows you to specify if this NIF is to run on a dirty scheduler.  See [dirty NIFs](http://www.erlang.org/doc/man/erl_nif.html#dirty_nifs)
+in the Erlang docs.
+
+The `options` are the NIF module intialization functions [`load`](http://www.erlang.org/doc/man/erl_nif.html#load), [`reload`](http://www.erlang.org/doc/man/erl_nif.html#reload),
+[`upgrade`](http://www.erlang.org/doc/man/erl_nif.html#upgrade), and [`unload`](http://www.erlang.org/doc/man/erl_nif.html#unload).
+Each is optional and is specified in struct-init style if present.  If no options are needed,
+the curly braces may be elided.  Stub implementation of all these functions looks something like:
 
 ```
-# extern crate erlang_nif_sys;
-# use erlang_nif_sys::*;
-extern "C" fn load(env: *mut ErlNifEnv,
-                   priv_data: *mut *mut c_void,
-                   load_info: ERL_NIF_TERM)-> c_int { 0 }
+#[macro_use]
+extern crate erlang_nif_sys;
+use erlang_nif_sys::*;
 
-extern "C" fn reload(env: *mut ErlNifEnv,
-                     priv_data: *mut *mut c_void,
-                     load_info: ERL_NIF_TERM) -> c_int { 0 }
+nif_init!("mymod", [], {load: load, reload: reload, upgrade: upgrade, unload: unload});
 
-extern "C" fn upgrade(env: *mut ErlNifEnv,
-                      priv_data: *mut *mut c_void,
-                      old_priv_data: *mut *mut c_void,
+fn load(env: *mut ErlNifEnv,
+        priv_data: *mut *mut c_void,
+        load_info: ERL_NIF_TERM)-> c_int { 0 }
+
+fn reload(env: *mut ErlNifEnv,
+          priv_data: *mut *mut c_void,
+          load_info: ERL_NIF_TERM) -> c_int { 0 }
+
+fn upgrade(env: *mut ErlNifEnv,
+           priv_data: *mut *mut c_void,
+           old_priv_data: *mut *mut c_void,
                       load_info: ERL_NIF_TERM) -> c_int { 0 }
 
-extern "C" fn unload(env: *mut ErlNifEnv,
-                     priv_data: *mut c_void) {}
-# fn main(){}
+fn unload(env: *mut ErlNifEnv,
+          priv_data: *mut c_void) {}
+
+# fn main(){} //2
 ```
-
-`nif!` declares NIF functions inside `nif_init!`:
-
-`nif!(nif_name, arity, nif_func, flags)`
-
-`nif_name` must be a null-terminated byte array, for example `b"my_nif_fun1\0"`.
-`arity` is the number of parameters accepted by the function. `nif_func` is the Rust implementation of the NIF.  `flags` is optional
-and allows you to specify if this NIF is to run on a dirty scheduler.  See [dirty NIFs](http://www.erlang.org/doc/man/erl_nif.html#dirty_nifs)
-in the Erlang docs.
 
 # Invoking NIF API
 
@@ -92,13 +105,13 @@ the the `args` parameter.
 ```
 extern crate erlang_nif_sys;
 use erlang_nif_sys::*;
-use std::mem::uninitialized;
-extern "C" fn native_add(env: *mut ErlNifEnv,
-                         argc: c_int,
-                         args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+use std::mem;
+fn native_add(env: *mut ErlNifEnv,
+              argc: c_int,
+              args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
     unsafe {
-        let mut a:c_int = uninitialized();
-        let mut b:c_int = uninitialized();
+        let mut a: c_int = mem::uninitialized();
+        let mut b: c_int = mem::uninitialized();
         if argc == 2 &&
            0 != enif_get_int(env, *args, &mut a) &&
            0 != enif_get_int(env, *args.offset(1), &mut b) {
@@ -109,7 +122,7 @@ extern "C" fn native_add(env: *mut ErlNifEnv,
          }
     }
 }
-# fn main(){}
+# fn main(){} //3
 ```
 
 */
@@ -324,7 +337,171 @@ include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
 //     pub fn enif_is_binary(arg1: *mut ErlNifEnv, term: ERL_NIF_TERM) -> c_int;
 // ...
 
-/// Create ErlNifFunc structure.  Use inside `nif_init!`.
+/// Implement exported module init function needed by the Erlang runtime.
+///
+/// See [the module level documentation](index.html) for usage of `nif_init!`.
+///
+/// The pre-0.5.5 `nif_init!` format is deprecated but still supported.
+/// An example of this format is ...
+///
+/// ```rust,ignore
+/// nif_init!(b"my_nif_module\0", Some(load), None, None, None,
+///     nif!(b"my_nif_fun1\0", 1, my_nif_fun1),
+///     nif!(b"my_dirty_fun2\0", 1, my_dirty_fun2, ERL_NIF_DIRTY_JOB_CPU_BOUND)
+/// );
+/// ```
+#[macro_export]
+macro_rules! nif_init {
+    ($($rest:tt)*) => (
+        platform_nif_init!(
+            get_entry!($($rest)*)
+        );
+    )
+}
+
+/// Platform specific NIF module initialization.
+///
+/// This macro is intended for higher level NIF libraries and not for direct
+/// users of `erlang_nif-sys`.  See implementation of `nif_init!` for usage.
+#[macro_export]
+macro_rules! platform_nif_init {
+    ($get_entry:expr) => (
+        #[cfg(unix)]
+        #[no_mangle]
+        pub extern "C" fn nif_init() -> *const $crate::ErlNifEntry {
+            $get_entry()
+        }
+
+        #[cfg(windows)]
+        #[no_mangle]
+        pub extern "C" fn nif_init(callbacks: *mut TWinDynNifCallbacks) -> *const $crate::ErlNifEntry {
+            unsafe {
+                WinDynNifCallbacks = Some(*callbacks);
+            }
+            //std::ptr::copy_nonoverlapping(callbacks, &WinDynNifCallbacks, std::mem::size_of<TWinDynNifCallbacks>());
+            $get_entry()
+        }
+    )
+}
+
+
+
+/// Wrapper to deliver NIF args as Rust slice.
+///
+/// A macro wrapper that combines the argc and args parameters into a
+/// more Rustic slice (`&[ERL_NIF_TERM]`).  On release builds this macro
+/// incurs zero overhead.
+///
+///
+/// # Examples
+/// ```
+/// #[macro_use]
+/// extern crate erlang_nif_sys;
+/// use erlang_nif_sys::*;
+/// use std::mem;
+///
+/// nif_init!("mymod", [
+///     ("native_add", 2, slice_args!(native_add))
+/// ]);
+///
+/// fn native_add(env: *mut ErlNifEnv,
+///               args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
+///     unsafe {
+///         let mut a: c_int = mem::uninitialized();
+///         let mut b: c_int = mem::uninitialized();
+///         if args.len() == 2 &&
+///            0 != enif_get_int(env, args[0], &mut a) &&
+///            0 != enif_get_int(env, args[1], &mut b) {
+///             enif_make_int(env, a+b)
+///         }
+///         else {
+///            enif_make_badarg(env)
+///         }
+///     }
+/// }
+/// # fn main(){} //3
+#[macro_export]
+macro_rules! slice_args {
+    ($f:expr) => (
+        |env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM| -> ERL_NIF_TERM {
+            $f(env, unsafe{std::slice::from_raw_parts(args, argc as usize)})
+        }
+    );
+}
+
+/// Internal macro for implenting a ErlNifEntry-creating function.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! get_entry {
+    // add default options if elided
+    ( $module:expr, $funcs_tt:tt) => ( get_entry!($module, $funcs_tt, {}) );
+
+    // strip trailing comma in funcs
+    ( $module:expr, [$($funcs:tt),+,], $inits_tt:tt ) => ( get_entry!($module, [$($funcs),*], $inits_tt) );
+
+    ( $module:expr, [$($funcs:tt),*], {$($inits:tt)*} ) => (
+        || { // start closure
+            const FUNCS: &'static [$crate::ErlNifFunc] = &[$(make_func_entry!($funcs)),*];
+
+            // initialize as much as possible statically
+            static mut ENTRY: $crate::ErlNifEntry = $crate::ErlNifEntry{
+                major : $crate::NIF_MAJOR_VERSION,
+                minor : $crate::NIF_MINOR_VERSION,
+                name : concat!($module, "\0") as *const str as *const u8,
+                num_of_funcs : 0 as $crate::c_int,
+                funcs : &[] as *const $crate::ErlNifFunc,
+                load: None,
+                reload: None,
+                upgrade: None,
+                unload: None,
+                vm_variant : b"beam.vanilla\0" as *const u8,
+                options: $crate::ERL_NIF_ENTRY_OPTIONS,
+            };
+
+            // get a safe mutable reference once to avoid repeated unsafe
+            let mut entry = unsafe { &mut ENTRY };
+
+            // perform dynamic insertions
+            entry.num_of_funcs = FUNCS.len() as $crate::c_int;
+            entry.funcs = FUNCS.as_ptr();
+            set_optionals!(entry, $($inits)*);
+            entry // return static entry reference
+        } // end closure
+    );
+
+    // For legacy nif_init!() invocation, deprecated
+    ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, $($func:expr),* ) => (
+        || { // start closure
+            const FUNCS: &'static [$crate::ErlNifFunc] = &[$($func),*];
+            static mut ENTRY: $crate::ErlNifEntry = $crate::ErlNifEntry{
+                major : $crate::NIF_MAJOR_VERSION,
+                minor : $crate::NIF_MINOR_VERSION,
+                name : $module as *const u8,
+                num_of_funcs : 0 as $crate::c_int,
+                funcs : &[] as *const $crate::ErlNifFunc,
+                load :    $load,
+                reload :  $reload,
+                upgrade : $upgrade,
+                unload :  $unload,
+                vm_variant : b"beam.vanilla\0" as *const u8,
+                options: $crate::ERL_NIF_ENTRY_OPTIONS,
+            };
+            // get a safe mutable reference once to avoid repeated unsafe
+            let mut entry = unsafe { &mut ENTRY };
+
+            // perform dynamic insertions
+            entry.num_of_funcs = FUNCS.len() as $crate::c_int;
+            entry.funcs = FUNCS.as_ptr();
+            entry // return static entry reference
+        } // end closure
+    );
+}
+
+
+/// Create ErlNifFunc structure.  Use inside `nif_init!`. (Deprecated)
+///
+/// This is deprecated; see [the module level documentation](index.html)
+/// for current `nif_init!` syntax.
 #[macro_export]
 macro_rules! nif{
     ($name:expr, $arity:expr, $function:expr, $flags:expr) => (
@@ -337,49 +514,256 @@ macro_rules! nif{
         nif!($name, $arity, $function, 0))
 }
 
+
+/// Internal macro to create an ErlNifEntry-creating function.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! count_expr {
-    () => { 0 };
-    ($_e:expr) => { 1 };
-    ($_e:expr, $($rest:expr),+) => { 1 + count_expr!($($rest),*) }
+macro_rules! make_func_entry {
+    (($name:expr, $arity:expr, $function:expr, $flags:expr)) => (
+        $crate::ErlNifFunc { name:     concat!($name, "\0") as *const str as *const u8,
+                             arity:    $arity,
+                             function: {
+                                extern "C" fn wrapper(env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+                                    $function(env, argc, args)
+                                }
+                                wrapper
+                             },
+                             flags:    $flags});
+
+    (($name:expr, $arity:expr, $function:expr)) => (
+        make_func_entry!(($name, $arity, $function, 0));
+    );
 }
 
 
-/// Register NIFs and supporting functions for your module.
+/// Internal macro to deal with optional init functions.
+#[doc(hidden)]
 #[macro_export]
-macro_rules! nif_init {
-    ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, $($func:expr),* ) => (
-        const NUM_FUNCS: usize = count_expr!($($func),*);
-        const FUNCS: [$crate::ErlNifFunc; NUM_FUNCS] = [$($func),*];
-        static mut ENTRY: $crate::ErlNifEntry = $crate::ErlNifEntry{
-            major : $crate::NIF_MAJOR_VERSION,
-            minor : $crate::NIF_MINOR_VERSION,
-            name : $module as *const u8,
-            num_of_funcs : NUM_FUNCS as $crate::c_int,
-            funcs : &FUNCS as *const $crate::ErlNifFunc,
-            load :    $load,
-            reload :  $reload,
-            upgrade : $upgrade,
-            unload :  $unload,
-            vm_variant : b"beam.vanilla\0" as *const u8,
-            options: $crate::ERL_NIF_ENTRY_OPTIONS,
-        };
+macro_rules! set_optionals {
+    ($entry:ident, $fname:ident: $val:expr, $($rest:tt)*) => (
+        set_optional!($entry, $fname, $val);
+        set_optionals!($entry, $($rest)*);
+    );
+    ($entry:ident, $fname:ident: $val:expr) => (
+        set_optional!($entry, $fname, $val);
+    );
+    //($entry:ident$($rest:tt)*) => ($($rest)*);
+    ($entry:ident,) => ();
+}
 
-        #[cfg(unix)]
-        #[no_mangle]
-        pub extern "C" fn nif_init() -> *const $crate::ErlNifEntry {
-            unsafe {&ENTRY}
+/// Internal macro to deal with optional init functions.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! set_optional {
+    ($entry:ident, load, $val:expr)    => ( {
+        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int {
+            $val(env, priv_data, load_info)
         }
+        $entry.load = Some(wrapper);
+     });
+    ($entry:ident, reload, $val:expr)  => ( {
+        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
+            $val(env, priv_data, load_info)
+        }
+        $entry.reload = Some(wrapper);
+     });
+    ($entry:ident, upgrade, $val:expr) => ( {
+        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
+            $val(env, priv_data, old_priv_data, load_info)
+        }
+        $entry.upgrade = Some(wrapper);
+     });
+    ($entry:ident, unload, $val:expr)  => ( {
+        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut c_void) {
+            $val(env, priv_data)
+        }
+        $entry.unload = Some(wrapper);
+     });
+}
 
-        #[cfg(windows)]
-        #[no_mangle]
-        pub extern "C" fn nif_init(callbacks: *mut TWinDynNifCallbacks) -> *const $crate::ErlNifEntry {
-            unsafe {
-                WinDynNifCallbacks = Some(*callbacks);
-            }
-            //std::ptr::copy_nonoverlapping(callbacks, &WinDynNifCallbacks, std::mem::size_of<TWinDynNifCallbacks>());
-            unsafe {&ENTRY}
-        }
-    )
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std;
+    use std::ptr;
+    use std::slice;
+    use std::ffi::{CString, CStr};
+
+
+    // Initializer tests
+
+
+    fn load(_env: *mut ErlNifEnv, _priv_data: *mut *mut c_void, _load_info: ERL_NIF_TERM) -> c_int {
+        14
+    }
+
+    fn unload(_env: *mut ErlNifEnv, _priv_data: *mut c_void) {}
+
+    fn raw_nif1(_env: *mut ErlNifEnv, argc: c_int, _args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+        (argc*7) as usize
+    }
+
+    fn raw_nif2(_env: *mut ErlNifEnv, argc: c_int, _args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+        (argc*11) as usize
+    }
+
+    fn slice_nif(_env: *mut ErlNifEnv, args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
+        args.len() * 17
+    }
+
+    extern "C" fn c_load(_env: *mut ErlNifEnv, _priv_data: *mut *mut c_void, _load_info: ERL_NIF_TERM) -> c_int {
+        114
+    }
+
+    extern "C" fn c_unload(_env: *mut ErlNifEnv, _priv_data: *mut c_void) {}
+
+    extern "C" fn c_nif1(_env: *mut ErlNifEnv, argc: c_int, _args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+        (argc*19) as usize
+    }
+
+
+    #[test]
+    fn opt_empty() {
+        let entry = get_entry!("empty", [])();
+        assert_eq!(0, entry.num_of_funcs);
+        assert_eq!(None, entry.load);
+        assert_eq!(None, entry.reload);
+        assert_eq!(None, entry.upgrade);
+        assert_eq!(None, entry.unload);
+    }
+
+    #[test]
+    fn opt_some1() {
+        let entry = get_entry!("empty", [], {load: load})();
+        assert_eq!(0, entry.num_of_funcs);
+        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(None, entry.reload);
+        assert_eq!(None, entry.upgrade);
+        assert_eq!(None, entry.unload);
+    }
+
+    #[test]
+    fn opt_some2() {
+        let entry = get_entry!("empty", [], {load: load, unload:unload})();
+        assert_eq!(0, entry.num_of_funcs);
+        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(None, entry.reload);
+        assert_eq!(None, entry.upgrade);
+        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+    }
+
+    #[test]
+    fn opt_some2b() {  // optionals in different order as opt_some2
+        let entry = get_entry!("empty", [], {unload:unload, load: load})();
+        assert_eq!(0, entry.num_of_funcs);
+        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(None, entry.reload);
+        assert_eq!(None, entry.upgrade);
+        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+    }
+
+    #[test]
+    fn opt_closure() {  // optionals in different order as opt_some2
+        let entry = get_entry!("empty", [], {load: |_,_,_|15})();
+        assert_eq!(15, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+    }
+
+
+    #[test]
+    fn modname() {
+        let entry = get_entry!("bananas", [])();
+        assert_eq!(CString::new("bananas").unwrap().as_ref(), unsafe{CStr::from_ptr(entry.name as *const i8)} );
+    }
+
+    #[test]
+    fn nif1() {
+        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1)])();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+        assert_eq!(1, funcs.len());
+        assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(3,  funcs[0].arity);
+        assert_eq!(28, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(0,  funcs[0].flags);
+    }
+
+    #[test]
+    fn nif2() {
+        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1),("raw2", 33, raw_nif2, ERL_NIF_DIRTY_JOB_IO_BOUND)])();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+        assert_eq!(2, funcs.len());
+        assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(3,  funcs[0].arity);
+        assert_eq!(28, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(0,  funcs[0].flags);
+        assert_eq!(CString::new("raw2").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[1].name as *const i8)});
+        assert_eq!(33,  funcs[1].arity);
+        assert_eq!(44, (funcs[1].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(ERL_NIF_DIRTY_JOB_IO_BOUND,  funcs[1].flags);
+    }
+
+    #[test]
+    fn nif_closure() {
+        let entry = get_entry!("nifs", [("closure", 5, |_,argc,_| (argc*13) as usize )])();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+        assert_eq!(1, funcs.len());
+        assert_eq!(CString::new("closure").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(5,  funcs[0].arity);
+        assert_eq!(52, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(0,  funcs[0].flags);
+    }
+
+    #[test]
+    fn nif_wrapped() {
+        let entry = get_entry!("nifs", [("sliced", 6, slice_args!(slice_nif))])();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+        assert_eq!(1, funcs.len());
+        assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(6,  funcs[0].arity);
+        assert_eq!(34, (funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut()));
+        assert_eq!(0,  funcs[0].flags);
+    }
+
+    #[test]
+    fn legacy() {
+        let entry = get_entry!(
+            b"legacymod\0",
+            Some(c_load), None, None, Some(c_unload),
+            nif!(b"cnif_1\0", 7, c_nif1, ERL_NIF_DIRTY_JOB_IO_BOUND),
+            nif!(b"cnif_2\0", 8, c_nif1))();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+
+        assert_eq!(CString::new("legacymod").unwrap().as_ref(), unsafe{CStr::from_ptr(entry.name as *const i8)} );
+
+        assert_eq!(114, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(None, entry.reload);
+        assert_eq!(None, entry.upgrade);
+        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+
+        assert_eq!(2, funcs.len());
+
+        assert_eq!(CString::new("cnif_1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(7,  funcs[0].arity);
+        assert_eq!(38, (funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut()));
+        assert_eq!(ERL_NIF_DIRTY_JOB_IO_BOUND,  funcs[0].flags);
+
+        assert_eq!(CString::new("cnif_2").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[1].name as *const i8)});
+        assert_eq!(8,  funcs[1].arity);
+        assert_eq!(57, (funcs[1].function)(ptr::null_mut(), 3, ptr::null_mut()));
+        assert_eq!(0,  funcs[1].flags);
+    }
+
+    #[test]
+    fn trailing_comma() {
+        get_entry!("nifs",
+            [
+                ("raw1", 3, raw_nif1),
+                ("raw2", 33, raw_nif2, ERL_NIF_DIRTY_JOB_IO_BOUND),   // <- trailing comma
+            ],
+            {
+                unload: unload,
+                load: load,    // <- trailing comma
+            })();
+
+    }
+
 }
