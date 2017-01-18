@@ -9,7 +9,7 @@ extern "C" fn test_enif_make_int(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NI
 extern "C" fn test_enif_make_pid(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
     let mut pid: ErlNifPid = unsafe { std::mem::uninitialized() };
     unsafe { enif_self(env, &mut pid) };
-    enif_make_pid(env, &pid)
+    unsafe { enif_make_pid(env, &pid) }
 }
 
 nif_init!(
