@@ -334,9 +334,9 @@ api_bindings_rust("win32", Entries) ->
             [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
                case Return of
                   "" ->
-                      io_lib:format("#[inline]\npub fn ~s(~s) {\n    unsafe{(WinDynNifCallbacks.unwrap().~s)(~s)\n}}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
+                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) {\n    (WinDynNifCallbacks.unwrap().~s)(~s)\n}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
                   _ ->
-                      io_lib:format("#[inline]\npub fn ~s(~s) -> ~s {\n    unsafe{(WinDynNifCallbacks.unwrap().~s)(~s)\n}}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
+                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) -> ~s {\n    (WinDynNifCallbacks.unwrap().~s)(~s)\n}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
                end] || {Return,Name,Params} <- Entries, not is_dummy(Name)]
             ];
 
