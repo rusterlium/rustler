@@ -10,7 +10,7 @@ use std::iter::FromIterator;
 use std::mem::size_of;
 
 
-
+#[cfg(unix)]
 #[test]
 fn test1() {
 

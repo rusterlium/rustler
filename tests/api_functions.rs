@@ -4,6 +4,7 @@ use std::path::Path;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
+#[cfg(unix)]
 #[test]
 fn test_api_functions() {
 	let out_dir = env::var("OUT_DIR").unwrap();
