@@ -1,0 +1,14 @@
+language: erlang
+otp_release:
+  - 19.2
+
+sudo: required
+
+script: cargo test
+
+before_install:
+  - curl https://static.rust-lang.org/rustup.sh | sh
+
+before_script:
+  - kerl list installations
+  - kerl list releases
