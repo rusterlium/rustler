@@ -157,7 +157,7 @@ pub struct ErlNifEnv {dummy:c_int}
 pub struct ErlNifFunc {
     pub name:     *const u8,
     pub arity:    c_uint,
-    pub function: extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
+    pub function: unsafe extern "C" fn(env: *mut ErlNifEnv, argc: c_int, argv: *const ERL_NIF_TERM) -> ERL_NIF_TERM,
     pub flags:    c_uint,
 }
 
@@ -171,10 +171,10 @@ pub struct ErlNifEntry {
     pub name:         *const u8,
     pub num_of_funcs: c_int,
     pub funcs:        *const ErlNifFunc,
-    pub load:    Option<extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
-    pub reload:  Option<extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-    pub upgrade: Option<extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
-    pub unload:  Option<extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
+    pub load:    Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int>,
+    pub reload:  Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+    pub upgrade: Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
+    pub unload:  Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
     pub vm_variant: *const u8,
     pub options: c_uint,
 }
@@ -199,7 +199,7 @@ pub struct ErlNifResourceType {dummy:c_int}
 
 /// See [ErlNifResourceDtor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceDtor) in the Erlang docs.
 #[allow(missing_copy_implementations)]
-pub type ErlNifResourceDtor = extern "C" fn(arg1: *mut ErlNifEnv, arg2: *mut c_void) -> ();
+pub type ErlNifResourceDtor = unsafe extern "C" fn(arg1: *mut ErlNifEnv, arg2: *mut c_void) -> ();
 
 /// See [ErlNifResourceFlags](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceFlags) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
@@ -424,7 +424,7 @@ macro_rules! platform_nif_init {
 macro_rules! slice_args {
     ($f:expr) => (
         |env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM| -> ERL_NIF_TERM {
-            $f(env, unsafe{std::slice::from_raw_parts(args, argc as usize)})
+            $f(env, std::slice::from_raw_parts(args, argc as usize))
         }
     );
 }
@@ -523,7 +523,7 @@ macro_rules! make_func_entry {
         $crate::ErlNifFunc { name:     concat!($name, "\0") as *const str as *const u8,
                              arity:    $arity,
                              function: {
-                                extern "C" fn wrapper(env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+                                unsafe extern "C" fn wrapper(env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
                                     $function(env, argc, args)
                                 }
                                 wrapper
@@ -556,25 +556,25 @@ macro_rules! set_optionals {
 #[macro_export]
 macro_rules! set_optional {
     ($entry:ident, load, $val:expr)    => ( {
-        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int {
+        unsafe extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM)-> c_int {
             $val(env, priv_data, load_info)
         }
         $entry.load = Some(wrapper);
      });
     ($entry:ident, reload, $val:expr)  => ( {
-        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
+        unsafe extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
             $val(env, priv_data, load_info)
         }
         $entry.reload = Some(wrapper);
      });
     ($entry:ident, upgrade, $val:expr) => ( {
-        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
+        unsafe extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int {
             $val(env, priv_data, old_priv_data, load_info)
         }
         $entry.upgrade = Some(wrapper);
      });
     ($entry:ident, unload, $val:expr)  => ( {
-        extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut c_void) {
+        unsafe extern "C" fn wrapper(env: *mut ErlNifEnv, priv_data: *mut c_void) {
             $val(env, priv_data)
         }
         $entry.unload = Some(wrapper);
@@ -636,7 +636,7 @@ mod tests {
     fn opt_some1() {
         let entry = get_entry!("empty", [], {load: load})();
         assert_eq!(0, entry.num_of_funcs);
-        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(14, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
         assert_eq!(None, entry.reload);
         assert_eq!(None, entry.upgrade);
         assert_eq!(None, entry.unload);
@@ -646,26 +646,26 @@ mod tests {
     fn opt_some2() {
         let entry = get_entry!("empty", [], {load: load, unload:unload})();
         assert_eq!(0, entry.num_of_funcs);
-        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(14, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
         assert_eq!(None, entry.reload);
         assert_eq!(None, entry.upgrade);
-        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+        unsafe{entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut())}; // shouldn't panic or crash
     }
 
     #[test]
     fn opt_some2b() {  // optionals in different order as opt_some2
         let entry = get_entry!("empty", [], {unload:unload, load: load})();
         assert_eq!(0, entry.num_of_funcs);
-        assert_eq!(14, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(14, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
         assert_eq!(None, entry.reload);
         assert_eq!(None, entry.upgrade);
-        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+        unsafe{entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut())}; // shouldn't panic or crash
     }
 
     #[test]
     fn opt_closure() {  // optionals in different order as opt_some2
         let entry = get_entry!("empty", [], {load: |_,_,_|15})();
-        assert_eq!(15, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(15, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
     }
 
 
@@ -682,7 +682,7 @@ mod tests {
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
         assert_eq!(3,  funcs[0].arity);
-        assert_eq!(28, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(28, unsafe{(funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut())});
         assert_eq!(0,  funcs[0].flags);
     }
 
@@ -693,11 +693,11 @@ mod tests {
         assert_eq!(2, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
         assert_eq!(3,  funcs[0].arity);
-        assert_eq!(28, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(28, unsafe{(funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut())});
         assert_eq!(0,  funcs[0].flags);
         assert_eq!(CString::new("raw2").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[1].name as *const i8)});
         assert_eq!(33,  funcs[1].arity);
-        assert_eq!(44, (funcs[1].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(44, unsafe{(funcs[1].function)(ptr::null_mut(), 4, ptr::null_mut())});
         assert_eq!(ERL_NIF_DIRTY_JOB_IO_BOUND,  funcs[1].flags);
     }
 
@@ -708,7 +708,7 @@ mod tests {
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("closure").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
         assert_eq!(5,  funcs[0].arity);
-        assert_eq!(52, (funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut()));
+        assert_eq!(52, unsafe{(funcs[0].function)(ptr::null_mut(), 4, ptr::null_mut())});
         assert_eq!(0,  funcs[0].flags);
     }
 
@@ -719,7 +719,7 @@ mod tests {
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
         assert_eq!(6,  funcs[0].arity);
-        assert_eq!(34, (funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut()));
+        assert_eq!(34, unsafe{(funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut())});
         assert_eq!(0,  funcs[0].flags);
     }
 
@@ -734,21 +734,21 @@ mod tests {
 
         assert_eq!(CString::new("legacymod").unwrap().as_ref(), unsafe{CStr::from_ptr(entry.name as *const i8)} );
 
-        assert_eq!(114, entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0));
+        assert_eq!(114, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
         assert_eq!(None, entry.reload);
         assert_eq!(None, entry.upgrade);
-        entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut()); // shouldn't panic or crash
+        unsafe{entry.unload.unwrap()(ptr::null_mut(), ptr::null_mut())}; // shouldn't panic or crash
 
         assert_eq!(2, funcs.len());
 
         assert_eq!(CString::new("cnif_1").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
         assert_eq!(7,  funcs[0].arity);
-        assert_eq!(38, (funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut()));
+        assert_eq!(38, unsafe{(funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut())});
         assert_eq!(ERL_NIF_DIRTY_JOB_IO_BOUND,  funcs[0].flags);
 
         assert_eq!(CString::new("cnif_2").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[1].name as *const i8)});
         assert_eq!(8,  funcs[1].arity);
-        assert_eq!(57, (funcs[1].function)(ptr::null_mut(), 3, ptr::null_mut()));
+        assert_eq!(57, unsafe{(funcs[1].function)(ptr::null_mut(), 3, ptr::null_mut())});
         assert_eq!(0,  funcs[1].flags);
     }
 
