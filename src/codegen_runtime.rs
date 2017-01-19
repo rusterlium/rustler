@@ -66,7 +66,7 @@ pub unsafe fn handle_nif_init_call(function: Option<for<'a> fn(NifEnv<'a>, NifTe
 use std;
 use ::resource::align_alloced_mem_for_struct;
 pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
-    let aligned = align_alloced_mem_for_struct::<Box<T>>(handle);
-    let res = aligned as *mut Box<T>;
+    let aligned = align_alloced_mem_for_struct::<T>(handle);
+    let res = aligned as *mut T;
     std::mem::drop(std::ptr::read(res));
 }
