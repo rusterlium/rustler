@@ -26,6 +26,8 @@ rustler_export_nifs!(
         ("resource_make", 0, test_resource::resource_make),
         ("resource_set_integer_field", 2, test_resource::resource_set_integer_field),
         ("resource_get_integer_field", 1, test_resource::resource_get_integer_field),
+        ("resource_make_immutable", 1, test_resource::resource_make_immutable),
+        ("resource_immutable_count", 0, test_resource::resource_immutable_count),
 
         ("atom_to_string", 1, test_atom::atom_to_string),
         ("atom_equals_ok", 1, test_atom::atom_equals_ok),
