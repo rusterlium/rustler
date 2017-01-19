@@ -84,18 +84,18 @@ pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_vo
 /// resource instance on creation, and decrements when dropped.
 pub struct ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     raw: *const c_void,
-    inner: *mut Box<T>,
+    inner: *mut T,
 }
 
 impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     /// Makes a new ResourceCell from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
-        let alloc_size = get_alloc_size_struct::<Box<T>>();
+        let alloc_size = get_alloc_size_struct::<T>();
         let mem_raw = unsafe { ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
-        let aligned_mem = unsafe { align_alloced_mem_for_struct::<Box<T>>(mem_raw) } as *mut Box<T>;
+        let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
-        unsafe { ptr::write(aligned_mem, Box::new(data)) };
+        unsafe { ptr::write(aligned_mem, data) };
 
         ResourceCell {
             raw: mem_raw,
@@ -109,7 +109,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
             None => return Err(NifError::BadArg),
         };
         unsafe { ::wrapper::resource::keep_resource(res_resource); }
-        let casted_ptr = unsafe { align_alloced_mem_for_struct::<Box<T>>(res_resource) } as *mut Box<T>;
+        let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
         Ok(ResourceCell {
             raw: res_resource,
             inner: casted_ptr,
