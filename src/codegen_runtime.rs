@@ -4,7 +4,6 @@ use ::{NifEnv, NifTerm};
 use std::panic::catch_unwind;
 use ::types::atom::NifAtom;
 use ::wrapper::exception;
-use ::resource::NifResourceTypeProvider;
 use ::NifResult;
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
@@ -60,13 +59,4 @@ pub unsafe fn handle_nif_init_call(function: Option<for<'a> fn(NifEnv<'a>, NifTe
     } else {
         0
     }
-}
-
-
-use std;
-use ::resource::align_alloced_mem_for_struct;
-pub unsafe fn handle_drop_resource_struct_handle<T: NifResourceTypeProvider>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
-    let aligned = align_alloced_mem_for_struct::<T>(handle);
-    let res = aligned as *mut T;
-    std::mem::drop(std::ptr::read(res));
 }
