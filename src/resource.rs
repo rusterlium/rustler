@@ -27,16 +27,12 @@ pub struct NifResourceType<T> {
 }
 
 /// This trait gets implemented for the type we want to put into a resource when
-/// resource_struct_init! is called on it. It provides the destructor and the
-/// NifResourceType.
+/// resource_struct_init! is called on it. It provides the NifResourceType.
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
 pub trait NifResourceTypeProvider: Sized {
-    //fn get_dtor() -> extern "C" fn(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
-    extern "C" fn destructor(env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE);
     fn get_type<'a>() -> &'a NifResourceType<Self>;
-    //unsafe fn set_type(typ: NifResourceType<Self>);
 }
 
 impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
@@ -50,6 +46,16 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
     }
 }
 
+/// Drop a T that lives in an Erlang resource. (erlang_nif-sys requires us to declare this
+/// function safe, but it is of course thoroughly unsafe!)
+extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
+    unsafe {
+        let aligned = align_alloced_mem_for_struct::<T>(handle);
+        let res = aligned as *mut T;
+        ptr::read(res);
+    }
+}
+
 /// This is the function that gets called from resource_struct_init! in on_load to create a new
 /// resource type.
 ///
@@ -60,7 +66,7 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
 pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: NifEnv<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(T::destructor), flags)
+        ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(resource_destructor::<T>), flags)
     };
     if res.is_some() {
         Some(NifResourceType {
@@ -76,10 +82,10 @@ fn get_alloc_size_struct<T>() -> usize {
     mem::size_of::<T>() + mem::align_of::<T>()
 }
 
-/// Exported for use by codegen_runtime
-/// This is unsafe as it allows us to do nasty things with pointers
-#[doc(hidden)]
-pub unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
+/// Given a pointer `ptr` to an allocation of `get_alloc_size_struct::<T>()` bytes, return the
+/// first aligned pointer within the allocation where a `T` may be stored.
+/// Unsafe: `ptr` must point to a large enough allocation and not be null.
+unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
     let offset = mem::align_of::<T>() - ((ptr as usize) % mem::align_of::<T>());
     ptr.offset(offset as isize)
 }
@@ -182,11 +188,6 @@ macro_rules! resource_struct_init {
             unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
             impl $crate::resource::NifResourceTypeProvider for $struct_name {
-                extern "C" fn destructor(
-                    env: $crate::codegen_runtime::NIF_ENV,
-                    obj: $crate::codegen_runtime::MUTABLE_NIF_RESOURCE_HANDLE) {
-                    unsafe { $crate::codegen_runtime::handle_drop_resource_struct_handle::<$struct_name>(env, obj) };
-                }
                 fn get_type<'a>() -> &'a $crate::resource::NifResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref().unwrap()
                 }
