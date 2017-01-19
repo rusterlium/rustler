@@ -52,11 +52,15 @@ impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider 
 
 /// This is the function that gets called from resource_struct_init! in on_load to create a new
 /// resource type.
+///
+/// # Panics
+///
+/// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
 pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: NifEnv<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        ::wrapper::resource::open_resource_type(env.as_c_arg(), name, Some(T::destructor), flags)
+        ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(T::destructor), flags)
     };
     if res.is_some() {
         Some(NifResourceType {
@@ -166,7 +170,7 @@ macro_rules! resource_struct_init {
             let temp_struct_type =
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
-                    stringify!($struct_name),
+                    concat!(stringify!($struct_name), "\x00"),
                     $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,

@@ -10,15 +10,17 @@ pub use super::nif_interface::{
 #[allow(dead_code)]
 pub use super::nif_interface::enif_release_resource as release_resource;
 
-use std::ffi::CString;
 use std::mem;
 use std::ptr;
 
-pub unsafe fn open_resource_type(env: NIF_ENV, name: &str, dtor: Option<NifResourceDtor>, flags: NifResourceFlags
+pub unsafe fn open_resource_type(env: NIF_ENV, name: &[u8], dtor: Option<NifResourceDtor>, flags: NifResourceFlags
                                  ) -> Option<NIF_RESOURCE_TYPE> {
+    // Panic if name is not null-terminated.
+    assert_eq!(name.last().cloned(), Some(0u8));
+
     // Currently unused as per erlang nif documentation
     let module_p: *const u8 = ptr::null();
-    let name_p: *const u8 = CString::new(name).unwrap().as_bytes_with_nul().as_ptr();
+    let name_p = name.as_ptr();
     let res = {
         let mut tried: NifResourceFlags = mem::uninitialized();
         nif_interface::enif_open_resource_type(env, module_p, name_p, dtor, flags, &mut tried)
