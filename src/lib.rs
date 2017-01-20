@@ -621,6 +621,14 @@ mod tests {
         (argc*19) as usize
     }
 
+    unsafe fn unsafe_load(_env: *mut ErlNifEnv, _priv_data: *mut *mut c_void, _load_info: ERL_NIF_TERM) -> c_int {
+        15
+    }
+
+    unsafe fn unsafe_nif(_env: *mut ErlNifEnv, argc: c_int, _args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+        (argc*23) as usize
+    }
+
 
     #[test]
     fn opt_empty() {
@@ -765,5 +773,24 @@ mod tests {
             })();
 
     }
+
+    #[test]
+    fn unsafe_callbacks() {
+        let entry = get_entry!("unsafe_nifs",
+            [
+                ("unsafe_nif", 3, unsafe_nif)
+            ],
+            {
+                load: unsafe_load
+            })();
+        let funcs = unsafe{slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize)};
+        assert_eq!(15, unsafe{entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)});
+        assert_eq!(CString::new("unsafe_nif").unwrap().as_ref(), unsafe{CStr::from_ptr(funcs[0].name as *const i8)});
+        assert_eq!(3,  funcs[0].arity);
+        assert_eq!(46, unsafe{(funcs[0].function)(ptr::null_mut(), 2, ptr::null_mut())});
+        assert_eq!(0,  funcs[0].flags);
+
+    }
+
 
 }
