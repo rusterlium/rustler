@@ -31,8 +31,8 @@ pub struct NifResourceType<T> {
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
-pub trait NifResourceTypeProvider: Sized + Send + Sync {
-    fn get_type<'a>() -> &'a NifResourceType<Self>;
+pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
+    fn get_type() -> &'static NifResourceType<Self>;
 }
 
 impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider {
@@ -188,7 +188,7 @@ macro_rules! resource_struct_init {
             unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
             impl $crate::resource::NifResourceTypeProvider for $struct_name {
-                fn get_type<'a>() -> &'a $crate::resource::NifResourceType<Self> {
+                fn get_type() -> &'static $crate::resource::NifResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref().unwrap()
                 }
             }
