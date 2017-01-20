@@ -1,5 +1,6 @@
-
-//! A NIF resource allows you to safely store rust structs in a term, and therefore keep it across
+//! Support for storing Rust data in Erlang terms.
+//!
+//! A NIF resource allows you to safely store Rust structs in a term, and therefore keep it across
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
@@ -13,6 +14,7 @@ use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, 
 use ::wrapper::nif_interface::{ c_void };
 
 /// Re-export a type used by the `resource_struct_init!` macro.
+#[doc(hidden)]
 pub use ::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
 
 /// The NifResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
@@ -152,8 +154,8 @@ impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider {
 }
 
 impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
-    /// For a ResourceCell this will simply increment the refcounter for the resource instance and
-    /// perform a fairly standard clone.
+    /// Cloning a `ResourceCell` simply increments the reference count for the
+    /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
         unsafe { ::wrapper::resource::keep_resource(self.raw); }
         ResourceCell {
@@ -164,8 +166,12 @@ impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
 }
 
 impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
-    /// When drop is called for a ResourceCell, the reference held to the resource by the Cell is
-    /// released.
+    /// When a `ResourceCell` is dropped, the reference count is decremented. If
+    /// there are no other references to the resource, the `T` value is dropped.
+    ///
+    /// However, note that in general, the Rust value in a resource is dropped
+    /// at an unpredictable time: whenever the VM decides to do garbage
+    /// collection.
     fn drop(&mut self) {
         unsafe { ::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
     }
