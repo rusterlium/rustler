@@ -92,8 +92,15 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
     ptr.offset(offset as isize)
 }
 
-/// This is the struct that holds a reference to a resource. It increments the refcounter for the
-/// resource instance on creation, and decrements when dropped.
+/// A reference to a resource of type `T`.
+///
+/// This type is like `std::sync::Arc`: it provides thread-safe, reference-counted storage for Rust
+/// data that can be shared across threads. Data stored this way is immutable by default. If you
+/// need to modify data in a resource, use a `std::sync::Mutex` or `RwLock`.
+///
+/// Rust code and Erlang code can both have references to the same resource at the same time.  Rust
+/// code uses `ResourceArc`; in Erlang, a reference to a resource is a kind of term.  You can
+/// convert back and forth between the two using `NifEncoder` and `NifDecoder`.
 pub struct ResourceArc<T> where T: NifResourceTypeProvider {
     raw: *const c_void,
     inner: *mut T,
