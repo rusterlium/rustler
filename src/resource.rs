@@ -31,16 +31,16 @@ pub struct NifResourceType<T> {
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
-pub trait NifResourceTypeProvider: Sized {
+pub trait NifResourceTypeProvider: Sized + Send + Sync {
     fn get_type<'a>() -> &'a NifResourceType<Self>;
 }
 
-impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider + Sync + 'a {
+impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider + 'a {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         ResourceCell::from_term(term)
     }
@@ -92,12 +92,12 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 
 /// This is the struct that holds a reference to a resource. It increments the refcounter for the
 /// resource instance on creation, and decrements when dropped.
-pub struct ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+pub struct ResourceCell<T> where T: NifResourceTypeProvider {
     raw: *const c_void,
     inner: *mut T,
 }
 
-impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
     /// Makes a new ResourceCell from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
@@ -139,7 +139,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 }
 
-impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -147,7 +147,7 @@ impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 }
 
-impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
     /// For a ResourceCell this will simply increment the refcounter for the resource instance and
     /// perform a fairly standard clone.
     fn clone(&self) -> Self {
@@ -159,7 +159,7 @@ impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
     }
 }
 
-impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider + Sync {
+impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
     /// When drop is called for a ResourceCell, the reference held to the resource by the Cell is
     /// released.
     fn drop(&mut self) {
