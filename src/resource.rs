@@ -37,14 +37,14 @@ pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static NifResourceType<Self>;
 }
 
-impl<T> NifEncoder for ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> NifEncoder for ResourceArc<T> where T: NifResourceTypeProvider {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> NifDecoder<'a> for ResourceCell<T> where T: NifResourceTypeProvider + 'a {
+impl<'a, T> NifDecoder<'a> for ResourceArc<T> where T: NifResourceTypeProvider + 'a {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        ResourceCell::from_term(term)
+        ResourceArc::from_term(term)
     }
 }
 
@@ -94,17 +94,17 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 
 /// This is the struct that holds a reference to a resource. It increments the refcounter for the
 /// resource instance on creation, and decrements when dropped.
-pub struct ResourceCell<T> where T: NifResourceTypeProvider {
+pub struct ResourceArc<T> where T: NifResourceTypeProvider {
     raw: *const c_void,
     inner: *mut T,
 }
 
 // Safe because T is `Sync` and `Send`.
-unsafe impl<T> Send for ResourceCell<T> where T: NifResourceTypeProvider {}
-unsafe impl<T> Sync for ResourceCell<T> where T: NifResourceTypeProvider {}
+unsafe impl<T> Send for ResourceArc<T> where T: NifResourceTypeProvider {}
+unsafe impl<T> Sync for ResourceArc<T> where T: NifResourceTypeProvider {}
 
-impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
-    /// Makes a new ResourceCell from the given type. Note that the type must have
+impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
+    /// Makes a new ResourceArc from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
@@ -113,7 +113,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
 
         unsafe { ptr::write(aligned_mem, data) };
 
-        ResourceCell {
+        ResourceArc {
             raw: mem_raw,
             inner: aligned_mem,
         }
@@ -126,7 +126,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
         };
         unsafe { ::wrapper::resource::keep_resource(res_resource); }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
-        Ok(ResourceCell {
+        Ok(ResourceArc {
             raw: res_resource,
             inner: casted_ptr,
         })
@@ -145,7 +145,7 @@ impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider {
+impl<T> Deref for ResourceArc<T> where T: NifResourceTypeProvider {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -153,20 +153,20 @@ impl<T> Deref for ResourceCell<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Clone for ResourceCell<T> where T: NifResourceTypeProvider {
-    /// Cloning a `ResourceCell` simply increments the reference count for the
+impl<T> Clone for ResourceArc<T> where T: NifResourceTypeProvider {
+    /// Cloning a `ResourceArc` simply increments the reference count for the
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
         unsafe { ::wrapper::resource::keep_resource(self.raw); }
-        ResourceCell {
+        ResourceArc {
             raw: self.raw,
             inner: self.inner,
         }
     }
 }
 
-impl<T> Drop for ResourceCell<T> where T: NifResourceTypeProvider {
-    /// When a `ResourceCell` is dropped, the reference count is decremented. If
+impl<T> Drop for ResourceArc<T> where T: NifResourceTypeProvider {
+    /// When a `ResourceArc` is dropped, the reference count is decremented. If
     /// there are no other references to the resource, the `T` value is dropped.
     ///
     /// However, note that in general, the Rust value in a resource is dropped
