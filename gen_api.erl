@@ -110,7 +110,7 @@ api_list(Opts) -> [
     %%      {"*mut c_void", "enif_tsd_get", "key: ErlNifTSDKey"},
     %%      {"*mut ErlNifThreadOpts", "enif_thread_opts_create", "name: *mut c_uchar"},
     %%      {"", "enif_thread_opts_destroy", "opts: *mut ErlNifThreadOpts"},
-    %%      {"c_int", "enif_thread_create", "name: *mut c_uchar, tid: *mut ErlNifTid, func: Option<extern \"C\" fn (arg1: *mut c_void) -> *mut c_void>, args: *mut c_void, opts: *mut ErlNifThreadOpts"},
+    %%      {"c_int", "enif_thread_create", "name: *mut c_uchar, tid: *mut ErlNifTid, func: Option<unsafe extern \"C\" fn (arg1: *mut c_void) -> *mut c_void>, args: *mut c_void, opts: *mut ErlNifThreadOpts"},
     %%      {"ErlNifTid", "enif_thread_self", ""},
     %%      {"c_int", "enif_equal_tids", "tid1: ErlNifTid, tid2: ErlNifTid"},
     %%      {"", "enif_thread_exit", "resp: *mut c_void"},
@@ -165,7 +165,7 @@ api_list(Opts) -> [
     {"ERL_NIF_TERM", "enif_make_tuple_from_array", "arg1: *mut ErlNifEnv, arr: *const ERL_NIF_TERM, cnt: c_uint"},
     {"ERL_NIF_TERM", "enif_make_list_from_array", "arg1: *mut ErlNifEnv, arr: *const ERL_NIF_TERM, cnt: c_uint"},
     {"c_int", "enif_is_empty_list", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
-    {"*const ErlNifResourceType", "enif_open_resource_type", "arg1: *mut ErlNifEnv, module_str: *const c_uchar, name_str: *const c_uchar, dtor: Option<extern \"C\" fn (arg1: *mut ErlNifEnv, arg2: *mut c_void)>, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
+    {"*const ErlNifResourceType", "enif_open_resource_type", "arg1: *mut ErlNifEnv, module_str: *const c_uchar, name_str: *const c_uchar, dtor: Option<unsafe extern \"C\" fn (arg1: *mut ErlNifEnv, arg2: *mut c_void)>, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
     {"*mut c_void", "enif_alloc_resource", "_type: *const ErlNifResourceType, size: size_t"},
     {"", "enif_release_resource", "obj: *const c_void"},
     {"ERL_NIF_TERM", "enif_make_resource", "arg1: *mut ErlNifEnv, obj: *const c_void"},
@@ -204,8 +204,8 @@ api_list(Opts) -> [
     {"c_int", "enif_is_exception", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
     {"c_int", "enif_make_reverse_list", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM, list: *mut ERL_NIF_TERM"},
     {"c_int", "enif_is_number", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM"},
-    {"*mut c_void", "enif_dlopen", "lib: *const c_uchar, err_handler: Option<extern \"C\" fn (arg1: *mut c_void, arg2: *const c_uchar)>, err_arg: *mut c_void"},
-    {"*mut c_void", "enif_dlsym", "handle: *mut c_void, symbol: *const c_uchar, err_handler: Option<extern \"C\" fn (arg1: *mut c_void, arg2: *const c_uchar)>, err_arg: *mut c_void"},
+    {"*mut c_void", "enif_dlopen", "lib: *const c_uchar, err_handler: Option<unsafe extern \"C\" fn (arg1: *mut c_void, arg2: *const c_uchar)>, err_arg: *mut c_void"},
+    {"*mut c_void", "enif_dlsym", "handle: *mut c_void, symbol: *const c_uchar, err_handler: Option<unsafe extern \"C\" fn (arg1: *mut c_void, arg2: *const c_uchar)>, err_arg: *mut c_void"},
     {"c_int", "enif_consume_timeslice", "arg1: *mut ErlNifEnv, percent: c_int"},
     {"c_int", "enif_is_map", "env: *mut ErlNifEnv, term: ERL_NIF_TERM"},
     {"c_int", "enif_get_map_size", "env: *mut ErlNifEnv, term: ERL_NIF_TERM, size: *mut size_t"},
@@ -221,7 +221,7 @@ api_list(Opts) -> [
     {"c_int", "enif_map_iterator_next", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator"},
     {"c_int", "enif_map_iterator_prev", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator"},
     {"c_int", "enif_map_iterator_get_pair", "env: *mut ErlNifEnv, iter: *mut ErlNifMapIterator, key: *mut ERL_NIF_TERM, value: *mut ERL_NIF_TERM"},
-    {"ERL_NIF_TERM", "enif_schedule_nif", "env: *mut ErlNifEnv, fun_name: *const c_uchar, flags:c_int, dtor: Option<extern \"C\" fn(env: *mut ErlNifEnv, argc:c_int, argv:*const ERL_NIF_TERM)>, argc:c_int, argv:*const ERL_NIF_TERM"}
+    {"ERL_NIF_TERM", "enif_schedule_nif", "env: *mut ErlNifEnv, fun_name: *const c_uchar, flags:c_int, dtor: Option<unsafe extern \"C\" fn(env: *mut ErlNifEnv, argc:c_int, argv:*const ERL_NIF_TERM)>, argc:c_int, argv:*const ERL_NIF_TERM"}
     ] ++
 
 
