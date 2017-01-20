@@ -97,6 +97,10 @@ pub struct ResourceCell<T> where T: NifResourceTypeProvider {
     inner: *mut T,
 }
 
+// Safe because T is `Sync` and `Send`.
+unsafe impl<T> Send for ResourceCell<T> where T: NifResourceTypeProvider {}
+unsafe impl<T> Sync for ResourceCell<T> where T: NifResourceTypeProvider {}
+
 impl<T> ResourceCell<T> where T: NifResourceTypeProvider {
     /// Makes a new ResourceCell from the given type. Note that the type must have
     /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
