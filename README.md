@@ -1,6 +1,6 @@
 # Rustler
 
-[Documentation](http://rustler.rustbridge.io/) | [Getting Started](https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/NifIo)
+[Documentation](https://docs.rs/rustler/) | [Getting Started](https://github.com/hansihe/Rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/NifIo)
 
 [![Build Status](https://travis-ci.org/hansihe/rustler.svg?branch=master)](https://travis-ci.org/hansihe/rustler)
 
