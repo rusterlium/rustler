@@ -39,7 +39,7 @@ rustler_export_nifs!(
         ("threaded_sleep", 1, test_thread::threaded_sleep),
 
         ("send_all", 2, test_env::send_all),
-        ("sublists", 1, test_env::sublists)
+        ("sublists", 1, test_env::sublists),
     ],
     Some(on_load)
 );
