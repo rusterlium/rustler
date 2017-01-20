@@ -16,6 +16,10 @@
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
 #[macro_export]
 macro_rules! rustler_export_nifs {
+    // Strip trailing comma.
+    ($name:expr, [$( $exported_nif:tt ),+,], $on_load:expr) => {
+        rustler_export_nifs!($name, [$( $exported_nif ),*], $on_load);
+    };
     ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
         static mut NIF_ENTRY: Option<$crate::codegen_runtime::DEF_NIF_ENTRY> = None;
 
