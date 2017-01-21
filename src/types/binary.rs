@@ -1,38 +1,112 @@
 use ::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
-use std::mem::uninitialized;
 use ::wrapper::nif_interface::{ size_t, c_void };
 use ::wrapper::nif_interface::{ NIF_TERM, NIF_BINARY };
 use ::wrapper::nif_interface;
+use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
-#[repr(C)]
-#[derive(Clone)]
-struct ErlNifBinary {
-    pub size: size_t,
-    pub data: *mut u8,
-    bin_term: NIF_TERM,
-    ref_bin: *mut c_void,
-}
-impl ErlNifBinary {
-    unsafe fn new_empty() -> Self {
-        ErlNifBinary {
-            size: uninitialized(),
-            data: uninitialized(),
-            bin_term: uninitialized(),
-            ref_bin: uninitialized(),
-        }
-    }
-    fn as_c_arg(&mut self) -> NIF_BINARY {
-        (self as *mut ErlNifBinary) as NIF_BINARY
-    }
-}
+use ::std::io::Write;
+use ::std::borrow::{ Borrow, BorrowMut };
+use ::std::ops::{ Deref, DerefMut };
+
+// Owned
 
 pub struct OwnedNifBinary {
     inner: ErlNifBinary,
     release: bool,
 }
-pub struct NifBinary<'a> {
-    inner: ErlNifBinary,
-    term: NifTerm<'a>,
+
+impl<'a> OwnedNifBinary {
+    /// Allocates a new OwnedNifBinary with size `size`.
+    ///
+    /// Note that the memory is not initially guaranteed to be any particular value.
+    /// If an empty buffer is needed, you should manually zero it.
+    pub fn new(size: usize) -> Option<OwnedNifBinary> {
+        unsafe { alloc(size) }.map(|binary| {
+            OwnedNifBinary {
+                inner: binary,
+                release: true,
+            }
+        })
+    }
+
+    /// Copies a given `NifBinary`.
+    pub fn from_unowned(from_bin: &NifBinary) -> Option<OwnedNifBinary> {
+        let len = from_bin.len();
+        if let Some(mut bin) = OwnedNifBinary::new(len) {
+            if let Ok(write_len) = bin.as_mut_slice().write(from_bin.as_slice()) {
+                if write_len != len {
+                    panic!("Could not copy binary");
+                }
+                Some(bin)
+            } else {
+                panic!("Could not copy binary");
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Attempts to reallocate the buffer with the new size.
+    /// Returns false if the buffer cannot be reallocated.
+    #[must_use]
+    pub fn realloc(&mut self, size: usize) -> bool {
+        unsafe { realloc(&mut self.inner, size) }
+    }
+
+    /// Attempts to reallocate the buffer with the new size.
+    /// If reallocation fails, it will perform a copy instead.
+
+    /// Memory outside the range of the original buffer will
+    /// not be initialized. If this needs to be empty, clear it manually.
+    pub fn realloc_or_copy(&mut self, size: usize) {
+        if !self.realloc(size) {
+            let mut new = OwnedNifBinary::new(size).unwrap();
+            if let Ok(num_written) = new.as_mut_slice().write(self.as_slice()) {
+                if !(num_written == self.len() || num_written == new.len()) {
+                    panic!("Could not copy binary");
+                }
+                ::std::mem::swap(&mut self.inner, &mut new.inner);
+            } else {
+                panic!("Could not copy binary");
+            }
+        }
+    }
+
+    pub fn as_slice(&self) -> &'a [u8] {
+        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
+        unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size) }
+    }
+
+    /// Releases control of the binary to the VM. After this point
+    /// the binary will be immutable.
+    pub fn release<'b>(self, env: NifEnv<'b>) -> NifBinary<'b> {
+        NifBinary::from_owned(self, env)
+    }
+}
+
+impl Borrow<[u8]> for OwnedNifBinary {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+impl BorrowMut<[u8]> for OwnedNifBinary {
+    fn borrow_mut(&mut self) -> &mut [u8] {
+        self.as_mut_slice()
+    }
+}
+impl Deref for OwnedNifBinary {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+impl DerefMut for OwnedNifBinary {
+    fn deref_mut(&mut self) -> &mut [u8] {
+        self.as_mut_slice()
+    }
 }
 
 impl Drop for OwnedNifBinary {
@@ -43,28 +117,18 @@ impl Drop for OwnedNifBinary {
     }
 }
 
-impl<'a> OwnedNifBinary {
-    pub fn alloc(size: usize) -> Option<OwnedNifBinary> {
-        let mut binary = unsafe { ErlNifBinary::new_empty() };
-        if unsafe { nif_interface::enif_alloc_binary(size, binary.as_c_arg()) } == 0 {
-            return None;
-        }
-        Some(OwnedNifBinary {
-            inner: binary,
-            release: true,
-        })
-    }
-    pub fn as_slice(&self) -> &'a [u8] {
-        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
-    }
-    pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
-        unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size) }
-    }
-    pub fn release<'b>(self, env: NifEnv<'b>) -> NifBinary<'b> {
-        NifBinary::from_owned(self, env)
-    }
+// Borrowed
+
+#[derive(Copy, Clone)]
+pub struct NifBinary<'a> {
+    inner: ErlNifBinary,
+    term: NifTerm<'a>,
 }
+
 impl<'a> NifBinary<'a> {
+
+    /// Releases a given `OwnedNifBinary` to the VM.
+    /// After this point the binary will be immutable.
     pub fn from_owned(mut bin: OwnedNifBinary, env: NifEnv<'a>) -> Self {
         bin.release = false;
         let term = unsafe { NifTerm::new(env, nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg())) };
@@ -73,6 +137,11 @@ impl<'a> NifBinary<'a> {
             term: term,
         }
     }
+
+    pub fn to_owned(&self) -> Option<OwnedNifBinary> {
+        OwnedNifBinary::from_unowned(self)
+    }
+
     pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe { nif_interface::enif_inspect_binary(term.get_env().as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
@@ -83,12 +152,17 @@ impl<'a> NifBinary<'a> {
             term: term,
         })
     }
+
+    pub fn to_term<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+        self.term.in_env(env)
+    }
+
     pub fn as_slice(&self) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
     }
-    pub fn get_term<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
-        self.term.in_env(env)
-    }
+
+    /// Returns a new view into the same binary.
+    /// This will not copy anything.
     pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<NifBinary<'a>> {
         let min_len = length.checked_add(offset);
         if try!(min_len.ok_or(NifError::BadArg)) > self.inner.size {
@@ -102,6 +176,18 @@ impl<'a> NifBinary<'a> {
     }
 }
 
+impl<'a> Borrow<[u8]> for NifBinary<'a> {
+    fn borrow(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+impl<'a> Deref for NifBinary<'a> {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
 impl<'a> NifDecoder<'a> for NifBinary<'a> {
     fn decode(term: NifTerm<'a>) -> Result<Self, NifError> {
         NifBinary::from_term(term)
@@ -109,7 +195,7 @@ impl<'a> NifDecoder<'a> for NifBinary<'a> {
 }
 impl<'a> NifEncoder for NifBinary<'a> {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
-        self.get_term(env)
+        self.to_term(env)
     }
 }
 

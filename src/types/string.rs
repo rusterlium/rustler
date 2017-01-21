@@ -22,11 +22,11 @@ use std::io::Write;
 impl NifEncoder for str {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let str_len = self.len();
-        let mut bin = match OwnedNifBinary::alloc(str_len) {
+        let mut bin = match OwnedNifBinary::new(str_len) {
             Some(bin) => bin,
             None => panic!("binary term allocation fail"),
         };
         bin.as_mut_slice().write(self.as_bytes()).expect("memory copy of string failed");
-        bin.release(env).get_term(env)
+        bin.release(env).to_term(env)
     }
 }

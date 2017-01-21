@@ -13,4 +13,22 @@ defmodule RustlerTest.BinaryTest do
     assert_raise ArgumentError, fn -> RustlerTest.parse_integer("999999999999999999999") end
   end
 
+  test "OwnedNifBinary creation" do
+    assert RustlerTest.binary_new() == <<1, 2, 3, 4>>
+  end
+
+  test "unowned binary to owned" do
+    assert RustlerTest.unowned_to_owned("test") == <<1, "est">>
+    assert RustlerTest.unowned_to_owned("whatisgoingon") == <<1, "hatisgoingon">>
+    assert_raise ErlangError, fn -> RustlerTest.unowned_to_owned("") end
+  end
+
+  test "realloc shrink binary" do
+    assert RustlerTest.realloc_shrink() == <<1, 2, 3, 4>>
+  end
+
+  test "realloc grow binary" do
+    assert RustlerTest.realloc_grow() == <<1, 2, 3, 4, 5>>
+  end
+
 end
