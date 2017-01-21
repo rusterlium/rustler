@@ -10,6 +10,10 @@ keywords = ["FFI", "Erlang", "NIF"]
 
 build = "build.rs"
 
+[dev-dependencies]
+walkdir = "1.0"
+itertools = "0.5"
+cargo-erlangapp = "0.1"
 
 [package.metadata.release]
 upload-doc = true

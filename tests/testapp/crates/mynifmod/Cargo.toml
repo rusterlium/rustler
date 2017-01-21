@@ -1,0 +1,11 @@
+[package]
+name = "mynifmod"
+version = "0.1.0"
+authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
+
+[lib]
+name = "mynifmod"
+crate-type = ["dylib"]
+
+[dependencies]
+erlang_nif-sys = { path = "../../../../../../../../" }  #please don't judge me
