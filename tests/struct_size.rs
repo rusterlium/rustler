@@ -1,18 +1,16 @@
-
 extern crate erlang_nif_sys;
-use erlang_nif_sys::*;
-
-use std::process::Command;
-use std::env;
-use std::path::Path;
-use std::collections::HashMap;
-use std::iter::FromIterator;
-use std::mem::size_of;
-
 
 #[cfg(unix)]
 #[test]
 fn test1() {
+
+	use erlang_nif_sys::*;
+	use std::process::Command;
+	use std::env;
+	use std::path::Path;
+	use std::collections::HashMap;
+	use std::iter::FromIterator;
+	use std::mem::size_of;
 
 	let out_dir = env::var("OUT_DIR").unwrap();
 

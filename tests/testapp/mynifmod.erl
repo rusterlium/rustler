@@ -13,7 +13,6 @@ init() ->
 %% butchered version of https://github.com/goertzenator/find_crate/blob/master/src/find_crate.erl
 find_library(CrateName, LibName) ->
 	Wildcard = "priv/crates/" ++ CrateName ++ "/{lib,}" ++ LibName ++ ".{so,dll}",
-	X = filelib:wildcard(Wildcard),
 	case filelib:wildcard(Wildcard) of
 		[Lib] -> {ok, filename:rootname(Lib)};
 		[] -> {error, not_found};

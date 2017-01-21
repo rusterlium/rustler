@@ -311,7 +311,8 @@ nif_version_rust(Major, Minor) ->
      io_lib:format("pub const NIF_MINOR_VERSION: c_int = ~p;\n\n", [Minor])].
 
 api_bindings_rust("win32", Entries) ->
-    [ "#[derive(Copy, Clone)]\n",
+    [ "#[allow(dead_code)]\n",
+      "#[derive(Copy, Clone)]\n",
       "pub struct TWinDynNifCallbacks {\n",
             [ case Return of
                   "" ->
@@ -329,14 +330,14 @@ api_bindings_rust("win32", Entries) ->
 
             % The work-around is to use Option.  The problem here is that we have to do an unwrap() for
             % each API call which is extra work.
-            "pub static mut WinDynNifCallbacks:Option<TWinDynNifCallbacks> = None;\n\n",
+            "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n\n",
 
             [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
                case Return of
                   "" ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) {\n    (WinDynNifCallbacks.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
+                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
                   _ ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) -> ~s {\n    (WinDynNifCallbacks.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
+                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) -> ~s {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
                end] || {Return,Name,Params} <- Entries, not is_dummy(Name)]
             ];
 

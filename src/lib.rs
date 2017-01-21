@@ -379,7 +379,7 @@ macro_rules! platform_nif_init {
         #[no_mangle]
         pub extern "C" fn nif_init(callbacks: *mut TWinDynNifCallbacks) -> *const $crate::ErlNifEntry {
             unsafe {
-                WinDynNifCallbacks = Some(*callbacks);
+                WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
             //std::ptr::copy_nonoverlapping(callbacks, &WinDynNifCallbacks, std::mem::size_of<TWinDynNifCallbacks>());
             $get_entry()
