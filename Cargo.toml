@@ -17,6 +17,8 @@ categories = ["external-ffi-bindings"]
 travis-ci = { repository = "https://github.com/goertzenator/erlang_nif-sys" }
 appveyor  = { repository = "https://github.com/goertzenator/erlang_nif-sys" }
 
+[dependencies]
+unreachable = "0.1"
 
 [dev-dependencies]
 walkdir = "1.0"
