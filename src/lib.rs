@@ -127,7 +127,9 @@ fn native_add(env: *mut ErlNifEnv,
 
 */
 
+#[cfg(windows)]
 extern crate unreachable;
+#[cfg(windows)]
 use unreachable::UncheckedOptionExt;  // unchecked unwrap used in generated Windows code
 
 pub use std::os::raw::{c_int, c_void, c_uint, c_char, c_uchar, c_ulong, c_long, c_double};
