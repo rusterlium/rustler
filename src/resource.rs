@@ -186,7 +186,7 @@ impl<T> Drop for ResourceArc<T> where T: NifResourceTypeProvider {
 
 #[macro_export]
 macro_rules! resource_struct_init {
-    ($struct_name:ident, $env: ident) => {
+    ($struct_name:ty, $env: ident) => {
         {
             static mut STRUCT_TYPE: Option<$crate::resource::NifResourceType<$struct_name>> = None;
 
@@ -206,7 +206,8 @@ macro_rules! resource_struct_init {
 
             impl $crate::resource::NifResourceTypeProvider for $struct_name {
                 fn get_type() -> &'static $crate::resource::NifResourceType<Self> {
-                    unsafe { &STRUCT_TYPE }.as_ref().unwrap()
+                    unsafe { &STRUCT_TYPE }.as_ref()
+                        .expect("The resource type hasn't been inited. Did you remember to call the function where you used the `resource_struct_init!` macro?")
                 }
             }
         }
