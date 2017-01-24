@@ -4,18 +4,22 @@ extern crate erlang_nif_sys;
 use erlang_nif_sys::*;
 
 use std::{mem, ptr};
+use std::sync::atomic::{AtomicIsize, Ordering};
 
 static mut RUSTMAP_TYPE: *const ErlNifResourceType = 0 as *const ErlNifResourceType;
+static mut DTOR_COUNTER: Option<AtomicIsize> = None;
 
 nif_init!("mynifmod", [
 	("times2", 1, slice_args!(times2)),
 	("test_enif_make_pid", 0, test_enif_make_pid),
 	("rustmap", 0, rustmap),
+	("rustmap_dtor_count", 0, rustmap_dtor_count),
 	],
 	{load: mynifmod_load});
 
 unsafe fn mynifmod_load(env: *mut ErlNifEnv, _priv_data: *mut *mut c_void, _load_info: ERL_NIF_TERM) -> c_int {
 	let mut tried: ErlNifResourceFlags = mem::uninitialized();
+	DTOR_COUNTER = Some(AtomicIsize::new(0));
 	RUSTMAP_TYPE = enif_open_resource_type(
 		env,
 		ptr::null(),
@@ -47,7 +51,9 @@ fn test_enif_make_pid(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> 
 use std::collections::HashMap;
 type RustMap = HashMap<String, String>;
 
+
 unsafe extern "C" fn rustmap_destructor(_env: *mut ErlNifEnv, handle: *mut c_void) {
+	DTOR_COUNTER.as_mut().unwrap().fetch_add(1, Ordering::SeqCst);
     ptr::read(handle as *mut RustMap);
 }
 
@@ -63,4 +69,9 @@ unsafe fn rustmap(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> ERL_
     let term = enif_make_resource(env, mem);
     enif_release_resource(mem);
     term
+}
+
+unsafe fn rustmap_dtor_count(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
+	let cnt = DTOR_COUNTER.as_mut().unwrap().load(Ordering::SeqCst);
+	enif_make_int(env, cnt as i32)
 }

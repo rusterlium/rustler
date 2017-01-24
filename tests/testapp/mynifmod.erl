@@ -21,7 +21,7 @@ find_library(CrateName, LibName) ->
 
 exercise_dtor(0) ->
 	garbage_collect(), %% don't crash
-	[];
+	rustmap_dtor_count();
 exercise_dtor(N) ->
 	rustmap(),  %% create and discard a resource
 	exercise_dtor(N - 1).
@@ -30,14 +30,14 @@ simple_test_() -> [
 		?_assertEqual(6, times2(3)),
 		?_assertEqual(self(), test_enif_make_pid()),
 		?_assertEqual(<<"">>, rustmap()),
-		exercise_dtor(10)
+		?_assertEqual(11, exercise_dtor(10))
 	].
-
 
 
 times2(_X)           -> exit(nif_library_not_loaded).
 test_enif_make_pid() -> exit(nif_library_not_loaded).
 rustmap()            -> exit(nif_library_not_loaded).
+rustmap_dtor_count() -> exit(nif_library_not_loaded).
 
 
 
