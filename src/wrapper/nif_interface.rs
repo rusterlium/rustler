@@ -113,6 +113,9 @@ pub unsafe fn enif_release_binary(bin_ref: NIF_BINARY) {
 pub unsafe fn enif_alloc_binary(size: size_t, bin_ref: NIF_BINARY) -> c_int {
     erlang_nif_sys::enif_alloc_binary(size, bin_ref)
 }
+pub unsafe fn enif_realloc_binary(bin_ref: NIF_BINARY, size: size_t) -> c_int {
+    erlang_nif_sys::enif_realloc_binary(bin_ref, size)
+}
 pub unsafe fn enif_make_binary(env: NIF_ENV, bin_ref: NIF_BINARY) -> NIF_TERM {
     erlang_nif_sys::enif_make_binary(env, bin_ref)
 }

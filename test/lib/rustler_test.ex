@@ -28,6 +28,10 @@ defmodule RustlerTest do
 
   def make_shorter_subbinary(_), do: err()
   def parse_integer(_), do: err()
+  def binary_new(), do: err()
+  def unowned_to_owned(_), do: err()
+  def realloc_shrink(), do: err()
+  def realloc_grow(), do: err()
 
   def atom_to_string(_), do: err()
   def atom_equals_ok(_), do: err()
