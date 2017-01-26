@@ -74,10 +74,8 @@ api_list(Opts) -> [
     {"ERL_NIF_TERM", "enif_make_atom", "env: *mut ErlNifEnv, name: *const c_uchar"},
     {"c_int", "enif_make_existing_atom", "env: *mut ErlNifEnv, name: *const c_uchar, atom: *mut ERL_NIF_TERM, arg1: ErlNifCharEncoding"},
 
-    %{"ERL_NIF_TERM", "enif_make_tuple", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
-    %{"ERL_NIF_TERM", "enif_make_list", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
-    {"", "dummy_enif_make_tuple", ""}, % Can't support variable arguments
-    {"", "dummy_enif_make_list", ""}, % Can't support variable arguments
+    {"ERL_NIF_TERM", "enif_make_tuple", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
+    {"ERL_NIF_TERM", "enif_make_list", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
 
     {"ERL_NIF_TERM", "enif_make_list_cell", "env: *mut ErlNifEnv, car: ERL_NIF_TERM, cdr: ERL_NIF_TERM"},
     {"ERL_NIF_TERM", "enif_make_string", "env: *mut ErlNifEnv, string: *const c_uchar, arg1: ErlNifCharEncoding"},
@@ -148,8 +146,7 @@ api_list(Opts) -> [
     {"*mut c_void", "enif_realloc", "ptr: *mut c_void, size: size_t"},
     {"", "enif_system_info", "sip: *mut ErlNifSysInfo, si_size: size_t"},
 
-    %{"c_int", "enif_fprintf", "filep: *mut c_void, format: *const c_uchar, ..."},
-    {"", "dummy_enif_fprintf", ""}, % Can't support variable arguments
+    {"c_int", "enif_fprintf", "filep: *mut c_void, format: *const c_uchar, ..."},
 
     {"c_int", "enif_inspect_iolist_as_binary", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM, bin: *mut ErlNifBinary"},
     {"ERL_NIF_TERM", "enif_make_sub_binary", "arg1: *mut ErlNifEnv, bin_term: ERL_NIF_TERM, pos: size_t, size: size_t"},
@@ -272,7 +269,7 @@ api_list(Opts) -> [
             {"usize", "enif_binary_to_term", "env: *mut ErlNifEnv, data: *const c_uchar, sz: usize, term: *mut ERL_NIF_TERM, opts: ErlNifBinaryToTerm"},
             {"c_int", "enif_port_command", "env: *mut ErlNifEnv, to_port: *const ErlNifPort, msg_env: *mut ErlNifEnv, msg: ERL_NIF_TERM"},
             {"c_int", "enif_thread_type", ""},
-            {"", "dummy_enif_snprintf", ""} % Can't support variable arguments
+            {"c_int", "enif_snprintf", "out: *mut c_char, size: usize, format: *const c_char, ..."}
         ];
         false -> []
     end.

@@ -4,6 +4,7 @@ extern crate erlang_nif_sys;
 use erlang_nif_sys::*;
 
 use std::{mem, ptr};
+use std::cmp::min;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
 static mut RUSTMAP_TYPE: *const ErlNifResourceType = 0 as *const ErlNifResourceType;
@@ -14,6 +15,7 @@ nif_init!("mynifmod", [
 	("test_enif_make_pid", 0, test_enif_make_pid),
 	("rustmap", 0, rustmap),
 	("rustmap_dtor_count", 0, rustmap_dtor_count),
+        ("to_str", 1, slice_args!(to_str)),
 	],
 	{load: mynifmod_load});
 
@@ -74,4 +76,20 @@ unsafe fn rustmap(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> ERL_
 unsafe fn rustmap_dtor_count(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
 	let cnt = DTOR_COUNTER.as_mut().unwrap().load(Ordering::SeqCst);
 	enif_make_int(env, cnt as i32)
+}
+
+unsafe fn to_str(env: *mut ErlNifEnv, args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
+    let mut buf = Vec::<u8>::with_capacity(1024);
+    let n = enif_snprintf(buf.as_mut_ptr() as *mut i8,
+                          buf.capacity(),
+                          "%T".as_ptr() as *mut i8,
+                          args[0]);
+    if n < 0 {
+	enif_make_badarg(env)
+    } else {
+        let len = min(n as usize, buf.capacity() - 1);
+        buf.set_len(len);
+        enif_make_string_len(env, buf.as_ptr(), len,
+                             ErlNifCharEncoding::ERL_NIF_LATIN1)
+    }
 }
