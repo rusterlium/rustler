@@ -311,48 +311,77 @@ api_bindings_rust("win32", Entries) ->
     [ "#[allow(dead_code)]\n",
       "#[derive(Copy, Clone)]\n",
       "pub struct TWinDynNifCallbacks {\n",
-            [ case Return of
-                  "" ->
-                      io_lib:format("    ~s: fn(~s),\n",[Name,Params]);
-                  _ ->
-                      io_lib:format("    ~s: fn(~s) -> ~s,\n",[Name,Params,Return])
-              end || {Return,Name,Params} <- Entries],
+      [io_lib:format("    ~s: ~s,\n",[Name,fn_type(Params, Return)]) || {Return,Name,Params} <- Entries],
+      "}\n\n",
 
-            "}\n\n",
+      % The line below would be the "faithful" reproduction of the NIF Win API, but Rust
+      % is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
+      % RFC911 is implemented (or some other mechanism)
+      %"static mut WinDynNifCallbacks:TWinDynNifCallbacks = unsafe{std::mem::uninitialized()};\n\n",
 
-            % The line below would be the "faithful" reproduction of the NIF Win API, but Rust
-            % is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
-            % RFC911 is implemented (or some other mechanism)
-            %"static mut WinDynNifCallbacks:TWinDynNifCallbacks = unsafe{std::mem::uninitialized()};\n\n",
+      % The work-around is to use Option.  The problem here is that we have to do an unwrap() for
+      % each API call which is extra work.
+      "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n\n",
 
-            % The work-around is to use Option.  The problem here is that we have to do an unwrap() for
-            % each API call which is extra work.
-            "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n\n",
-
-            [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
-               case Return of
-                  "" ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
-                  _ ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) -> ~s {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
-               end] || {Return,Name,Params} <- Entries, not is_dummy(Name)]
-            ];
+      [ [ io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
+          case is_variadic(Params) of
+            true ->
+                io_lib:format("#[macro_export]\n"
+                              "macro_rules! ~s {\n"
+                              "    ( $( $arg:expr ),*  ) => { $crate::get_~s()($($arg),*) };\n"
+                              "    ( $( $arg:expr ),+, ) => { ~s!($($arg),*) };\n"
+                              "}\n\n"
+                              "#[inline]\n"
+                              "#[doc(hidden)]\n"
+                              "pub unsafe fn get_~s() -> ~s {\n"
+                              "    WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s\n"
+                              "}\n\n",
+                              [Name,Name,Name,Name,fn_type(Params, Return),Name]);
+            _ ->
+                io_lib:format("#[inline]\n"
+                              "pub unsafe fn ~s(~s)~s {\n"
+                              "    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n"
+                              "}\n\n",
+                              [Name,Params,ret_type(Return),Name,strip_types_from_params(Params)])
+          end] || {Return,Name,Params} <- Entries, not is_dummy(Name)
+      ]
+    ];
 
 api_bindings_rust(_Arch, Entries) ->
     [
         "extern \"C\" {\n",
-             [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
-                case Return of
-                   "" ->
-                       io_lib:format("pub fn ~s(~s);\n",[Name,Params]);
-                   _ ->
-                       io_lib:format("pub fn ~s(~s) -> ~s;\n",[Name,Params,Return])
-                end] || {Return,Name,Params} <- Entries, not is_dummy(Name)],
-             "}\n"
+        [ io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n"
+                        "pub fn ~s(~s)~s;\n",
+                        [Name,Name,Name,Params,ret_type(Return)])
+          || {Return,Name,Params} <- Entries, not is_dummy(Name), not is_variadic(Params)],
+        "}\n\n",
+        [ io_lib:format("extern \"C\" {\n"
+                        "    #[doc(hidden)]\n"
+                        "    #[link_name = \"~s\"]\n"
+                        "    pub fn _~s(~s)~s;\n"
+                        "}\n\n"
+                        "/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n"
+                        "#[macro_export]\n"
+                        "macro_rules! ~s {\n"
+                        "    ( $( $arg:expr ),*  ) => { $crate::_~s($($arg),*) };\n"
+                        "    ( $( $arg:expr ),+, ) => { ~s!($($arg),*) };\n"
+                        "}\n\n",
+                        [Name,Name,Params,ret_type(Return),Name,Name,Name,Name,Name])
+          || {Return,Name,Params} <- Entries, not is_dummy(Name), is_variadic(Params)]
     ].
 
 is_dummy([$d,$u,$m,$m,$y|_]) -> true;
 is_dummy(_) -> false.
+
+is_variadic("...") -> true;
+is_variadic("") -> false;
+is_variadic([_|T]) -> is_variadic(T).
+
+fn_type(Params, "")     -> io_lib:format("extern \"C\" fn (~s)", [Params]);
+fn_type(Params, Return) -> io_lib:format("extern \"C\" fn (~s) -> ~s", [Params, Return]).
+
+ret_type("") -> "";
+ret_type(Return) -> " -> " ++ Return.
 
 
 

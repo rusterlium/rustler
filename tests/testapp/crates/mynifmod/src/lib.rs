@@ -80,10 +80,10 @@ unsafe fn rustmap_dtor_count(env: *mut ErlNifEnv, _: c_int, _: *const ERL_NIF_TE
 
 unsafe fn to_str(env: *mut ErlNifEnv, args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
     let mut buf = Vec::<u8>::with_capacity(1024);
-    let n = enif_snprintf(buf.as_mut_ptr() as *mut i8,
-                          buf.capacity(),
-                          "%T".as_ptr() as *mut i8,
-                          args[0]);
+    let n = enif_snprintf!(buf.as_mut_ptr() as *mut i8,
+                           buf.capacity(),
+                           "%T".as_ptr() as *mut i8,
+                           args[0]);
     if n < 0 {
 	enif_make_badarg(env)
     } else {
