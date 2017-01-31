@@ -6,7 +6,7 @@ use rustler::types::pid::NifPid;
 use std::thread;
 
 // Send a message to several PIDs.
-pub fn send_all<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn send_all<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let pids: Vec<NifPid> = args[0].decode()?;
     let message = args[1];
 
@@ -17,7 +17,7 @@ pub fn send_all<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTe
     Ok(message)
 }
 
-pub fn sublists<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn sublists<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     // This is a "threaded NIF": it spawns a thread that sends a message back
     // to the calling thread later.
     let pid = env.pid();
