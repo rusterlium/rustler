@@ -18,20 +18,20 @@ pub fn parse_integer<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<Nif
     Ok(num.encode(env))
 }
 
-pub fn binary_new<'a>(env: NifEnv<'a>, _args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn binary_new<'a>(env: NifEnv<'a>, _args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let mut binary = OwnedNifBinary::new(4).unwrap();
     binary.as_mut_slice().write(&[1, 2, 3, 4]).unwrap();
     Ok(binary.release(env).encode(env))
 }
 
-pub fn unowned_to_owned<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn unowned_to_owned<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let in_binary: NifBinary = args[0].decode()?;
     let mut copied = in_binary.to_owned().unwrap();
     copied.as_mut_slice()[0] = 1;
     Ok(copied.release(env).encode(env))
 }
 
-pub fn realloc_shrink<'a>(env: NifEnv<'a>, _args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn realloc_shrink<'a>(env: NifEnv<'a>, _args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let mut binary = OwnedNifBinary::new(8).unwrap();
     binary.as_mut_slice().write(&[1, 2, 3, 4, 5, 6, 7, 8]).unwrap();
     if !binary.realloc(4) {
@@ -40,7 +40,7 @@ pub fn realloc_shrink<'a>(env: NifEnv<'a>, _args: &Vec<NifTerm<'a>>) -> NifResul
     Ok(binary.release(env).encode(env))
 }
 
-pub fn realloc_grow<'a>(env: NifEnv<'a>, _args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+pub fn realloc_grow<'a>(env: NifEnv<'a>, _args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let mut binary = OwnedNifBinary::new(4).unwrap();
     binary.as_mut_slice().write(&[1, 2, 3, 4]).unwrap();
     binary.realloc_or_copy(5);
