@@ -74,10 +74,8 @@ api_list(Opts) -> [
     {"ERL_NIF_TERM", "enif_make_atom", "env: *mut ErlNifEnv, name: *const c_uchar"},
     {"c_int", "enif_make_existing_atom", "env: *mut ErlNifEnv, name: *const c_uchar, atom: *mut ERL_NIF_TERM, arg1: ErlNifCharEncoding"},
 
-    %{"ERL_NIF_TERM", "enif_make_tuple", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
-    %{"ERL_NIF_TERM", "enif_make_list", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
-    {"", "dummy_enif_make_tuple", ""}, % Can't support variable arguments
-    {"", "dummy_enif_make_list", ""}, % Can't support variable arguments
+    {"ERL_NIF_TERM", "enif_make_tuple", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
+    {"ERL_NIF_TERM", "enif_make_list", "env: *mut ErlNifEnv, cnt: c_uint, ..."},
 
     {"ERL_NIF_TERM", "enif_make_list_cell", "env: *mut ErlNifEnv, car: ERL_NIF_TERM, cdr: ERL_NIF_TERM"},
     {"ERL_NIF_TERM", "enif_make_string", "env: *mut ErlNifEnv, string: *const c_uchar, arg1: ErlNifCharEncoding"},
@@ -148,8 +146,7 @@ api_list(Opts) -> [
     {"*mut c_void", "enif_realloc", "ptr: *mut c_void, size: size_t"},
     {"", "enif_system_info", "sip: *mut ErlNifSysInfo, si_size: size_t"},
 
-    %{"c_int", "enif_fprintf", "filep: *mut c_void, format: *const c_uchar, ..."},
-    {"", "dummy_enif_fprintf", ""}, % Can't support variable arguments
+    {"c_int", "enif_fprintf", "filep: *mut c_void, format: *const c_uchar, ..."},
 
     {"c_int", "enif_inspect_iolist_as_binary", "arg1: *mut ErlNifEnv, term: ERL_NIF_TERM, bin: *mut ErlNifBinary"},
     {"ERL_NIF_TERM", "enif_make_sub_binary", "arg1: *mut ErlNifEnv, bin_term: ERL_NIF_TERM, pos: size_t, size: size_t"},
@@ -272,7 +269,7 @@ api_list(Opts) -> [
             {"usize", "enif_binary_to_term", "env: *mut ErlNifEnv, data: *const c_uchar, sz: usize, term: *mut ERL_NIF_TERM, opts: ErlNifBinaryToTerm"},
             {"c_int", "enif_port_command", "env: *mut ErlNifEnv, to_port: *const ErlNifPort, msg_env: *mut ErlNifEnv, msg: ERL_NIF_TERM"},
             {"c_int", "enif_thread_type", ""},
-            {"", "dummy_enif_snprintf", ""} % Can't support variable arguments
+            {"c_int", "enif_snprintf", "out: *mut c_char, size: usize, format: *const c_char, ..."}
         ];
         false -> []
     end.
@@ -314,48 +311,77 @@ api_bindings_rust("win32", Entries) ->
     [ "#[allow(dead_code)]\n",
       "#[derive(Copy, Clone)]\n",
       "pub struct TWinDynNifCallbacks {\n",
-            [ case Return of
-                  "" ->
-                      io_lib:format("    ~s: fn(~s),\n",[Name,Params]);
-                  _ ->
-                      io_lib:format("    ~s: fn(~s) -> ~s,\n",[Name,Params,Return])
-              end || {Return,Name,Params} <- Entries],
+      [io_lib:format("    ~s: ~s,\n",[Name,fn_type(Params, Return)]) || {Return,Name,Params} <- Entries],
+      "}\n\n",
 
-            "}\n\n",
+      % The line below would be the "faithful" reproduction of the NIF Win API, but Rust
+      % is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
+      % RFC911 is implemented (or some other mechanism)
+      %"static mut WinDynNifCallbacks:TWinDynNifCallbacks = unsafe{std::mem::uninitialized()};\n\n",
 
-            % The line below would be the "faithful" reproduction of the NIF Win API, but Rust
-            % is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
-            % RFC911 is implemented (or some other mechanism)
-            %"static mut WinDynNifCallbacks:TWinDynNifCallbacks = unsafe{std::mem::uninitialized()};\n\n",
+      % The work-around is to use Option.  The problem here is that we have to do an unwrap() for
+      % each API call which is extra work.
+      "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n\n",
 
-            % The work-around is to use Option.  The problem here is that we have to do an unwrap() for
-            % each API call which is extra work.
-            "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n\n",
-
-            [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
-               case Return of
-                  "" ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Name,strip_types_from_params(Params)]);
-                  _ ->
-                      io_lib:format("#[inline]\npub unsafe fn ~s(~s) -> ~s {\n    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n}\n\n",[Name,Params,Return,Name,strip_types_from_params(Params)])
-               end] || {Return,Name,Params} <- Entries, not is_dummy(Name)]
-            ];
+      [ [ io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
+          case is_variadic(Params) of
+            true ->
+                io_lib:format("#[macro_export]\n"
+                              "macro_rules! ~s {\n"
+                              "    ( $( $arg:expr ),*  ) => { $crate::get_~s()($($arg),*) };\n"
+                              "    ( $( $arg:expr ),+, ) => { ~s!($($arg),*) };\n"
+                              "}\n\n"
+                              "#[inline]\n"
+                              "#[doc(hidden)]\n"
+                              "pub unsafe fn get_~s() -> ~s {\n"
+                              "    WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s\n"
+                              "}\n\n",
+                              [Name,Name,Name,Name,fn_type(Params, Return),Name]);
+            _ ->
+                io_lib:format("#[inline]\n"
+                              "pub unsafe fn ~s(~s)~s {\n"
+                              "    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().~s)(~s)\n"
+                              "}\n\n",
+                              [Name,Params,ret_type(Return),Name,strip_types_from_params(Params)])
+          end] || {Return,Name,Params} <- Entries, not is_dummy(Name)
+      ]
+    ];
 
 api_bindings_rust(_Arch, Entries) ->
     [
         "extern \"C\" {\n",
-             [ [io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n", [Name, Name]),
-                case Return of
-                   "" ->
-                       io_lib:format("pub fn ~s(~s);\n",[Name,Params]);
-                   _ ->
-                       io_lib:format("pub fn ~s(~s) -> ~s;\n",[Name,Params,Return])
-                end] || {Return,Name,Params} <- Entries, not is_dummy(Name)],
-             "}\n"
+        [ io_lib:format("/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n"
+                        "pub fn ~s(~s)~s;\n",
+                        [Name,Name,Name,Params,ret_type(Return)])
+          || {Return,Name,Params} <- Entries, not is_dummy(Name), not is_variadic(Params)],
+        "}\n\n",
+        [ io_lib:format("extern \"C\" {\n"
+                        "    #[doc(hidden)]\n"
+                        "    #[link_name = \"~s\"]\n"
+                        "    pub fn _~s(~s)~s;\n"
+                        "}\n\n"
+                        "/// See [~s](http://www.erlang.org/doc/man/erl_nif.html#~s) in the Erlang docs.\n"
+                        "#[macro_export]\n"
+                        "macro_rules! ~s {\n"
+                        "    ( $( $arg:expr ),*  ) => { $crate::_~s($($arg),*) };\n"
+                        "    ( $( $arg:expr ),+, ) => { ~s!($($arg),*) };\n"
+                        "}\n\n",
+                        [Name,Name,Params,ret_type(Return),Name,Name,Name,Name,Name])
+          || {Return,Name,Params} <- Entries, not is_dummy(Name), is_variadic(Params)]
     ].
 
 is_dummy([$d,$u,$m,$m,$y|_]) -> true;
 is_dummy(_) -> false.
+
+is_variadic("...") -> true;
+is_variadic("") -> false;
+is_variadic([_|T]) -> is_variadic(T).
+
+fn_type(Params, "")     -> io_lib:format("extern \"C\" fn (~s)", [Params]);
+fn_type(Params, Return) -> io_lib:format("extern \"C\" fn (~s) -> ~s", [Params, Return]).
+
+ret_type("") -> "";
+ret_type(Return) -> " -> " ++ Return.
 
 
 
