@@ -117,6 +117,8 @@ install:
   - echo Installing Erlang...
   - start /B /WAIT C:\Users\appveyor\erlang.exe /S /D=C:\Users\appveyor\erlang
   - set ERLANG_HOME=C:\Users\appveyor\erlang
+  - set PATH=C:\Users\appveyor\erlang\bin;%PATH%
+  - echo %PATH%
 
 ## Build Script ##
 
