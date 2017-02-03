@@ -9,19 +9,7 @@ name = "rustler_test"
 path = "src/lib.rs"
 crate-type = ["dylib"]
 
-[features]
-default = ["with-syntex"]
-with-syntex = [
-    "rustler_codegen/with-syntex",
-]
-
-[build-dependencies.rustler_codegen]
-path = "../rustler_codegen"
-
 [dependencies]
 lazy_static = "*"
-
-[dependencies.rustler]
-path = "../"
-[dependencies.rustler_codegen]
-path = "../rustler_codegen/"
+rustler = { path = "../" }
+rustler_codegen = { path = "../rustler_codegen/" }
