@@ -2,7 +2,6 @@
 name = "<%= library_name %>"
 version = "0.1.0"
 authors = []
-build = "build.rs"
 
 [lib]
 name = "<%= library_name %>"

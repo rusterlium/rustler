@@ -13,7 +13,6 @@ defmodule Mix.Tasks.Rustler.New do
   @basic [
     {:eex, "basic/README.md", "README.md"},
     {:eex, "basic/Cargo.toml.exs", "Cargo.toml"},
-    {:eex, "basic/build.rs", "build.rs"},
     {:eex, "basic/src/lib.rs", "src/lib.rs"},
   ]
 
