@@ -10,7 +10,13 @@ defmodule Mix.Tasks.Compile.Rustler do
     File.mkdir_p!(priv_dir())
 
     Enum.map(crates, &compile_crate/1)
+
+    # Workaround for a mix problem. We should REALLY get this fixed properly.
+    _ = symlink_or_copy(config,
+      Path.expand("priv"),
+      Path.join(Mix.Project.app_path(config), "priv"))
   end
+
 
   defp priv_dir, do: "priv/native"
 
@@ -123,5 +129,17 @@ defmodule Mix.Tasks.Compile.Rustler do
     Mix.raise """
     Missing required :rustler_crates option in mix.exs.
     """
+  end
+
+  # https://github.com/elixir-lang/elixir/blob/b13404e913fff70e080c08c2da3dbd5c41793b54/lib/mix/lib/mix/project.ex#L553-L562
+  defp symlink_or_copy(config, source, target) do
+    if config[:build_embedded] do
+      if File.exists?(source) do
+        File.rm_rf!(target)
+        File.cp_r!(source, target)
+      end
+    else
+      Mix.Utils.symlink_or_copy(source, target)
+    end
   end
 end
