@@ -2,7 +2,7 @@
 name = "rustler_codegen"
 description = "Compiler plugin for Rustler"
 repository = "https://github.com/hansihe/Rustler/tree/master/rustler_codegen"
-version = "0.12.0"
+version = "0.13.0"
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "BSD-2-Clause"
 
