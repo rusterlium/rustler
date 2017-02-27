@@ -37,6 +37,9 @@ pub use self::erlang_nif_sys::NIF_MAJOR_VERSION;
 pub use self::erlang_nif_sys::NIF_MINOR_VERSION;
 pub use self::erlang_nif_sys::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 
+pub use self::erlang_nif_sys::ErlNifBinaryToTerm as NIF_BINARY_TO_TERM_OPTS;
+pub use self::erlang_nif_sys::ERL_NIF_BIN2TERM_SAFE;
+
 #[repr(C)]
 pub enum ErlNifTaskFlags {
     ERL_NIF_NORMAL_JOB = 0,
@@ -58,6 +61,13 @@ pub unsafe fn enif_raise_exception(env: NIF_ENV, reason: NIF_TERM) -> NIF_TERM {
 
 pub unsafe fn enif_make_copy(dest_env: NIF_ENV, source_term: NIF_TERM) -> NIF_TERM {
     erlang_nif_sys::enif_make_copy(dest_env, source_term)
+}
+
+pub unsafe fn enif_binary_to_term(env: NIF_ENV, data: *const u8, size: size_t, result: *mut NIF_TERM, opts: NIF_BINARY_TO_TERM_OPTS) -> size_t {
+    erlang_nif_sys::enif_binary_to_term(env, data, size, result, opts)
+}
+pub unsafe fn enif_term_to_binary(env: NIF_ENV, term: NIF_TERM, result: NIF_BINARY) -> c_int {
+    erlang_nif_sys::enif_term_to_binary(env, term, result)
 }
 
 // Term type checks

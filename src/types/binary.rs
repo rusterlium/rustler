@@ -1,6 +1,4 @@
 use ::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
-use ::wrapper::nif_interface::{ size_t, c_void };
-use ::wrapper::nif_interface::{ NIF_TERM, NIF_BINARY };
 use ::wrapper::nif_interface;
 use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
@@ -117,6 +115,8 @@ impl Drop for OwnedNifBinary {
     }
 }
 
+unsafe impl Send for OwnedNifBinary {}
+
 // Borrowed
 
 #[derive(Copy, Clone)]
@@ -135,6 +135,13 @@ impl<'a> NifBinary<'a> {
         NifBinary {
             inner: bin.inner.clone(),
             term: term,
+        }
+    }
+
+    pub unsafe fn from_raw(env: NifEnv<'a>, bin: ErlNifBinary) -> NifBinary<'a> {
+        NifBinary {
+            inner: bin,
+            term: NifTerm::new(env, bin.bin_term),
         }
     }
 

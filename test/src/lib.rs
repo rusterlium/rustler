@@ -16,6 +16,7 @@ mod test_binary;
 mod test_atom;
 mod test_thread;
 mod test_env;
+mod test_codegen;
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -23,7 +24,6 @@ rustler_export_nifs!(
         ("add_u32", 2, test_primitives::add_u32),
         ("add_i32", 2, test_primitives::add_i32),
         ("echo_u8", 1, test_primitives::echo_u8),
-        ("tuple_add", 1, test_primitives::tuple_add),
 
         ("sum_list", 1, test_list::sum_list),
         ("make_list", 0, test_list::make_list),
@@ -52,6 +52,9 @@ rustler_export_nifs!(
 
         ("send_all", 2, test_env::send_all),
         ("sublists", 1, test_env::sublists),
+
+        ("tuple_echo", 1, test_codegen::tuple_echo),
+        ("map_echo", 1, test_codegen::map_echo),
     ],
     Some(on_load)
 );

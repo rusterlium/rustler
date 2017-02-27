@@ -42,6 +42,25 @@ impl<'a> NifEnv<'a> {
             nif_interface::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
         }
     }
+
+    /// Decodes binary data to a term.
+    ///
+    /// Follows the erlang
+    /// [External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html).
+    pub fn binary_to_term(self, data: &[u8]) -> Option<(NifTerm<'a>, usize)> {
+        unsafe {
+            ::wrapper::env::binary_to_term(self.as_c_arg(), data, true)
+                .map(|(term, size)| (NifTerm::new(self, term), size))
+        }
+    }
+
+    /// Like `binary_to_term`, but can only be called on valid
+    /// and trusted data.
+    pub unsafe fn binary_to_term_trusted(self, data: &[u8]) -> Option<(NifTerm<'a>, usize)> {
+        ::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
+            .map(|(term, size)| (NifTerm::new(self, term), size))
+    }
+
 }
 
 

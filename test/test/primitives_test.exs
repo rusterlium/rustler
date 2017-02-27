@@ -13,4 +13,5 @@ defmodule RustlerTest.PrimitivesTest do
     assert_raise ArgumentError, fn -> RustlerTest.add_u32("1", 1) end
     assert_raise ArgumentError, fn -> RustlerTest.add_i32(2147483648, 1) end
   end
+
 end

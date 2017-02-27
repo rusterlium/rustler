@@ -37,8 +37,10 @@ defmodule Rustler do
     quote bind_quoted: [opts: opts] do
       @on_load :__init__
 
+      @rustler_opts opts
+
       def __init__ do
-        {so_path, load_data} = Rustler.compile_config(__MODULE__, opts)
+        {so_path, load_data} = Rustler.compile_config(__MODULE__, @rustler_opts)
         :erlang.load_nif(so_path, load_data)
       end
     end

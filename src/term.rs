@@ -1,5 +1,7 @@
 use ::{NifDecoder, NifEnv, NifResult};
 use ::wrapper::nif_interface::{NIF_TERM};
+use ::wrapper::env::term_to_binary;
+use ::types::binary::NifBinary;
 
 /// NifTerm is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
 ///
@@ -62,5 +64,10 @@ impl<'a> NifTerm<'a> {
     /// ```
     pub fn decode<T>(self) -> NifResult<T> where T: NifDecoder<'a> {
         NifDecoder::decode(self)
+    }
+
+    pub fn to_binary(self) -> NifBinary<'a> {
+        let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
+        unsafe { NifBinary::from_raw(self.env, raw_binary) }
     }
 }

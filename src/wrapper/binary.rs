@@ -1,5 +1,5 @@
 use super::nif_interface;
-use super::nif_interface::{ NIF_ENV, NIF_TERM, NIF_BINARY, c_uint };
+use super::nif_interface::{ NIF_TERM, NIF_BINARY };
 use ::wrapper::nif_interface::{ size_t, c_void };
 
 use std::mem::uninitialized;
@@ -28,8 +28,8 @@ impl ErlNifBinary {
 }
 
 pub unsafe fn alloc(size: size_t) -> Option<ErlNifBinary> {
-    let mut binary = unsafe {ErlNifBinary::new_empty()};
-    let success = unsafe { nif_interface::enif_alloc_binary(size, binary.as_c_arg()) };
+    let mut binary = ErlNifBinary::new_empty();
+    let success = nif_interface::enif_alloc_binary(size, binary.as_c_arg());
     if success == 0 {
         return None;
     }
@@ -37,6 +37,6 @@ pub unsafe fn alloc(size: size_t) -> Option<ErlNifBinary> {
 }
 
 pub unsafe fn realloc(binary: &mut ErlNifBinary, size: size_t) -> bool {
-    let success = unsafe { nif_interface::enif_realloc_binary(binary.as_c_arg(), size) };
+    let success = nif_interface::enif_realloc_binary(binary.as_c_arg(), size);
     success != 0
 }
