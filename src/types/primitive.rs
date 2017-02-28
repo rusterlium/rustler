@@ -35,6 +35,8 @@ impl_number_transcoder!(u8, u32, enif_make_uint, enif_get_uint);
 impl_number_transcoder!(i16, i32, enif_make_int, enif_get_int);
 impl_number_transcoder!(u16, u32, enif_make_uint, enif_get_uint);
 impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
+impl_number_transcoder!(usize, u64, enif_make_uint64, enif_get_uint64);
+impl_number_transcoder!(isize, i64, enif_make_int64, enif_get_int64);
 
 impl NifEncoder for bool {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
