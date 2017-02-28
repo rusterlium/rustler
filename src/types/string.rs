@@ -30,3 +30,9 @@ impl NifEncoder for str {
         bin.release(env).to_term(env)
     }
 }
+
+impl NifEncoder for String {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+        self.as_str().encode(env)
+    }
+}
