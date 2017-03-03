@@ -25,7 +25,15 @@ pub type ERL_NIF_TERM = ERL_NIF_UINT;
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 #[repr(C)]
-pub struct ErlNifEnv {dummy:c_int}
+pub struct ErlNifEnv {
+    dummy: *mut c_void,  // block automatic Send and Sync traits.  Ref https://doc.rust-lang.org/beta/nomicon/send-and-sync.html
+}
+
+// Ownership of an env may be safely transfers between threads, therefore ErlNifEnv is Send.
+// This is the common use case for process independent environments created with enif_alloc_env().
+// ErlNifEnv is NOT Sync because it is thread unsafe.
+unsafe impl Send for ErlNifEnv {}
+
 
 /// See [ErlNifFunc](http://www.erlang.org/doc/man/erl_nif.html#ErlNifFunc) in the Erlang docs.
 // #[allow(missing_copy_implementations)]
