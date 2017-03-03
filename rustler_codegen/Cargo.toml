@@ -7,6 +7,7 @@ authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "BSD-2-Clause"
 
 [lib]
+name = "rustler_codegen"
 proc_macro = true
 
 [dependencies]
