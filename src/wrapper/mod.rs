@@ -18,5 +18,6 @@ pub mod pid;
 pub mod check;
 pub mod binary;
 pub mod env;
+pub mod term;
 
 pub use self::nif_interface::enif_make_copy as copy_term;

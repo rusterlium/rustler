@@ -70,6 +70,13 @@ impl NifAtom {
     }
 }
 
+use ::std::fmt;
+impl fmt::Debug for NifAtom {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        ::wrapper::term::fmt(self.as_c_arg(), f)
+    }
+}
+
 impl NifEncoder for NifAtom {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.to_term(env)

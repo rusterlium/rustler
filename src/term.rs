@@ -3,7 +3,6 @@ use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::env::term_to_binary;
 use ::types::binary::NifBinary;
 use std::fmt::{self, Debug};
-use std::os::raw::c_char;
 
 /// NifTerm is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
 ///
@@ -17,38 +16,7 @@ pub struct NifTerm<'a> {
 
 impl<'a> Debug for NifTerm<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        const SIZE: usize = 1024;
-        let mut bytes: Vec<u8> = Vec::with_capacity(SIZE);
-
-        let mut n = 0;
-        for _ in 0 .. 10 {
-            let i = unsafe {
-                enif_snprintf!(bytes.as_mut_ptr() as *mut c_char,
-                              bytes.capacity(),
-                              b"%T\x00" as *const u8 as *const c_char,
-                              self.as_c_arg())
-            };
-            if i < 0 {
-                // Do not propagate an error, because string formatting is
-                // supposed to be infallible.
-                break;
-            }
-
-            n = i as usize;
-            if n >= bytes.capacity() {
-                // Bizarrely, enif_snprintf consistently underestimates the
-                // amount of memory it will need to write long lists. To try to
-                // avoid going around the loop again, double the estimate.
-                bytes.reserve_exact(2 * n + 1);
-            } else {
-                break;
-            }
-        }
-
-        unsafe {
-            bytes.set_len(n);
-        }
-        f.write_str(&String::from_utf8_lossy(&bytes))
+        ::wrapper::term::fmt(self.as_c_arg(), f)
     }
 }
 
