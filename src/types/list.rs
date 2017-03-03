@@ -99,9 +99,7 @@ impl<'a> NifDecoder<'a> for NifListIterator<'a> {
 
 impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
-        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
-            self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+        self.as_slice().encode(env)
     }
 }
 
@@ -112,6 +110,21 @@ impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
             .map(|x| x.decode::<T>())
             .collect();
         res
+    }
+}
+
+impl<'a, T> NifEncoder for [T] where T: NifEncoder {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
+            self.iter().map(|x| x.encode(env).as_c_arg()).collect();
+        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+    }
+}
+impl<'a, T> NifEncoder for &'a [T] where T: NifEncoder {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
+            self.iter().map(|x| x.encode(env).as_c_arg()).collect();
+        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
 

@@ -33,3 +33,9 @@ impl<'a> NifDecoder<'a> for NifTerm<'a> {
         Ok(term)
     }
 }
+
+impl<'a, T> NifEncoder for &'a T where T: NifEncoder {
+    fn encode<'c>(&self, env: NifEnv<'c>) -> NifTerm<'c> {
+        <T as NifEncoder>::encode(self, env)
+    }
+}
