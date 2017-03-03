@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-use ::{ NifTerm, NifEnv, NifResult, NifError, NifEncoder };
+use ::{ NifTerm, NifEnv, NifResult, NifError, NifEncoder, NifDecoder };
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::atom;
 
@@ -80,6 +80,11 @@ impl fmt::Debug for NifAtom {
 impl NifEncoder for NifAtom {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.to_term(env)
+    }
+}
+impl<'a> NifDecoder<'a> for NifAtom {
+    fn decode(term: NifTerm<'a>) -> NifResult<NifAtom> {
+        NifAtom::from_term(term)
     }
 }
 
