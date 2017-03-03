@@ -127,7 +127,7 @@ macro_rules! get_entry {
             let mut entry = unsafe { &mut ENTRY };
 
             // perform dynamic insertions
-            entry.num_of_funcs = FUNCS.len() as $crate::c_int;
+            entry.num_of_funcs = FUNCS.len() as ens::c_int;
             entry.funcs = FUNCS.as_ptr();
             set_optionals!(entry, $($inits)*);
             entry // return static entry reference
