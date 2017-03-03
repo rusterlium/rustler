@@ -1,4 +1,4 @@
-# erlang_nif-sys (formerly ruster_unsafe)
+# erlang_nif-sys
 [![](http://meritbadge.herokuapp.com/erlang_nif-sys)](https://crates.io/crates/erlang_nif-sys)
 [![Docs](https://docs.rs/erlang_nif-sys/badge.svg)](https://docs.rs/erlang_nif-sys)
 [![Build Status](https://travis-ci.org/goertzenator/erlang_nif-sys.svg?branch=master)](https://travis-ci.org/goertzenator/erlang_nif-sys)
