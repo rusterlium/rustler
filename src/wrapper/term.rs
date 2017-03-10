@@ -28,6 +28,10 @@ pub fn fmt<'a>(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error>
             // amount of memory it will need to write long lists. To try to
             // avoid going around the loop again, double the estimate.
             bytes.reserve_exact(2 * n + 1);
+
+            // Ensure that the `set_len` call below does not expose
+            // uninitialized bytes if we give up after 10 attempts.
+            n = 0;
         } else {
             break;
         }
