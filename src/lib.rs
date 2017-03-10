@@ -43,6 +43,7 @@ mod term;
 
 pub use term::{ NifTerm };
 pub use types::{ NifEncoder, NifDecoder };
+pub use wrapper::nif_interface::ErlNifTaskFlags;
 pub mod resource;
 
 pub mod dynamic;
