@@ -30,6 +30,8 @@ rustler_export_nifs!(
         ("make_list", 0, test_list::make_list),
 
         ("term_debug", 1, test_term::term_debug),
+        ("term_eq", 2, test_term::term_eq),
+        ("term_cmp", 2, test_term::term_cmp),
 
         ("sum_map_values", 1, test_map::sum_map_values),
         ("map_entries_sorted", 1, test_map::map_entries_sorted),

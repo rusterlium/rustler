@@ -3,6 +3,7 @@ use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::env::term_to_binary;
 use ::types::binary::NifBinary;
 use std::fmt::{self, Debug};
+use std::cmp::Ordering;
 
 /// NifTerm is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
 ///
@@ -76,5 +77,35 @@ impl<'a> NifTerm<'a> {
     pub fn to_binary(self) -> NifBinary<'a> {
         let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
         unsafe { NifBinary::from_raw(self.env, raw_binary) }
+    }
+}
+
+impl<'a> PartialEq for NifTerm<'a> {
+    fn eq(&self, other: &NifTerm) -> bool {
+        unsafe {
+            ::wrapper::nif_interface::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1
+        }
+    }
+}
+impl<'a> Eq for NifTerm<'a> {}
+
+fn cmp(lhs: &NifTerm, rhs: &NifTerm) -> Ordering {
+    let ord = unsafe { ::wrapper::nif_interface::enif_compare(
+        lhs.as_c_arg(), rhs.as_c_arg()) };
+    match ord {
+        0 => Ordering::Equal,
+        n if n < 0 => Ordering::Less,
+        _ => Ordering::Greater,
+    }
+}
+
+impl<'a> Ord for NifTerm<'a> {
+    fn cmp(&self, other: &NifTerm) -> Ordering {
+        cmp(self, other)
+    }
+}
+impl<'a> PartialOrd for NifTerm<'a> {
+    fn partial_cmp(&self, other: &NifTerm<'a>) -> Option<Ordering> {
+        Some(cmp(self, other))
     }
 }

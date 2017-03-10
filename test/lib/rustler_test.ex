@@ -16,7 +16,9 @@ defmodule RustlerTest do
   def sum_list(_), do: err()
   def make_list(), do: err()
 
-  def term_debug(_), do: err
+  def term_debug(_), do: err()
+  def term_eq(_, _), do: err()
+  def term_cmp(_, _), do: err()
 
   def sum_map_values(_), do: err()
   def map_entries_sorted(_), do: err()

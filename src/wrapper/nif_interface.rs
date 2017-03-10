@@ -70,6 +70,13 @@ pub unsafe fn enif_term_to_binary(env: NIF_ENV, term: NIF_TERM, result: NIF_BINA
     erlang_nif_sys::enif_term_to_binary(env, term, result)
 }
 
+pub unsafe fn enif_compare(lhs: NIF_TERM, rhs: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_compare(lhs, rhs)
+}
+pub unsafe fn enif_is_identical(lhs: NIF_TERM, rhs: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_identical(lhs, rhs)
+}
+
 // Term type checks
 pub unsafe fn enif_is_atom(env: NIF_ENV, term: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_is_atom(env, term)
