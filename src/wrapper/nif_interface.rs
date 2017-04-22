@@ -33,12 +33,12 @@ pub enum NIF_ERROR {
 
 pub type DEF_NIF_FUNC = erlang_nif_sys::ErlNifFunc;
 pub type DEF_NIF_ENTRY = erlang_nif_sys::ErlNifEntry;
-pub use self::erlang_nif_sys::NIF_MAJOR_VERSION;
-pub use self::erlang_nif_sys::NIF_MINOR_VERSION;
-pub use self::erlang_nif_sys::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
+pub use ::erlang_nif_sys::NIF_MAJOR_VERSION;
+pub use ::erlang_nif_sys::NIF_MINOR_VERSION;
+pub use ::erlang_nif_sys::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 
-pub use self::erlang_nif_sys::ErlNifBinaryToTerm as NIF_BINARY_TO_TERM_OPTS;
-pub use self::erlang_nif_sys::ERL_NIF_BIN2TERM_SAFE;
+pub use ::erlang_nif_sys::ErlNifBinaryToTerm as NIF_BINARY_TO_TERM_OPTS;
+pub use ::erlang_nif_sys::ERL_NIF_BIN2TERM_SAFE;
 
 #[repr(C)]
 pub enum ErlNifTaskFlags {
@@ -210,7 +210,7 @@ pub unsafe fn enif_keep_resource(obj: NIF_RESOURCE_HANDLE) {
     erlang_nif_sys::enif_keep_resource(obj)
 }
 
-pub use self::erlang_nif_sys::{
+pub use ::erlang_nif_sys::{
     ErlNifMapIterator,
     ErlNifMapIteratorEntry,
     ErlNifPid,
