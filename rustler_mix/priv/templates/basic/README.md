@@ -2,7 +2,7 @@
 
 ## To build the NIF module:
 
-  * Make sure your projects `mix.exs` has the `:rustler` compiler listed in the `project` function: `compilers: [:rustler] ++ Mix.compilers`
+  * Make sure your projects `mix.exs` has the `:rustler` compiler listed in the `project` function: `compilers: [:rustler] ++ Mix.compilers` If there already is a `:compilers` list, you should append `:rustler` to it.
   * Add your crate to the `rustler_crates` attribute in the `project function. [See here](https://hexdocs.pm/rustler/basics.html#crate-configuration).
   * Your NIF will now build along with your project.
 
@@ -10,12 +10,7 @@
 
 ```elixir
 defmodule <%= module %> do
-    require Rustler
-
-    @on_load :load_nif
-    def load_nif do
-        Rustler.load_nif("<%= library_name %>")
-    end
+    use Rustler, otp_app: [otp app], crate: "<%= library_name %>"
 
     # When your NIF is loaded, it will override this function.
     def add(_a, _b), do: throw :nif_not_loaded
