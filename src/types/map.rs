@@ -10,6 +10,16 @@ pub fn map_new<'a>(env: NifEnv<'a>) -> NifTerm<'a> {
 /// ## Map terms
 impl<'a> NifTerm<'a> {
 
+    /// Constructs a new, empty map term.
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// %{}
+    /// ```
+    pub fn map_new(env: NifEnv<'a>) -> NifTerm<'a> {
+        map_new(env)
+    }
+
     /// Gets the value corresponding to a key in a map term.
     ///
     /// Returns Err(NifError::BadArg) if the term is not a map or if

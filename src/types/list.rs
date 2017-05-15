@@ -131,6 +131,12 @@ impl<'a, T> NifEncoder for &'a [T] where T: NifEncoder {
 /// ## List terms
 impl<'a> NifTerm<'a> {
 
+    /// Returns a new empty list.
+    pub fn list_new_empty(env: NifEnv<'a>) -> NifTerm<'a> {
+        let list: &[u8] = &[];
+        list.encode(env)
+    }
+
     /// Returns an iterator over a list term.
     /// See documentation for NifListIterator for more information.
     ///
