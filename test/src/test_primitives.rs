@@ -1,4 +1,3 @@
-use rustler;
 use rustler::{NifEnv, NifTerm, NifEncoder, NifResult};
 
 pub fn add_u32<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {

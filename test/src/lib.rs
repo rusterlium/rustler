@@ -60,6 +60,7 @@ rustler_export_nifs!(
 
         ("tuple_echo", 1, test_codegen::tuple_echo),
         ("map_echo", 1, test_codegen::map_echo),
+        ("struct_echo", 1, test_codegen::struct_echo),
     ],
     Some(on_load)
 );
