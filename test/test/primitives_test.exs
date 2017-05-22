@@ -14,4 +14,16 @@ defmodule RustlerTest.PrimitivesTest do
     assert_raise ArgumentError, fn -> RustlerTest.add_i32(2147483648, 1) end
   end
 
+  test "option decoding and encoding" do
+    assert 33.0 == RustlerTest.option_inc(32.0)
+    assert nil == RustlerTest.option_inc(nil)
+    assert_raise ArgumentError, fn -> RustlerTest.option_inc("hello") end
+  end
+
+  test "result decoding and encoding" do
+    assert {:ok, 1} == RustlerTest.result_to_int({:ok, true})
+    assert {:ok, 0} == RustlerTest.result_to_int({:ok, false})
+    assert {:error, "watwat"} == RustlerTest.result_to_int({:error, "wat"})
+    assert_raise ArgumentError, fn -> RustlerTest.result_to_int({:great, true}) end
+  end
 end

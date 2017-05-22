@@ -25,6 +25,8 @@ rustler_export_nifs!(
         ("add_u32", 2, test_primitives::add_u32),
         ("add_i32", 2, test_primitives::add_i32),
         ("echo_u8", 1, test_primitives::echo_u8),
+        ("option_inc", 1, test_primitives::option_inc),
+        ("result_to_int", 1, test_primitives::result_to_int),
 
         ("sum_list", 1, test_list::sum_list),
         ("make_list", 0, test_list::make_list),

@@ -1,5 +1,6 @@
 use ::{
     NifEnv,
+    NifError,
     NifTerm,
     NifResult,
 };
@@ -49,11 +50,41 @@ impl<T> NifEncoder for Option<T> where T: NifEncoder {
     }
 }
 
+impl<'a, T> NifDecoder<'a> for Option<T> where T: NifDecoder<'a> {
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        if let Ok(term) = term.decode::<T>() {
+            Ok(Some(term))
+        } else {
+            let decoded_atom: atom::NifAtom = term.decode()?;
+            if decoded_atom == atom::nil() {
+                Ok(None)
+            } else {
+                Err(NifError::BadArg)
+            }
+        }
+    }
+}
+
 impl<T, E> NifEncoder for Result<T, E> where T: NifEncoder, E: NifEncoder {
     fn encode<'c>(&self, env: NifEnv<'c>) -> NifTerm<'c> {
         match *self {
             Ok(ref value) => (atom::ok().encode(env), value.encode(env)).encode(env),
             Err(ref err) => (atom::error().encode(env), err.encode(env)).encode(env),
+        }
+    }
+}
+
+impl<'a, T, E> NifDecoder<'a> for Result<T, E> where T: NifDecoder<'a>, E: NifDecoder<'a> {
+    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+        let (decoded_atom, inner_term): (atom::NifAtom, NifTerm) = term.decode()?;
+        if decoded_atom == atom::ok() {
+            let ok_value: T = inner_term.decode()?;
+            Ok(Ok(ok_value))
+        } else if decoded_atom == atom::error() {
+            let err_value: E = inner_term.decode()?;
+            Ok(Err(err_value))
+        } else {
+            Err(NifError::BadArg)
         }
     }
 }
