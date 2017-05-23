@@ -1,3 +1,5 @@
+#![recursion_limit = "128"]
+
 extern crate proc_macro;
 use proc_macro::TokenStream;
 
@@ -9,6 +11,15 @@ extern crate quote;
 mod util;
 mod tuple;
 mod map;
+mod ex_struct;
+
+#[proc_macro_derive(NifStruct, attributes(module))]
+pub fn nif_struct(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = syn::parse_macro_input(&s).unwrap();
+    let gen = ex_struct::transcoder_decorator(&ast);
+    gen.unwrap().parse().unwrap()
+}
 
 #[proc_macro_derive(NifMap)]
 pub fn nif_map(input: TokenStream) -> TokenStream {

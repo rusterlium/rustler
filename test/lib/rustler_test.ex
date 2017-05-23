@@ -49,4 +49,5 @@ defmodule RustlerTest do
 
   def tuple_echo(_), do: err()
   def map_echo(_), do: err()
+  def struct_echo(_), do: err()
 end

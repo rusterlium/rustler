@@ -22,3 +22,15 @@ pub fn map_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<
     let map: AddMap = try!(args[0].decode());
     Ok(map.encode(env))
 }
+
+#[derive(NifStruct)]
+#[module = "AddStruct"]
+struct AddStruct {
+    lhs: i32,
+    rhs: i32,
+}
+
+pub fn struct_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+    let add_struct: AddStruct = args[0].decode()?;
+    Ok(add_struct.encode(env))
+}
