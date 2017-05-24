@@ -62,10 +62,9 @@ defmodule Mix.Tasks.Compile.Rustler do
       {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
     end
 
-    {src_ext, dst_ext} = dll_extension()
-    compiled_lib = Path.join([target_dir, Atom.to_string(build_mode),
-                              "lib#{lib_name}.#{src_ext}"])
-    destination_lib = Path.join(priv_dir(), "lib#{lib_name}.#{dst_ext}")
+    {src_file, dst_file} = make_lib_name(lib_name)
+    compiled_lib = Path.join([target_dir, Atom.to_string(build_mode), src_file])
+    destination_lib = Path.join(priv_dir(), dst_file)
 
     File.cp!(compiled_lib, destination_lib)
   end
@@ -99,12 +98,12 @@ defmodule Mix.Tasks.Compile.Rustler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args ++ []
 
-  def dll_extension do
+  def make_lib_name(base_name) do
     case :os.type do
-      {:win32, _} -> {"dll", "dll"}
-      {:unix, :darwin} -> {"dylib", "so"}
-      {:unix, :linux} -> {"so", "so"}
-      #{:unix, _} -> {"so", "so"} # Assume .so? Is this a unix thing?
+      {:win32, _} -> {"#{base_name}.dll", "lib#{base_name}.dll"}
+      {:unix, :darwin} -> {"lib#{base_name}.dylib", "lib#{base_name}.so"}
+      {:unix, :linux} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
+      # {:unix, _} -> Assume .so? Is this a unix thing?
     end
   end
 
