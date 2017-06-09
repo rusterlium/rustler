@@ -47,7 +47,7 @@ rustler_export_nifs!(
     None
 );
 
-fn add<'a>(env: NifEnv<'a>, args: &Vec<NifTerm<'a>>) -> NifResult<NifTerm<'a>> {
+fn add<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let num1: i64 = try!(args[0].decode());
     let num2: i64 = try!(args[1].decode());
 
