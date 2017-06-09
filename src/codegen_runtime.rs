@@ -12,6 +12,9 @@ pub use ::wrapper::nif_interface::{
     NIF_ENV, NIF_TERM, NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
     MUTABLE_NIF_RESOURCE_HANDLE };
 
+#[cfg(windows)]
+pub use ::erlang_nif_sys::{ TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS };
+
 /// This is the last level of rust safe rust code before the BEAM.
 /// No panics should go above this point, as they will unwrap into the C code and ruin the day.
 ///
