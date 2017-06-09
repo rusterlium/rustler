@@ -23,8 +23,7 @@ macro_rules! rustler_export_nifs {
     ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
         static mut NIF_ENTRY: Option<$crate::codegen_runtime::DEF_NIF_ENTRY> = None;
 
-        #[no_mangle]
-        pub extern "C" fn nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
+        rustler_export_nifs!(internal_platform_init, ({
             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
 
             extern "C" fn nif_load(
@@ -38,7 +37,7 @@ macro_rules! rustler_export_nifs {
             }
 
             const FUN_ENTRIES: &'static [$crate::codegen_runtime::DEF_NIF_FUNC] = &[
-                $(rustler_export_nifs!(internal, $exported_nif)),*
+                $(rustler_export_nifs!(internal_item_init, $exported_nif)),*
             ];
 
             let entry = $crate::codegen_runtime::DEF_NIF_ENTRY {
@@ -57,13 +56,13 @@ macro_rules! rustler_export_nifs {
             unsafe { NIF_ENTRY = Some(entry) };
 
             unsafe { NIF_ENTRY.as_ref().unwrap() }
-        }
+        }));
     };
 
-    (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::NifScheduleFlags::Normal))
+    (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
+        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::NifScheduleFlags::Normal))
     };
-    (internal, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
+    (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
             name: concat!($nif_name, "\x00") as *const str as *const u8,
             arity: $nif_arity,
@@ -80,6 +79,24 @@ macro_rules! rustler_export_nifs {
                 nif_func
             },
             flags: $nif_flag as u32,
+        }
+    };
+    
+    (internal_platform_init, ($inner:expr)) => {
+        #[cfg(unix)]
+        #[no_mangle]
+        pub extern "C" fn nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
+            $inner
+        }
+        
+        #[cfg(windows)]
+        #[no_mangle]
+        pub extern "C" fn nif_init(callbacks: *mut $crate::codegen_runtime::TWinDynNifCallbacks) -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
+            unsafe {
+                $crate::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
+            }
+            
+            $inner
         }
     };
 }
