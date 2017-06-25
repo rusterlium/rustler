@@ -4,11 +4,13 @@ use unreachable::UncheckedOptionExt;  // unchecked unwrap used in generated Wind
 
 pub use std::os::raw::{c_int, c_void, c_uint, c_char, c_uchar, c_ulong, c_long, c_double};
 
+use std::os;
 
 #[allow(non_camel_case_types)]
 pub type size_t = usize;
 
 use std::option::Option;
+//use std::mem::size_of;
 
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
@@ -49,6 +51,7 @@ pub struct ErlNifFunc {
 #[doc(hidden)]
 #[derive(Debug)]
 #[repr(C)]
+#[allow(non_snake_case)]
 pub struct ErlNifEntry {
     pub major:        c_int,
     pub minor:        c_int,
@@ -60,7 +63,8 @@ pub struct ErlNifEntry {
     pub upgrade: Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut *mut c_void, old_priv_data: *mut *mut c_void, load_info: ERL_NIF_TERM) -> c_int>,
     pub unload:  Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
     pub vm_variant: *const u8,
-    pub options: c_uint,
+    pub options: c_uint, // added in 2.7
+    pub sizeof_ErlNifResourceTypeInit: usize,  // added in 2.12
 }
 
 pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
@@ -76,6 +80,13 @@ pub struct ErlNifBinary {
     ref_bin: *mut c_void,
 }
 
+#[cfg(windows)]
+pub type ErlNifEvent = os::windows::raw::HANDLE;
+
+#[cfg(unix)]
+pub type ErlNifEvent = os::unix::io::RawFd;
+
+
 /// See [ErlNifResourceType](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceType) in the Erlang docs.
 #[allow(missing_copy_implementations)]
 #[repr(C)]
@@ -83,7 +94,42 @@ pub struct ErlNifResourceType {dummy:c_int}
 
 /// See [ErlNifResourceDtor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceDtor) in the Erlang docs.
 #[allow(missing_copy_implementations)]
-pub type ErlNifResourceDtor = unsafe extern "C" fn(arg1: *mut ErlNifEnv, arg2: *mut c_void) -> ();
+pub type ErlNifResourceDtor = unsafe extern "C" fn(env: *mut ErlNifEnv, obj: *mut c_void) -> ();
+
+/// See [ErlNifResourceStop](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceStop) in the Erlang docs.
+#[allow(missing_copy_implementations)]
+pub type ErlNifResourceStop = unsafe extern "C" fn(env: *mut ErlNifEnv, obj: *mut c_void, event: ErlNifEvent, is_direct_call: c_int ) -> ();
+
+/// See [ErlNifResourceDown](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceDown) in the Erlang docs.
+#[allow(missing_copy_implementations)]
+pub type ErlNifResourceDown = unsafe extern "C" fn(env: *mut ErlNifEnv, obj: *mut c_void, pid: *const ErlNifPid, mon: *const ErlNifMonitor) -> ();
+
+
+/// See [ErlNifResourceTypeInit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceTypeInit) in the Erlang docs.
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+pub struct ErlNifResourceTypeInit {
+    dtor: *const ErlNifResourceDtor,
+    stop: *const ErlNifResourceStop,  // at ERL_NIF_SELECT_STOP event
+    down: *const ErlNifResourceDown,  // enif_monitor_process
+}
+
+/// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
+pub type ErlNifSelectFlags = c_int;
+pub const ERL_NIF_SELECT_READ: ErlNifSelectFlags = (1 << 0);
+pub const ERL_NIF_SELECT_WRITE: ErlNifSelectFlags = (1 << 1);
+pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = (1 << 2);
+
+
+/// See [ErlNifMonitor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMonitor) in the Erlang docs.
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+pub struct ErlNifMonitor {
+    // from https://github.com/erlang/otp/blob/83e20c62057ebc1d8064bf57b01be560cd244e1d/erts/emulator/beam/erl_drv_nif.h#L64
+    // data: [c_uchar; size_of::<*const c_void>()*4],  size_of is non-const
+    data: [usize; 4],
+}
+
 
 /// See [ErlNifResourceFlags](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceFlags) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
@@ -208,6 +254,15 @@ pub const ERL_NIF_THR_UNDEFINED: c_int =  0;
 pub const ERL_NIF_THR_NORMAL_SCHEDULER: c_int =  1;
 pub const ERL_NIF_THR_DIRTY_CPU_SCHEDULER: c_int =  2;
 pub const ERL_NIF_THR_DIRTY_IO_SCHEDULER: c_int =  3;
+
+/// See [ErlNifHash](http://www.erlang.org/doc/man/erl_nif.html#ErlNifHash) in the Erlang docs.
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub enum ErlNifHash {
+    // from https://github.com/erlang/otp/blob/83e20c62057ebc1d8064bf57b01be560cd244e1d/erts/emulator/beam/erl_nif.h#L242
+    ERL_NIF_INTERNAL_HASH = 1,
+    ERL_NIF_PHASH2 = 2,
+}
 
 
 

@@ -26,6 +26,8 @@ version_opts("2.9")  -> [{major,2}, {minor,9},  exception, getenv];        % erl
 version_opts("2.10") -> [{major,2}, {minor,10}, exception, getenv, time];  % erlang 18.3
 version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,   % erlang 19.0
                         dirty_scheduler_opt, nif_2_11];
+version_opts("2.12") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.0
+                        dirty_scheduler_opt, nif_2_11, nif_2_12];
 version_opts(_) ->
     io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
     halt(1).
@@ -272,8 +274,21 @@ api_list(Opts) -> [
             {"c_int", "enif_snprintf", "out: *mut c_char, size: usize, format: *const c_char, ..."}
         ];
         false -> []
-    end.
+    end ++
 
+    case proplists:get_bool(nif_2_12, Opts) of
+        true -> [
+            {"c_int",                     "enif_select",               "env: *mut ErlNifEnv, e: ErlNifEvent, flags: ErlNifSelectFlags, obj: *const c_void, pid: *const ErlNifPid, eref: ERL_NIF_TERM"},
+            {"*const ErlNifResourceType", "enif_open_resource_type_x", "env: *mut ErlNifEnv, name_str: *const c_uchar, init: *const ErlNifResourceTypeInit, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
+            {"c_int",                     "enif_monitor_process",      "env: *mut ErlNifEnv, obj: *const c_void, pid: *const ErlNifPid, monitor: *mut ErlNifMonitor"},
+            {"c_int",                     "enif_demonitor_process",    "env: *mut ErlNifEnv, obj: *const c_void,  monitor: *const ErlNifMonitor"},
+            {"c_int",                     "enif_compare_monitors",     "monitor1: *const ErlNifMonitor, monitor2: *const ErlNifMonitor"},
+            {"u64",                       "enif_hash",                 "hashtype: ErlNifHash, term: ERL_NIF_TERM, salt: u64"},
+            {"c_int",                     "enif_whereis_pid",          "env: *mut ErlNifEnv, name: ERL_NIF_TERM, pid: *mut ErlNifPid"},
+            {"c_int",                     "enif_whereis_port",         "env: *mut ErlNifEnv, name: ERL_NIF_TERM, port: *mut ErlNifPort"}
+        ];
+        false -> []
+    end.
 
 
 main([UlongSizeT]) -> main([UlongSizeT,"."]);

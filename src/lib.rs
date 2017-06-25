@@ -127,6 +127,10 @@ fn native_add(env: *mut ErlNifEnv,
 
 */
 
+
+// Don't throw warnings on NIF naming conventions
+#![allow(non_camel_case_types)]
+
 #[cfg(windows)]
 extern crate unreachable;
 

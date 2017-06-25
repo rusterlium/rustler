@@ -121,6 +121,7 @@ macro_rules! get_entry {
                 unload: None,
                 vm_variant : b"beam.vanilla\0" as *const u8,
                 options: ens::ERL_NIF_ENTRY_OPTIONS,
+                sizeof_ErlNifResourceTypeInit: 0,
             };
 
             // get a safe mutable reference once to avoid repeated unsafe
@@ -130,6 +131,7 @@ macro_rules! get_entry {
             entry.num_of_funcs = FUNCS.len() as ens::c_int;
             entry.funcs = FUNCS.as_ptr();
             set_optionals!(entry, $($inits)*);
+            entry.sizeof_ErlNifResourceTypeInit = std::mem::size_of::<ens::ErlNifResourceTypeInit>();
             entry // return static entry reference
         } // end closure
     );
@@ -151,6 +153,7 @@ macro_rules! get_entry {
                 unload :  $unload,
                 vm_variant : b"beam.vanilla\0" as *const u8,
                 options: ens::ERL_NIF_ENTRY_OPTIONS,
+                sizeof_ErlNifResourceTypeInit: 0,
             };
             // get a safe mutable reference once to avoid repeated unsafe
             let mut entry = unsafe { &mut ENTRY };
@@ -158,6 +161,7 @@ macro_rules! get_entry {
             // perform dynamic insertions
             entry.num_of_funcs = FUNCS.len() as ens::c_int;
             entry.funcs = FUNCS.as_ptr();
+            entry.sizeof_ErlNifResourceTypeInit = std::mem::size_of::<ens::ErlNifResourceTypeInit>();
             entry // return static entry reference
         } // end closure
     );

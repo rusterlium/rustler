@@ -113,7 +113,7 @@ install:
   #################################
 
   - echo Downloading Erlang...
-  - ps: (new-object System.Net.WebClient).Downloadfile('http://www.erlang.org/download/otp_win64_19.2.exe', 'C:\Users\appveyor\erlang.exe')
+  - ps: (new-object System.Net.WebClient).Downloadfile('http://www.erlang.org/download/otp_win64_20.0.exe', 'C:\Users\appveyor\erlang.exe')
   - echo Installing Erlang...
   - start /B /WAIT C:\Users\appveyor\erlang.exe /S /D=C:\Users\appveyor\erlang
   - set ERLANG_HOME=C:\Users\appveyor\erlang
