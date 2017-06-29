@@ -46,7 +46,10 @@ pub use types::{ NifEncoder, NifDecoder };
 pub use wrapper::nif_interface::ErlNifTaskFlags;
 pub mod resource;
 
+#[doc(hidden)]
 pub mod dynamic;
+pub use dynamic::TermType;
+
 pub mod schedule;
 pub mod env;
 pub mod thread;

@@ -10,7 +10,7 @@ use ::NifResult;
 pub use ::wrapper::nif_interface::{
     c_int, c_void, DEF_NIF_ENTRY, DEF_NIF_FUNC,
     NIF_ENV, NIF_TERM, NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
-    MUTABLE_NIF_RESOURCE_HANDLE };
+    MUTABLE_NIF_RESOURCE_HANDLE, get_nif_resource_type_init_size };
 
 /// This is the last level of rust safe rust code before the BEAM.
 /// No panics should go above this point, as they will unwrap into the C code and ruin the day.

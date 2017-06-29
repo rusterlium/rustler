@@ -53,6 +53,7 @@ macro_rules! rustler_export_nifs {
                 unload: None,
                 vm_variant: b"beam.vanilla\x00".as_ptr(),
                 options: 0,
+                sizeof_ErlNifResourceTypeInit: $crate::codegen_runtime::get_nif_resource_type_init_size(),
             };
             unsafe { NIF_ENTRY = Some(entry) };
 
@@ -79,7 +80,7 @@ macro_rules! rustler_export_nifs {
                 }
                 nif_func
             },
-            flags: $nif_flag as u32,
+            flags: ($nif_flag as $crate::schedule::NifScheduleFlags) as u32,
         }
     };
 }
