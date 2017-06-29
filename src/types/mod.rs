@@ -7,13 +7,28 @@ use ::{
 
 #[macro_use]
 pub mod atom;
+
+#[doc(hidden)]
 pub mod binary;
+pub use types::binary::{ NifBinary, OwnedNifBinary };
+
+#[doc(hidden)]
 pub mod list;
+pub use types::list::NifListIterator;
+
+#[doc(hidden)]
 pub mod map;
+pub use types::map::NifMapIterator;
+
+#[doc(hidden)]
 pub mod primitive;
+#[doc(hidden)]
 pub mod string;
 pub mod tuple;
+
+#[doc(hidden)]
 pub mod pid;
+pub use types::pid::NifPid;
 
 pub mod elixir_struct;
 

@@ -4,7 +4,7 @@ defmodule RustlerTest.ResourceTest do
 
   test "resource creation and interaction" do
     resource = RustlerTest.resource_make()
-    assert resource == "" # A resource looks like an empty binary :(
+    assert resource == "" || is_reference(resource) # A resource looks like an empty binary < OTP20
     assert RustlerTest.resource_get_integer_field(resource) == 0
     RustlerTest.resource_set_integer_field(resource, 10)
     assert RustlerTest.resource_get_integer_field(resource) == 10

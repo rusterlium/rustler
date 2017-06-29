@@ -2,6 +2,15 @@ use ::{ NifEnv, NifTerm, NifError, NifResult, NifEncoder, NifDecoder };
 use ::wrapper::tuple;
 use ::wrapper::nif_interface::NIF_TERM;
 
+/// ## Tuple terms
+//impl<'a> NifTerm<'a> {
+//
+//    pub fn tuple_to_vec(self) -> NifResult<NifTerm<'a>> {
+//        
+//    }
+//
+//}
+
 /// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
 /// instead.)
 ///

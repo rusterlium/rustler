@@ -7,5 +7,17 @@ authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-erlang_nif-sys = ">=0.6.1"
+erlang_nif-sys = ">=0.6.2"
 lazy_static = "0.1.*"
+
+[package.metadata.release]
+
+[[package.metadata.release.pre-release-replacements]]
+file = "rustler_mix/lib/rustler.ex"
+search = "def rustler_version, do: \"[^\"]+\""
+replace = "def rustler_version, do: \"{{version}}\""
+
+[[package.metadata.release.pre-release-replacements]]
+file = "rustler_codegen/Cargo.toml"
+search = "# rustler_codegen version\nversion = \"[^\"]+\""
+replace = "# rustler_codegen version\nversion = \"{{version}}\""
