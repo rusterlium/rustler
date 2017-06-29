@@ -21,6 +21,10 @@ pub type NIF_BINARY = *mut erlang_nif_sys::ErlNifBinary;
 pub type NIF_RESOURCE_TYPE = *const erlang_nif_sys::ErlNifResourceType;
 pub type NIF_PID = *const erlang_nif_sys::ErlNifPid;
 
+pub fn get_nif_resource_type_init_size() -> usize {
+    std::mem::size_of::<erlang_nif_sys::ErlNifResourceTypeInit>()
+}
+
 pub type NIF_RESOURCE_HANDLE = *const c_void;
 pub type MUTABLE_NIF_RESOURCE_HANDLE = *mut c_void;
 
