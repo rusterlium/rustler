@@ -4,7 +4,7 @@ defmodule Rustler.TomlParser do
   # just used to extract version numbers from Cargo.toml files.
 
   def parse(text) do
-    {:ok, tokens, _test_chars} = text |> to_char_list |> :toml_lexer.string
+    {:ok, tokens, _test_chars} = text |> to_charlist |> :toml_lexer.string
     {:ok, parsed} = :toml_parser.parse(tokens)
 
     collect(parsed, [])
