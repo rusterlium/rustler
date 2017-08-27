@@ -3,22 +3,20 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   alias Rustler.Compiler.{Messages, Rustup}
 
+  @recursive true
+
   def run(_args) do
     config = Mix.Project.config()
-    case Mix.Project.umbrella?(config) do
-      true -> nil
-      false ->
-        crates = Keyword.get(config, :rustler_crates) || raise_missing_crates()
+    crates = Keyword.get(config, :rustler_crates) || raise_missing_crates()
 
-        File.mkdir_p!(priv_dir())
+    File.mkdir_p!(priv_dir())
 
-        Enum.map(crates, &compile_crate/1)
+    Enum.map(crates, &compile_crate/1)
 
-        # Workaround for a mix problem. We should REALLY get this fixed properly.
-        _ = symlink_or_copy(config,
-          Path.expand("priv"),
-          Path.join(Mix.Project.app_path(config), "priv"))
-    end
+    # Workaround for a mix problem. We should REALLY get this fixed properly.
+    _ = symlink_or_copy(config,
+      Path.expand("priv"),
+      Path.join(Mix.Project.app_path(config), "priv"))
   end
 
 
