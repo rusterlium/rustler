@@ -7,6 +7,7 @@ extern crate rustler_codegen;
 extern crate lazy_static;
 
 use rustler::{NifEnv, NifTerm};
+use rustler::schedule::NifScheduleFlags;
 
 mod test_primitives;
 mod test_list;
@@ -18,6 +19,7 @@ mod test_thread;
 mod test_env;
 mod test_codegen;
 mod test_term;
+mod test_dirty;
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -63,6 +65,9 @@ rustler_export_nifs!(
         ("tuple_echo", 1, test_codegen::tuple_echo),
         ("map_echo", 1, test_codegen::map_echo),
         ("struct_echo", 1, test_codegen::struct_echo),
+
+        ("dirty_cpu", 0, test_dirty::dirty_cpu, NifScheduleFlags::DirtyCpu),
+        ("dirty_io", 0, test_dirty::dirty_io, NifScheduleFlags::DirtyIo),
     ],
     Some(on_load)
 );
