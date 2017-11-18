@@ -34,3 +34,15 @@ pub fn struct_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTe
     let add_struct: AddStruct = args[0].decode()?;
     Ok(add_struct.encode(env))
 }
+
+#[derive(NifUnitEnum)]
+enum UnitEnum {
+    Foo,
+    Bar,
+    Baz,
+}
+
+pub fn unit_enum_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+    let unit_enum: UnitEnum = args[0].decode()?;
+    Ok(unit_enum.encode(env))
+}

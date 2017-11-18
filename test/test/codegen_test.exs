@@ -20,4 +20,11 @@ defmodule RustlerTest.CodegenTest do
     assert value == RustlerTest.struct_echo(value)
     assert :invalid_struct == RustlerTest.struct_echo(DateTime.utc_now())
   end
+
+  test "unit enum transcoder" do
+    assert :foo == RustlerTest.unit_enum_echo(:foo)
+    assert :bar == RustlerTest.unit_enum_echo(:bar)
+    assert :baz == RustlerTest.unit_enum_echo(:baz)
+    assert :invalid_variant == RustlerTest.unit_enum_echo(:somethingelse)
+  end
 end

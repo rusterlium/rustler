@@ -12,6 +12,7 @@ mod util;
 mod tuple;
 mod map;
 mod ex_struct;
+mod unit_enum;
 
 #[proc_macro_derive(NifStruct, attributes(module))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
@@ -34,5 +35,13 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = syn::parse_macro_input(&s).unwrap();
     let gen = tuple::transcoder_decorator(&ast);
+    gen.unwrap().parse().unwrap()
+}
+
+#[proc_macro_derive(NifUnitEnum)]
+pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = syn::parse_macro_input(&s).unwrap();
+    let gen = unit_enum::transcoder_decorator(&ast);
     gen.unwrap().parse().unwrap()
 }
