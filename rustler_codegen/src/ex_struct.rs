@@ -58,19 +58,21 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
         let ident_str = ident.to_string();
         let atom_fun = Ident::new(format!("atom_{}", ident_str));
         quote! {
-            #ident: rustler::NifDecoder::decode(term.map_get(#atom_fun().encode(env))?)?
+            #ident: ::rustler::NifDecoder::decode(term.map_get(#atom_fun().encode(env))?)?
         }
     }).collect();
 
     quote! {
-        impl<'a> rustler::NifDecoder<'a> for #struct_type {
-            fn decode(term: rustler::NifTerm<'a>) -> Result<Self, rustler::NifError> {
+        impl<'a> ::rustler::NifDecoder<'a> for #struct_type {
+            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+                use ::rustler::NifEncoder;
+
                 #atom_defs
 
                 let env = term.get_env();
-                let module: rustler::types::atom::NifAtom = term.map_get(atom_struct().to_term(env))?.decode()?;
+                let module: ::rustler::types::atom::NifAtom = term.map_get(atom_struct().to_term(env))?.decode()?;
                 if module != atom_module() {
-                    return Err(rustler::NifError::Atom("invalid_struct"));
+                    return Err(::rustler::NifError::Atom("invalid_struct"));
                 }
 
                 Ok(#struct_name { #(#field_defs),* })
@@ -96,11 +98,11 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
     }).collect();
 
     quote! {
-        impl<'b> rustler::NifEncoder for #struct_type {
-            fn encode<'a>(&self, env: rustler::NifEnv<'a>) -> rustler::NifTerm<'a> {
+        impl<'b> ::rustler::NifEncoder for #struct_type {
+            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
                 #atom_defs
 
-                let mut map = rustler::types::map::map_new(env);
+                let mut map = ::rustler::types::map::map_new(env);
                 map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).ok().unwrap();
                 #(#field_defs)*
                 map
