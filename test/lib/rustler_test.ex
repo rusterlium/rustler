@@ -51,6 +51,7 @@ defmodule RustlerTest do
   def map_echo(_), do: err()
   def struct_echo(_), do: err()
   def unit_enum_echo(_), do: err()
+  def untagged_enum_echo(_), do: err()
 
   def dirty_io(), do: err()
   def dirty_cpu(), do: err()

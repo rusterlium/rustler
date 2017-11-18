@@ -12,11 +12,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &st
     if num_lifetimes > 1 { panic!("Enum can only have one lifetime argument"); }
     let has_lifetime = num_lifetimes == 1;
 
-    let atoms: Vec<Tokens> = variants.iter().map(|variant| {
+    for variant in variants {
         if VariantData::Unit != variant.data {
             panic!("NifUnitEnum can only be used with enums that contain all unit variants.");
         }
+    }
 
+    let atoms: Vec<Tokens> = variants.iter().map(|variant| {
         let atom_str = variant.ident.to_string().to_ascii_lowercase();
         let atom_fn  = Ident::new(format!("atom_{}", atom_str));
         quote! {

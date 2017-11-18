@@ -46,3 +46,15 @@ pub fn unit_enum_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<Ni
     let unit_enum: UnitEnum = args[0].decode()?;
     Ok(unit_enum.encode(env))
 }
+
+#[derive(NifUntaggedEnum)]
+enum UntaggedEnum {
+    Foo(u32),
+    Bar(String),
+    Baz(AddStruct),
+}
+
+pub fn untagged_enum_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+    let untagged_enum: UntaggedEnum = args[0].decode()?;
+    Ok(untagged_enum.encode(env))
+}
