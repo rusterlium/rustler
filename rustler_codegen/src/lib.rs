@@ -3,6 +3,7 @@
 extern crate proc_macro;
 use proc_macro::TokenStream;
 
+extern crate heck;
 extern crate syn;
 
 #[macro_use]

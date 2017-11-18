@@ -1,4 +1,3 @@
-use rustler;
 use rustler::{NifEnv, NifTerm, NifEncoder, NifResult};
 
 #[derive(NifTuple)]
@@ -8,7 +7,7 @@ struct AddTuple {
 }
 
 pub fn tuple_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
-    let tuple: AddTuple = try!(args[0].decode());
+    let tuple: AddTuple = args[0].decode()?;
     Ok(tuple.encode(env))
 }
 
@@ -37,8 +36,7 @@ pub fn struct_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTe
 
 #[derive(NifUnitEnum)]
 enum UnitEnum {
-    Foo,
-    Bar,
+    FooBar,
     Baz,
 }
 

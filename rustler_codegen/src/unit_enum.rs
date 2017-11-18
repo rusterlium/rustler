@@ -1,6 +1,6 @@
-use std::ascii::AsciiExt;
-use ::syn::{self, Body, Ident, Variant, VariantData};
-use ::quote::{self, Tokens};
+use heck::SnakeCase;
+use syn::{self, Body, Ident, Variant, VariantData};
+use quote::{self, Tokens};
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &str> {
     let variants = match ast.body {
@@ -19,7 +19,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &st
     }
 
     let atoms: Vec<Tokens> = variants.iter().map(|variant| {
-        let atom_str = variant.ident.to_string().to_ascii_lowercase();
+        let atom_str = variant.ident.to_string().to_snake_case();
         let atom_fn  = Ident::new(format!("atom_{}", atom_str));
         quote! {
             atom #atom_fn = #atom_str;
@@ -50,7 +50,7 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     let variant_defs: Vec<Tokens> = variants.iter().map(|variant| {
         let variant_ident = variant.ident.clone();
-        let atom_str      = variant_ident.to_string().to_ascii_lowercase();
+        let atom_str      = variant_ident.to_string().to_snake_case();
         let atom_fn       = Ident::new(format!("atom_{}", atom_str));
 
         quote! {
@@ -84,7 +84,7 @@ pub fn gen_encoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     let variant_defs: Vec<Tokens> = variants.iter().map(|variant| {
         let variant_ident = variant.ident.clone();
-        let atom_str      = variant_ident.to_string().to_ascii_lowercase();
+        let atom_str      = variant_ident.to_string().to_snake_case();
         let atom_fn       = Ident::new(format!("atom_{}", atom_str));
 
         quote! {

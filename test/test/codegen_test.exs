@@ -22,8 +22,7 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "unit enum transcoder" do
-    assert :foo == RustlerTest.unit_enum_echo(:foo)
-    assert :bar == RustlerTest.unit_enum_echo(:bar)
+    assert :foo_bar == RustlerTest.unit_enum_echo(:foo_bar)
     assert :baz == RustlerTest.unit_enum_echo(:baz)
     assert :invalid_variant == RustlerTest.unit_enum_echo(:somethingelse)
   end
