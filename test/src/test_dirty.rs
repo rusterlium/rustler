@@ -1,7 +1,7 @@
 use rustler::NifEncoder;
 use rustler::{NifEnv, NifTerm, NifResult};
 
-use std::{ thread, time };
+use std::time;
 
 mod atoms {
     rustler_atoms! {
@@ -11,14 +11,14 @@ mod atoms {
 
 // TODO: Make these realistic
 
-pub fn dirty_cpu<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn dirty_cpu<'a>(env: NifEnv<'a>, _: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let duration = time::Duration::from_millis(100);
     ::std::thread::sleep(duration);
 
     Ok(atoms::ok().encode(env))
 }
 
-pub fn dirty_io<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn dirty_io<'a>(env: NifEnv<'a>, _: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
     let duration = time::Duration::from_millis(100);
     ::std::thread::sleep(duration);
 

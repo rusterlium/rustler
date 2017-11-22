@@ -65,6 +65,8 @@ rustler_export_nifs!(
         ("tuple_echo", 1, test_codegen::tuple_echo),
         ("map_echo", 1, test_codegen::map_echo),
         ("struct_echo", 1, test_codegen::struct_echo),
+        ("unit_enum_echo", 1, test_codegen::unit_enum_echo),
+        ("untagged_enum_echo", 1, test_codegen::untagged_enum_echo),
 
         ("dirty_cpu", 0, test_dirty::dirty_cpu, NifScheduleFlags::DirtyCpu),
         ("dirty_io", 0, test_dirty::dirty_io, NifScheduleFlags::DirtyIo),
