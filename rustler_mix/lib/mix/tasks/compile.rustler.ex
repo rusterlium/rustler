@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     compile_return = System.cmd(cmd_bin, args, [
       cd: crate_full_path,
       stderr_to_stdout: true,
-      env: [{"CARGO_TARGET_DIR", target_dir}],
+      env: [{"CARGO_TARGET_DIR", target_dir} | Keyword.get(config, :env, [])],
       into: IO.stream(:stdio, :line),
     ])
 
