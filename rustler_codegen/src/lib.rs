@@ -11,6 +11,7 @@ extern crate quote;
 
 mod util;
 mod tuple;
+mod record;
 mod map;
 mod ex_struct;
 mod unit_enum;
@@ -37,6 +38,14 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
     let s = input.to_string();
     let ast = syn::parse_macro_input(&s).unwrap();
     let gen = tuple::transcoder_decorator(&ast);
+    gen.unwrap().parse().unwrap()
+}
+
+#[proc_macro_derive(NifRecord, attributes(tag))]
+pub fn nif_record(input: TokenStream) -> TokenStream {
+    let s = input.to_string();
+    let ast = syn::parse_macro_input(&s).unwrap();
+    let gen = record::transcoder_decorator(&ast);
     gen.unwrap().parse().unwrap()
 }
 

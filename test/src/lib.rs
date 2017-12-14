@@ -63,6 +63,7 @@ rustler_export_nifs!(
         ("sublists", 1, test_env::sublists),
 
         ("tuple_echo", 1, test_codegen::tuple_echo),
+        ("record_echo", 1, test_codegen::record_echo),
         ("map_echo", 1, test_codegen::map_echo),
         ("struct_echo", 1, test_codegen::struct_echo),
         ("unit_enum_echo", 1, test_codegen::unit_enum_echo),
