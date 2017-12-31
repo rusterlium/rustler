@@ -125,7 +125,7 @@ macro_rules! get_entry {
             };
 
             // get a safe mutable reference once to avoid repeated unsafe
-            let mut entry = unsafe { &mut ENTRY };
+            let entry = unsafe { &mut ENTRY };
 
             // perform dynamic insertions
             entry.num_of_funcs = FUNCS.len() as ens::c_int;
@@ -156,7 +156,7 @@ macro_rules! get_entry {
                 sizeof_ErlNifResourceTypeInit: 0,
             };
             // get a safe mutable reference once to avoid repeated unsafe
-            let mut entry = unsafe { &mut ENTRY };
+            let entry = unsafe { &mut ENTRY };
 
             // perform dynamic insertions
             entry.num_of_funcs = FUNCS.len() as ens::c_int;
