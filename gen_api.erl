@@ -28,6 +28,8 @@ version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,   % erl
                         dirty_scheduler_opt, nif_2_11];
 version_opts("2.12") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12];
+version_opts("2.13") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.1
+                        dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13];
 version_opts(_) ->
     io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
     halt(1).
@@ -288,7 +290,35 @@ api_list(Opts) -> [
             {"c_int",                     "enif_whereis_port",         "env: *mut ErlNifEnv, name: ERL_NIF_TERM, port: *mut ErlNifPort"}
         ];
         false -> []
+    end ++
+
+    case proplists:get_bool(nif_2_13, Opts) of
+        true -> [
+            %% Skip iovec API for now (perhaps forever).
+            %% Consider safer Rust iovec crates like https://crates.io/crates/iovec instead of this API.
+            %% If anybody really does need this API in Rust, please file a bug.
+            %% {"ErlNifIOQueue *",  "enif_ioq_create",     "ErlNifIOQueueOpts opts"},
+            %% {"void",             "enif_ioq_destroy",    "ErlNifIOQueue *q"},
+            %% {"int",              "enif_ioq_enq_binary", "ErlNifIOQueue *q, ErlNifBinary *bin, size_t skip"},
+            %% {"int",              "enif_ioq_enqv",       "ErlNifIOQueue *q, ErlNifIOVec *iov, size_t skip"},
+            %% {"size_t",           "enif_ioq_size",       "ErlNifIOQueue *q"},
+            %% {"int",              "enif_ioq_deq",        "ErlNifIOQueue *q, size_t count, size_t *size"},
+            %% {"SysIOVec*",        "enif_ioq_peek",       "ErlNifIOQueue *q, int *iovlen"},
+            %% {"int",              "enif_inspect_iovec",  "ErlNifEnv *env, size_t max_length, ERL_NIF_TERM iovec_term, ERL_NIF_TERM *tail, ErlNifIOVec **iovec"},
+            %% {"void",             "enif_free_iovec",     "ErlNifIOVec *iov"}
+            {"", "dummy_enif_ioq_create",     ""},
+            {"", "dummy_enif_ioq_destroy",    ""},
+            {"", "dummy_enif_ioq_enq_binary", ""},
+            {"", "dummy_enif_ioq_enqv",       ""},
+            {"", "dummy_enif_ioq_size",       ""},
+            {"", "dummy_enif_ioq_deq",        ""},
+            {"", "dummy_enif_ioq_peek",       ""},
+            {"", "dummy_enif_inspect_iovec",  ""},
+            {"", "dummy_enif_free_iovec",     ""}
+        ];
+        false -> []
     end.
+
 
 
 main([UlongSizeT]) -> main([UlongSizeT,"."]);
