@@ -11,6 +11,18 @@ pub fn tuple_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTer
     Ok(tuple.encode(env))
 }
 
+#[derive(NifRecord)]
+#[tag = "record"]
+struct AddRecord {
+    lhs: i32,
+    rhs: i32,
+}
+
+pub fn record_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+    let record: AddRecord = args[0].decode()?;
+    Ok(record.encode(env))
+}
+
 #[derive(NifMap)]
 struct AddMap {
     lhs: i32,

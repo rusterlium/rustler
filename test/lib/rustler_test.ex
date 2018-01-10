@@ -48,6 +48,7 @@ defmodule RustlerTest do
   def sublists(_), do: err()
 
   def tuple_echo(_), do: err()
+  def record_echo(_), do: err()
   def map_echo(_), do: err()
   def struct_echo(_), do: err()
   def unit_enum_echo(_), do: err()
