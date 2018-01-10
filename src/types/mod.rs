@@ -14,7 +14,7 @@ pub use types::binary::{ Binary, OwnedBinary };
 
 #[doc(hidden)]
 pub mod list;
-pub use types::list::NifListIterator;
+pub use types::list::ListIterator;
 
 #[doc(hidden)]
 pub mod map;

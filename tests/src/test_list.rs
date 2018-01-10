@@ -1,8 +1,8 @@
 use rustler::{Env, Term, Error, Encoder, NifResult};
-use rustler::types::list::NifListIterator;
+use rustler::types::list::ListIterator;
 
 pub fn sum_list<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let iter: NifListIterator = try!(args[0].decode());
+    let iter: ListIterator = try!(args[0].decode());
 
     let res: Result<Vec<i64>, Error> = iter
         .map(|x| x.decode::<i64>())

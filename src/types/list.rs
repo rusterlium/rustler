@@ -1,6 +1,6 @@
 //! Utilities used for working with erlang linked lists.
 //!
-//! Right now the only supported way to read lists are through the NifListIterator.
+//! Right now the only supported way to read lists are through the ListIterator.
 
 use ::{ Term, Error, NifResult, Decoder, Encoder, Env };
 use ::wrapper::list;
@@ -25,9 +25,9 @@ use ::wrapper::list;
 ///
 /// ```
 /// # use rustler::{Term, NifResult};
-/// # use rustler::types::list::NifListIterator;
+/// # use rustler::types::list::ListIterator;
 /// # fn list_iterator_example(list_term: Term) -> NifResult<Vec<i64>> {
-/// let list_iterator: NifListIterator = try!(list_term.decode());
+/// let list_iterator: ListIterator = try!(list_term.decode());
 ///
 /// let result: NifResult<Vec<i64>> = list_iterator
 ///     // Produces an iterator of NifResult<i64>
@@ -38,15 +38,15 @@ use ::wrapper::list;
 /// # result
 /// # }
 /// ```
-pub struct NifListIterator<'a> {
+pub struct ListIterator<'a> {
     term: Term<'a>,
 }
 
-impl<'a> NifListIterator<'a> {
+impl<'a> ListIterator<'a> {
 
     fn new(term: Term<'a>) -> Option<Self> {
         if term.is_list() || term.is_empty_list() {
-            let iter = NifListIterator {
+            let iter = ListIterator {
                 term: term,
             };
             Some(iter)
@@ -57,7 +57,7 @@ impl<'a> NifListIterator<'a> {
 
 }
 
-impl<'a> Iterator for NifListIterator<'a> {
+impl<'a> Iterator for ListIterator<'a> {
     type Item = Term<'a>;
 
     fn next(&mut self) -> Option<Term<'a>> {
@@ -81,9 +81,9 @@ impl<'a> Iterator for NifListIterator<'a> {
     }
 }
 
-impl<'a> Decoder<'a> for NifListIterator<'a> {
+impl<'a> Decoder<'a> for ListIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        match NifListIterator::new(term) {
+        match ListIterator::new(term) {
             Some(iter) => Ok(iter),
             None => Err(Error::BadArg)
         }
@@ -105,7 +105,7 @@ impl<'a, T> Encoder for Vec<T> where T: Encoder {
 
 impl<'a, T> Decoder<'a> for Vec<T> where T: Decoder<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let iter: NifListIterator = try!(term.decode());
+        let iter: ListIterator = try!(term.decode());
         let res: NifResult<Self> = iter
             .map(|x| x.decode::<T>())
             .collect();
@@ -138,11 +138,11 @@ impl<'a> Term<'a> {
     }
 
     /// Returns an iterator over a list term.
-    /// See documentation for NifListIterator for more information.
+    /// See documentation for ListIterator for more information.
     ///
     /// Returns None if the term is not a list.
-    pub fn into_list_iterator(self) -> NifResult<NifListIterator<'a>> {
-        NifListIterator::new(self).ok_or(Error::BadArg)
+    pub fn into_list_iterator(self) -> NifResult<ListIterator<'a>> {
+        ListIterator::new(self).ok_or(Error::BadArg)
     }
 
     /// Returns the length of a list term.

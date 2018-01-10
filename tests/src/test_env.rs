@@ -1,7 +1,7 @@
 use rustler::{Env, Term, NifResult, Encoder};
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
-use rustler::types::list::NifListIterator;
+use rustler::types::list::ListIterator;
 use rustler::types::pid::Pid;
 use std::thread;
 
@@ -43,7 +43,7 @@ pub fn sublists<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         my_env.send_and_clear(&pid, |env| {
             let result: NifResult<Term> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
-                let iter: NifListIterator = try!(reversed_list.decode());
+                let iter: ListIterator = try!(reversed_list.decode());
 
                 let empty_list = Vec::<Term>::new().encode(env);
                 let mut all_sublists = vec![empty_list];
