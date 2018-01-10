@@ -1,6 +1,6 @@
 use ::{ Env, Term };
 use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
-use ::types::pid::NifPid;
+use ::types::pid::Pid;
 use std::ptr;
 use std::sync::{Arc, Weak};
 
@@ -21,7 +21,7 @@ impl<'a> Env<'a> {
     /// Panics if the above rules are broken (by trying to send a message from
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
-    pub fn send(self, pid: &NifPid, message: Term<'a>) {
+    pub fn send(self, pid: &Pid, message: Term<'a>) {
         let thread_type = nif_interface::enif_thread_type();
         let env =
             if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
@@ -71,10 +71,10 @@ impl<'a> Env<'a> {
 /// Erlang process.
 ///
 ///     use rustler::env::OwnedEnv;
-///     use rustler::types::pid::NifPid;
+///     use rustler::types::pid::Pid;
 ///     use rustler::Encoder;
 ///
-///     fn send_string_to_pid(data: &str, pid: &NifPid) {
+///     fn send_string_to_pid(data: &str, pid: &Pid) {
 ///         let mut msg_env = OwnedEnv::new();
 ///         msg_env.send_and_clear(pid, |env| data.encode(env));
 ///     }
@@ -115,7 +115,7 @@ impl OwnedEnv {
     /// can only use this method on a thread that was created by other
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
-    pub fn send_and_clear<F>(&mut self, recipient: &NifPid, closure: F)
+    pub fn send_and_clear<F>(&mut self, recipient: &Pid, closure: F)
         where F: for<'a> FnOnce(Env<'a>) -> Term<'a>
     {
         if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {

@@ -28,7 +28,7 @@ pub mod tuple;
 
 #[doc(hidden)]
 pub mod pid;
-pub use types::pid::NifPid;
+pub use types::pid::Pid;
 
 pub mod elixir_struct;
 

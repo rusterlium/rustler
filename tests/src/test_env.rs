@@ -2,12 +2,12 @@ use rustler::{Env, Term, NifResult, Encoder};
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
 use rustler::types::list::NifListIterator;
-use rustler::types::pid::NifPid;
+use rustler::types::pid::Pid;
 use std::thread;
 
 // Send a message to several PIDs.
 pub fn send_all<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let pids: Vec<NifPid> = args[0].decode()?;
+    let pids: Vec<Pid> = args[0].decode()?;
     let message = args[1];
 
     for pid in pids {
