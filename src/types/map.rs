@@ -109,21 +109,21 @@ impl<'a> Term<'a> {
 
 }
 
-pub struct NifMapIterator<'a> {
+pub struct MapIterator<'a> {
     env: Env<'a>,
     iter: map::ErlNifMapIterator
 }
 
-impl<'a> NifMapIterator<'a> {
-    pub fn new(map: Term<'a>) -> Option<NifMapIterator<'a>> {
+impl<'a> MapIterator<'a> {
+    pub fn new(map: Term<'a>) -> Option<MapIterator<'a>> {
         let env = map.get_env();
         unsafe {
             map::map_iterator_create(env.as_c_arg(), map.as_c_arg())
-        }.map(|iter| NifMapIterator { env: env, iter: iter })
+        }.map(|iter| MapIterator { env: env, iter: iter })
     }
 }
 
-impl<'a> Drop for NifMapIterator<'a> {
+impl<'a> Drop for MapIterator<'a> {
     fn drop(&mut self) {
         unsafe {
             map::map_iterator_destroy(self.env.as_c_arg(), &mut self.iter);
@@ -131,7 +131,7 @@ impl<'a> Drop for NifMapIterator<'a> {
     }
 }
 
-impl<'a> Iterator for NifMapIterator<'a> {
+impl<'a> Iterator for MapIterator<'a> {
     type Item = (Term<'a>, Term<'a>);
 
     fn next(&mut self) -> Option<(Term<'a>, Term<'a>)> {
@@ -146,9 +146,9 @@ impl<'a> Iterator for NifMapIterator<'a> {
     }
 }
 
-impl<'a> Decoder<'a> for NifMapIterator<'a> {
+impl<'a> Decoder<'a> for MapIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        match NifMapIterator::new(term) {
+        match MapIterator::new(term) {
             Some(iter) => Ok(iter),
             None => Err(Error::BadArg)
         }

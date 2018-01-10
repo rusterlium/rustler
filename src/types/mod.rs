@@ -18,7 +18,7 @@ pub use types::list::ListIterator;
 
 #[doc(hidden)]
 pub mod map;
-pub use types::map::NifMapIterator;
+pub use types::map::MapIterator;
 
 #[doc(hidden)]
 pub mod primitive;
