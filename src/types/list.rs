@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the NifListIterator.
 
-use ::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
+use ::{ NifTerm, NifError, NifResult, Decoder, Encoder, NifEnv };
 use ::wrapper::list;
 
 /// Enables iteration over the items in the list.
@@ -81,7 +81,7 @@ impl<'a> Iterator for NifListIterator<'a> {
     }
 }
 
-impl<'a> NifDecoder<'a> for NifListIterator<'a> {
+impl<'a> Decoder<'a> for NifListIterator<'a> {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         match NifListIterator::new(term) {
             Some(iter) => Ok(iter),
@@ -90,20 +90,20 @@ impl<'a> NifDecoder<'a> for NifListIterator<'a> {
     }
 }
 
-//impl<'a, T> NifEncoder for Iterator<Item = T> where T: NifEncoder {
+//impl<'a, T> Encoder for Iterator<Item = T> where T: Encoder {
 //    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
 //        let term_arr: Vec<::wrapper::nif_interface::NIF_TERM> =
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
 
-impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
+impl<'a, T> Encoder for Vec<T> where T: Encoder {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.as_slice().encode(env)
     }
 }
 
-impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
+impl<'a, T> Decoder<'a> for Vec<T> where T: Decoder<'a> {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         let iter: NifListIterator = try!(term.decode());
         let res: NifResult<Self> = iter
@@ -113,14 +113,14 @@ impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
     }
 }
 
-impl<'a, T> NifEncoder for [T] where T: NifEncoder {
+impl<'a, T> Encoder for [T] where T: Encoder {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
-impl<'a, T> NifEncoder for &'a [T] where T: NifEncoder {
+impl<'a, T> Encoder for &'a [T] where T: Encoder {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();

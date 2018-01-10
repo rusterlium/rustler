@@ -82,7 +82,7 @@ macro_rules! rustler_export_nifs {
             flags: ($nif_flag as $crate::schedule::NifScheduleFlags) as u32,
         }
     };
-    
+
     (internal_platform_init, ($inner:expr)) => {
         #[cfg(not(feature = "alternative_nif_init_name"))]
         #[cfg(unix)]
@@ -90,7 +90,7 @@ macro_rules! rustler_export_nifs {
         pub extern "C" fn nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
             $inner
         }
-        
+
         #[cfg(not(feature = "alternative_nif_init_name"))]
         #[cfg(windows)]
         #[no_mangle]
@@ -98,7 +98,7 @@ macro_rules! rustler_export_nifs {
             unsafe {
                 $crate::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
-            
+
             $inner
         }
 
@@ -108,7 +108,7 @@ macro_rules! rustler_export_nifs {
         pub extern "C" fn rustler_nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
             $inner
         }
-        
+
         #[cfg(feature = "alternative_nif_init_name")]
         #[cfg(windows)]
         #[no_mangle]
@@ -116,7 +116,7 @@ macro_rules! rustler_export_nifs {
             unsafe {
                 $crate::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
-            
+
             $inner
         }
     };

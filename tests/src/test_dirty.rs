@@ -1,4 +1,4 @@
-use rustler::NifEncoder;
+use rustler::Encoder;
 use rustler::{NifEnv, NifTerm, NifResult};
 
 use std::time;

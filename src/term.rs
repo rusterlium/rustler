@@ -1,4 +1,4 @@
-use ::{NifDecoder, NifEnv, NifResult};
+use ::{Decoder, NifEnv, NifResult};
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::env::term_to_binary;
 use ::types::binary::NifBinary;
@@ -70,8 +70,8 @@ impl<'a> NifTerm<'a> {
     /// let term: NifTerm = ...;
     /// let number: i32 = try!(term.decode());
     /// ```
-    pub fn decode<T>(self) -> NifResult<T> where T: NifDecoder<'a> {
-        NifDecoder::decode(self)
+    pub fn decode<T>(self) -> NifResult<T> where T: Decoder<'a> {
+        Decoder::decode(self)
     }
 
     pub fn to_binary(self) -> NifBinary<'a> {

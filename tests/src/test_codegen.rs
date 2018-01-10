@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifEncoder, NifResult};
+use rustler::{NifEnv, NifTerm, Encoder, NifResult};
 
 #[derive(NifTuple)]
 struct AddTuple {

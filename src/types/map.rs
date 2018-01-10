@@ -1,6 +1,6 @@
 //! Utilities used to access and create Erlang maps.
 
-use ::{ NifEnv, NifTerm, NifResult, NifError, NifDecoder };
+use ::{ NifEnv, NifTerm, NifResult, NifError, Decoder };
 use ::wrapper::map;
 
 pub fn map_new<'a>(env: NifEnv<'a>) -> NifTerm<'a> {
@@ -146,7 +146,7 @@ impl<'a> Iterator for NifMapIterator<'a> {
     }
 }
 
-impl<'a> NifDecoder<'a> for NifMapIterator<'a> {
+impl<'a> Decoder<'a> for NifMapIterator<'a> {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         match NifMapIterator::new(term) {
             Some(iter) => Ok(iter),

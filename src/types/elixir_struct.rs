@@ -1,6 +1,6 @@
 //! Utilities used to create and access data specific to Elixir structs. Keep in mind that an
 //! Elixir struct is a normal Erlang map, and functions from the `map` module can be used.
-//! 
+//!
 //! # Elixir struct transcoders
 //! The compiler plugin has functionality for automatically generating a transcoder that can decode
 //! and encode a Rust struct to an Elixir struct. To do so, simply annotate a struct with

@@ -89,7 +89,7 @@ mod ex_struct {
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                           ::syntax::parse::token::ModSep));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                          ::syntax::parse::token::Ident(ext_cx.ident_of("NifDecoder"))));
+                                                                                                                                                          ::syntax::parse::token::Ident(ext_cx.ident_of("Decoder"))));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                           ::syntax::parse::token::ModSep));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -293,7 +293,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifDecoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Decoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -648,7 +648,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEncoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Encoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Ident(ext_cx.ident_of("for"))));
                                                                                     tt.extend(struct_typ.to_tokens(ext_cx).into_iter());
@@ -711,7 +711,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEncoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Encoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Semi));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1506,7 +1506,7 @@ mod tuple {
                                                                                                                   tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                                   ::syntax::parse::token::ModSep));
                                                                                                                   tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                                  ::syntax::parse::token::Ident(ext_cx.ident_of("NifDecoder"))));
+                                                                                                                                                                  ::syntax::parse::token::Ident(ext_cx.ident_of("Decoder"))));
                                                                                                                   tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                                   ::syntax::parse::token::ModSep));
                                                                                                                   tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1610,7 +1610,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifDecoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Decoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1883,7 +1883,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEncoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Encoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Ident(ext_cx.ident_of("for"))));
                                                                                     tt.extend(struct_typ.to_tokens(ext_cx).into_iter());
@@ -1946,7 +1946,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEncoder"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Encoder"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Semi));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,

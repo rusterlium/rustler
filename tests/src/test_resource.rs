@@ -1,4 +1,4 @@
-use rustler::NifEncoder;
+use rustler::Encoder;
 use rustler::{NifEnv, NifTerm, NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::RwLock;

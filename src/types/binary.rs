@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifError, NifResult, NifTerm, NifEncoder, NifDecoder };
+use ::{ NifEnv, NifError, NifResult, NifTerm, Encoder, Decoder };
 use ::wrapper::nif_interface;
 use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
@@ -195,12 +195,12 @@ impl<'a> Deref for NifBinary<'a> {
     }
 }
 
-impl<'a> NifDecoder<'a> for NifBinary<'a> {
+impl<'a> Decoder<'a> for NifBinary<'a> {
     fn decode(term: NifTerm<'a>) -> Result<Self, NifError> {
         NifBinary::from_term(term)
     }
 }
-impl<'a> NifEncoder for NifBinary<'a> {
+impl<'a> Encoder for NifBinary<'a> {
     fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
         self.to_term(env)
     }

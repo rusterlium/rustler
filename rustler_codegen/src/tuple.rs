@@ -25,7 +25,7 @@ pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str
 pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has_lifetime: bool) -> Tokens {
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { try!(::rustler::NifDecoder::decode(terms[#idx])) };
+        let decoder = quote! { try!(::rustler::Decoder::decode(terms[#idx])) };
 
         if is_tuple {
             unimplemented!();
@@ -46,7 +46,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
 
     // The implementation itself
     quote! {
-        impl<'a> ::rustler::NifDecoder<'a> for #struct_typ {
+        impl<'a> ::rustler::Decoder<'a> for #struct_typ {
             fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
                 let terms = try!(::rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num {
@@ -88,9 +88,9 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
 
     // The implementation itself
     quote! {
-        impl<'b> ::rustler::NifEncoder for #struct_typ {
+        impl<'b> ::rustler::Encoder for #struct_typ {
             fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
-                use ::rustler::NifEncoder;
+                use ::rustler::Encoder;
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }

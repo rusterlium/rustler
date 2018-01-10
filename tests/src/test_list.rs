@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifError, NifEncoder, NifResult};
+use rustler::{NifEnv, NifTerm, NifError, Encoder, NifResult};
 use rustler::types::list::NifListIterator;
 
 pub fn sum_list<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {

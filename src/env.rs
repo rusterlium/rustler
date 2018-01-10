@@ -72,7 +72,7 @@ impl<'a> NifEnv<'a> {
 ///
 ///     use rustler::env::OwnedEnv;
 ///     use rustler::types::pid::NifPid;
-///     use rustler::NifEncoder;
+///     use rustler::Encoder;
 ///
 ///     fn send_string_to_pid(data: &str, pid: &NifPid) {
 ///         let mut msg_env = OwnedEnv::new();

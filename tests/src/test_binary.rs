@@ -1,6 +1,6 @@
 use ::std::io::Write;
 
-use rustler::{NifEnv, NifTerm, NifEncoder, NifResult, NifError};
+use rustler::{NifEnv, NifTerm, Encoder, NifResult, NifError};
 use rustler::types::binary::{ NifBinary, OwnedNifBinary };
 
 pub fn make_shorter_subbinary<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {

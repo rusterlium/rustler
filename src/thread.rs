@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifTerm, NifEncoder };
+use ::{ NifEnv, NifTerm, Encoder };
 use ::env::OwnedEnv;
 use ::types::atom::NifAtom;
 use std::thread;

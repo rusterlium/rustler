@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifTerm, NifError, NifResult, NifEncoder, NifDecoder };
+use ::{ NifEnv, NifTerm, NifError, NifResult, Encoder, Decoder };
 use ::wrapper::tuple;
 use ::wrapper::nif_interface::NIF_TERM;
 
@@ -6,7 +6,7 @@ use ::wrapper::nif_interface::NIF_TERM;
 //impl<'a> NifTerm<'a> {
 //
 //    pub fn tuple_to_vec(self) -> NifResult<NifTerm<'a>> {
-//        
+//
 //    }
 //
 //}
@@ -27,7 +27,7 @@ pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
 }
 
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
-/// use `NifEncoder` instead.)
+/// use `Encoder` instead.)
 pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[NifTerm]) -> NifTerm<'a> {
     let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
     unsafe { NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
@@ -52,26 +52,26 @@ macro_rules! count {
 macro_rules! impl_nifencoder_nifdecoder_for_tuple {
     ( $($index:tt : $tyvar:ident),* ) => {
         // No need for `$crate` gunk in here, since the macro is not exported.
-        impl<$( $tyvar: NifEncoder ),*>
-            NifEncoder for tuple!( $( $tyvar ),* )
+        impl<$( $tyvar: Encoder ),*>
+            Encoder for tuple!( $( $tyvar ),* )
         {
             fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-                let arr = [ $( NifEncoder::encode(&self.$index, env).as_c_arg() ),* ];
+                let arr = [ $( Encoder::encode(&self.$index, env).as_c_arg() ),* ];
                 unsafe {
                     NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &arr))
                 }
             }
         }
 
-        impl<'a, $( $tyvar: NifDecoder<'a> ),*>
-            NifDecoder<'a> for tuple!( $( $tyvar ),* )
+        impl<'a, $( $tyvar: Decoder<'a> ),*>
+            Decoder<'a> for tuple!( $( $tyvar ),* )
         {
             fn decode(term: NifTerm<'a>) -> NifResult<tuple!( $( $tyvar ),* )>
             {
                 match unsafe { tuple::get_tuple(term.get_env().as_c_arg(), term.as_c_arg()) } {
                     Ok(elements) if elements.len() == count!( $( $index ),* ) =>
                         Ok(tuple!( $(
-                            (<$tyvar as NifDecoder>::decode(
+                            (<$tyvar as Decoder>::decode(
                                 unsafe { NifTerm::new(term.get_env(), elements[$index]) })?)
                         ),* )),
                     _ =>

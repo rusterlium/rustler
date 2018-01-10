@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifResult, NifEncoder};
+use rustler::{NifEnv, NifTerm, NifResult, Encoder};
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
 use rustler::types::list::NifListIterator;

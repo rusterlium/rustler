@@ -42,7 +42,7 @@ pub mod types;
 mod term;
 
 pub use term::{ NifTerm };
-pub use types::{ NifEncoder, NifDecoder };
+pub use types::{Encoder, Decoder};
 pub use wrapper::nif_interface::ErlNifTaskFlags;
 pub mod resource;
 
@@ -107,7 +107,7 @@ impl<'a> NifEnv<'a> {
 
     /// Convenience method for building a tuple `{error, Reason}`.
     pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
-        where T: NifEncoder
+        where T: Encoder
     {
         let error = types::atom::error().to_term(self);
         (error, reason).encode(self)
@@ -124,7 +124,7 @@ pub enum NifError {
     /// Encodes the string into an atom and returns it from the NIF.
     Atom(&'static str),
     RaiseAtom(&'static str),
-    RaiseTerm(Box<NifEncoder>),
+    RaiseTerm(Box<Encoder>),
 }
 
 impl NifError {

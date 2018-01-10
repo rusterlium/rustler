@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifResult, NifEncoder};
+use rustler::{NifEnv, NifTerm, NifResult, Encoder};
 use std::io::Write;
 use std::cmp::Ordering;
 

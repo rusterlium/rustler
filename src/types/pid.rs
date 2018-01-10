@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifTerm, NifError, NifResult, NifDecoder, NifEncoder };
+use ::{ NifEnv, NifTerm, NifError, NifResult, Decoder, Encoder };
 use ::wrapper::nif_interface::{ self, ErlNifPid };
 use ::wrapper::pid;
 use std::mem;
@@ -14,7 +14,7 @@ impl NifPid {
     }
 }
 
-impl<'a> NifDecoder<'a> for NifPid {
+impl<'a> Decoder<'a> for NifPid {
     fn decode(term: NifTerm<'a>) -> NifResult<NifPid> {
         unsafe { pid::get_local_pid(term.get_env().as_c_arg(), term.as_c_arg()) }
             .map(|pid| NifPid { c: pid })
@@ -22,7 +22,7 @@ impl<'a> NifDecoder<'a> for NifPid {
     }
 }
 
-impl NifEncoder for NifPid {
+impl Encoder for NifPid {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         unsafe { NifTerm::new(env, pid::make_pid(env.as_c_arg(), &self.c)) }
     }

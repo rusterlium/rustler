@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifEncoder, NifResult};
+use rustler::{NifEnv, NifTerm, Encoder, NifResult};
 use rustler::types::map::NifMapIterator;
 use rustler::types::tuple::make_tuple;
 

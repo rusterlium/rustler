@@ -9,7 +9,7 @@ use std::ptr;
 use std::ops::Deref;
 use std::marker::PhantomData;
 
-use super::{ NifTerm, NifEnv, NifError, NifEncoder, NifDecoder, NifResult };
+use super::{ NifTerm, NifEnv, NifError, Encoder, Decoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 use ::wrapper::nif_interface::{ c_void };
 
@@ -37,12 +37,12 @@ pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static NifResourceType<Self>;
 }
 
-impl<T> NifEncoder for ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> Encoder for ResourceArc<T> where T: NifResourceTypeProvider {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> NifDecoder<'a> for ResourceArc<T> where T: NifResourceTypeProvider + 'a {
+impl<'a, T> Decoder<'a> for ResourceArc<T> where T: NifResourceTypeProvider + 'a {
     fn decode(term: NifTerm<'a>) -> NifResult<Self> {
         ResourceArc::from_term(term)
     }
@@ -100,7 +100,7 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 ///
 /// Rust code and Erlang code can both have references to the same resource at the same time.  Rust
 /// code uses `ResourceArc`; in Erlang, a reference to a resource is a kind of term.  You can
-/// convert back and forth between the two using `NifEncoder` and `NifDecoder`.
+/// convert back and forth between the two using `Encoder` and `Decoder`.
 pub struct ResourceArc<T> where T: NifResourceTypeProvider {
     raw: *const c_void,
     inner: *mut T,

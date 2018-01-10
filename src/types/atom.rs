@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-use ::{ NifTerm, NifEnv, NifResult, NifError, NifEncoder, NifDecoder };
+use ::{ NifTerm, NifEnv, NifResult, NifError, Encoder, Decoder };
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::atom;
 
@@ -77,12 +77,12 @@ impl fmt::Debug for NifAtom {
     }
 }
 
-impl NifEncoder for NifAtom {
+impl Encoder for NifAtom {
     fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
         self.to_term(env)
     }
 }
-impl<'a> NifDecoder<'a> for NifAtom {
+impl<'a> Decoder<'a> for NifAtom {
     fn decode(term: NifTerm<'a>) -> NifResult<NifAtom> {
         NifAtom::from_term(term)
     }
@@ -228,13 +228,13 @@ rustler_atoms! {
     /// The `false` atom. (Trailing underscore because `false` is a keyword in Rust.)
     ///
     /// If you're looking to convert between Erlang terms and Rust `bool`
-    /// values, use `NifEncoder` and `NifDecoder` instead.
+    /// values, use `Encoder` and `Decoder` instead.
     atom false_ = "false";
 
     /// The `true` atom. (Trailing underscore because `true` is a keyword in Rust.)
     ///
     /// If you're looking to convert between Erlang terms and Rust `bool`
-    /// values, use `NifEncoder` and `NifDecoder` instead.
+    /// values, use `Encoder` and `Decoder` instead.
     atom true_ = "true";
 
     /// The `__struct__` atom used by Elixir.
