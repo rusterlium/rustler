@@ -1,4 +1,4 @@
-use ::{ NifEnv, Term, NifError, NifResult, Encoder, Decoder };
+use ::{ Env, Term, NifError, NifResult, Encoder, Decoder };
 use ::wrapper::tuple;
 use ::wrapper::nif_interface::NIF_TERM;
 
@@ -28,7 +28,7 @@ pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, NifError> {
 
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
-pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[Term]) -> Term<'a> {
+pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Term<'a> {
     let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
     unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
@@ -55,7 +55,7 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         impl<$( $tyvar: Encoder ),*>
             Encoder for tuple!( $( $tyvar ),* )
         {
-            fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+            fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
                 let arr = [ $( Encoder::encode(&self.$index, env).as_c_arg() ),* ];
                 unsafe {
                     Term::new(env, tuple::make_tuple(env.as_c_arg(), &arr))

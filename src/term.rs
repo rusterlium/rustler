@@ -1,18 +1,18 @@
-use ::{Decoder, NifEnv, NifResult};
+use ::{Decoder, Env, NifResult};
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::env::term_to_binary;
 use ::types::binary::NifBinary;
 use std::fmt::{self, Debug};
 use std::cmp::Ordering;
 
-/// Term is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
+/// Term is used to represent all erlang terms. Terms are always lifetime limited by a Env.
 ///
-/// Term is cloneable and copyable, but it can not exist outside of the lifetime of the NifEnv
+/// Term is cloneable and copyable, but it can not exist outside of the lifetime of the Env
 /// that owns it.
 #[derive(Clone, Copy)]
 pub struct Term<'a> {
     term: NIF_TERM,
-    env: NifEnv<'a>,
+    env: Env<'a>,
 }
 
 impl<'a> Debug for Term<'a> {
@@ -28,7 +28,7 @@ impl<'a> Term<'a> {
     /// # Unsafe
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
     /// unless `inner` is an atom term.
-    pub unsafe fn new(env: NifEnv<'a>, inner: NIF_TERM) -> Self {
+    pub unsafe fn new(env: Env<'a>, inner: NIF_TERM) -> Self {
         Term {
             term: inner,
             env: env,
@@ -40,15 +40,15 @@ impl<'a> Term<'a> {
         self.term
     }
 
-    pub fn get_env(&self) -> NifEnv<'a> {
+    pub fn get_env(&self) -> Env<'a> {
         self.env
     }
 
-    /// Returns a representation of self in the given NifEnv.
+    /// Returns a representation of self in the given Env.
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
     /// the term will be copied over.
-    pub fn in_env<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    pub fn in_env<'b>(&self, env: Env<'b>) -> Term<'b> {
         if self.get_env() == env {
             // It's safe to create a new Term<'b> without copying because we
             // just proved that the same environment is associated with both 'a

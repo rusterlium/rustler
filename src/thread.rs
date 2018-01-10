@@ -1,4 +1,4 @@
-use ::{ NifEnv, Term, Encoder };
+use ::{ Env, Term, Encoder };
 use ::env::OwnedEnv;
 use ::types::atom::NifAtom;
 use std::thread;
@@ -31,11 +31,11 @@ impl JobSpawner for ThreadSpawner {
 /// thread sends its return value back to the calling process.  If the closure panics, an `{error,
 /// Reason}` tuple is sent instead.
 ///
-/// Note that the thread creates a new `NifEnv` and passes it to the closure, so the closure
+/// Note that the thread creates a new `Env` and passes it to the closure, so the closure
 /// runs under a separate environment, not under `env`.
 ///
-pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
-    where F: for<'b> FnOnce(NifEnv<'b>) -> Term<'b> + Send + panic::UnwindSafe + 'static,
+pub fn spawn<'a, S, F>(env: Env<'a>, thread_fn: F)
+    where F: for<'b> FnOnce(Env<'b>) -> Term<'b> + Send + panic::UnwindSafe + 'static,
           S: JobSpawner,
 {
     let pid = env.pid();

@@ -1,4 +1,4 @@
-use ::{ NifEnv, Term, NifError, NifResult, Decoder, Encoder };
+use ::{ Env, Term, NifError, NifResult, Decoder, Encoder };
 use ::wrapper::nif_interface::{ self, ErlNifPid };
 use ::wrapper::pid;
 use std::mem;
@@ -23,18 +23,18 @@ impl<'a> Decoder<'a> for NifPid {
 }
 
 impl Encoder for NifPid {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), &self.c)) }
     }
 }
 
-impl<'a> NifEnv<'a> {
+impl<'a> Env<'a> {
     /// Return the calling process's pid.
     ///
     /// # Panics
     ///
     /// Panics if this environment is process-independent.  (The only way to get such an
-    /// environment is to use `OwnedEnv`.  The `NifEnv` that Rustler passes to NIFs when they're
+    /// environment is to use `OwnedEnv`.  The `Env` that Rustler passes to NIFs when they're
     /// called is always associated with the calling Erlang process.)
     pub fn pid(self) -> NifPid {
         let mut pid: ErlNifPid = unsafe { mem::uninitialized() };

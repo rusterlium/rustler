@@ -1,5 +1,5 @@
 use ::{
-    NifEnv,
+    Env,
     NifError,
     Term,
     NifResult,
@@ -33,14 +33,14 @@ pub use types::pid::NifPid;
 pub mod elixir_struct;
 
 pub trait Encoder {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a>;
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a>;
 }
 pub trait Decoder<'a>: Sized+'a {
     fn decode(term: Term<'a>) -> NifResult<Self>;
 }
 
 impl<'a> Encoder for Term<'a> {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.in_env(env)
     }
 }
@@ -51,13 +51,13 @@ impl<'a> Decoder<'a> for Term<'a> {
 }
 
 impl<'a, T> Encoder for &'a T where T: Encoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> Term<'c> {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         <T as Encoder>::encode(self, env)
     }
 }
 
 impl<T> Encoder for Option<T> where T: Encoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> Term<'c> {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Some(ref value) => value.encode(env),
             None => atom::nil().encode(env),
@@ -81,7 +81,7 @@ impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
 }
 
 impl<T, E> Encoder for Result<T, E> where T: Encoder, E: Encoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> Term<'c> {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Ok(ref value) => (atom::ok().encode(env), value.encode(env)).encode(env),
             Err(ref err) => (atom::error().encode(env), err.encode(env)).encode(env),

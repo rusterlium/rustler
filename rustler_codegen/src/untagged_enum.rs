@@ -76,7 +76,7 @@ pub fn gen_encoder(enum_name: &Ident, variants: &[Variant], has_lifetime: bool) 
 
     quote! {
         impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 match *self {
                     #(#variant_defs)*
                 }

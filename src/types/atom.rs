@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-use ::{ Term, NifEnv, NifResult, NifError, Encoder, Decoder };
+use ::{ Term, Env, NifResult, NifError, Encoder, Decoder };
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::atom;
 
@@ -16,7 +16,7 @@ impl NifAtom {
         self.term
     }
 
-    pub fn to_term<'a>(self, env: NifEnv<'a>) -> Term<'a> {
+    pub fn to_term<'a>(self, env: Env<'a>) -> Term<'a> {
         // Safe because atoms are not associated with any environment.
         unsafe { Term::new(env, self.term) }
     }
@@ -38,7 +38,7 @@ impl NifAtom {
     ///
     /// # Errors
     /// `NifError::BadArg` if `bytes.len() > 255`.
-    pub fn from_bytes<'a>(env: NifEnv<'a>, bytes: &[u8]) -> NifResult<NifAtom> {
+    pub fn from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<NifAtom> {
         if bytes.len() > 255 {
             return Err(NifError::BadArg);
         }
@@ -52,7 +52,7 @@ impl NifAtom {
     /// # Errors
     /// `NifError::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
     /// long. The maximum length is 255 characters.
-    pub fn from_str<'a>(env: NifEnv<'a>, string: &str) -> NifResult<NifAtom> {
+    pub fn from_str<'a>(env: Env<'a>, string: &str) -> NifResult<NifAtom> {
         if string.is_ascii() {
             // Fast path.
             NifAtom::from_bytes(env, string.as_bytes())
@@ -78,7 +78,7 @@ impl fmt::Debug for NifAtom {
 }
 
 impl Encoder for NifAtom {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.to_term(env)
     }
 }

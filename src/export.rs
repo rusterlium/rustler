@@ -12,7 +12,7 @@
 /// is the arity (number of arguments) of the exported function. The third argument is a
 /// indentifier of a rust function. This is where your actual NIF will be implemented.
 ///
-/// The third argument is an `Option<fn(env: &NifEnv, load_info: Term) -> bool>`. If this is
+/// The third argument is an `Option<fn(env: &Env, load_info: Term) -> bool>`. If this is
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
 #[macro_export]
 macro_rules! rustler_export_nifs {

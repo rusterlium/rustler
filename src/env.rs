@@ -1,10 +1,10 @@
-use ::{ NifEnv, Term };
+use ::{ Env, Term };
 use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 use ::types::pid::NifPid;
 use std::ptr;
 use std::sync::{Arc, Weak};
 
-impl<'a> NifEnv<'a> {
+impl<'a> Env<'a> {
     /// Send a message to a process.
     ///
     /// The Erlang VM imposes some odd restrictions on sending messages.
@@ -34,7 +34,7 @@ impl<'a> NifEnv<'a> {
 
                 self.as_c_arg()
             } else {
-                panic!("NifEnv::send(): unrecognized calling thread type");
+                panic!("Env::send(): unrecognized calling thread type");
             };
 
         // Send the message.
@@ -97,10 +97,10 @@ impl OwnedEnv {
 
     /// Run some code in this environment.
     pub fn run<F, R>(&self, closure: F) -> R
-        where F: for<'a> FnOnce(NifEnv<'a>) -> R
+        where F: for<'a> FnOnce(Env<'a>) -> R
     {
         let env_lifetime = ();
-        let env = unsafe { NifEnv::new(&env_lifetime, *self.env) };
+        let env = unsafe { Env::new(&env_lifetime, *self.env) };
         closure(env)
     }
 
@@ -116,7 +116,7 @@ impl OwnedEnv {
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
     pub fn send_and_clear<F>(&mut self, recipient: &NifPid, closure: F)
-        where F: for<'a> FnOnce(NifEnv<'a>) -> Term<'a>
+        where F: for<'a> FnOnce(Env<'a>) -> Term<'a>
     {
         if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
@@ -153,11 +153,11 @@ impl OwnedEnv {
     /// `.save()` offers a way to do this. For example, maybe you'd like to copy a term from the
     /// caller into an `OwnedEnv`, then use that term on another thread.
     ///
-    ///     # use rustler::{ NifEnv, Term };
+    ///     # use rustler::{ Env, Term };
     ///     use rustler::env::OwnedEnv;
     ///     use std::thread;
     ///
-    ///     fn thread_example<'a>(env: NifEnv<'a>, term: Term<'a>) {
+    ///     fn thread_example<'a>(env: Env<'a>, term: Term<'a>) {
     ///         // Copy `term` into a new OwnedEnv, for use on another thread.
     ///         let mut thread_env = OwnedEnv::new();
     ///         let saved_term = thread_env.save(term);
@@ -204,10 +204,10 @@ impl SavedTerm {
     ///
     /// # Panics
     ///
-    /// `env` must be the `NifEnv` of a `.run()` or `.send()` call on the
+    /// `env` must be the `Env` of a `.run()` or `.send()` call on the
     /// `OwnedEnv` where this term was saved, and the `OwnedEnv` must not have
     /// been cleared or dropped since then. Otherwise this method will panic.
-    pub fn load<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    pub fn load<'a>(&self, env: Env<'a>) -> Term<'a> {
         // Check that the saved term is still valid.
         match self.env_generation.upgrade() {
             None =>

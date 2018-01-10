@@ -1,4 +1,4 @@
-use ::{ Term, NifEnv, Encoder, Decoder, NifResult, NifError };
+use ::{ Term, Env, Encoder, Decoder, NifResult, NifError };
 use super::binary::{ NifBinary, OwnedNifBinary };
 
 impl<'a> Decoder<'a> for String {
@@ -20,7 +20,7 @@ impl<'a> Decoder<'a> for &'a str {
 use std::io::Write;
 
 impl Encoder for str {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let str_len = self.len();
         let mut bin = match OwnedNifBinary::new(str_len) {
             Some(bin) => bin,
@@ -32,7 +32,7 @@ impl Encoder for str {
 }
 
 impl Encoder for String {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.as_str().encode(env)
     }
 }

@@ -1,11 +1,11 @@
 extern crate erlang_nif_sys;
-use ::{ NifEnv, Term, Encoder, Decoder, NifResult, NifError };
+use ::{ Env, Term, Encoder, Decoder, NifResult, NifError };
 use ::types::atom;
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl Encoder for $dec_type {
-            fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+            fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
                 unsafe { Term::new(env, erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type)) }
             }
         }
@@ -39,7 +39,7 @@ impl_number_transcoder!(usize, u64, enif_make_uint64, enif_get_uint64);
 impl_number_transcoder!(isize, i64, enif_make_int64, enif_get_int64);
 
 impl Encoder for bool {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         if *self {
             atom::true_().to_term(env)
         } else {

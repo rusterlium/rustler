@@ -1,4 +1,4 @@
-use rustler::{NifEnv, Term, Encoder, NifResult};
+use rustler::{Env, Term, Encoder, NifResult};
 
 #[derive(NifTuple)]
 struct AddTuple {
@@ -6,7 +6,7 @@ struct AddTuple {
     rhs: i32,
 }
 
-pub fn tuple_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn tuple_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let tuple: AddTuple = args[0].decode()?;
     Ok(tuple.encode(env))
 }
@@ -29,7 +29,7 @@ struct AddMap {
     rhs: i32,
 }
 
-pub fn map_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn map_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let map: AddMap = try!(args[0].decode());
     Ok(map.encode(env))
 }
@@ -41,7 +41,7 @@ struct AddStruct {
     rhs: i32,
 }
 
-pub fn struct_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn struct_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let add_struct: AddStruct = args[0].decode()?;
     Ok(add_struct.encode(env))
 }
@@ -52,7 +52,7 @@ enum UnitEnum {
     Baz,
 }
 
-pub fn unit_enum_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn unit_enum_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let unit_enum: UnitEnum = args[0].decode()?;
     Ok(unit_enum.encode(env))
 }
@@ -64,7 +64,7 @@ enum UntaggedEnum {
     Baz(AddStruct),
 }
 
-pub fn untagged_enum_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn untagged_enum_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let untagged_enum: UntaggedEnum = args[0].decode()?;
     Ok(untagged_enum.encode(env))
 }

@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifError, NifResult, Term, Encoder, Decoder };
+use ::{ Env, NifError, NifResult, Term, Encoder, Decoder };
 use ::wrapper::nif_interface;
 use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
@@ -80,7 +80,7 @@ impl<'a> OwnedNifBinary {
 
     /// Releases control of the binary to the VM. After this point
     /// the binary will be immutable.
-    pub fn release<'b>(self, env: NifEnv<'b>) -> NifBinary<'b> {
+    pub fn release<'b>(self, env: Env<'b>) -> NifBinary<'b> {
         NifBinary::from_owned(self, env)
     }
 }
@@ -129,7 +129,7 @@ impl<'a> NifBinary<'a> {
 
     /// Releases a given `OwnedNifBinary` to the VM.
     /// After this point the binary will be immutable.
-    pub fn from_owned(mut bin: OwnedNifBinary, env: NifEnv<'a>) -> Self {
+    pub fn from_owned(mut bin: OwnedNifBinary, env: Env<'a>) -> Self {
         bin.release = false;
         let term = unsafe { Term::new(env, nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg())) };
         NifBinary {
@@ -138,7 +138,7 @@ impl<'a> NifBinary<'a> {
         }
     }
 
-    pub unsafe fn from_raw(env: NifEnv<'a>, bin: ErlNifBinary) -> NifBinary<'a> {
+    pub unsafe fn from_raw(env: Env<'a>, bin: ErlNifBinary) -> NifBinary<'a> {
         NifBinary {
             inner: bin,
             term: Term::new(env, bin.bin_term),
@@ -160,7 +160,7 @@ impl<'a> NifBinary<'a> {
         })
     }
 
-    pub fn to_term<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    pub fn to_term<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.term.in_env(env)
     }
 
@@ -201,7 +201,7 @@ impl<'a> Decoder<'a> for NifBinary<'a> {
     }
 }
 impl<'a> Encoder for NifBinary<'a> {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.to_term(env)
     }
 }

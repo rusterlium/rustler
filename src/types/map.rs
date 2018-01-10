@@ -1,9 +1,9 @@
 //! Utilities used to access and create Erlang maps.
 
-use ::{ NifEnv, Term, NifResult, NifError, Decoder };
+use ::{ Env, Term, NifResult, NifError, Decoder };
 use ::wrapper::map;
 
-pub fn map_new<'a>(env: NifEnv<'a>) -> Term<'a> {
+pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
 }
 
@@ -16,7 +16,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// %{}
     /// ```
-    pub fn map_new(env: NifEnv<'a>) -> Term<'a> {
+    pub fn map_new(env: Env<'a>) -> Term<'a> {
         map_new(env)
     }
 
@@ -110,7 +110,7 @@ impl<'a> Term<'a> {
 }
 
 pub struct NifMapIterator<'a> {
-    env: NifEnv<'a>,
+    env: Env<'a>,
     iter: map::ErlNifMapIterator
 }
 

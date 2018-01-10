@@ -6,7 +6,7 @@
 //! and encode a Rust struct to an Elixir struct. To do so, simply annotate a struct with
 //! `#[ExStruct(module = "Elixir.TheStructModule")]`.
 
-use ::{ NifEnv, Term, NifResult };
+use ::{ Env, Term, NifResult };
 use super::atom::{ self, NifAtom };
 use super::map::{ map_new };
 
@@ -17,7 +17,7 @@ pub fn get_ex_struct_name(map: Term) -> NifResult<NifAtom> {
         .and_then(|e| NifAtom::from_term(e))
 }
 
-pub fn make_ex_struct<'a>(env: NifEnv<'a>, struct_module: &str) -> NifResult<Term<'a>> {
+pub fn make_ex_struct<'a>(env: Env<'a>, struct_module: &str) -> NifResult<Term<'a>> {
     let map = map_new(env);
 
     let struct_atom = atom::__struct__().to_term(env);

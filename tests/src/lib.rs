@@ -6,7 +6,7 @@ extern crate rustler_codegen;
 #[macro_use]
 extern crate lazy_static;
 
-use rustler::{NifEnv, Term};
+use rustler::{Env, Term};
 use rustler::schedule::NifScheduleFlags;
 
 mod test_primitives;
@@ -75,7 +75,7 @@ rustler_export_nifs!(
     Some(on_load)
 );
 
-fn on_load<'a>(env: NifEnv<'a>, _load_info: Term<'a>) -> bool {
+fn on_load<'a>(env: Env<'a>, _load_info: Term<'a>) -> bool {
     test_resource::on_load(env);
     test_atom::on_load(env);
     true

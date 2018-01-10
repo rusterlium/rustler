@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the NifListIterator.
 
-use ::{ Term, NifError, NifResult, Decoder, Encoder, NifEnv };
+use ::{ Term, NifError, NifResult, Decoder, Encoder, Env };
 use ::wrapper::list;
 
 /// Enables iteration over the items in the list.
@@ -91,14 +91,14 @@ impl<'a> Decoder<'a> for NifListIterator<'a> {
 }
 
 //impl<'a, T> Encoder for Iterator<Item = T> where T: Encoder {
-//    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+//    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
 //        let term_arr: Vec<::wrapper::nif_interface::NIF_TERM> =
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
 
 impl<'a, T> Encoder for Vec<T> where T: Encoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.as_slice().encode(env)
     }
 }
@@ -114,14 +114,14 @@ impl<'a, T> Decoder<'a> for Vec<T> where T: Decoder<'a> {
 }
 
 impl<'a, T> Encoder for [T] where T: Encoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
 impl<'a, T> Encoder for &'a [T] where T: Encoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
@@ -132,7 +132,7 @@ impl<'a, T> Encoder for &'a [T] where T: Encoder {
 impl<'a> Term<'a> {
 
     /// Returns a new empty list.
-    pub fn list_new_empty(env: NifEnv<'a>) -> Term<'a> {
+    pub fn list_new_empty(env: Env<'a>) -> Term<'a> {
         let list: &[u8] = &[];
         list.encode(env)
     }

@@ -94,7 +94,7 @@ pub fn gen_encoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     quote! {
         impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 match *self {

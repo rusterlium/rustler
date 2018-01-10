@@ -99,7 +99,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
 
     quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 let mut map = ::rustler::types::map::map_new(env);

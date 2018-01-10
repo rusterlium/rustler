@@ -1,8 +1,8 @@
-use rustler::{NifEnv, Term, Encoder, NifResult};
+use rustler::{Env, Term, Encoder, NifResult};
 use rustler::types::map::NifMapIterator;
 use rustler::types::tuple::make_tuple;
 
-pub fn sum_map_values<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn sum_map_values<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let iter: NifMapIterator = args[0].decode()?;
 
     let res: NifResult<Vec<i64>> = iter
@@ -14,7 +14,7 @@ pub fn sum_map_values<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<
     Ok(total.encode(env))
 }
 
-pub fn map_entries_sorted<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn map_entries_sorted<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let iter: NifMapIterator = args[0].decode()?;
 
     let mut vec = vec![];

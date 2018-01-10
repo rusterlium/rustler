@@ -1,5 +1,5 @@
 use rustler::Encoder;
-use rustler::{NifEnv, Term, NifResult};
+use rustler::{Env, Term, NifResult};
 use rustler::resource::ResourceArc;
 use std::sync::RwLock;
 
@@ -14,13 +14,13 @@ struct ImmutableResource {
     b: u32
 }
 
-pub fn on_load<'a>(env: NifEnv<'a>) -> bool {
+pub fn on_load<'a>(env: Env<'a>) -> bool {
     resource_struct_init!(TestResource, env);
     resource_struct_init!(ImmutableResource, env);
     true
 }
 
-pub fn resource_make<'a>(env: NifEnv<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn resource_make<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let data = TestResource {
         test_field: RwLock::new(0),
     };
@@ -29,7 +29,7 @@ pub fn resource_make<'a>(env: NifEnv<'a>, _args: &[Term<'a>]) -> NifResult<Term<
     Ok(resource.encode(env))
 }
 
-pub fn resource_set_integer_field<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn resource_set_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let resource: ResourceArc<TestResource> = try!(args[0].decode());
     let mut test_field = resource.test_field.write().unwrap();
     *test_field = try!(args[1].decode());
@@ -37,7 +37,7 @@ pub fn resource_set_integer_field<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> Nif
     Ok("ok".encode(env))
 }
 
-pub fn resource_get_integer_field<'a>(env: NifEnv<'a>, args: &[Term<'a>]) ->  NifResult<Term<'a>> {
+pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) ->  NifResult<Term<'a>> {
     let resource: ResourceArc<TestResource> = try!(args[0].decode());
     let test_field = resource.test_field.read().unwrap();
     Ok(test_field.encode(env))
@@ -68,13 +68,13 @@ impl Drop for ImmutableResource {
     }
 }
 
-pub fn resource_make_immutable<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn resource_make_immutable<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let u: u32 = try!(args[0].decode());
     Ok(ResourceArc::new(ImmutableResource::new(u)).encode(env))
 }
 
 /// Count how many instances of `ImmutableResource` are currently alive globally.
-pub fn resource_immutable_count<'a>(env: NifEnv<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn resource_immutable_count<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let n = COUNT.load(Ordering::SeqCst) as u32;
     Ok(n.encode(env))
 }

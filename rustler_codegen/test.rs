@@ -685,7 +685,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEnv"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Env"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::CloseDelim(::syntax::parse::token::Paren)));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1920,7 +1920,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifEnv"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Env"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::CloseDelim(::syntax::parse::token::Paren)));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,

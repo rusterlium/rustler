@@ -9,7 +9,7 @@ use std::ptr;
 use std::ops::Deref;
 use std::marker::PhantomData;
 
-use super::{ Term, NifEnv, NifError, Encoder, Decoder, NifResult };
+use super::{ Term, Env, NifError, Encoder, Decoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 use ::wrapper::nif_interface::{ c_void };
 
@@ -38,7 +38,7 @@ pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
 }
 
 impl<T> Encoder for ResourceArc<T> where T: NifResourceTypeProvider {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.as_term(env)
     }
 }
@@ -65,7 +65,7 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 ///
 /// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
-pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: NifEnv<'a>, name: &str,
+pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: Env<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
         ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(resource_destructor::<T>), flags)
@@ -139,7 +139,7 @@ impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
         })
     }
 
-    fn as_term<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+    fn as_term<'a>(&self, env: Env<'a>) -> Term<'a> {
         unsafe { Term::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw)) }
     }
 
