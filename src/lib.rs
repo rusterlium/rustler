@@ -56,7 +56,7 @@ pub mod thread;
 
 mod export;
 
-pub type NifResult<T> = Result<T, NifError>;
+pub type NifResult<T> = Result<T, Error>;
 
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
@@ -117,7 +117,7 @@ impl<'a> Env<'a> {
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have
 /// an Env availible.
-pub enum NifError {
+pub enum Error {
     /// Returned when the NIF has been called with the wrong number or type of
     /// arguments.
     BadArg,
@@ -127,7 +127,7 @@ pub enum NifError {
     RaiseTerm(Box<Encoder>),
 }
 
-impl NifError {
+impl Error {
 
     /// # Unsafe
     ///
@@ -136,23 +136,23 @@ impl NifError {
     /// value from the calling NIF.
     unsafe fn encode<'a>(self, env: Env<'a>) -> Term<'a> {
         match self {
-            NifError::BadArg => {
+            Error::BadArg => {
                 let exception = wrapper::exception::raise_badarg(env.as_c_arg());
                 Term::new(env, exception)
             },
-            NifError::Atom(atom_str) => {
+            Error::Atom(atom_str) => {
                 types::atom::NifAtom::from_str(env, atom_str)
-                    .ok().expect("NifError::Atom: bad atom").to_term(env)
+                    .ok().expect("Error::Atom: bad atom").to_term(env)
             },
-            NifError::RaiseAtom(atom_str) => {
+            Error::RaiseAtom(atom_str) => {
                 let atom = types::atom::NifAtom::from_str(env, atom_str)
-                    .ok().expect("NifError::RaiseAtom: bad argument");
+                    .ok().expect("Error::RaiseAtom: bad argument");
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     atom.as_c_arg());
                 Term::new(env, exception)
             },
-            NifError::RaiseTerm(ref term_unencoded) => {
+            Error::RaiseTerm(ref term_unencoded) => {
                 let term = term_unencoded.encode(env);
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),

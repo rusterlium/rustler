@@ -1,6 +1,6 @@
 //! Utilities used to access and create Erlang maps.
 
-use ::{ Env, Term, NifResult, NifError, Decoder };
+use ::{ Env, Term, NifResult, Error, Decoder };
 use ::wrapper::map;
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
@@ -22,7 +22,7 @@ impl<'a> Term<'a> {
 
     /// Gets the value corresponding to a key in a map term.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a map or if
+    /// Returns Err(Error::BadArg) if the term is not a map or if
     /// key doesn't exist in the map.
     ///
     /// ### Elixir equivalent
@@ -33,13 +33,13 @@ impl<'a> Term<'a> {
         let env = self.get_env();
         match unsafe { map::get_map_value(env.as_c_arg(), self.as_c_arg(), key.as_c_arg()) } {
             Some(value) => Ok(unsafe { Term::new(env, value) }),
-            None => Err(NifError::BadArg),
+            None => Err(Error::BadArg),
         }
     }
 
     /// Gets the size of a map term.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a map.
+    /// Returns Err(Error::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -47,13 +47,13 @@ impl<'a> Term<'a> {
     /// ```
     pub fn map_size(self) -> NifResult<usize> {
         let env = self.get_env();
-        unsafe { map::get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(NifError::BadArg) }
+        unsafe { map::get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(Error::BadArg) }
     }
 
     /// Makes a copy of the self map term and sets key to value.
     /// If the value already exists, it is overwritten.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a map.
+    /// Returns Err(Error::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -67,14 +67,14 @@ impl<'a> Term<'a> {
 
         match unsafe { map::map_put(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg(), value.as_c_arg()) } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
-            None => Err(NifError::BadArg),
+            None => Err(Error::BadArg),
         }
     }
 
     /// Makes a copy of the self map term and removes key. If the key
     /// doesn't exist, the original map is returned.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a map.
+    /// Returns Err(Error::BadArg) if the term is not a map.
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -87,13 +87,13 @@ impl<'a> Term<'a> {
 
         match unsafe { map::map_remove(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg()) } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
-            None => Err(NifError::BadArg),
+            None => Err(Error::BadArg),
         }
     }
 
     /// Makes a copy of the self map term where key is set to value.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a map of if key
+    /// Returns Err(Error::BadArg) if the term is not a map of if key
     /// doesn't exist.
     pub fn map_update(self, key: Term<'a>, new_value: Term<'a>) -> NifResult<Term<'a>> {
         let map_env = self.get_env();
@@ -103,7 +103,7 @@ impl<'a> Term<'a> {
 
         match unsafe { map::map_update(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg(), new_value.as_c_arg()) } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
-            None => Err(NifError::BadArg),
+            None => Err(Error::BadArg),
         }
     }
 
@@ -150,7 +150,7 @@ impl<'a> Decoder<'a> for NifMapIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         match NifMapIterator::new(term) {
             Some(iter) => Ok(iter),
-            None => Err(NifError::BadArg)
+            None => Err(Error::BadArg)
         }
     }
 }

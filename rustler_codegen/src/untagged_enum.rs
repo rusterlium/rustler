@@ -50,10 +50,10 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[Variant], has_lifetime: bool) 
 
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #(#variant_defs)*
 
-                Err(::rustler::NifError::Atom("invalid_variant"))
+                Err(::rustler::Error::Atom("invalid_variant"))
             }
         }
     }

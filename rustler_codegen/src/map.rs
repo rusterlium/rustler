@@ -58,7 +58,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
 
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #atom_defs
 
                 let env = term.get_env();

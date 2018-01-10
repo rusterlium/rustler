@@ -172,7 +172,7 @@ mod ex_struct {
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                           ::syntax::parse::token::ModSep));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                          ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                                          ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                           ::syntax::parse::token::ModSep));
                                                                                                           tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -344,7 +344,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Gt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -433,7 +433,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -463,7 +463,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1661,7 +1661,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Gt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1726,7 +1726,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifError"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Error"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,

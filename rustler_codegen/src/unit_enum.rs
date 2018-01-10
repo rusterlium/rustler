@@ -62,14 +62,14 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #atom_defs
 
                 let value = ::rustler::types::atom::NifAtom::from_term(term)?;
 
                 #(#variant_defs)*
 
-                Err(::rustler::NifError::Atom("invalid_variant"))
+                Err(::rustler::Error::Atom("invalid_variant"))
             }
         }
     }

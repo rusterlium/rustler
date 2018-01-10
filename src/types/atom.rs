@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-use ::{ Term, Env, NifResult, NifError, Encoder, Decoder };
+use ::{ Term, Env, NifResult, Error, Encoder, Decoder };
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::atom;
 
@@ -30,17 +30,17 @@ impl NifAtom {
     pub fn from_term(term: Term) -> NifResult<Self> {
         match term.is_atom() {
             true => Ok(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
-            false => Err(NifError::BadArg)
+            false => Err(Error::BadArg)
         }
     }
 
     /// Return the atom whose text representation is `bytes`, like `erlang:binary_to_atom/2`.
     ///
     /// # Errors
-    /// `NifError::BadArg` if `bytes.len() > 255`.
+    /// `Error::BadArg` if `bytes.len() > 255`.
     pub fn from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<NifAtom> {
         if bytes.len() > 255 {
-            return Err(NifError::BadArg);
+            return Err(Error::BadArg);
         }
         unsafe {
             Ok(NifAtom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes)))
@@ -50,7 +50,7 @@ impl NifAtom {
     /// Return the atom whose text representation is the given `string`, like `erlang:list_to_atom/2`.
     ///
     /// # Errors
-    /// `NifError::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
+    /// `Error::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
     /// long. The maximum length is 255 characters.
     pub fn from_str<'a>(env: Env<'a>, string: &str) -> NifResult<NifAtom> {
         if string.is_ascii() {
@@ -61,7 +61,7 @@ impl NifAtom {
             let mut bytes = Vec::with_capacity(string.len());
             for c in string.chars() {
                 if (c as u32) >= 256 {
-                    return Err(NifError::BadArg);
+                    return Err(Error::BadArg);
                 }
                 bytes.push(c as u8);
             }

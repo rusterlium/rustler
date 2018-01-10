@@ -1,6 +1,6 @@
 use ::std::io::Write;
 
-use rustler::{Env, Term, Encoder, NifResult, NifError};
+use rustler::{Env, Term, Encoder, NifResult, Error};
 use rustler::types::binary::{ NifBinary, OwnedNifBinary };
 
 pub fn make_shorter_subbinary<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
@@ -13,7 +13,7 @@ pub fn parse_integer<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>>
     let str_num: &str = args[0].decode()?;
     let num: i64 = match ::std::str::FromStr::from_str(str_num) {
         Ok(num) => num,
-        Err(_) => return Err(NifError::BadArg),
+        Err(_) => return Err(Error::BadArg),
     };
     Ok(num.encode(env))
 }

@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the NifListIterator.
 
-use ::{ Term, NifError, NifResult, Decoder, Encoder, Env };
+use ::{ Term, Error, NifResult, Decoder, Encoder, Env };
 use ::wrapper::list;
 
 /// Enables iteration over the items in the list.
@@ -33,7 +33,7 @@ use ::wrapper::list;
 ///     // Produces an iterator of NifResult<i64>
 ///     .map(|x| x.decode::<i64>())
 ///     // Lifts each value out of the result. Returns Ok(Vec<i64>) if successful, the first error
-///     // Error(NifError) on failure.
+///     // Error(Error) on failure.
 ///     .collect::<NifResult<Vec<i64>>>();
 /// # result
 /// # }
@@ -85,7 +85,7 @@ impl<'a> Decoder<'a> for NifListIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         match NifListIterator::new(term) {
             Some(iter) => Ok(iter),
-            None => Err(NifError::BadArg)
+            None => Err(Error::BadArg)
         }
     }
 }
@@ -142,7 +142,7 @@ impl<'a> Term<'a> {
     ///
     /// Returns None if the term is not a list.
     pub fn into_list_iterator(self) -> NifResult<NifListIterator<'a>> {
-        NifListIterator::new(self).ok_or(NifError::BadArg)
+        NifListIterator::new(self).ok_or(Error::BadArg)
     }
 
     /// Returns the length of a list term.
@@ -155,7 +155,7 @@ impl<'a> Term<'a> {
     /// ```
     pub fn list_length(self) -> NifResult<usize> {
         unsafe { list::get_list_length(self.get_env().as_c_arg(), self.as_c_arg()) }
-            .ok_or(NifError::BadArg)
+            .ok_or(Error::BadArg)
     }
 
     /// Unpacks a single cell at the head of a list term,
@@ -173,19 +173,19 @@ impl<'a> Term<'a> {
         unsafe {
             list::get_list_cell(env.as_c_arg(), self.as_c_arg())
                 .map(|(t1, t2)| (Term::new(env, t1), Term::new(env, t2)))
-                .ok_or(NifError::BadArg)
+                .ok_or(Error::BadArg)
         }
     }
 
     /// Makes a copy of the self list term and reverses it.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a list.
+    /// Returns Err(Error::BadArg) if the term is not a list.
     pub fn list_reverse(self) -> NifResult<Term<'a>> {
         let env = self.get_env();
         unsafe {
             list::make_reverse_list(env.as_c_arg(), self.as_c_arg())
                 .map(|t| Term::new(env, t))
-                .ok_or(NifError::BadArg)
+                .ok_or(Error::BadArg)
         }
     }
 

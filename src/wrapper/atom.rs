@@ -1,6 +1,6 @@
 use super::nif_interface;
 use super::nif_interface::{ NIF_ENV, NIF_TERM, c_uint };
-use {NifResult, NifError};
+use {NifResult, Error};
 
 pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
     nif_interface::enif_make_atom_len(env, name.as_ptr(), name.len())
@@ -13,14 +13,14 @@ pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
 ///
 /// # Errors
 ///
-/// `NifError::BadArg` if `term` is not an atom.
+/// `Error::BadArg` if `term` is not an atom.
 ///
 pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> NifResult<String> {
     // Determine the length of the atom, in bytes.
     let mut len = 0;
     let success = nif_interface::enif_get_atom_length_latin1(env, term, &mut len);
     if success == 0 {
-        return Err(NifError::BadArg);
+        return Err(Error::BadArg);
     }
 
     // Get the bytes from the atom into a buffer.

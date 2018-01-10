@@ -1,4 +1,4 @@
-use ::{ Env, Term, NifError, NifResult, Encoder, Decoder };
+use ::{ Env, Term, Error, NifResult, Encoder, Decoder };
 use ::wrapper::tuple;
 use ::wrapper::nif_interface::NIF_TERM;
 
@@ -16,12 +16,12 @@ use ::wrapper::nif_interface::NIF_TERM;
 ///
 /// # Errors
 /// `badarg` if `term` is not a tuple.
-pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, NifError> {
+pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, Error> {
     let env = term.get_env();
     unsafe {
         match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
             Ok(terms) => Ok(terms.iter().map(|x| Term::new(env, *x)).collect::<Vec<Term>>()),
-            Err(_error) => Err(NifError::BadArg)
+            Err(_error) => Err(Error::BadArg)
         }
     }
 }
@@ -75,7 +75,7 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
                                 unsafe { Term::new(term.get_env(), elements[$index]) })?)
                         ),* )),
                     _ =>
-                        Err(NifError::BadArg),
+                        Err(Error::BadArg),
                 }
             }
         }

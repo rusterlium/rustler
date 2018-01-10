@@ -1,4 +1,4 @@
-use ::{ Term, Env, Encoder, Decoder, NifResult, NifError };
+use ::{ Term, Env, Encoder, Decoder, NifResult, Error };
 use super::binary::{ NifBinary, OwnedNifBinary };
 
 impl<'a> Decoder<'a> for String {
@@ -12,7 +12,7 @@ impl<'a> Decoder<'a> for &'a str {
         let binary = try!(NifBinary::from_term(term));
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
-            Err(_) => Err(NifError::BadArg),
+            Err(_) => Err(Error::BadArg),
         }
     }
 }

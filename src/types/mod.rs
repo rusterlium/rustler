@@ -1,6 +1,6 @@
 use ::{
     Env,
-    NifError,
+    Error,
     Term,
     NifResult,
 };
@@ -74,7 +74,7 @@ impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
             if decoded_atom == atom::nil() {
                 Ok(None)
             } else {
-                Err(NifError::BadArg)
+                Err(Error::BadArg)
             }
         }
     }
@@ -99,7 +99,7 @@ impl<'a, T, E> Decoder<'a> for Result<T, E> where T: Decoder<'a>, E: Decoder<'a>
             let err_value: E = inner_term.decode()?;
             Ok(Err(err_value))
         } else {
-            Err(NifError::BadArg)
+            Err(Error::BadArg)
         }
     }
 }

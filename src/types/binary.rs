@@ -1,4 +1,4 @@
-use ::{ Env, NifError, NifResult, Term, Encoder, Decoder };
+use ::{ Env, Error, NifResult, Term, Encoder, Decoder };
 use ::wrapper::nif_interface;
 use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
@@ -149,10 +149,10 @@ impl<'a> NifBinary<'a> {
         OwnedNifBinary::from_unowned(self)
     }
 
-    pub fn from_term(term: Term<'a>) -> Result<Self, NifError> {
+    pub fn from_term(term: Term<'a>) -> Result<Self, Error> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe { nif_interface::enif_inspect_binary(term.get_env().as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
-            return Err(NifError::BadArg);
+            return Err(Error::BadArg);
         }
         Ok(NifBinary {
             inner: binary,
@@ -172,8 +172,8 @@ impl<'a> NifBinary<'a> {
     /// This will not copy anything.
     pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<NifBinary<'a>> {
         let min_len = length.checked_add(offset);
-        if try!(min_len.ok_or(NifError::BadArg)) > self.inner.size {
-            return Err(NifError::BadArg);
+        if try!(min_len.ok_or(Error::BadArg)) > self.inner.size {
+            return Err(Error::BadArg);
         }
 
         let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.get_env().as_c_arg(), self.inner.bin_term, offset, length) };
@@ -196,7 +196,7 @@ impl<'a> Deref for NifBinary<'a> {
 }
 
 impl<'a> Decoder<'a> for NifBinary<'a> {
-    fn decode(term: Term<'a>) -> Result<Self, NifError> {
+    fn decode(term: Term<'a>) -> Result<Self, Error> {
         NifBinary::from_term(term)
     }
 }

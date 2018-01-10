@@ -9,7 +9,7 @@ use std::ptr;
 use std::ops::Deref;
 use std::marker::PhantomData;
 
-use super::{ Term, Env, NifError, Encoder, Decoder, NifResult };
+use super::{ Term, Env, Error, Encoder, Decoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 use ::wrapper::nif_interface::{ c_void };
 
@@ -126,10 +126,10 @@ impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
         }
     }
 
-    fn from_term(term: Term) -> Result<Self, NifError> {
+    fn from_term(term: Term) -> Result<Self, Error> {
         let res_resource = match unsafe { ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) } {
             Some(res) => res,
-            None => return Err(NifError::BadArg),
+            None => return Err(Error::BadArg),
         };
         unsafe { ::wrapper::resource::keep_resource(res_resource); }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };

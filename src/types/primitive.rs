@@ -1,5 +1,5 @@
 extern crate erlang_nif_sys;
-use ::{ Env, Term, Encoder, Decoder, NifResult, NifError };
+use ::{ Env, Term, Encoder, Decoder, NifResult, Error };
 use ::types::atom;
 
 macro_rules! impl_number_transcoder {
@@ -14,7 +14,7 @@ macro_rules! impl_number_transcoder {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
                 if unsafe { erlang_nif_sys::$decode_fun(term.get_env().as_c_arg(), term.as_c_arg(), &mut res) } == 0 {
-                    return Err(NifError::BadArg);
+                    return Err(Error::BadArg);
                 }
                 Ok(res as $dec_type)
             }

@@ -47,10 +47,10 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     // The implementation itself
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 let terms = try!(::rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num {
-                    return Err(::rustler::NifError::BadArg);
+                    return Err(::rustler::Error::BadArg);
                 }
                 Ok(
                     #struct_name {
