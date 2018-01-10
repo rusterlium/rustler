@@ -1,7 +1,7 @@
 use ::{Decoder, Env, NifResult};
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::env::term_to_binary;
-use ::types::binary::NifBinary;
+use ::types::binary::Binary;
 use std::fmt::{self, Debug};
 use std::cmp::Ordering;
 
@@ -74,9 +74,9 @@ impl<'a> Term<'a> {
         Decoder::decode(self)
     }
 
-    pub fn to_binary(self) -> NifBinary<'a> {
+    pub fn to_binary(self) -> Binary<'a> {
         let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
-        unsafe { NifBinary::from_raw(self.env, raw_binary) }
+        unsafe { Binary::from_raw(self.env, raw_binary) }
     }
 }
 

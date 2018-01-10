@@ -1,5 +1,5 @@
 use ::{ Term, Env, Encoder, Decoder, NifResult, Error };
-use super::binary::{ NifBinary, OwnedNifBinary };
+use super::binary::{ Binary, OwnedBinary };
 
 impl<'a> Decoder<'a> for String {
     fn decode(term: Term<'a>) -> NifResult<Self> {
@@ -9,7 +9,7 @@ impl<'a> Decoder<'a> for String {
 }
 impl<'a> Decoder<'a> for &'a str {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let binary = try!(NifBinary::from_term(term));
+        let binary = try!(Binary::from_term(term));
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
             Err(_) => Err(Error::BadArg),
@@ -22,7 +22,7 @@ use std::io::Write;
 impl Encoder for str {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let str_len = self.len();
-        let mut bin = match OwnedNifBinary::new(str_len) {
+        let mut bin = match OwnedBinary::new(str_len) {
             Some(bin) => bin,
             None => panic!("binary term allocation fail"),
         };

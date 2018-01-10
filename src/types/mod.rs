@@ -10,7 +10,7 @@ pub mod atom;
 
 #[doc(hidden)]
 pub mod binary;
-pub use types::binary::{ NifBinary, OwnedNifBinary };
+pub use types::binary::{ Binary, OwnedBinary };
 
 #[doc(hidden)]
 pub mod list;
