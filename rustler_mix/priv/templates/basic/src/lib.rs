@@ -2,7 +2,7 @@
 #[macro_use] extern crate rustler_codegen;
 #[macro_use] extern crate lazy_static;
 
-use rustler::{NifEnv, NifTerm, NifResult, Encoder};
+use rustler::{NifEnv, Term, NifResult, Encoder};
 
 mod atoms {
     rustler_atoms! {
@@ -19,7 +19,7 @@ rustler_export_nifs! {
     None
 }
 
-fn add<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+fn add<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let num1: i64 = try!(args[0].decode());
     let num2: i64 = try!(args[1].decode());
 

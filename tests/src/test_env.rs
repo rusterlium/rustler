@@ -1,4 +1,4 @@
-use rustler::{NifEnv, NifTerm, NifResult, Encoder};
+use rustler::{NifEnv, Term, NifResult, Encoder};
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
 use rustler::types::list::NifListIterator;
@@ -6,7 +6,7 @@ use rustler::types::pid::NifPid;
 use std::thread;
 
 // Send a message to several PIDs.
-pub fn send_all<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn send_all<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let pids: Vec<NifPid> = args[0].decode()?;
     let message = args[1];
 
@@ -17,7 +17,7 @@ pub fn send_all<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<
     Ok(message)
 }
 
-pub fn sublists<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn sublists<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     // This is a "threaded NIF": it spawns a thread that sends a message back
     // to the calling thread later.
     let pid = env.pid();
@@ -41,11 +41,11 @@ pub fn sublists<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<
         // Use `.send()` to get a `NifEnv` from our `OwnedEnv`,
         // run some rust code, and finally send the result back to `pid`.
         my_env.send_and_clear(&pid, |env| {
-            let result: NifResult<NifTerm> = (|| {
+            let result: NifResult<Term> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
                 let iter: NifListIterator = try!(reversed_list.decode());
 
-                let empty_list = Vec::<NifTerm>::new().encode(env);
+                let empty_list = Vec::<Term>::new().encode(env);
                 let mut all_sublists = vec![empty_list];
 
                 for element in iter {

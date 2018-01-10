@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifTerm };
+use ::{ NifEnv, Term };
 use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
 use ::types::pid::NifPid;
 use std::ptr;
@@ -21,7 +21,7 @@ impl<'a> NifEnv<'a> {
     /// Panics if the above rules are broken (by trying to send a message from
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
-    pub fn send(self, pid: &NifPid, message: NifTerm<'a>) {
+    pub fn send(self, pid: &NifPid, message: Term<'a>) {
         let thread_type = nif_interface::enif_thread_type();
         let env =
             if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
@@ -47,18 +47,18 @@ impl<'a> NifEnv<'a> {
     ///
     /// Follows the erlang
     /// [External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html).
-    pub fn binary_to_term(self, data: &[u8]) -> Option<(NifTerm<'a>, usize)> {
+    pub fn binary_to_term(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
         unsafe {
             ::wrapper::env::binary_to_term(self.as_c_arg(), data, true)
-                .map(|(term, size)| (NifTerm::new(self, term), size))
+                .map(|(term, size)| (Term::new(self, term), size))
         }
     }
 
     /// Like `binary_to_term`, but can only be called on valid
     /// and trusted data.
-    pub unsafe fn binary_to_term_trusted(self, data: &[u8]) -> Option<(NifTerm<'a>, usize)> {
+    pub unsafe fn binary_to_term_trusted(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
         ::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
-            .map(|(term, size)| (NifTerm::new(self, term), size))
+            .map(|(term, size)| (Term::new(self, term), size))
     }
 
 }
@@ -116,7 +116,7 @@ impl OwnedEnv {
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
     pub fn send_and_clear<F>(&mut self, recipient: &NifPid, closure: F)
-        where F: for<'a> FnOnce(NifEnv<'a>) -> NifTerm<'a>
+        where F: for<'a> FnOnce(NifEnv<'a>) -> Term<'a>
     {
         if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
@@ -147,17 +147,17 @@ impl OwnedEnv {
 
     /// Save a term for use in a later call to `.run()` or `.send()`.
     ///
-    /// For your safety, Rust doesn't let you save `NifTerm` values from one `.run()` call to a
+    /// For your safety, Rust doesn't let you save `Term` values from one `.run()` call to a
     /// later `.run()` call. If you try, it'll complain about lifetimes.
     ///
     /// `.save()` offers a way to do this. For example, maybe you'd like to copy a term from the
     /// caller into an `OwnedEnv`, then use that term on another thread.
     ///
-    ///     # use rustler::{ NifEnv, NifTerm };
+    ///     # use rustler::{ NifEnv, Term };
     ///     use rustler::env::OwnedEnv;
     ///     use std::thread;
     ///
-    ///     fn thread_example<'a>(env: NifEnv<'a>, term: NifTerm<'a>) {
+    ///     fn thread_example<'a>(env: NifEnv<'a>, term: Term<'a>) {
     ///         // Copy `term` into a new OwnedEnv, for use on another thread.
     ///         let mut thread_env = OwnedEnv::new();
     ///         let saved_term = thread_env.save(term);
@@ -173,7 +173,7 @@ impl OwnedEnv {
     ///
     /// **Note: There is no way to save terms across `OwnedEnv::send()` or `clear()`.**
     /// If you try, the `.load()` call will panic.
-    pub fn save<'a>(&self, term: NifTerm<'a>) -> SavedTerm {
+    pub fn save<'a>(&self, term: Term<'a>) -> SavedTerm {
         SavedTerm {
             term: self.run(|env| term.in_env(env).as_c_arg()),
             env_generation: Arc::downgrade(&self.env),
@@ -207,13 +207,13 @@ impl SavedTerm {
     /// `env` must be the `NifEnv` of a `.run()` or `.send()` call on the
     /// `OwnedEnv` where this term was saved, and the `OwnedEnv` must not have
     /// been cleared or dropped since then. Otherwise this method will panic.
-    pub fn load<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
+    pub fn load<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
         // Check that the saved term is still valid.
         match self.env_generation.upgrade() {
             None =>
                 panic!("term is from a cleared or dropped OwnedEnv"),
             Some(ref env_arc) if **env_arc == env.as_c_arg() =>
-                unsafe { NifTerm::new(env, self.term) },
+                unsafe { Term::new(env, self.term) },
             _ =>
                 panic!("can't load SavedTerm into a different environment"),
         }

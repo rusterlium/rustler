@@ -1,11 +1,11 @@
-use ::{ NifEnv, NifTerm, NifError, NifResult, Encoder, Decoder };
+use ::{ NifEnv, Term, NifError, NifResult, Encoder, Decoder };
 use ::wrapper::tuple;
 use ::wrapper::nif_interface::NIF_TERM;
 
 /// ## Tuple terms
-//impl<'a> NifTerm<'a> {
+//impl<'a> Term<'a> {
 //
-//    pub fn tuple_to_vec(self) -> NifResult<NifTerm<'a>> {
+//    pub fn tuple_to_vec(self) -> NifResult<Term<'a>> {
 //
 //    }
 //
@@ -16,11 +16,11 @@ use ::wrapper::nif_interface::NIF_TERM;
 ///
 /// # Errors
 /// `badarg` if `term` is not a tuple.
-pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
+pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, NifError> {
     let env = term.get_env();
     unsafe {
         match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
-            Ok(terms) => Ok(terms.iter().map(|x| NifTerm::new(env, *x)).collect::<Vec<NifTerm>>()),
+            Ok(terms) => Ok(terms.iter().map(|x| Term::new(env, *x)).collect::<Vec<Term>>()),
             Err(_error) => Err(NifError::BadArg)
         }
     }
@@ -28,9 +28,9 @@ pub fn get_tuple<'a>(term: NifTerm<'a>) -> Result<Vec<NifTerm<'a>>, NifError> {
 
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
-pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[NifTerm]) -> NifTerm<'a> {
+pub fn make_tuple<'a>(env: NifEnv<'a>, terms: &[Term]) -> Term<'a> {
     let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
-    unsafe { NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
+    unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
 
 /// Helper macro to emit tuple-like syntax. Wraps its arguments in parentheses, and adds a comma if
@@ -55,10 +55,10 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         impl<$( $tyvar: Encoder ),*>
             Encoder for tuple!( $( $tyvar ),* )
         {
-            fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
+            fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
                 let arr = [ $( Encoder::encode(&self.$index, env).as_c_arg() ),* ];
                 unsafe {
-                    NifTerm::new(env, tuple::make_tuple(env.as_c_arg(), &arr))
+                    Term::new(env, tuple::make_tuple(env.as_c_arg(), &arr))
                 }
             }
         }
@@ -66,13 +66,13 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         impl<'a, $( $tyvar: Decoder<'a> ),*>
             Decoder<'a> for tuple!( $( $tyvar ),* )
         {
-            fn decode(term: NifTerm<'a>) -> NifResult<tuple!( $( $tyvar ),* )>
+            fn decode(term: Term<'a>) -> NifResult<tuple!( $( $tyvar ),* )>
             {
                 match unsafe { tuple::get_tuple(term.get_env().as_c_arg(), term.as_c_arg()) } {
                     Ok(elements) if elements.len() == count!( $( $index ),* ) =>
                         Ok(tuple!( $(
                             (<$tyvar as Decoder>::decode(
-                                unsafe { NifTerm::new(term.get_env(), elements[$index]) })?)
+                                unsafe { Term::new(term.get_env(), elements[$index]) })?)
                         ),* )),
                     _ =>
                         Err(NifError::BadArg),

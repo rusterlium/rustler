@@ -62,7 +62,7 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
                 #atom_defs
 
                 let value = ::rustler::types::atom::NifAtom::from_term(term)?;
@@ -94,7 +94,7 @@ pub fn gen_encoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
 
     quote! {
         impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
+            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 match *self {

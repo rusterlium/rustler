@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifTerm, Encoder };
+use ::{ NifEnv, Term, Encoder };
 use ::env::OwnedEnv;
 use ::types::atom::NifAtom;
 use std::thread;
@@ -35,7 +35,7 @@ impl JobSpawner for ThreadSpawner {
 /// runs under a separate environment, not under `env`.
 ///
 pub fn spawn<'a, S, F>(env: NifEnv<'a>, thread_fn: F)
-    where F: for<'b> FnOnce(NifEnv<'b>) -> NifTerm<'b> + Send + panic::UnwindSafe + 'static,
+    where F: for<'b> FnOnce(NifEnv<'b>) -> Term<'b> + Send + panic::UnwindSafe + 'static,
           S: JobSpawner,
 {
     let pid = env.pid();

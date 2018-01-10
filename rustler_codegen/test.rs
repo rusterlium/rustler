@@ -320,7 +320,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifTerm"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Term"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -695,7 +695,7 @@ mod ex_struct {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifTerm"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Term"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1637,7 +1637,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifTerm"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Term"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1930,7 +1930,7 @@ mod tuple {
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::ModSep));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("NifTerm"))));
+                                                                                                                                    ::syntax::parse::token::Ident(ext_cx.ident_of("Term"))));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                     ::syntax::parse::token::Lt));
                                                                                     tt.push(::syntax::tokenstream::TokenTree::Token(_sp,

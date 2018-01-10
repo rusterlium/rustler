@@ -5,31 +5,31 @@ use ::types::binary::NifBinary;
 use std::fmt::{self, Debug};
 use std::cmp::Ordering;
 
-/// NifTerm is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
+/// Term is used to represent all erlang terms. Terms are always lifetime limited by a NifEnv.
 ///
-/// NifTerm is cloneable and copyable, but it can not exist outside of the lifetime of the NifEnv
+/// Term is cloneable and copyable, but it can not exist outside of the lifetime of the NifEnv
 /// that owns it.
 #[derive(Clone, Copy)]
-pub struct NifTerm<'a> {
+pub struct Term<'a> {
     term: NIF_TERM,
     env: NifEnv<'a>,
 }
 
-impl<'a> Debug for NifTerm<'a> {
+impl<'a> Debug for Term<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         ::wrapper::term::fmt(self.as_c_arg(), f)
     }
 }
 
-impl<'a> NifTerm<'a> {
+impl<'a> Term<'a> {
 
-    /// Create a `NifTerm` from a raw `NIF_TERM`.
+    /// Create a `Term` from a raw `NIF_TERM`.
     ///
     /// # Unsafe
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
     /// unless `inner` is an atom term.
     pub unsafe fn new(env: NifEnv<'a>, inner: NIF_TERM) -> Self {
-        NifTerm {
+        Term {
             term: inner,
             env: env,
         }
@@ -48,26 +48,26 @@ impl<'a> NifTerm<'a> {
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
     /// the term will be copied over.
-    pub fn in_env<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+    pub fn in_env<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
         if self.get_env() == env {
-            // It's safe to create a new NifTerm<'b> without copying because we
+            // It's safe to create a new Term<'b> without copying because we
             // just proved that the same environment is associated with both 'a
             // and 'b.  (They are either exactly the same lifetime, or the
             // lifetimes of two .run() calls on the same OwnedEnv.)
-            unsafe { NifTerm::new(env, self.as_c_arg()) }
+            unsafe { Term::new(env, self.as_c_arg()) }
         } else {
-            unsafe { NifTerm::new(env, ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg())) }
+            unsafe { Term::new(env, ::wrapper::copy_term(env.as_c_arg(), self.as_c_arg())) }
         }
     }
 
-    /// Decodes the NifTerm into type T.
+    /// Decodes the Term into type T.
     ///
-    /// This should be used as the primary method of extracting the value from a NifTerm.
+    /// This should be used as the primary method of extracting the value from a Term.
     ///
     /// # Examples
     ///
     /// ```ignore
-    /// let term: NifTerm = ...;
+    /// let term: Term = ...;
     /// let number: i32 = try!(term.decode());
     /// ```
     pub fn decode<T>(self) -> NifResult<T> where T: Decoder<'a> {
@@ -80,16 +80,16 @@ impl<'a> NifTerm<'a> {
     }
 }
 
-impl<'a> PartialEq for NifTerm<'a> {
-    fn eq(&self, other: &NifTerm) -> bool {
+impl<'a> PartialEq for Term<'a> {
+    fn eq(&self, other: &Term) -> bool {
         unsafe {
             ::wrapper::nif_interface::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1
         }
     }
 }
-impl<'a> Eq for NifTerm<'a> {}
+impl<'a> Eq for Term<'a> {}
 
-fn cmp(lhs: &NifTerm, rhs: &NifTerm) -> Ordering {
+fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
     let ord = unsafe { ::wrapper::nif_interface::enif_compare(
         lhs.as_c_arg(), rhs.as_c_arg()) };
     match ord {
@@ -99,13 +99,13 @@ fn cmp(lhs: &NifTerm, rhs: &NifTerm) -> Ordering {
     }
 }
 
-impl<'a> Ord for NifTerm<'a> {
-    fn cmp(&self, other: &NifTerm) -> Ordering {
+impl<'a> Ord for Term<'a> {
+    fn cmp(&self, other: &Term) -> Ordering {
         cmp(self, other)
     }
 }
-impl<'a> PartialOrd for NifTerm<'a> {
-    fn partial_cmp(&self, other: &NifTerm<'a>) -> Option<Ordering> {
+impl<'a> PartialOrd for Term<'a> {
+    fn partial_cmp(&self, other: &Term<'a>) -> Option<Ordering> {
         Some(cmp(self, other))
     }
 }

@@ -1,16 +1,16 @@
 extern crate erlang_nif_sys;
-use ::{ NifEnv, NifTerm, Encoder, Decoder, NifResult, NifError };
+use ::{ NifEnv, Term, Encoder, Decoder, NifResult, NifError };
 use ::types::atom;
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl Encoder for $dec_type {
-            fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-                unsafe { NifTerm::new(env, erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type)) }
+            fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+                unsafe { Term::new(env, erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type)) }
             }
         }
         impl<'a> Decoder<'a> for $dec_type {
-            fn decode(term: NifTerm) -> NifResult<$dec_type> {
+            fn decode(term: Term) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
                 if unsafe { erlang_nif_sys::$decode_fun(term.get_env().as_c_arg(), term.as_c_arg(), &mut res) } == 0 {
@@ -39,7 +39,7 @@ impl_number_transcoder!(usize, u64, enif_make_uint64, enif_get_uint64);
 impl_number_transcoder!(isize, i64, enif_make_int64, enif_get_int64);
 
 impl Encoder for bool {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
+    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
         if *self {
             atom::true_().to_term(env)
         } else {
@@ -48,7 +48,7 @@ impl Encoder for bool {
     }
 }
 impl<'a> Decoder<'a> for bool {
-    fn decode(term: NifTerm<'a>) -> NifResult<bool> {
+    fn decode(term: Term<'a>) -> NifResult<bool> {
         Ok(atom::is_truthy(term))
     }
 }

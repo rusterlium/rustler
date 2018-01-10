@@ -1,6 +1,6 @@
 use std::ascii::AsciiExt;
 
-use ::{ NifTerm, NifEnv, NifResult, NifError, Encoder, Decoder };
+use ::{ Term, NifEnv, NifResult, NifError, Encoder, Decoder };
 use ::wrapper::nif_interface::NIF_TERM;
 use ::wrapper::atom;
 
@@ -16,9 +16,9 @@ impl NifAtom {
         self.term
     }
 
-    pub fn to_term<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
+    pub fn to_term<'a>(self, env: NifEnv<'a>) -> Term<'a> {
         // Safe because atoms are not associated with any environment.
-        unsafe { NifTerm::new(env, self.term) }
+        unsafe { Term::new(env, self.term) }
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
@@ -27,7 +27,7 @@ impl NifAtom {
         }
     }
 
-    pub fn from_term(term: NifTerm) -> NifResult<Self> {
+    pub fn from_term(term: Term) -> NifResult<Self> {
         match term.is_atom() {
             true => Ok(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
             false => Err(NifError::BadArg)
@@ -78,24 +78,24 @@ impl fmt::Debug for NifAtom {
 }
 
 impl Encoder for NifAtom {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
+    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
         self.to_term(env)
     }
 }
 impl<'a> Decoder<'a> for NifAtom {
-    fn decode(term: NifTerm<'a>) -> NifResult<NifAtom> {
+    fn decode(term: Term<'a>) -> NifResult<NifAtom> {
         NifAtom::from_term(term)
     }
 }
 
-impl<'a> PartialEq<NifTerm<'a>> for NifAtom {
-    fn eq(&self, other: &NifTerm<'a>) -> bool {
+impl<'a> PartialEq<Term<'a>> for NifAtom {
+    fn eq(&self, other: &Term<'a>) -> bool {
         self.as_c_arg() == other.as_c_arg()
     }
 }
 
 /// ## Atom terms
-impl<'a> NifTerm<'a> {
+impl<'a> Term<'a> {
 
     /// When the term is an atom, this method will return the string
     /// representation of it.
@@ -110,7 +110,7 @@ impl<'a> NifTerm<'a> {
 
 }
 
-pub fn is_truthy(term: NifTerm) -> bool {
+pub fn is_truthy(term: Term) -> bool {
     !((term.as_c_arg() == false_().as_c_arg()) || (term.as_c_arg() == nil().as_c_arg()))
 }
 

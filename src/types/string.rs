@@ -1,14 +1,14 @@
-use ::{ NifTerm, NifEnv, Encoder, Decoder, NifResult, NifError };
+use ::{ Term, NifEnv, Encoder, Decoder, NifResult, NifError };
 use super::binary::{ NifBinary, OwnedNifBinary };
 
 impl<'a> Decoder<'a> for String {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
         let string: &str = try!(Decoder::decode(term));
         Ok(string.to_string())
     }
 }
 impl<'a> Decoder<'a> for &'a str {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
         let binary = try!(NifBinary::from_term(term));
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
@@ -20,7 +20,7 @@ impl<'a> Decoder<'a> for &'a str {
 use std::io::Write;
 
 impl Encoder for str {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
         let str_len = self.len();
         let mut bin = match OwnedNifBinary::new(str_len) {
             Some(bin) => bin,
@@ -32,7 +32,7 @@ impl Encoder for str {
 }
 
 impl Encoder for String {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
         self.as_str().encode(env)
     }
 }

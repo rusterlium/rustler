@@ -9,7 +9,7 @@ use std::ptr;
 use std::ops::Deref;
 use std::marker::PhantomData;
 
-use super::{ NifTerm, NifEnv, NifError, Encoder, Decoder, NifResult };
+use super::{ Term, NifEnv, NifError, Encoder, Decoder, NifResult };
 use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
 use ::wrapper::nif_interface::{ c_void };
 
@@ -38,12 +38,12 @@ pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
 }
 
 impl<T> Encoder for ResourceArc<T> where T: NifResourceTypeProvider {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
+    fn encode<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
         self.as_term(env)
     }
 }
 impl<'a, T> Decoder<'a> for ResourceArc<T> where T: NifResourceTypeProvider + 'a {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
         ResourceArc::from_term(term)
     }
 }
@@ -126,7 +126,7 @@ impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
         }
     }
 
-    fn from_term(term: NifTerm) -> Result<Self, NifError> {
+    fn from_term(term: Term) -> Result<Self, NifError> {
         let res_resource = match unsafe { ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) } {
             Some(res) => res,
             None => return Err(NifError::BadArg),
@@ -139,8 +139,8 @@ impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
         })
     }
 
-    fn as_term<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a> {
-        unsafe { NifTerm::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw)) }
+    fn as_term<'a>(&self, env: NifEnv<'a>) -> Term<'a> {
+        unsafe { Term::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw)) }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {

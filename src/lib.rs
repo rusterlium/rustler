@@ -41,7 +41,7 @@ pub mod types;
 
 mod term;
 
-pub use term::{ NifTerm };
+pub use term::{ Term };
 pub use types::{Encoder, Decoder};
 pub use wrapper::nif_interface::ErlNifTaskFlags;
 pub mod resource;
@@ -61,7 +61,7 @@ pub type NifResult<T> = Result<T, NifError>;
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
-/// purpose is to make `NifEnv<'a>` and `NifTerm<'a>` *invariant* w.r.t. `'a`, so that Rust won't
+/// purpose is to make `NifEnv<'a>` and `Term<'a>` *invariant* w.r.t. `'a`, so that Rust won't
 /// auto-convert a `NifEnv<'a>` to a `NifEnv<'b>`.
 type EnvId<'a> = PhantomData<*mut &'a u8>;
 
@@ -106,7 +106,7 @@ impl<'a> NifEnv<'a> {
     }
 
     /// Convenience method for building a tuple `{error, Reason}`.
-    pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
+    pub fn error_tuple<T>(self, reason: T) -> Term<'a>
         where T: Encoder
     {
         let error = types::atom::error().to_term(self);
@@ -134,11 +134,11 @@ impl NifError {
     /// If `self` is a `BadArg`, `RaiseAtom`, or `RaiseTerm` value, then the
     /// term returned from this method must not be used except as the return
     /// value from the calling NIF.
-    unsafe fn encode<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
+    unsafe fn encode<'a>(self, env: NifEnv<'a>) -> Term<'a> {
         match self {
             NifError::BadArg => {
                 let exception = wrapper::exception::raise_badarg(env.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
             NifError::Atom(atom_str) => {
                 types::atom::NifAtom::from_str(env, atom_str)
@@ -150,14 +150,14 @@ impl NifError {
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     atom.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
             NifError::RaiseTerm(ref term_unencoded) => {
                 let term = term_unencoded.encode(env);
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     term.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
         }
     }

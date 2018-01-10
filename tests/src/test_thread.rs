@@ -1,9 +1,9 @@
-use rustler::{ NifEnv, NifTerm, NifResult, Encoder };
+use rustler::{ NifEnv, Term, NifResult, Encoder };
 use rustler::thread;
 use rustler::types::atom;
 use std;
 
-pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     // Multiply two numbers; panic on overflow. In Rust, the `*` operator wraps (rather than
     // panicking) in release builds. A test depends on this panicking, so we make sure it panics in
     // all builds. The test also checks the panic message.
@@ -20,7 +20,7 @@ pub fn threaded_fac<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifT
     Ok(atom::ok().to_term(env))
 }
 
-pub fn threaded_sleep<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn threaded_sleep<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let msec: u64 = args[0].decode()?;
 
     let q = msec / 1000;

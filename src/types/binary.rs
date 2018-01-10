@@ -1,4 +1,4 @@
-use ::{ NifEnv, NifError, NifResult, NifTerm, Encoder, Decoder };
+use ::{ NifEnv, NifError, NifResult, Term, Encoder, Decoder };
 use ::wrapper::nif_interface;
 use ::wrapper::binary::{ ErlNifBinary, alloc, realloc };
 
@@ -122,7 +122,7 @@ unsafe impl Send for OwnedNifBinary {}
 #[derive(Copy, Clone)]
 pub struct NifBinary<'a> {
     inner: ErlNifBinary,
-    term: NifTerm<'a>,
+    term: Term<'a>,
 }
 
 impl<'a> NifBinary<'a> {
@@ -131,7 +131,7 @@ impl<'a> NifBinary<'a> {
     /// After this point the binary will be immutable.
     pub fn from_owned(mut bin: OwnedNifBinary, env: NifEnv<'a>) -> Self {
         bin.release = false;
-        let term = unsafe { NifTerm::new(env, nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg())) };
+        let term = unsafe { Term::new(env, nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg())) };
         NifBinary {
             inner: bin.inner.clone(),
             term: term,
@@ -141,7 +141,7 @@ impl<'a> NifBinary<'a> {
     pub unsafe fn from_raw(env: NifEnv<'a>, bin: ErlNifBinary) -> NifBinary<'a> {
         NifBinary {
             inner: bin,
-            term: NifTerm::new(env, bin.bin_term),
+            term: Term::new(env, bin.bin_term),
         }
     }
 
@@ -149,7 +149,7 @@ impl<'a> NifBinary<'a> {
         OwnedNifBinary::from_unowned(self)
     }
 
-    pub fn from_term(term: NifTerm<'a>) -> Result<Self, NifError> {
+    pub fn from_term(term: Term<'a>) -> Result<Self, NifError> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe { nif_interface::enif_inspect_binary(term.get_env().as_c_arg(), term.as_c_arg(), binary.as_c_arg()) } == 0 {
             return Err(NifError::BadArg);
@@ -160,7 +160,7 @@ impl<'a> NifBinary<'a> {
         })
     }
 
-    pub fn to_term<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+    pub fn to_term<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
         self.term.in_env(env)
     }
 
@@ -177,7 +177,7 @@ impl<'a> NifBinary<'a> {
         }
 
         let raw_term = unsafe { nif_interface::enif_make_sub_binary(self.term.get_env().as_c_arg(), self.inner.bin_term, offset, length) };
-        let term = unsafe { NifTerm::new(self.term.get_env(), raw_term) };
+        let term = unsafe { Term::new(self.term.get_env(), raw_term) };
         // This should never fail, as we are always passing in a binary term.
         Ok(NifBinary::from_term(term).ok().unwrap())
     }
@@ -196,18 +196,18 @@ impl<'a> Deref for NifBinary<'a> {
 }
 
 impl<'a> Decoder<'a> for NifBinary<'a> {
-    fn decode(term: NifTerm<'a>) -> Result<Self, NifError> {
+    fn decode(term: Term<'a>) -> Result<Self, NifError> {
         NifBinary::from_term(term)
     }
 }
 impl<'a> Encoder for NifBinary<'a> {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+    fn encode<'b>(&self, env: NifEnv<'b>) -> Term<'b> {
         self.to_term(env)
     }
 }
 
 /// ## Binary terms
-impl<'a> NifTerm<'a> {
+impl<'a> Term<'a> {
 
     pub fn into_binary(self) -> NifResult<NifBinary<'a>> {
         NifBinary::from_term(self)

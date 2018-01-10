@@ -64,7 +64,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
 
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::NifError> {
                 use ::rustler::Encoder;
 
                 #atom_defs
@@ -99,7 +99,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
 
     quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
+            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 let mut map = ::rustler::types::map::map_new(env);
