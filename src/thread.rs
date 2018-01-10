@@ -1,6 +1,6 @@
 use ::{ Env, Term, Encoder };
 use ::env::OwnedEnv;
-use ::types::atom::NifAtom;
+use ::types::atom::Atom;
 use std::thread;
 use std::panic;
 
@@ -51,7 +51,7 @@ pub fn spawn<'a, S, F>(env: Env<'a>, thread_fn: F)
                         } else if let Some(&s) = err.downcast_ref::<&'static str>() {
                             s.encode(env)
                         } else {
-                            NifAtom::from_bytes(env, b"nif_panic").ok().unwrap().to_term(env)
+                            Atom::from_bytes(env, b"nif_panic").ok().unwrap().to_term(env)
                         };
                     env.error_tuple(reason)
                 }

@@ -65,7 +65,7 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[Variant], atom_defs: &Tokens, 
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #atom_defs
 
-                let value = ::rustler::types::atom::NifAtom::from_term(term)?;
+                let value = ::rustler::types::atom::Atom::from_term(term)?;
 
                 #(#variant_defs)*
 

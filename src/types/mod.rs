@@ -70,7 +70,7 @@ impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
         if let Ok(term) = term.decode::<T>() {
             Ok(Some(term))
         } else {
-            let decoded_atom: atom::NifAtom = term.decode()?;
+            let decoded_atom: atom::Atom = term.decode()?;
             if decoded_atom == atom::nil() {
                 Ok(None)
             } else {
@@ -91,7 +91,7 @@ impl<T, E> Encoder for Result<T, E> where T: Encoder, E: Encoder {
 
 impl<'a, T, E> Decoder<'a> for Result<T, E> where T: Decoder<'a>, E: Decoder<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let (decoded_atom, inner_term): (atom::NifAtom, Term) = term.decode()?;
+        let (decoded_atom, inner_term): (atom::Atom, Term) = term.decode()?;
         if decoded_atom == atom::ok() {
             let ok_value: T = inner_term.decode()?;
             Ok(Ok(ok_value))

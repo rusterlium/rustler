@@ -7,11 +7,11 @@ use ::wrapper::atom;
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
 #[derive(PartialEq, Eq, Clone, Copy)]
-pub struct NifAtom {
+pub struct Atom {
     term: NIF_TERM,
 }
 
-impl NifAtom {
+impl Atom {
     pub fn as_c_arg(&self) -> NIF_TERM {
         self.term
     }
@@ -22,14 +22,14 @@ impl NifAtom {
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
-        NifAtom {
+        Atom {
             term: term
         }
     }
 
     pub fn from_term(term: Term) -> NifResult<Self> {
         match term.is_atom() {
-            true => Ok(unsafe { NifAtom::from_nif_term(term.as_c_arg()) }),
+            true => Ok(unsafe { Atom::from_nif_term(term.as_c_arg()) }),
             false => Err(Error::BadArg)
         }
     }
@@ -38,12 +38,12 @@ impl NifAtom {
     ///
     /// # Errors
     /// `Error::BadArg` if `bytes.len() > 255`.
-    pub fn from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<NifAtom> {
+    pub fn from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<Atom> {
         if bytes.len() > 255 {
             return Err(Error::BadArg);
         }
         unsafe {
-            Ok(NifAtom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes)))
+            Ok(Atom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes)))
         }
     }
 
@@ -52,10 +52,10 @@ impl NifAtom {
     /// # Errors
     /// `Error::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
     /// long. The maximum length is 255 characters.
-    pub fn from_str<'a>(env: Env<'a>, string: &str) -> NifResult<NifAtom> {
+    pub fn from_str<'a>(env: Env<'a>, string: &str) -> NifResult<Atom> {
         if string.is_ascii() {
             // Fast path.
-            NifAtom::from_bytes(env, string.as_bytes())
+            Atom::from_bytes(env, string.as_bytes())
         } else {
             // Convert from Rust UTF-8 to Latin-1.
             let mut bytes = Vec::with_capacity(string.len());
@@ -65,30 +65,30 @@ impl NifAtom {
                 }
                 bytes.push(c as u8);
             }
-            NifAtom::from_bytes(env, &bytes)
+            Atom::from_bytes(env, &bytes)
         }
     }
 }
 
 use ::std::fmt;
-impl fmt::Debug for NifAtom {
+impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         ::wrapper::term::fmt(self.as_c_arg(), f)
     }
 }
 
-impl Encoder for NifAtom {
+impl Encoder for Atom {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.to_term(env)
     }
 }
-impl<'a> Decoder<'a> for NifAtom {
-    fn decode(term: Term<'a>) -> NifResult<NifAtom> {
-        NifAtom::from_term(term)
+impl<'a> Decoder<'a> for Atom {
+    fn decode(term: Term<'a>) -> NifResult<Atom> {
+        Atom::from_term(term)
     }
 }
 
-impl<'a> PartialEq<Term<'a>> for NifAtom {
+impl<'a> PartialEq<Term<'a>> for Atom {
     fn eq(&self, other: &Term<'a>) -> bool {
         self.as_c_arg() == other.as_c_arg()
     }
@@ -115,8 +115,8 @@ pub fn is_truthy(term: Term) -> bool {
 }
 
 // This is safe because atoms are never removed/changed once they are created.
-unsafe impl Sync for NifAtom {}
-unsafe impl Send for NifAtom {}
+unsafe impl Sync for Atom {}
+unsafe impl Send for Atom {}
 
 
 /// Macro for defining Rust functions that return Erlang atoms.
@@ -134,7 +134,7 @@ unsafe impl Send for NifAtom {}
 ///     }
 ///     # fn main() {}
 ///
-/// defines a public function `my_atoms::jpeg()` that returns the `NifAtom` for the `jpeg` atom.
+/// defines a public function `my_atoms::jpeg()` that returns the `Atom` for the `jpeg` atom.
 ///
 /// Multiple atoms can be defined. Each one can have its own doc comment and other attributes.
 ///
@@ -184,7 +184,7 @@ macro_rules! rustler_atoms {
     } => {
         #[allow(non_snake_case)]
         struct RustlerAtoms {
-            $( $name : $crate::types::atom::NifAtom ),*
+            $( $name : $crate::types::atom::Atom ),*
         }
         lazy_static! {
             static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
@@ -195,7 +195,7 @@ macro_rules! rustler_atoms {
         }
         $(
             $( #[$attr] )*
-            pub fn $name() -> $crate::types::atom::NifAtom {
+            pub fn $name() -> $crate::types::atom::Atom {
                 RUSTLER_ATOMS.$name
             }
         )*
@@ -206,7 +206,7 @@ macro_rules! rustler_atoms {
         rustler_atoms!(@internal_make_atom($env, $name = stringify!($name)))
     };
     { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
-        $crate::types::atom::NifAtom::from_str($env, $str)
+        $crate::types::atom::Atom::from_str($env, $str)
             .ok().expect("rustler_atoms: bad atom string")
     };
 }

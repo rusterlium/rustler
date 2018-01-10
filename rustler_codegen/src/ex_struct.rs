@@ -70,7 +70,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
                 #atom_defs
 
                 let env = term.get_env();
-                let module: ::rustler::types::atom::NifAtom = term.map_get(atom_struct().to_term(env))?.decode()?;
+                let module: ::rustler::types::atom::Atom = term.map_get(atom_struct().to_term(env))?.decode()?;
                 if module != atom_module() {
                     return Err(::rustler::Error::Atom("invalid_struct"));
                 }

@@ -2,7 +2,7 @@
 
 use ::{Env, Term};
 use std::panic::catch_unwind;
-use ::types::atom::NifAtom;
+use ::types::atom::Atom;
 use ::wrapper::exception;
 use ::NifResult;
 
@@ -43,7 +43,7 @@ pub unsafe fn handle_nif_call(function: for<'a> fn(Env<'a>, &[Term<'a>]) -> NifR
         Err(_err) =>
             exception::raise_exception(
                 env.as_c_arg(),
-                NifAtom::from_bytes(env, b"nif_panic").ok().unwrap().as_c_arg()),
+                Atom::from_bytes(env, b"nif_panic").ok().unwrap().as_c_arg()),
     }
 }
 

@@ -141,11 +141,11 @@ impl Error {
                 Term::new(env, exception)
             },
             Error::Atom(atom_str) => {
-                types::atom::NifAtom::from_str(env, atom_str)
+                types::atom::Atom::from_str(env, atom_str)
                     .ok().expect("Error::Atom: bad atom").to_term(env)
             },
             Error::RaiseAtom(atom_str) => {
-                let atom = types::atom::NifAtom::from_str(env, atom_str)
+                let atom = types::atom::Atom::from_str(env, atom_str)
                     .ok().expect("Error::RaiseAtom: bad argument");
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
