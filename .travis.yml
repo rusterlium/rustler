@@ -1,13 +1,23 @@
 language: elixir
+
 elixir:
   - 1.5
+
 otp_release:
   - 20.1
+
+env:
+  global:
+    - MIX_ENV=test
 
 sudo: true
 
 before_install:
   - curl https://static.rust-lang.org/rustup.sh | sh
+
+install:
+  - mix local.rebar --force
+  - mix local.hex --force
 
 script:
   - cargo test
