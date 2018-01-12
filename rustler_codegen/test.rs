@@ -990,7 +990,7 @@ mod resource {
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::ModSep));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("NifResourceTypeProvider"))));
+                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("ResourceTypeProvider"))));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::Ident(ext_cx.ident_of("for"))));
                                                                                                        tt.extend(struct_ident.to_tokens(ext_cx).into_iter());
@@ -1382,7 +1382,7 @@ mod resource {
                                                                                         tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                         ::syntax::parse::token::ModSep));
                                                                                         tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                        ::syntax::parse::token::Ident(ext_cx.ident_of("NifResourceTypeProvider"))));
+                                                                                                                                        ::syntax::parse::token::Ident(ext_cx.ident_of("ResourceTypeProvider"))));
                                                                                         tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                         ::syntax::parse::token::Semi));
                                                                                         tt.extend(struct_ident.to_tokens(ext_cx).into_iter());

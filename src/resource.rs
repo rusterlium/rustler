@@ -21,7 +21,7 @@ pub use ::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
 /// the resource type.
 /// 
-/// This is usually stored in an implementation of NifResourceTypeProvider.
+/// This is usually stored in an implementation of ResourceTypeProvider.
 #[doc(hidden)]
 pub struct NifResourceType<T> {
     pub res: NIF_RESOURCE_TYPE,
@@ -33,16 +33,16 @@ pub struct NifResourceType<T> {
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
-pub trait NifResourceTypeProvider: Sized + Send + Sync + 'static {
+pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static NifResourceType<Self>;
 }
 
-impl<T> Encoder for ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> Encoder for ResourceArc<T> where T: ResourceTypeProvider {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> Decoder<'a> for ResourceArc<T> where T: NifResourceTypeProvider + 'a {
+impl<'a, T> Decoder<'a> for ResourceArc<T> where T: ResourceTypeProvider + 'a {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         ResourceArc::from_term(term)
     }
@@ -65,7 +65,7 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 ///
 /// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
-pub fn open_struct_resource_type<'a, T: NifResourceTypeProvider>(env: Env<'a>, name: &str,
+pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(env: Env<'a>, name: &str,
                                  flags: NifResourceFlags) -> Option<NifResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
         ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(resource_destructor::<T>), flags)
@@ -101,18 +101,18 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 /// Rust code and Erlang code can both have references to the same resource at the same time.  Rust
 /// code uses `ResourceArc`; in Erlang, a reference to a resource is a kind of term.  You can
 /// convert back and forth between the two using `Encoder` and `Decoder`.
-pub struct ResourceArc<T> where T: NifResourceTypeProvider {
+pub struct ResourceArc<T> where T: ResourceTypeProvider {
     raw: *const c_void,
     inner: *mut T,
 }
 
 // Safe because T is `Sync` and `Send`.
-unsafe impl<T> Send for ResourceArc<T> where T: NifResourceTypeProvider {}
-unsafe impl<T> Sync for ResourceArc<T> where T: NifResourceTypeProvider {}
+unsafe impl<T> Send for ResourceArc<T> where T: ResourceTypeProvider {}
+unsafe impl<T> Sync for ResourceArc<T> where T: ResourceTypeProvider {}
 
-impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> ResourceArc<T> where T: ResourceTypeProvider {
     /// Makes a new ResourceArc from the given type. Note that the type must have
-    /// NifResourceTypeProvider implemented for it. See module documentation for info on this.
+    /// ResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
         let mem_raw = unsafe { ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
@@ -152,7 +152,7 @@ impl<T> ResourceArc<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Deref for ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> Deref for ResourceArc<T> where T: ResourceTypeProvider {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -160,7 +160,7 @@ impl<T> Deref for ResourceArc<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Clone for ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> Clone for ResourceArc<T> where T: ResourceTypeProvider {
     /// Cloning a `ResourceArc` simply increments the reference count for the
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
@@ -172,7 +172,7 @@ impl<T> Clone for ResourceArc<T> where T: NifResourceTypeProvider {
     }
 }
 
-impl<T> Drop for ResourceArc<T> where T: NifResourceTypeProvider {
+impl<T> Drop for ResourceArc<T> where T: ResourceTypeProvider {
     /// When a `ResourceArc` is dropped, the reference count is decremented. If
     /// there are no other references to the resource, the `T` value is dropped.
     ///
@@ -204,7 +204,7 @@ macro_rules! resource_struct_init {
                 };
             unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
-            impl $crate::resource::NifResourceTypeProvider for $struct_name {
+            impl $crate::resource::ResourceTypeProvider for $struct_name {
                 fn get_type() -> &'static $crate::resource::NifResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref()
                         .expect("The resource type hasn't been inited. Did you remember to call the function where you used the `resource_struct_init!` macro?")
