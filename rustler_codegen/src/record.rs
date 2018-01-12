@@ -107,7 +107,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     // The implementation itself
     quote! {
         impl<'b> ::rustler::Encoder for #struct_typ {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 use ::rustler::Encoder;
