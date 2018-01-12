@@ -1,6 +1,10 @@
 language: elixir
+elixir:
+  - 1.5
 otp_release:
   - 20.1
+
+sudo: true
 
 before_install:
   - curl https://static.rust-lang.org/rustup.sh | sh
