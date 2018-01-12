@@ -18,7 +18,7 @@ struct AddRecord {
     rhs: i32,
 }
 
-pub fn record_echo<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn record_echo<'a>(env: NifEnv<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let record: AddRecord = args[0].decode()?;
     Ok(record.encode(env))
 }

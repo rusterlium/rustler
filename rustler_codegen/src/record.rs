@@ -58,7 +58,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     // The implementation itself
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 let terms = try!(::rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num + 1 {
                     return Err(::rustler::Error::Atom("invalid_record"));
@@ -107,7 +107,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     // The implementation itself
     quote! {
         impl<'b> ::rustler::Encoder for #struct_typ {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
+            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 use ::rustler::Encoder;
