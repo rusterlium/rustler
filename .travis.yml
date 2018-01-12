@@ -1,30 +1,23 @@
-language: rust
+language: elixir
 
-rust:
-  - stable
-  - beta
-  - nightly
+elixir:
+  - 1.5
 
-matrix:
-  allow_failures:
-    - rust: nightly
+otp_release:
+  - 20.1
+
+env:
+  global:
+    - MIX_ENV=test
+
+sudo: true
 
 before_install:
-  - wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-  - sudo dpkg -i erlang-solutions_1.0_all.deb
-  - sudo apt-get -qq update
-  - sudo apt-get install -y --no-install-recommends erlang elixir tree
+  - curl https://static.rust-lang.org/rustup.sh | sh
+
+install:
+  - mix local.rebar --force
   - mix local.hex --force
-  - erl -version
-  - elixir --version
-  - mix --version
 
 script:
-  - cargo build --verbose
-  - cd test && mix test
-
-after_script:
-  - tree
-
-#addons:
-#  artifacts: true
+  - cargo test
