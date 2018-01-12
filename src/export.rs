@@ -61,7 +61,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::NifScheduleFlags::Normal))
+        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
     };
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
@@ -79,7 +79,7 @@ macro_rules! rustler_export_nifs {
                 }
                 nif_func
             },
-            flags: ($nif_flag as $crate::schedule::NifScheduleFlags) as u32,
+            flags: ($nif_flag as $crate::schedule::SchedulerFlags) as u32,
         }
     };
 

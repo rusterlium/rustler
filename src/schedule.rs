@@ -1,7 +1,7 @@
 use super::Env;
 use super::wrapper::nif_interface::enif_consume_timeslice;
 
-pub enum NifScheduleFlags {
+pub enum SchedulerFlags {
     Normal = 0,
     DirtyCpu = 1,
     DirtyIo = 2,
