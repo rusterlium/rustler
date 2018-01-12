@@ -58,17 +58,17 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     // The implementation itself
     quote! {
         impl<'a> ::rustler::NifDecoder<'a> for #struct_typ {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::Error> {
                 let terms = try!(::rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num + 1 {
-                    return Err(::rustler::NifError::Atom("invalid_record"));
+                    return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
                 #atom_defs
 
                 let tag : ::rustler::types::atom::NifAtom  = terms[0].decode()?;
                 if tag != atom_tag() {
-                    return Err(::rustler::NifError::Atom("invalid_record"));
+                    return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
                 Ok(
