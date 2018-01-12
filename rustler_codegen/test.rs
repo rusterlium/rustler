@@ -832,7 +832,7 @@ mod resource {
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::ModSep));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("NifResourceType"))));
+                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("ResourceType"))));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::Lt));
                                                                                                        tt.extend(struct_ident.to_tokens(ext_cx).into_iter());
@@ -1095,7 +1095,7 @@ mod resource {
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::ModSep));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("NifResourceType"))));
+                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("ResourceType"))));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::Lt));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
@@ -1154,7 +1154,7 @@ mod resource {
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::ModSep));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
-                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("NifResourceType"))));
+                                                                                                                                                       ::syntax::parse::token::Ident(ext_cx.ident_of("ResourceType"))));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,
                                                                                                                                                        ::syntax::parse::token::Lt));
                                                                                                        tt.push(::syntax::tokenstream::TokenTree::Token(_sp,

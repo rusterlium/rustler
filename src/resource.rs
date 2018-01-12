@@ -17,24 +17,24 @@ use ::wrapper::nif_interface::{ c_void };
 #[doc(hidden)]
 pub use ::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
 
-/// The NifResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
+/// The ResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
 /// the resource type.
-/// 
+///
 /// This is usually stored in an implementation of ResourceTypeProvider.
 #[doc(hidden)]
-pub struct NifResourceType<T> {
+pub struct ResourceType<T> {
     pub res: NIF_RESOURCE_TYPE,
     pub struct_type: PhantomData<T>,
 }
 
 /// This trait gets implemented for the type we want to put into a resource when
-/// resource_struct_init! is called on it. It provides the NifResourceType.
+/// resource_struct_init! is called on it. It provides the ResourceType.
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
 pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
-    fn get_type() -> &'static NifResourceType<Self>;
+    fn get_type() -> &'static ResourceType<Self>;
 }
 
 impl<T> Encoder for ResourceArc<T> where T: ResourceTypeProvider {
@@ -66,12 +66,12 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 /// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
 pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(env: Env<'a>, name: &str,
-                                 flags: NifResourceFlags) -> Option<NifResourceType<T>> {
+                                 flags: NifResourceFlags) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
         ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(resource_destructor::<T>), flags)
     };
     if res.is_some() {
-        Some(NifResourceType {
+        Some(ResourceType {
             res: res.unwrap(),
             struct_type: PhantomData,
         })
@@ -188,7 +188,7 @@ impl<T> Drop for ResourceArc<T> where T: ResourceTypeProvider {
 macro_rules! resource_struct_init {
     ($struct_name:ty, $env: ident) => {
         {
-            static mut STRUCT_TYPE: Option<$crate::resource::NifResourceType<$struct_name>> = None;
+            static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
 
             let temp_struct_type =
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
@@ -205,7 +205,7 @@ macro_rules! resource_struct_init {
             unsafe { STRUCT_TYPE = Some(temp_struct_type) };
 
             impl $crate::resource::ResourceTypeProvider for $struct_name {
-                fn get_type() -> &'static $crate::resource::NifResourceType<Self> {
+                fn get_type() -> &'static $crate::resource::ResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref()
                         .expect("The resource type hasn't been inited. Did you remember to call the function where you used the `resource_struct_init!` macro?")
                 }
