@@ -66,7 +66,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
 
                 #atom_defs
 
-                let tag : ::rustler::types::atom::NifAtom  = terms[0].decode()?;
+                let tag : ::rustler::types::atom::Atom  = terms[0].decode()?;
                 if tag != atom_tag() {
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }
