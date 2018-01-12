@@ -33,7 +33,7 @@ This is the code for a minimal NIF that adds two numbers and returns the result.
 #[macro_use] extern crate rustler;
 #[macro_use] extern crate lazy_static;
 
-use rustler::{NifEnv, NifTerm, NifResult, NifEncoder};
+use rustler::{Env, Term, NifResult, Encoder};
 
 mod atoms {
     rustler_atoms! {
@@ -47,7 +47,7 @@ rustler_export_nifs!(
     None
 );
 
-fn add<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let num1: i64 = try!(args[0].decode());
     let num2: i64 = try!(args[1].decode());
 
