@@ -10,7 +10,7 @@ license = "MIT/Apache-2.0"
 alternative_nif_init_name = []
 
 [dependencies]
-erlang_nif-sys = ">=0.6.2"
+erlang_nif-sys = ">=0.6.3"
 lazy_static = "0.1.*"
 
 [package.metadata.release]
