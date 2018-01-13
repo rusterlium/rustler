@@ -43,7 +43,6 @@ mod term;
 
 pub use term::{ Term };
 pub use types::{Encoder, Decoder};
-pub use wrapper::nif_interface::ErlNifTaskFlags;
 pub mod resource;
 
 #[doc(hidden)]
@@ -58,6 +57,7 @@ mod export;
 
 pub type NifResult<T> = Result<T, Error>;
 
+pub use schedule::SchedulerFlags;
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
