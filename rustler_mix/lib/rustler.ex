@@ -74,7 +74,7 @@ defmodule Rustler do
 
     priv_dir = otp_app |> :code.priv_dir() |> to_string()
     load_data = opts[:load_data] || config[:load_data] || 0
-    so_path = "#{priv_dir}/native/#{crate}"
+    so_path = String.to_charlist("#{priv_dir}/native/#{crate}")
 
     {so_path, load_data}
   end
