@@ -64,6 +64,11 @@ defmodule Mix.Tasks.Compile.Rustler do
     compiled_lib = Path.join([target_dir, Atom.to_string(build_mode), src_file])
     destination_lib = Path.join(priv_dir(), dst_file)
 
+    # If the file exists already, we delete it first. This is to ensure that another
+    # process, which might have the library dynamically linked in, does not generate
+    # a segfault. By deleting it first, we ensure that the copy operation below does
+    # not write into the existing file.
+    File.rm(destination_lib)
     File.cp!(compiled_lib, destination_lib)
   end
 
