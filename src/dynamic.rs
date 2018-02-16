@@ -1,4 +1,4 @@
-use ::{NifTerm};
+use ::{Term};
 use ::wrapper::check;
 
 pub enum TermType {
@@ -16,7 +16,7 @@ pub enum TermType {
     Unknown
 }
 
-pub fn get_type(term: NifTerm) -> TermType {
+pub fn get_type(term: Term) -> TermType {
     if term.is_atom() {
         TermType::Atom
     } else if term.is_binary() {
@@ -53,7 +53,7 @@ macro_rules! impl_check {
 }
 
 /// ## Type checks
-impl<'a> NifTerm<'a> {
+impl<'a> Term<'a> {
 
     /// Returns an enum representing which type the term is.
     /// Note that using the individual `is_*` functions is more

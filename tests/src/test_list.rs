@@ -1,10 +1,10 @@
-use rustler::{NifEnv, NifTerm, NifError, NifEncoder, NifResult};
-use rustler::types::list::NifListIterator;
+use rustler::{Env, Term, Error, Encoder, NifResult};
+use rustler::types::list::ListIterator;
 
-pub fn sum_list<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
-    let iter: NifListIterator = try!(args[0].decode());
+pub fn sum_list<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    let iter: ListIterator = try!(args[0].decode());
 
-    let res: Result<Vec<i64>, NifError> = iter
+    let res: Result<Vec<i64>, Error> = iter
         .map(|x| x.decode::<i64>())
         .collect();
 
@@ -14,7 +14,7 @@ pub fn sum_list<'a>(env: NifEnv<'a>, args: &[NifTerm<'a>]) -> NifResult<NifTerm<
     }
 }
 
-pub fn make_list<'a>(env: NifEnv<'a>, _args: &[NifTerm<'a>]) -> NifResult<NifTerm<'a>> {
+pub fn make_list<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let list = vec![1, 2, 3];
     Ok(list.encode(env))
 }

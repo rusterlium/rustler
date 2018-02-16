@@ -41,9 +41,8 @@ pub mod types;
 
 mod term;
 
-pub use term::{ NifTerm };
-pub use types::{ NifEncoder, NifDecoder };
-pub use wrapper::nif_interface::ErlNifTaskFlags;
+pub use term::{ Term };
+pub use types::{Encoder, Decoder};
 pub mod resource;
 
 #[doc(hidden)]
@@ -56,46 +55,47 @@ pub mod thread;
 
 mod export;
 
-pub type NifResult<T> = Result<T, NifError>;
+pub type NifResult<T> = Result<T, Error>;
 
+pub use schedule::SchedulerFlags;
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
-/// purpose is to make `NifEnv<'a>` and `NifTerm<'a>` *invariant* w.r.t. `'a`, so that Rust won't
-/// auto-convert a `NifEnv<'a>` to a `NifEnv<'b>`.
+/// purpose is to make `Env<'a>` and `Term<'a>` *invariant* w.r.t. `'a`, so that Rust won't
+/// auto-convert a `Env<'a>` to a `Env<'b>`.
 type EnvId<'a> = PhantomData<*mut &'a u8>;
 
-/// On each NIF call, a NifEnv is passed in. The NifEnv is used for most operations that involve
+/// On each NIF call, a Env is passed in. The Env is used for most operations that involve
 /// communicating with the BEAM, like decoding and encoding terms.
 ///
-/// There is no way to allocate a NifEnv at the moment, but this may be possible in the future.
+/// There is no way to allocate a Env at the moment, but this may be possible in the future.
 #[derive(Clone, Copy)]
-pub struct NifEnv<'a> {
+pub struct Env<'a> {
     env: NIF_ENV,
     id: EnvId<'a>
 }
 
 /// Two environments are equal if they're the same `NIF_ENV` value.
 ///
-/// A `NifEnv<'a>` is equal to a `NifEnv<'b>` iff `'a` and `'b` are the same lifetime.
-impl<'a, 'b> PartialEq<NifEnv<'b>> for NifEnv<'a> {
-    fn eq(&self, other: &NifEnv<'b>) -> bool {
+/// A `Env<'a>` is equal to a `Env<'b>` iff `'a` and `'b` are the same lifetime.
+impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
+    fn eq(&self, other: &Env<'b>) -> bool {
         self.env == other.env
     }
 }
 
-impl<'a> NifEnv<'a> {
-    /// Create a new NifEnv. For the `_lifetime_marker` argument, pass a
+impl<'a> Env<'a> {
+    /// Create a new Env. For the `_lifetime_marker` argument, pass a
     /// reference to any local variable that has its own lifetime, different
-    /// from all other `NifEnv` values. The purpose of the argument is to make
-    /// it easier to know for sure that the `NifEnv` you're creating has a
+    /// from all other `Env` values. The purpose of the argument is to make
+    /// it easier to know for sure that the `Env` you're creating has a
     /// unique lifetime (i.e. that you're following the most important safety
     /// rule of Rustler).
     ///
     /// # Unsafe
-    /// Don't create multiple `NifEnv`s with the same lifetime.
-    unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> NifEnv<'a> {
-        NifEnv {
+    /// Don't create multiple `Env`s with the same lifetime.
+    unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
+        Env {
             env: env,
             id: PhantomData
         }
@@ -106,8 +106,8 @@ impl<'a> NifEnv<'a> {
     }
 
     /// Convenience method for building a tuple `{error, Reason}`.
-    pub fn error_tuple<T>(self, reason: T) -> NifTerm<'a>
-        where T: NifEncoder
+    pub fn error_tuple<T>(self, reason: T) -> Term<'a>
+        where T: Encoder
     {
         let error = types::atom::error().to_term(self);
         (error, reason).encode(self)
@@ -116,48 +116,48 @@ impl<'a> NifEnv<'a> {
 
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have
-/// an NifEnv availible.
-pub enum NifError {
+/// an Env availible.
+pub enum Error {
     /// Returned when the NIF has been called with the wrong number or type of
     /// arguments.
     BadArg,
     /// Encodes the string into an atom and returns it from the NIF.
     Atom(&'static str),
     RaiseAtom(&'static str),
-    RaiseTerm(Box<NifEncoder>),
+    RaiseTerm(Box<Encoder>),
 }
 
-impl NifError {
+impl Error {
 
     /// # Unsafe
     ///
     /// If `self` is a `BadArg`, `RaiseAtom`, or `RaiseTerm` value, then the
     /// term returned from this method must not be used except as the return
     /// value from the calling NIF.
-    unsafe fn encode<'a>(self, env: NifEnv<'a>) -> NifTerm<'a> {
+    unsafe fn encode<'a>(self, env: Env<'a>) -> Term<'a> {
         match self {
-            NifError::BadArg => {
+            Error::BadArg => {
                 let exception = wrapper::exception::raise_badarg(env.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
-            NifError::Atom(atom_str) => {
-                types::atom::NifAtom::from_str(env, atom_str)
-                    .ok().expect("NifError::Atom: bad atom").to_term(env)
+            Error::Atom(atom_str) => {
+                types::atom::Atom::from_str(env, atom_str)
+                    .ok().expect("Error::Atom: bad atom").to_term(env)
             },
-            NifError::RaiseAtom(atom_str) => {
-                let atom = types::atom::NifAtom::from_str(env, atom_str)
-                    .ok().expect("NifError::RaiseAtom: bad argument");
+            Error::RaiseAtom(atom_str) => {
+                let atom = types::atom::Atom::from_str(env, atom_str)
+                    .ok().expect("Error::RaiseAtom: bad argument");
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     atom.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
-            NifError::RaiseTerm(ref term_unencoded) => {
+            Error::RaiseTerm(ref term_unencoded) => {
                 let term = term_unencoded.encode(env);
                 let exception = wrapper::exception::raise_exception(
                     env.as_c_arg(),
                     term.as_c_arg());
-                NifTerm::new(env, exception)
+                Term::new(env, exception)
             },
         }
     }

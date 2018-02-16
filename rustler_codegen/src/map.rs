@@ -46,7 +46,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
         let atom_fun = Ident::new(format!("atom_{}", ident_str));
 
         quote! {
-            #ident: ::rustler::NifDecoder::decode(term.map_get(#atom_fun().encode(env))?)?
+            #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
         }
     }).collect();
 
@@ -57,8 +57,8 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     };
 
     quote! {
-        impl<'a> ::rustler::NifDecoder<'a> for #struct_type {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+        impl<'a> ::rustler::Decoder<'a> for #struct_type {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #atom_defs
 
                 let env = term.get_env();
@@ -87,8 +87,8 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     };
 
     quote! {
-        impl<'b> ::rustler::NifEncoder for #struct_type {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
+        impl<'b> ::rustler::Encoder for #struct_type {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
                 let mut map = ::rustler::types::map::map_new(env);

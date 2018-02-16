@@ -40,7 +40,7 @@ pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str
 pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens, has_lifetime: bool) -> Tokens {
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { try!(::rustler::NifDecoder::decode(terms[#idx + 1])) };
+        let decoder = quote! { try!(::rustler::Decoder::decode(terms[#idx + 1])) };
 
         let ident = field.clone().ident.unwrap();
         quote! { #ident: #decoder }
@@ -57,18 +57,18 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
 
     // The implementation itself
     quote! {
-        impl<'a> ::rustler::NifDecoder<'a> for #struct_typ {
-            fn decode(term: ::rustler::NifTerm<'a>) -> Result<Self, ::rustler::NifError> {
+        impl<'a> ::rustler::Decoder<'a> for #struct_typ {
+            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 let terms = try!(::rustler::types::tuple::get_tuple(term));
                 if terms.len() != #field_num + 1 {
-                    return Err(::rustler::NifError::Atom("invalid_record"));
+                    return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
                 #atom_defs
 
-                let tag : ::rustler::types::atom::NifAtom  = terms[0].decode()?;
+                let tag : ::rustler::types::atom::Atom  = terms[0].decode()?;
                 if tag != atom_tag() {
-                    return Err(::rustler::NifError::Atom("invalid_record"));
+                    return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
                 Ok(
@@ -106,11 +106,11 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
 
     // The implementation itself
     quote! {
-        impl<'b> ::rustler::NifEncoder for #struct_typ {
-            fn encode<'a>(&self, env: ::rustler::NifEnv<'a>) -> ::rustler::NifTerm<'a> {
+        impl<'b> ::rustler::Encoder for #struct_typ {
+            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
-                use ::rustler::NifEncoder;
+                use ::rustler::Encoder;
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }

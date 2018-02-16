@@ -6,8 +6,8 @@ extern crate rustler_codegen;
 #[macro_use]
 extern crate lazy_static;
 
-use rustler::{NifEnv, NifTerm};
-use rustler::schedule::NifScheduleFlags;
+use rustler::{Env, Term};
+use rustler::schedule::SchedulerFlags;
 
 mod test_primitives;
 mod test_list;
@@ -69,13 +69,13 @@ rustler_export_nifs!(
         ("unit_enum_echo", 1, test_codegen::unit_enum_echo),
         ("untagged_enum_echo", 1, test_codegen::untagged_enum_echo),
 
-        ("dirty_cpu", 0, test_dirty::dirty_cpu, NifScheduleFlags::DirtyCpu),
-        ("dirty_io", 0, test_dirty::dirty_io, NifScheduleFlags::DirtyIo),
+        ("dirty_cpu", 0, test_dirty::dirty_cpu, SchedulerFlags::DirtyCpu),
+        ("dirty_io", 0, test_dirty::dirty_io, SchedulerFlags::DirtyIo),
     ],
     Some(on_load)
 );
 
-fn on_load<'a>(env: NifEnv<'a>, _load_info: NifTerm<'a>) -> bool {
+fn on_load<'a>(env: Env<'a>, _load_info: Term<'a>) -> bool {
     test_resource::on_load(env);
     test_atom::on_load(env);
     true

@@ -1,7 +1,7 @@
 use ::{
-    NifEnv,
-    NifError,
-    NifTerm,
+    Env,
+    Error,
+    Term,
     NifResult,
 };
 
@@ -10,15 +10,15 @@ pub mod atom;
 
 #[doc(hidden)]
 pub mod binary;
-pub use types::binary::{ NifBinary, OwnedNifBinary };
+pub use types::binary::{ Binary, OwnedBinary };
 
 #[doc(hidden)]
 pub mod list;
-pub use types::list::NifListIterator;
+pub use types::list::ListIterator;
 
 #[doc(hidden)]
 pub mod map;
-pub use types::map::NifMapIterator;
+pub use types::map::MapIterator;
 
 #[doc(hidden)]
 pub mod primitive;
@@ -28,36 +28,36 @@ pub mod tuple;
 
 #[doc(hidden)]
 pub mod pid;
-pub use types::pid::NifPid;
+pub use types::pid::Pid;
 
 pub mod elixir_struct;
 
-pub trait NifEncoder {
-    fn encode<'a>(&self, env: NifEnv<'a>) -> NifTerm<'a>;
+pub trait Encoder {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a>;
 }
-pub trait NifDecoder<'a>: Sized+'a {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self>;
+pub trait Decoder<'a>: Sized+'a {
+    fn decode(term: Term<'a>) -> NifResult<Self>;
 }
 
-impl<'a> NifEncoder for NifTerm<'a> {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+impl<'a> Encoder for Term<'a> {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.in_env(env)
     }
 }
-impl<'a> NifDecoder<'a> for NifTerm<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+impl<'a> Decoder<'a> for Term<'a> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
         Ok(term)
     }
 }
 
-impl<'a, T> NifEncoder for &'a T where T: NifEncoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> NifTerm<'c> {
-        <T as NifEncoder>::encode(self, env)
+impl<'a, T> Encoder for &'a T where T: Encoder {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
+        <T as Encoder>::encode(self, env)
     }
 }
 
-impl<T> NifEncoder for Option<T> where T: NifEncoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> NifTerm<'c> {
+impl<T> Encoder for Option<T> where T: Encoder {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Some(ref value) => value.encode(env),
             None => atom::nil().encode(env),
@@ -65,23 +65,23 @@ impl<T> NifEncoder for Option<T> where T: NifEncoder {
     }
 }
 
-impl<'a, T> NifDecoder<'a> for Option<T> where T: NifDecoder<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
+impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
         if let Ok(term) = term.decode::<T>() {
             Ok(Some(term))
         } else {
-            let decoded_atom: atom::NifAtom = term.decode()?;
+            let decoded_atom: atom::Atom = term.decode()?;
             if decoded_atom == atom::nil() {
                 Ok(None)
             } else {
-                Err(NifError::BadArg)
+                Err(Error::BadArg)
             }
         }
     }
 }
 
-impl<T, E> NifEncoder for Result<T, E> where T: NifEncoder, E: NifEncoder {
-    fn encode<'c>(&self, env: NifEnv<'c>) -> NifTerm<'c> {
+impl<T, E> Encoder for Result<T, E> where T: Encoder, E: Encoder {
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Ok(ref value) => (atom::ok().encode(env), value.encode(env)).encode(env),
             Err(ref err) => (atom::error().encode(env), err.encode(env)).encode(env),
@@ -89,9 +89,9 @@ impl<T, E> NifEncoder for Result<T, E> where T: NifEncoder, E: NifEncoder {
     }
 }
 
-impl<'a, T, E> NifDecoder<'a> for Result<T, E> where T: NifDecoder<'a>, E: NifDecoder<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        let (decoded_atom, inner_term): (atom::NifAtom, NifTerm) = term.decode()?;
+impl<'a, T, E> Decoder<'a> for Result<T, E> where T: Decoder<'a>, E: Decoder<'a> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let (decoded_atom, inner_term): (atom::Atom, Term) = term.decode()?;
         if decoded_atom == atom::ok() {
             let ok_value: T = inner_term.decode()?;
             Ok(Ok(ok_value))
@@ -99,7 +99,7 @@ impl<'a, T, E> NifDecoder<'a> for Result<T, E> where T: NifDecoder<'a>, E: NifDe
             let err_value: E = inner_term.decode()?;
             Ok(Err(err_value))
         } else {
-            Err(NifError::BadArg)
+            Err(Error::BadArg)
         }
     }
 }

@@ -12,7 +12,7 @@
 /// is the arity (number of arguments) of the exported function. The third argument is a
 /// indentifier of a rust function. This is where your actual NIF will be implemented.
 ///
-/// The third argument is an `Option<fn(env: &NifEnv, load_info: NifTerm) -> bool>`. If this is
+/// The third argument is an `Option<fn(env: &Env, load_info: Term) -> bool>`. If this is
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
 #[macro_export]
 macro_rules! rustler_export_nifs {
@@ -61,7 +61,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::NifScheduleFlags::Normal))
+        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
     };
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
@@ -79,10 +79,10 @@ macro_rules! rustler_export_nifs {
                 }
                 nif_func
             },
-            flags: ($nif_flag as $crate::schedule::NifScheduleFlags) as u32,
+            flags: ($nif_flag as $crate::schedule::SchedulerFlags) as u32,
         }
     };
-    
+
     (internal_platform_init, ($inner:expr)) => {
         #[cfg(not(feature = "alternative_nif_init_name"))]
         #[cfg(unix)]
@@ -90,7 +90,7 @@ macro_rules! rustler_export_nifs {
         pub extern "C" fn nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
             $inner
         }
-        
+
         #[cfg(not(feature = "alternative_nif_init_name"))]
         #[cfg(windows)]
         #[no_mangle]
@@ -98,7 +98,7 @@ macro_rules! rustler_export_nifs {
             unsafe {
                 $crate::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
-            
+
             $inner
         }
 
@@ -108,7 +108,7 @@ macro_rules! rustler_export_nifs {
         pub extern "C" fn rustler_nif_init() -> *const $crate::codegen_runtime::DEF_NIF_ENTRY {
             $inner
         }
-        
+
         #[cfg(feature = "alternative_nif_init_name")]
         #[cfg(windows)]
         #[no_mangle]
@@ -116,7 +116,7 @@ macro_rules! rustler_export_nifs {
             unsafe {
                 $crate::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
-            
+
             $inner
         }
     };

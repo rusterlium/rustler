@@ -1,8 +1,8 @@
 //! Utilities used for working with erlang linked lists.
 //!
-//! Right now the only supported way to read lists are through the NifListIterator.
+//! Right now the only supported way to read lists are through the ListIterator.
 
-use ::{ NifTerm, NifError, NifResult, NifDecoder, NifEncoder, NifEnv };
+use ::{ Term, Error, NifResult, Decoder, Encoder, Env };
 use ::wrapper::list;
 
 /// Enables iteration over the items in the list.
@@ -12,7 +12,7 @@ use ::wrapper::list;
 /// [docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html)), there are a couple of tricky
 /// parts to using it.
 ///
-/// Because the iterator is an iterator over `NifTerm`s, you need to decode the terms before you
+/// Because the iterator is an iterator over `Term`s, you need to decode the terms before you
 /// can do anything with them.
 ///
 /// ## Example
@@ -24,29 +24,29 @@ use ::wrapper::list;
 /// the `Result`s out of the list. (Contains extra type annotations for clarity)
 ///
 /// ```
-/// # use rustler::{NifTerm, NifResult};
-/// # use rustler::types::list::NifListIterator;
-/// # fn list_iterator_example(list_term: NifTerm) -> NifResult<Vec<i64>> {
-/// let list_iterator: NifListIterator = try!(list_term.decode());
+/// # use rustler::{Term, NifResult};
+/// # use rustler::types::list::ListIterator;
+/// # fn list_iterator_example(list_term: Term) -> NifResult<Vec<i64>> {
+/// let list_iterator: ListIterator = try!(list_term.decode());
 ///
 /// let result: NifResult<Vec<i64>> = list_iterator
 ///     // Produces an iterator of NifResult<i64>
 ///     .map(|x| x.decode::<i64>())
 ///     // Lifts each value out of the result. Returns Ok(Vec<i64>) if successful, the first error
-///     // Error(NifError) on failure.
+///     // Error(Error) on failure.
 ///     .collect::<NifResult<Vec<i64>>>();
 /// # result
 /// # }
 /// ```
-pub struct NifListIterator<'a> {
-    term: NifTerm<'a>,
+pub struct ListIterator<'a> {
+    term: Term<'a>,
 }
 
-impl<'a> NifListIterator<'a> {
+impl<'a> ListIterator<'a> {
 
-    fn new(term: NifTerm<'a>) -> Option<Self> {
+    fn new(term: Term<'a>) -> Option<Self> {
         if term.is_list() || term.is_empty_list() {
-            let iter = NifListIterator {
+            let iter = ListIterator {
                 term: term,
             };
             Some(iter)
@@ -57,17 +57,17 @@ impl<'a> NifListIterator<'a> {
 
 }
 
-impl<'a> Iterator for NifListIterator<'a> {
-    type Item = NifTerm<'a>;
+impl<'a> Iterator for ListIterator<'a> {
+    type Item = Term<'a>;
 
-    fn next(&mut self) -> Option<NifTerm<'a>> {
+    fn next(&mut self) -> Option<Term<'a>> {
         let env = self.term.get_env();
         let cell = unsafe { list::get_list_cell(env.as_c_arg(), self.term.as_c_arg()) };
 
         match cell {
             Some((head, tail)) => unsafe {
-                self.term = NifTerm::new(self.term.get_env(), tail);
-                Some(NifTerm::new(self.term.get_env(), head))
+                self.term = Term::new(self.term.get_env(), tail);
+                Some(Term::new(self.term.get_env(), head))
             },
             None => {
                 if self.term.is_empty_list() {
@@ -81,31 +81,31 @@ impl<'a> Iterator for NifListIterator<'a> {
     }
 }
 
-impl<'a> NifDecoder<'a> for NifListIterator<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        match NifListIterator::new(term) {
+impl<'a> Decoder<'a> for ListIterator<'a> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        match ListIterator::new(term) {
             Some(iter) => Ok(iter),
-            None => Err(NifError::BadArg)
+            None => Err(Error::BadArg)
         }
     }
 }
 
-//impl<'a, T> NifEncoder for Iterator<Item = T> where T: NifEncoder {
-//    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+//impl<'a, T> Encoder for Iterator<Item = T> where T: Encoder {
+//    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
 //        let term_arr: Vec<::wrapper::nif_interface::NIF_TERM> =
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
 
-impl<'a, T> NifEncoder for Vec<T> where T: NifEncoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+impl<'a, T> Encoder for Vec<T> where T: Encoder {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.as_slice().encode(env)
     }
 }
 
-impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
-    fn decode(term: NifTerm<'a>) -> NifResult<Self> {
-        let iter: NifListIterator = try!(term.decode());
+impl<'a, T> Decoder<'a> for Vec<T> where T: Decoder<'a> {
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let iter: ListIterator = try!(term.decode());
         let res: NifResult<Self> = iter
             .map(|x| x.decode::<T>())
             .collect();
@@ -113,36 +113,36 @@ impl<'a, T> NifDecoder<'a> for Vec<T> where T: NifDecoder<'a> {
     }
 }
 
-impl<'a, T> NifEncoder for [T] where T: NifEncoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+impl<'a, T> Encoder for [T] where T: Encoder {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+        unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
-impl<'a, T> NifEncoder for &'a [T] where T: NifEncoder {
-    fn encode<'b>(&self, env: NifEnv<'b>) -> NifTerm<'b> {
+impl<'a, T> Encoder for &'a [T] where T: Encoder {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        unsafe { NifTerm::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+        unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
 
 /// ## List terms
-impl<'a> NifTerm<'a> {
+impl<'a> Term<'a> {
 
     /// Returns a new empty list.
-    pub fn list_new_empty(env: NifEnv<'a>) -> NifTerm<'a> {
+    pub fn list_new_empty(env: Env<'a>) -> Term<'a> {
         let list: &[u8] = &[];
         list.encode(env)
     }
 
     /// Returns an iterator over a list term.
-    /// See documentation for NifListIterator for more information.
+    /// See documentation for ListIterator for more information.
     ///
     /// Returns None if the term is not a list.
-    pub fn into_list_iterator(self) -> NifResult<NifListIterator<'a>> {
-        NifListIterator::new(self).ok_or(NifError::BadArg)
+    pub fn into_list_iterator(self) -> NifResult<ListIterator<'a>> {
+        ListIterator::new(self).ok_or(Error::BadArg)
     }
 
     /// Returns the length of a list term.
@@ -155,7 +155,7 @@ impl<'a> NifTerm<'a> {
     /// ```
     pub fn list_length(self) -> NifResult<usize> {
         unsafe { list::get_list_length(self.get_env().as_c_arg(), self.as_c_arg()) }
-            .ok_or(NifError::BadArg)
+            .ok_or(Error::BadArg)
     }
 
     /// Unpacks a single cell at the head of a list term,
@@ -168,33 +168,33 @@ impl<'a> NifTerm<'a> {
     /// [head, tail] = self_term
     /// {head, tail}
     /// ```
-    pub fn list_get_cell(self) -> NifResult<(NifTerm<'a>, NifTerm<'a>)> {
+    pub fn list_get_cell(self) -> NifResult<(Term<'a>, Term<'a>)> {
         let env = self.get_env();
         unsafe {
             list::get_list_cell(env.as_c_arg(), self.as_c_arg())
-                .map(|(t1, t2)| (NifTerm::new(env, t1), NifTerm::new(env, t2)))
-                .ok_or(NifError::BadArg)
+                .map(|(t1, t2)| (Term::new(env, t1), Term::new(env, t2)))
+                .ok_or(Error::BadArg)
         }
     }
 
     /// Makes a copy of the self list term and reverses it.
     ///
-    /// Returns Err(NifError::BadArg) if the term is not a list.
-    pub fn list_reverse(self) -> NifResult<NifTerm<'a>> {
+    /// Returns Err(Error::BadArg) if the term is not a list.
+    pub fn list_reverse(self) -> NifResult<Term<'a>> {
         let env = self.get_env();
         unsafe {
             list::make_reverse_list(env.as_c_arg(), self.as_c_arg())
-                .map(|t| NifTerm::new(env, t))
-                .ok_or(NifError::BadArg)
+                .map(|t| Term::new(env, t))
+                .ok_or(Error::BadArg)
         }
     }
 
     /// Adds `head` in a list cell with `self` as tail.
-    pub fn list_prepend(self, head: NifTerm<'a>) -> NifTerm<'a> {
+    pub fn list_prepend(self, head: Term<'a>) -> Term<'a> {
         let env = self.get_env();
         unsafe {
             let term = list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
-            NifTerm::new(env, term)
+            Term::new(env, term)
         }
     }
 
