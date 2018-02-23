@@ -144,6 +144,7 @@ defmodule Mix.Tasks.Compile.Rustler do
         File.rm_rf!(target)
         File.cp_r!(source, target)
       end
+      :ok
     else
       Mix.Utils.symlink_or_copy(source, target)
     end
