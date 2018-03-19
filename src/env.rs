@@ -1,10 +1,65 @@
-use ::{ Env, Term };
-use ::wrapper::nif_interface::{ self, NIF_ENV, NIF_TERM };
-use ::types::pid::Pid;
+use {Encoder, Term};
+use wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
+use types::pid::Pid;
 use std::ptr;
 use std::sync::{Arc, Weak};
+use std::marker::PhantomData;
+
+/// Private type system hack to help ensure that each environment exposed to safe Rust code is
+/// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
+/// purpose is to make `Env<'a>` and `Term<'a>` *invariant* w.r.t. `'a`, so that Rust won't
+/// auto-convert a `Env<'a>` to a `Env<'b>`.
+type EnvId<'a> = PhantomData<*mut &'a u8>;
+
+/// On each NIF call, a Env is passed in. The Env is used for most operations that involve
+/// communicating with the BEAM, like decoding and encoding terms.
+///
+/// There is no way to allocate a Env at the moment, but this may be possible in the future.
+#[derive(Clone, Copy)]
+pub struct Env<'a> {
+    env: NIF_ENV,
+    id: EnvId<'a>,
+}
+
+/// Two environments are equal if they're the same `NIF_ENV` value.
+///
+/// A `Env<'a>` is equal to a `Env<'b>` iff `'a` and `'b` are the same lifetime.
+impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
+    fn eq(&self, other: &Env<'b>) -> bool {
+        self.env == other.env
+    }
+}
 
 impl<'a> Env<'a> {
+    /// Create a new Env. For the `_lifetime_marker` argument, pass a
+    /// reference to any local variable that has its own lifetime, different
+    /// from all other `Env` values. The purpose of the argument is to make
+    /// it easier to know for sure that the `Env` you're creating has a
+    /// unique lifetime (i.e. that you're following the most important safety
+    /// rule of Rustler).
+    ///
+    /// # Unsafe
+    /// Don't create multiple `Env`s with the same lifetime.
+    pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
+        Env {
+            env: env,
+            id: PhantomData,
+        }
+    }
+
+    pub fn as_c_arg(&self) -> NIF_ENV {
+        self.env
+    }
+
+    /// Convenience method for building a tuple `{error, Reason}`.
+    pub fn error_tuple<T>(self, reason: T) -> Term<'a>
+    where
+        T: Encoder,
+    {
+        let error = ::types::atom::error().to_term(self);
+        (error, reason).encode(self)
+    }
+
     /// Send a message to a process.
     ///
     /// The Erlang VM imposes some odd restrictions on sending messages.
@@ -23,19 +78,19 @@ impl<'a> Env<'a> {
     ///
     pub fn send(self, pid: &Pid, message: Term<'a>) {
         let thread_type = nif_interface::enif_thread_type();
-        let env =
-            if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
-                ptr::null_mut()
-            } else if thread_type == nif_interface::ERL_NIF_THR_NORMAL_SCHEDULER ||
-                      thread_type == nif_interface::ERL_NIF_THR_DIRTY_CPU_SCHEDULER ||
-                      thread_type == nif_interface::ERL_NIF_THR_DIRTY_IO_SCHEDULER {
-                // Panic if `self` is not the environment of the calling process.
-                self.pid();
+        let env = if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
+            ptr::null_mut()
+        } else if thread_type == nif_interface::ERL_NIF_THR_NORMAL_SCHEDULER
+            || thread_type == nif_interface::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
+            || thread_type == nif_interface::ERL_NIF_THR_DIRTY_IO_SCHEDULER
+        {
+            // Panic if `self` is not the environment of the calling process.
+            self.pid();
 
-                self.as_c_arg()
-            } else {
-                panic!("Env::send(): unrecognized calling thread type");
-            };
+            self.as_c_arg()
+        } else {
+            panic!("Env::send(): unrecognized calling thread type");
+        };
 
         // Send the message.
         unsafe {
@@ -60,9 +115,7 @@ impl<'a> Env<'a> {
         ::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
             .map(|(term, size)| (Term::new(self, term), size))
     }
-
 }
-
 
 /// A process-independent environment, a place where Erlang terms can be created outside of a NIF
 /// call.
@@ -82,7 +135,7 @@ impl<'a> Env<'a> {
 /// There's no way to run Erlang code in an `OwnedEnv`. It's not a process. It's just a workspace
 /// for building terms.
 pub struct OwnedEnv {
-    env: Arc<NIF_ENV>
+    env: Arc<NIF_ENV>,
 }
 
 unsafe impl Send for OwnedEnv {}
@@ -91,13 +144,14 @@ impl OwnedEnv {
     /// Allocates a new process-independent environment.
     pub fn new() -> OwnedEnv {
         OwnedEnv {
-            env: Arc::new(unsafe { nif_interface::enif_alloc_env() })
+            env: Arc::new(unsafe { nif_interface::enif_alloc_env() }),
         }
     }
 
     /// Run some code in this environment.
     pub fn run<F, R>(&self, closure: F) -> R
-        where F: for<'a> FnOnce(Env<'a>) -> R
+    where
+        F: for<'a> FnOnce(Env<'a>) -> R,
     {
         let env_lifetime = ();
         let env = unsafe { Env::new(&env_lifetime, *self.env) };
@@ -116,7 +170,8 @@ impl OwnedEnv {
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
     pub fn send_and_clear<F>(&mut self, recipient: &Pid, closure: F)
-        where F: for<'a> FnOnce(Env<'a>) -> Term<'a>
+    where
+        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
     {
         if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
@@ -125,7 +180,7 @@ impl OwnedEnv {
         let message = self.run(|env| closure(env).as_c_arg());
 
         let c_env = *self.env;
-        self.env = Arc::new(c_env);  // invalidate SavedTerms
+        self.env = Arc::new(c_env); // invalidate SavedTerms
         unsafe {
             nif_interface::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
         }
@@ -142,7 +197,9 @@ impl OwnedEnv {
     pub fn clear(&mut self) {
         let c_env = *self.env;
         self.env = Arc::new(c_env);
-        unsafe { nif_interface::enif_clear_env(c_env); }
+        unsafe {
+            nif_interface::enif_clear_env(c_env);
+        }
     }
 
     /// Save a term for use in a later call to `.run()` or `.send()`.
@@ -183,7 +240,9 @@ impl OwnedEnv {
 
 impl Drop for OwnedEnv {
     fn drop(&mut self) {
-        unsafe { nif_interface::enif_free_env(*self.env); }
+        unsafe {
+            nif_interface::enif_free_env(*self.env);
+        }
     }
 }
 
@@ -210,12 +269,11 @@ impl SavedTerm {
     pub fn load<'a>(&self, env: Env<'a>) -> Term<'a> {
         // Check that the saved term is still valid.
         match self.env_generation.upgrade() {
-            None =>
-                panic!("term is from a cleared or dropped OwnedEnv"),
-            Some(ref env_arc) if **env_arc == env.as_c_arg() =>
-                unsafe { Term::new(env, self.term) },
-            _ =>
-                panic!("can't load SavedTerm into a different environment"),
+            None => panic!("term is from a cleared or dropped OwnedEnv"),
+            Some(ref env_arc) if **env_arc == env.as_c_arg() => unsafe {
+                Term::new(env, self.term)
+            },
+            _ => panic!("can't load SavedTerm into a different environment"),
         }
     }
 }
