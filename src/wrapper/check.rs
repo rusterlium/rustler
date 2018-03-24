@@ -1,12 +1,12 @@
-use ::wrapper::nif_interface::{ NIF_ENV, NIF_TERM };
-use ::wrapper::nif_interface;
+use wrapper::nif_interface;
+use wrapper::nif_interface::{NIF_ENV, NIF_TERM};
 
 macro_rules! impl_check_fun {
     ($name:ident, $inner:path) => {
         pub unsafe fn $name(env: NIF_ENV, term: NIF_TERM) -> bool {
             $inner(env, term) == 1
         }
-    }
+    };
 }
 
 impl_check_fun!(is_atom, nif_interface::enif_is_atom);

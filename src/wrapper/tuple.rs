@@ -1,5 +1,5 @@
 use super::nif_interface;
-use super::nif_interface::{ c_int, NIF_ENV, NIF_TERM, NIF_ERROR };
+use super::nif_interface::{c_int, NIF_ENV, NIF_ERROR, NIF_TERM};
 use std::mem;
 
 pub unsafe fn get_tuple<'a>(env: NIF_ENV, term: NIF_TERM) -> Result<&'a [NIF_TERM], NIF_ERROR> {

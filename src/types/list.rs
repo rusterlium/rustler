@@ -2,8 +2,8 @@
 //!
 //! Right now the only supported way to read lists are through the ListIterator.
 
-use ::{ Term, Error, NifResult, Decoder, Encoder, Env };
-use ::wrapper::list;
+use wrapper::list;
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// Enables iteration over the items in the list.
 ///
@@ -43,18 +43,14 @@ pub struct ListIterator<'a> {
 }
 
 impl<'a> ListIterator<'a> {
-
     fn new(term: Term<'a>) -> Option<Self> {
         if term.is_list() || term.is_empty_list() {
-            let iter = ListIterator {
-                term: term,
-            };
+            let iter = ListIterator { term: term };
             Some(iter)
         } else {
             None
         }
     }
-
 }
 
 impl<'a> Iterator for ListIterator<'a> {
@@ -85,7 +81,7 @@ impl<'a> Decoder<'a> for ListIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         match ListIterator::new(term) {
             Some(iter) => Ok(iter),
-            None => Err(Error::BadArg)
+            None => Err(Error::BadArg),
         }
     }
 }
@@ -97,30 +93,40 @@ impl<'a> Decoder<'a> for ListIterator<'a> {
 //    }
 //}
 
-impl<'a, T> Encoder for Vec<T> where T: Encoder {
+impl<'a, T> Encoder for Vec<T>
+where
+    T: Encoder,
+{
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.as_slice().encode(env)
     }
 }
 
-impl<'a, T> Decoder<'a> for Vec<T> where T: Decoder<'a> {
+impl<'a, T> Decoder<'a> for Vec<T>
+where
+    T: Decoder<'a>,
+{
     fn decode(term: Term<'a>) -> NifResult<Self> {
         let iter: ListIterator = try!(term.decode());
-        let res: NifResult<Self> = iter
-            .map(|x| x.decode::<T>())
-            .collect();
+        let res: NifResult<Self> = iter.map(|x| x.decode::<T>()).collect();
         res
     }
 }
 
-impl<'a, T> Encoder for [T] where T: Encoder {
+impl<'a, T> Encoder for [T]
+where
+    T: Encoder,
+{
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
-impl<'a, T> Encoder for &'a [T] where T: Encoder {
+impl<'a, T> Encoder for &'a [T]
+where
+    T: Encoder,
+{
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
@@ -130,7 +136,6 @@ impl<'a, T> Encoder for &'a [T] where T: Encoder {
 
 /// ## List terms
 impl<'a> Term<'a> {
-
     /// Returns a new empty list.
     pub fn list_new_empty(env: Env<'a>) -> Term<'a> {
         let list: &[u8] = &[];
@@ -197,5 +202,4 @@ impl<'a> Term<'a> {
             Term::new(env, term)
         }
     }
-
 }

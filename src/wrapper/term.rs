@@ -2,19 +2,21 @@ use std::fmt;
 
 use std::os::raw::c_char;
 
-use super::nif_interface::{ NIF_TERM };
+use super::nif_interface::NIF_TERM;
 
 pub fn fmt<'a>(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     const SIZE: usize = 1024;
     let mut bytes: Vec<u8> = Vec::with_capacity(SIZE);
 
     let mut n = 0;
-    for _ in 0 .. 10 {
+    for _ in 0..10 {
         let i = unsafe {
-            enif_snprintf!(bytes.as_mut_ptr() as *mut c_char,
-                           bytes.capacity(),
-                           b"%T\x00" as *const u8 as *const c_char,
-                           term)
+            enif_snprintf!(
+                bytes.as_mut_ptr() as *mut c_char,
+                bytes.capacity(),
+                b"%T\x00" as *const u8 as *const c_char,
+                term
+            )
         };
         if i < 0 {
             // Do not propagate an error, because string formatting is

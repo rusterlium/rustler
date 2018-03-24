@@ -1,9 +1,9 @@
-use {Encoder, Term};
-use wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
-use types::pid::Pid;
+use std::marker::PhantomData;
 use std::ptr;
 use std::sync::{Arc, Weak};
-use std::marker::PhantomData;
+use types::pid::Pid;
+use wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
+use {Encoder, Term};
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its

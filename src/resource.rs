@@ -4,18 +4,19 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-use std::mem;
-use std::ptr;
-use std::ops::Deref;
 use std::marker::PhantomData;
+use std::mem;
+use std::ops::Deref;
+use std::ptr;
 
-use super::{ Term, Env, Error, Encoder, Decoder, NifResult };
-use ::wrapper::nif_interface::{ NIF_RESOURCE_TYPE, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NifResourceFlags };
-use ::wrapper::nif_interface::{ c_void };
+use super::{Decoder, Encoder, Env, Error, NifResult, Term};
+use wrapper::nif_interface::c_void;
+use wrapper::nif_interface::{NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV,
+                             NIF_RESOURCE_TYPE};
 
 /// Re-export a type used by the `resource_struct_init!` macro.
 #[doc(hidden)]
-pub use ::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
+pub use wrapper::nif_interface::NIF_RESOURCE_FLAGS;
 
 /// The ResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
@@ -37,12 +38,18 @@ pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static ResourceType<Self>;
 }
 
-impl<T> Encoder for ResourceArc<T> where T: ResourceTypeProvider {
+impl<T> Encoder for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.as_term(env)
     }
 }
-impl<'a, T> Decoder<'a> for ResourceArc<T> where T: ResourceTypeProvider + 'a {
+impl<'a, T> Decoder<'a> for ResourceArc<T>
+where
+    T: ResourceTypeProvider + 'a,
+{
     fn decode(term: Term<'a>) -> NifResult<Self> {
         ResourceArc::from_term(term)
     }
@@ -65,10 +72,18 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 ///
 /// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
-pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(env: Env<'a>, name: &str,
-                                 flags: NifResourceFlags) -> Option<ResourceType<T>> {
+pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
+    env: Env<'a>,
+    name: &str,
+    flags: NifResourceFlags,
+) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        ::wrapper::resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(resource_destructor::<T>), flags)
+        ::wrapper::resource::open_resource_type(
+            env.as_c_arg(),
+            name.as_bytes(),
+            Some(resource_destructor::<T>),
+            flags,
+        )
     };
     if res.is_some() {
         Some(ResourceType {
@@ -101,16 +116,30 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 /// Rust code and Erlang code can both have references to the same resource at the same time.  Rust
 /// code uses `ResourceArc`; in Erlang, a reference to a resource is a kind of term.  You can
 /// convert back and forth between the two using `Encoder` and `Decoder`.
-pub struct ResourceArc<T> where T: ResourceTypeProvider {
+pub struct ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     raw: *const c_void,
     inner: *mut T,
 }
 
 // Safe because T is `Sync` and `Send`.
-unsafe impl<T> Send for ResourceArc<T> where T: ResourceTypeProvider {}
-unsafe impl<T> Sync for ResourceArc<T> where T: ResourceTypeProvider {}
+unsafe impl<T> Send for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
+}
+unsafe impl<T> Sync for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
+}
 
-impl<T> ResourceArc<T> where T: ResourceTypeProvider {
+impl<T> ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     /// Makes a new ResourceArc from the given type. Note that the type must have
     /// ResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
@@ -127,11 +156,19 @@ impl<T> ResourceArc<T> where T: ResourceTypeProvider {
     }
 
     fn from_term(term: Term) -> Result<Self, Error> {
-        let res_resource = match unsafe { ::wrapper::resource::get_resource(term.get_env().as_c_arg(), term.as_c_arg(), T::get_type().res) } {
+        let res_resource = match unsafe {
+            ::wrapper::resource::get_resource(
+                term.get_env().as_c_arg(),
+                term.as_c_arg(),
+                T::get_type().res,
+            )
+        } {
             Some(res) => res,
             None => return Err(Error::BadArg),
         };
-        unsafe { ::wrapper::resource::keep_resource(res_resource); }
+        unsafe {
+            ::wrapper::resource::keep_resource(res_resource);
+        }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
         Ok(ResourceArc {
             raw: res_resource,
@@ -140,7 +177,12 @@ impl<T> ResourceArc<T> where T: ResourceTypeProvider {
     }
 
     fn as_term<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe { Term::new(env, ::wrapper::resource::make_resource(env.as_c_arg(), self.raw)) }
+        unsafe {
+            Term::new(
+                env,
+                ::wrapper::resource::make_resource(env.as_c_arg(), self.raw),
+            )
+        }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {
@@ -152,7 +194,10 @@ impl<T> ResourceArc<T> where T: ResourceTypeProvider {
     }
 }
 
-impl<T> Deref for ResourceArc<T> where T: ResourceTypeProvider {
+impl<T> Deref for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -160,11 +205,16 @@ impl<T> Deref for ResourceArc<T> where T: ResourceTypeProvider {
     }
 }
 
-impl<T> Clone for ResourceArc<T> where T: ResourceTypeProvider {
+impl<T> Clone for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     /// Cloning a `ResourceArc` simply increments the reference count for the
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
-        unsafe { ::wrapper::resource::keep_resource(self.raw); }
+        unsafe {
+            ::wrapper::resource::keep_resource(self.raw);
+        }
         ResourceArc {
             raw: self.raw,
             inner: self.inner,
@@ -172,7 +222,10 @@ impl<T> Clone for ResourceArc<T> where T: ResourceTypeProvider {
     }
 }
 
-impl<T> Drop for ResourceArc<T> where T: ResourceTypeProvider {
+impl<T> Drop for ResourceArc<T>
+where
+    T: ResourceTypeProvider,
+{
     /// When a `ResourceArc` is dropped, the reference count is decremented. If
     /// there are no other references to the resource, the `T` value is dropped.
     ///

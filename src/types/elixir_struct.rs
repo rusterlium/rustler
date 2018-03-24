@@ -6,9 +6,9 @@
 //! and encode a Rust struct to an Elixir struct. To do so, simply annotate a struct with
 //! `#[ExStruct(module = "Elixir.TheStructModule")]`.
 
-use ::{ Env, Term, NifResult };
-use super::atom::{ self, Atom };
-use super::map::{ map_new };
+use super::atom::{self, Atom};
+use super::map::map_new;
+use {Env, NifResult, Term};
 
 pub fn get_ex_struct_name(map: Term) -> NifResult<Atom> {
     let env = map.get_env();

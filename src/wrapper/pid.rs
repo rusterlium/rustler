@@ -1,4 +1,4 @@
-use super::nif_interface::{ self, NIF_ENV, NIF_TERM, ErlNifPid };
+use super::nif_interface::{self, ErlNifPid, NIF_ENV, NIF_TERM};
 use std::mem;
 
 pub unsafe fn get_local_pid(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifPid> {

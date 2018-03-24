@@ -1,11 +1,10 @@
 use super::nif_interface;
-use super::nif_interface::{ NIF_ENV, NIF_TERM, NifResourceDtor, NifResourceFlags, NIF_RESOURCE_TYPE, NIF_RESOURCE_HANDLE };
+use super::nif_interface::{NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE,
+                           NIF_RESOURCE_TYPE, NIF_TERM};
 
-pub use super::nif_interface::{
-    enif_alloc_resource as alloc_resource,
-    enif_make_resource as make_resource,
-    enif_keep_resource as keep_resource
-};
+pub use super::nif_interface::{enif_alloc_resource as alloc_resource,
+                               enif_keep_resource as keep_resource,
+                               enif_make_resource as make_resource};
 
 #[allow(dead_code)]
 pub use super::nif_interface::enif_release_resource as release_resource;
@@ -13,8 +12,12 @@ pub use super::nif_interface::enif_release_resource as release_resource;
 use std::mem;
 use std::ptr;
 
-pub unsafe fn open_resource_type(env: NIF_ENV, name: &[u8], dtor: Option<NifResourceDtor>, flags: NifResourceFlags
-                                 ) -> Option<NIF_RESOURCE_TYPE> {
+pub unsafe fn open_resource_type(
+    env: NIF_ENV,
+    name: &[u8],
+    dtor: Option<NifResourceDtor>,
+    flags: NifResourceFlags,
+) -> Option<NIF_RESOURCE_TYPE> {
     // Panic if name is not null-terminated.
     assert_eq!(name.last().cloned(), Some(0u8));
 
@@ -34,7 +37,11 @@ pub unsafe fn open_resource_type(env: NIF_ENV, name: &[u8], dtor: Option<NifReso
 }
 
 // Functionally incomplete
-pub unsafe fn get_resource(env: NIF_ENV, term: NIF_TERM, typ: NIF_RESOURCE_TYPE) -> Option<NIF_RESOURCE_HANDLE> {
+pub unsafe fn get_resource(
+    env: NIF_ENV,
+    term: NIF_TERM,
+    typ: NIF_RESOURCE_TYPE,
+) -> Option<NIF_RESOURCE_HANDLE> {
     let mut ret_obj: NIF_RESOURCE_HANDLE = mem::uninitialized();
     let res = nif_interface::enif_get_resource(env, term, typ, &mut ret_obj);
 
@@ -44,4 +51,3 @@ pub unsafe fn get_resource(env: NIF_ENV, term: NIF_TERM, typ: NIF_RESOURCE_TYPE)
         Some(ret_obj)
     }
 }
-

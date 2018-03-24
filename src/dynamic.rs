@@ -1,5 +1,5 @@
-use ::{Term};
-use ::wrapper::check;
+use wrapper::check;
+use Term;
 
 pub enum TermType {
     Atom,
@@ -14,7 +14,7 @@ pub enum TermType {
     Port,
     Ref,
     Tuple,
-    Unknown
+    Unknown,
 }
 
 pub fn get_type(term: Term) -> TermType {
@@ -57,7 +57,6 @@ macro_rules! impl_check {
 
 /// ## Type checks
 impl<'a> Term<'a> {
-
     /// Returns an enum representing which type the term is.
     /// Note that using the individual `is_*` functions is more
     /// efficient for checking a single type.
@@ -77,5 +76,4 @@ impl<'a> Term<'a> {
     impl_check!(is_port);
     impl_check!(is_ref);
     impl_check!(is_tuple);
-
 }

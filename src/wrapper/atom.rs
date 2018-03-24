@@ -1,6 +1,6 @@
 use super::nif_interface;
-use super::nif_interface::{ NIF_ENV, NIF_TERM, c_uint };
-use {NifResult, Error};
+use super::nif_interface::{c_uint, NIF_ENV, NIF_TERM};
+use {Error, NifResult};
 
 pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
     nif_interface::enif_make_atom_len(env, name.as_ptr(), name.len())
@@ -31,7 +31,7 @@ pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> NifResult<String> {
     assert!(nbytes as c_uint == len + 1);
 
     // This is safe unless the VM is lying to us.
-    bytes.set_len(len as usize);  // drop the null byte
+    bytes.set_len(len as usize); // drop the null byte
 
     // Convert from Latin-1 bytes to a String.
     let nonascii_count = bytes.iter().filter(|&&b| b >= 128).count();

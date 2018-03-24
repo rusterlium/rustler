@@ -1,5 +1,5 @@
 use super::nif_interface;
-use super::nif_interface::{ NIF_ENV, NIF_TERM };
+use super::nif_interface::{NIF_ENV, NIF_TERM};
 use std::mem;
 
 pub unsafe fn get_list_cell(env: NIF_ENV, list: NIF_TERM) -> Option<(NIF_TERM, NIF_TERM)> {

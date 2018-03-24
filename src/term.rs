@@ -1,9 +1,9 @@
-use ::{Decoder, Env, NifResult};
-use ::wrapper::nif_interface::NIF_TERM;
-use ::wrapper::env::term_to_binary;
-use ::types::binary::Binary;
-use std::fmt::{self, Debug};
 use std::cmp::Ordering;
+use std::fmt::{self, Debug};
+use types::binary::Binary;
+use wrapper::env::term_to_binary;
+use wrapper::nif_interface::NIF_TERM;
+use {Decoder, Env, NifResult};
 
 /// Term is used to represent all erlang terms. Terms are always lifetime limited by a Env.
 ///
@@ -22,7 +22,6 @@ impl<'a> Debug for Term<'a> {
 }
 
 impl<'a> Term<'a> {
-
     /// Create a `Term` from a raw `NIF_TERM`.
     ///
     /// # Unsafe
@@ -70,7 +69,10 @@ impl<'a> Term<'a> {
     /// let term: Term = ...;
     /// let number: i32 = try!(term.decode());
     /// ```
-    pub fn decode<T>(self) -> NifResult<T> where T: Decoder<'a> {
+    pub fn decode<T>(self) -> NifResult<T>
+    where
+        T: Decoder<'a>,
+    {
         Decoder::decode(self)
     }
 
@@ -90,8 +92,7 @@ impl<'a> PartialEq for Term<'a> {
 impl<'a> Eq for Term<'a> {}
 
 fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
-    let ord = unsafe { ::wrapper::nif_interface::enif_compare(
-        lhs.as_c_arg(), rhs.as_c_arg()) };
+    let ord = unsafe { ::wrapper::nif_interface::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
     match ord {
         0 => Ordering::Equal,
         n if n < 0 => Ordering::Less,
