@@ -15,7 +15,7 @@ defmodule Rustler.TomlParserTest do
   [dependencies]
   ruster_unsafe = ">=0.2"
   libc = ">=0.1"
-  lazy_static = "0.1.*"
+  lazy_static = "1.0"
 
   [[testing]]
   wooo = "hoo"

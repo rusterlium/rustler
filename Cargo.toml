@@ -11,7 +11,7 @@ alternative_nif_init_name = []
 
 [dependencies]
 erlang_nif-sys = ">=0.6.3"
-lazy_static = "0.1.*"
+lazy_static = "1.0"
 
 [package.metadata.release]
 
