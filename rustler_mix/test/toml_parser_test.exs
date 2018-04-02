@@ -17,6 +17,8 @@ defmodule Rustler.TomlParserTest do
   libc = ">=0.1"
   lazy_static = "1.0"
 
+  [a."b.c"]
+
   [[testing]]
   wooo = "hoo"
   """
