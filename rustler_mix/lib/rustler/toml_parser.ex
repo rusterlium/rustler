@@ -45,6 +45,10 @@ defmodule Rustler.TomlParser do
     name
   end
 
+  def proc_key({:basic, name}) do
+    name
+  end
+
   def proc_val({:val_basic, raw_str}) do
     # TODO: Escapes
     :binary.part(raw_str, 1, byte_size(raw_str) - 2)
@@ -66,7 +70,7 @@ defmodule Rustler.TomlParser do
     any
   end
 
-  # Pass 2: Fuck it for now
+  # Pass 2
 
   def get_table_vals(data, path) do
     found = Enum.find(data, fn
