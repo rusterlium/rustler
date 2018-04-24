@@ -103,6 +103,9 @@ pub unsafe fn enif_is_list(env: NIF_ENV, term: NIF_TERM) -> c_int {
 pub unsafe fn enif_is_map(env: NIF_ENV, term: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_is_map(env, term)
 }
+pub unsafe fn enif_is_number(env: NIF_ENV, term: NIF_TERM) -> c_int {
+    erlang_nif_sys::enif_is_number(env, term)
+}
 pub unsafe fn enif_is_pid(env: NIF_ENV, term: NIF_TERM) -> c_int {
     erlang_nif_sys::enif_is_pid(env, term)
 }
