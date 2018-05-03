@@ -9,6 +9,7 @@ pub enum TermType {
     Fun,
     List,
     Map,
+    Number,
     Pid,
     Port,
     Ref,
@@ -31,6 +32,8 @@ pub fn get_type(term: Term) -> TermType {
         TermType::List
     } else if term.is_map() {
         TermType::Map
+    } else if term.is_number() {
+        TermType::Number
     } else if term.is_pid() {
         TermType::Pid
     } else if term.is_port() {
@@ -69,6 +72,7 @@ impl<'a> Term<'a> {
     impl_check!(is_fun);
     impl_check!(is_list);
     impl_check!(is_map);
+    impl_check!(is_number);
     impl_check!(is_pid);
     impl_check!(is_port);
     impl_check!(is_ref);

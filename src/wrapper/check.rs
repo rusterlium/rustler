@@ -16,6 +16,7 @@ impl_check_fun!(is_exception, nif_interface::enif_is_exception);
 impl_check_fun!(is_fun, nif_interface::enif_is_fun);
 impl_check_fun!(is_list, nif_interface::enif_is_list);
 impl_check_fun!(is_map, nif_interface::enif_is_map);
+impl_check_fun!(is_number, nif_interface::enif_is_number);
 impl_check_fun!(is_pid, nif_interface::enif_is_pid);
 impl_check_fun!(is_port, nif_interface::enif_is_port);
 impl_check_fun!(is_ref, nif_interface::enif_is_ref);
