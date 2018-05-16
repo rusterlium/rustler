@@ -1,5 +1,5 @@
-use super::Env;
 use super::wrapper::nif_interface::enif_consume_timeslice;
+use super::Env;
 
 pub enum SchedulerFlags {
     Normal = 0,

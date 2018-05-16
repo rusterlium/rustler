@@ -1,8 +1,8 @@
-use ::{ Env, Term, Encoder };
-use ::env::OwnedEnv;
-use ::types::atom::Atom;
-use std::thread;
+use env::OwnedEnv;
 use std::panic;
+use std::thread;
+use types::atom::Atom;
+use {Encoder, Env, Term};
 
 /// A `JobSpawner` is a value that can run Rust code on non-Erlang system threads.
 /// Abstracts away details of thread management for `spawn()`.
@@ -35,8 +35,9 @@ impl JobSpawner for ThreadSpawner {
 /// runs under a separate environment, not under `env`.
 ///
 pub fn spawn<'a, S, F>(env: Env<'a>, thread_fn: F)
-    where F: for<'b> FnOnce(Env<'b>) -> Term<'b> + Send + panic::UnwindSafe + 'static,
-          S: JobSpawner,
+where
+    F: for<'b> FnOnce(Env<'b>) -> Term<'b> + Send + panic::UnwindSafe + 'static,
+    S: JobSpawner,
 {
     let pid = env.pid();
     S::spawn(move || {
@@ -45,14 +46,16 @@ pub fn spawn<'a, S, F>(env: Env<'a>, thread_fn: F)
                 Ok(term) => term,
                 Err(err) => {
                     // Try to get an error message from Rust.
-                    let reason =
-                        if let Some(string) = err.downcast_ref::<String>() {
-                            string.encode(env)
-                        } else if let Some(&s) = err.downcast_ref::<&'static str>() {
-                            s.encode(env)
-                        } else {
-                            Atom::from_bytes(env, b"nif_panic").ok().unwrap().to_term(env)
-                        };
+                    let reason = if let Some(string) = err.downcast_ref::<String>() {
+                        string.encode(env)
+                    } else if let Some(&s) = err.downcast_ref::<&'static str>() {
+                        s.encode(env)
+                    } else {
+                        Atom::from_bytes(env, b"nif_panic")
+                            .ok()
+                            .unwrap()
+                            .to_term(env)
+                    };
                     env.error_tuple(reason)
                 }
             }

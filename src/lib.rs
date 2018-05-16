@@ -52,8 +52,8 @@ pub mod env;
 pub use env::Env;
 pub mod thread;
 
-mod export;
 pub mod error;
+mod export;
 pub use error::Error;
 
 pub type NifResult<T> = Result<T, Error>;

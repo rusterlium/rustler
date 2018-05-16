@@ -1,5 +1,5 @@
-use ::{ Term, Env, Encoder, Decoder, NifResult, Error };
-use super::binary::{ Binary, OwnedBinary };
+use super::binary::{Binary, OwnedBinary};
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 impl<'a> Decoder<'a> for String {
     fn decode(term: Term<'a>) -> NifResult<Self> {
@@ -26,7 +26,9 @@ impl Encoder for str {
             Some(bin) => bin,
             None => panic!("binary term allocation fail"),
         };
-        bin.as_mut_slice().write(self.as_bytes()).expect("memory copy of string failed");
+        bin.as_mut_slice()
+            .write(self.as_bytes())
+            .expect("memory copy of string failed");
         bin.release(env).to_term(env)
     }
 }

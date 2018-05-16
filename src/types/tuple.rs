@@ -1,6 +1,6 @@
-use ::{ Env, Term, Error, NifResult, Encoder, Decoder };
-use ::wrapper::tuple;
-use ::wrapper::nif_interface::NIF_TERM;
+use wrapper::nif_interface::NIF_TERM;
+use wrapper::tuple;
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// ## Tuple terms
 //impl<'a> Term<'a> {
@@ -20,8 +20,11 @@ pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, Error> {
     let env = term.get_env();
     unsafe {
         match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
-            Ok(terms) => Ok(terms.iter().map(|x| Term::new(env, *x)).collect::<Vec<Term>>()),
-            Err(_error) => Err(Error::BadArg)
+            Ok(terms) => Ok(terms
+                .iter()
+                .map(|x| Term::new(env, *x))
+                .collect::<Vec<Term>>()),
+            Err(_error) => Err(Error::BadArg),
         }
     }
 }

@@ -1,4 +1,4 @@
-use {Encoder, Env, Term, types, wrapper};
+use {types, wrapper, Encoder, Env, Term};
 
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have

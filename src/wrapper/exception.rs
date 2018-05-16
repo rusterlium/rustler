@@ -1,5 +1,5 @@
-use super::nif_interface::{ NIF_ENV, NIF_TERM };
 use super::nif_interface;
+use super::nif_interface::{NIF_ENV, NIF_TERM};
 
 /// Raise an "error exception".
 ///

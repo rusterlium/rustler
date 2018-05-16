@@ -1,11 +1,11 @@
-use ::{ Env, Term, Error, NifResult, Decoder, Encoder };
-use ::wrapper::nif_interface::{ self, ErlNifPid };
-use ::wrapper::pid;
 use std::mem;
+use wrapper::nif_interface::{self, ErlNifPid};
+use wrapper::pid;
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 #[derive(Clone)]
 pub struct Pid {
-    c: ErlNifPid
+    c: ErlNifPid,
 }
 
 impl Pid {

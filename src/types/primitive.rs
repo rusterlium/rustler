@@ -1,25 +1,37 @@
 extern crate erlang_nif_sys;
-use ::{ Env, Term, Encoder, Decoder, NifResult, Error };
-use ::types::atom;
+use types::atom;
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl Encoder for $dec_type {
             fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-                unsafe { Term::new(env, erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type)) }
+                unsafe {
+                    Term::new(
+                        env,
+                        erlang_nif_sys::$encode_fun(env.as_c_arg(), *self as $nif_type),
+                    )
+                }
             }
         }
         impl<'a> Decoder<'a> for $dec_type {
             fn decode(term: Term) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
-                if unsafe { erlang_nif_sys::$decode_fun(term.get_env().as_c_arg(), term.as_c_arg(), &mut res) } == 0 {
+                if unsafe {
+                    erlang_nif_sys::$decode_fun(
+                        term.get_env().as_c_arg(),
+                        term.as_c_arg(),
+                        &mut res,
+                    )
+                } == 0
+                {
                     return Err(Error::BadArg);
                 }
                 Ok(res as $dec_type)
             }
         }
-    }
+    };
 }
 
 // Base number types

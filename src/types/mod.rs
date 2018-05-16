@@ -1,16 +1,11 @@
-use ::{
-    Env,
-    Error,
-    Term,
-    NifResult,
-};
+use {Env, Error, NifResult, Term};
 
 #[macro_use]
 pub mod atom;
 
 #[doc(hidden)]
 pub mod binary;
-pub use types::binary::{ Binary, OwnedBinary };
+pub use types::binary::{Binary, OwnedBinary};
 
 #[doc(hidden)]
 pub mod list;
@@ -35,7 +30,7 @@ pub mod elixir_struct;
 pub trait Encoder {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a>;
 }
-pub trait Decoder<'a>: Sized+'a {
+pub trait Decoder<'a>: Sized + 'a {
     fn decode(term: Term<'a>) -> NifResult<Self>;
 }
 
@@ -50,13 +45,19 @@ impl<'a> Decoder<'a> for Term<'a> {
     }
 }
 
-impl<'a, T> Encoder for &'a T where T: Encoder {
+impl<'a, T> Encoder for &'a T
+where
+    T: Encoder,
+{
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         <T as Encoder>::encode(self, env)
     }
 }
 
-impl<T> Encoder for Option<T> where T: Encoder {
+impl<T> Encoder for Option<T>
+where
+    T: Encoder,
+{
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Some(ref value) => value.encode(env),
@@ -65,7 +66,10 @@ impl<T> Encoder for Option<T> where T: Encoder {
     }
 }
 
-impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
+impl<'a, T> Decoder<'a> for Option<T>
+where
+    T: Decoder<'a>,
+{
     fn decode(term: Term<'a>) -> NifResult<Self> {
         if let Ok(term) = term.decode::<T>() {
             Ok(Some(term))
@@ -80,7 +84,11 @@ impl<'a, T> Decoder<'a> for Option<T> where T: Decoder<'a> {
     }
 }
 
-impl<T, E> Encoder for Result<T, E> where T: Encoder, E: Encoder {
+impl<T, E> Encoder for Result<T, E>
+where
+    T: Encoder,
+    E: Encoder,
+{
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         match *self {
             Ok(ref value) => (atom::ok().encode(env), value.encode(env)).encode(env),
@@ -89,7 +97,11 @@ impl<T, E> Encoder for Result<T, E> where T: Encoder, E: Encoder {
     }
 }
 
-impl<'a, T, E> Decoder<'a> for Result<T, E> where T: Decoder<'a>, E: Decoder<'a> {
+impl<'a, T, E> Decoder<'a> for Result<T, E>
+where
+    T: Decoder<'a>,
+    E: Decoder<'a>,
+{
     fn decode(term: Term<'a>) -> NifResult<Self> {
         let (decoded_atom, inner_term): (atom::Atom, Term) = term.decode()?;
         if decoded_atom == atom::ok() {

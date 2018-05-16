@@ -1,7 +1,7 @@
 //! Utilities used to access and create Erlang maps.
 
-use ::{ Env, Term, NifResult, Error, Decoder };
-use ::wrapper::map;
+use wrapper::map;
+use {Decoder, Env, Error, NifResult, Term};
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
@@ -9,7 +9,6 @@ pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
 
 /// ## Map terms
 impl<'a> Term<'a> {
-
     /// Constructs a new, empty map term.
     ///
     /// ### Elixir equivalent
@@ -62,10 +61,23 @@ impl<'a> Term<'a> {
     pub fn map_put(self, key: Term<'a>, value: Term<'a>) -> NifResult<Term<'a>> {
         let map_env = self.get_env();
 
-        assert!(map_env == key.get_env(), "key is from different environment as map");
-        assert!(map_env == value.get_env(), "value is from different environment as map");
+        assert!(
+            map_env == key.get_env(),
+            "key is from different environment as map"
+        );
+        assert!(
+            map_env == value.get_env(),
+            "value is from different environment as map"
+        );
 
-        match unsafe { map::map_put(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg(), value.as_c_arg()) } {
+        match unsafe {
+            map::map_put(
+                map_env.as_c_arg(),
+                self.as_c_arg(),
+                key.as_c_arg(),
+                value.as_c_arg(),
+            )
+        } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
             None => Err(Error::BadArg),
         }
@@ -83,7 +95,10 @@ impl<'a> Term<'a> {
     pub fn map_remove(self, key: Term<'a>) -> NifResult<Term<'a>> {
         let map_env = self.get_env();
 
-        assert!(map_env == key.get_env(), "key is from different environment as map");
+        assert!(
+            map_env == key.get_env(),
+            "key is from different environment as map"
+        );
 
         match unsafe { map::map_remove(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg()) } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
@@ -98,28 +113,43 @@ impl<'a> Term<'a> {
     pub fn map_update(self, key: Term<'a>, new_value: Term<'a>) -> NifResult<Term<'a>> {
         let map_env = self.get_env();
 
-        assert!(map_env == key.get_env(), "key is from different environment as map");
-        assert!(map_env == new_value.get_env(), "value is from different environment as map");
+        assert!(
+            map_env == key.get_env(),
+            "key is from different environment as map"
+        );
+        assert!(
+            map_env == new_value.get_env(),
+            "value is from different environment as map"
+        );
 
-        match unsafe { map::map_update(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg(), new_value.as_c_arg()) } {
+        match unsafe {
+            map::map_update(
+                map_env.as_c_arg(),
+                self.as_c_arg(),
+                key.as_c_arg(),
+                new_value.as_c_arg(),
+            )
+        } {
             Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
             None => Err(Error::BadArg),
         }
     }
-
 }
 
 pub struct MapIterator<'a> {
     env: Env<'a>,
-    iter: map::ErlNifMapIterator
+    iter: map::ErlNifMapIterator,
 }
 
 impl<'a> MapIterator<'a> {
     pub fn new(map: Term<'a>) -> Option<MapIterator<'a>> {
         let env = map.get_env();
-        unsafe {
-            map::map_iterator_create(env.as_c_arg(), map.as_c_arg())
-        }.map(|iter| MapIterator { env: env, iter: iter })
+        unsafe { map::map_iterator_create(env.as_c_arg(), map.as_c_arg()) }.map(|iter| {
+            MapIterator {
+                env: env,
+                iter: iter,
+            }
+        })
     }
 }
 
@@ -136,12 +166,10 @@ impl<'a> Iterator for MapIterator<'a> {
 
     fn next(&mut self) -> Option<(Term<'a>, Term<'a>)> {
         unsafe {
-            map::map_iterator_get_pair(self.env.as_c_arg(), &mut self.iter)
-                .map(|(key, value)| {
-                    map::map_iterator_next(self.env.as_c_arg(), &mut self.iter);
-                    (Term::new(self.env, key),
-                     Term::new(self.env, value))
-                })
+            map::map_iterator_get_pair(self.env.as_c_arg(), &mut self.iter).map(|(key, value)| {
+                map::map_iterator_next(self.env.as_c_arg(), &mut self.iter);
+                (Term::new(self.env, key), Term::new(self.env, value))
+            })
         }
     }
 }
@@ -150,7 +178,7 @@ impl<'a> Decoder<'a> for MapIterator<'a> {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         match MapIterator::new(term) {
             Some(iter) => Ok(iter),
-            None => Err(Error::BadArg)
+            None => Err(Error::BadArg),
         }
     }
 }

@@ -1,8 +1,8 @@
 use std::ascii::AsciiExt;
 
-use ::{ Term, Env, NifResult, Error, Encoder, Decoder };
-use ::wrapper::nif_interface::NIF_TERM;
-use ::wrapper::atom;
+use wrapper::atom;
+use wrapper::nif_interface::NIF_TERM;
+use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -22,15 +22,13 @@ impl Atom {
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
-        Atom {
-            term: term
-        }
+        Atom { term: term }
     }
 
     pub fn from_term(term: Term) -> NifResult<Self> {
         match term.is_atom() {
             true => Ok(unsafe { Atom::from_nif_term(term.as_c_arg()) }),
-            false => Err(Error::BadArg)
+            false => Err(Error::BadArg),
         }
     }
 
@@ -42,9 +40,7 @@ impl Atom {
         if bytes.len() > 255 {
             return Err(Error::BadArg);
         }
-        unsafe {
-            Ok(Atom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes)))
-        }
+        unsafe { Ok(Atom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes))) }
     }
 
     /// Return the atom whose text representation is the given `string`, like `erlang:list_to_atom/2`.
@@ -70,7 +66,7 @@ impl Atom {
     }
 }
 
-use ::std::fmt;
+use std::fmt;
 impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         ::wrapper::term::fmt(self.as_c_arg(), f)
@@ -96,7 +92,6 @@ impl<'a> PartialEq<Term<'a>> for Atom {
 
 /// ## Atom terms
 impl<'a> Term<'a> {
-
     /// When the term is an atom, this method will return the string
     /// representation of it.
     ///
@@ -107,7 +102,6 @@ impl<'a> Term<'a> {
     pub fn atom_to_string(&self) -> NifResult<String> {
         unsafe { atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
     }
-
 }
 
 pub fn is_truthy(term: Term) -> bool {
@@ -117,7 +111,6 @@ pub fn is_truthy(term: Term) -> bool {
 // This is safe because atoms are never removed/changed once they are created.
 unsafe impl Sync for Atom {}
 unsafe impl Send for Atom {}
-
 
 /// Macro for defining Rust functions that return Erlang atoms.
 /// To use this macro, you must also import the `lazy_static` crate.

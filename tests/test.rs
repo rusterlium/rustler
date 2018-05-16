@@ -9,7 +9,7 @@ fn run_mix_test() {
 
     match mix_test(test_dir) {
         true => (),
-        false => panic!("mix test failed")
+        false => panic!("mix test failed"),
     }
 }
 
