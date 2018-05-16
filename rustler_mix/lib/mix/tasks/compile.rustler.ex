@@ -105,8 +105,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     case :os.type do
       {:win32, _} -> {"#{base_name}.dll", "lib#{base_name}.dll"}
       {:unix, :darwin} -> {"lib#{base_name}.dylib", "lib#{base_name}.so"}
-      {:unix, :linux} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
-      # {:unix, _} -> Assume .so? Is this a unix thing?
+      {:unix, _} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
     end
   end
 
