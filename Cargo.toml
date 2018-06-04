@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "rustler",
+  "rustler_codegen",
+  "rustler_tests"
+]
