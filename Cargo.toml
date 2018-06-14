@@ -1,31 +1,6 @@
-[package]
-name = "rustler"
-description = "Safe Rust wrappers for creating Erlang NIF functions"
-repository = "https://github.com/hansihe/Rustler"
-version = "0.17.1-alpha.0"
-authors = ["Hansihe <me@hansihe.com>"]
-license = "MIT/Apache-2.0"
-
-[features]
-alternative_nif_init_name = []
-
-[dependencies]
-erlang_nif-sys = ">=0.6.3"
-lazy_static = "1.0"
-
-[package.metadata.release]
-
-[[package.metadata.release.pre-release-replacements]]
-file = "rustler_mix/mix.exs"
-search = "version: \"[^\"]+\", # Auto updated by cargo release, do not modify this line."
-replace = "version: \"{{version}}\", # Auto updated by cargo release, do not modify this line."
-
-[[package.metadata.release.pre-release-replacements]]
-file = "rustler_mix/lib/rustler.ex"
-search = "def rustler_version, do: \"[^\"]+\""
-replace = "def rustler_version, do: \"{{version}}\""
-
-[[package.metadata.release.pre-release-replacements]]
-file = "rustler_codegen/Cargo.toml"
-search = "# rustler_codegen version\nversion = \"[^\"]+\""
-replace = "# rustler_codegen version\nversion = \"{{version}}\""
+[workspace]
+members = [
+  "rustler",
+  "rustler_codegen",
+  "rustler_tests"
+]
