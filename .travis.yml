@@ -22,3 +22,4 @@ install:
 
 script:
   - cargo test
+  - cd rustler_tests && mix test
