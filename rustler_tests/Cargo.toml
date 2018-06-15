@@ -6,7 +6,7 @@ authors = ["HansiHE <hansihe@hansihe.com>"]
 [lib]
 name = "rustler_test"
 path = "src/lib.rs"
-crate-type = ["dylib"]
+crate-type = ["cdylib"]
 
 [dependencies]
 lazy_static = "1.0"
