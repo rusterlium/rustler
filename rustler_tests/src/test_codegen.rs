@@ -34,7 +34,8 @@ pub fn map_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     Ok(map.encode(env))
 }
 
-#[derive(NifStruct)]
+#[derive(Debug, NifStruct)]
+#[must_use] // Added to test Issue #152
 #[module = "AddStruct"]
 struct AddStruct {
     lhs: i32,

@@ -8,6 +8,9 @@ Session.vim
 .netrwhist
 *~
 
+### IntelliJ ##
+/.idea
+/rustler.iml
 
 ### Rust ###
 # Compiled files

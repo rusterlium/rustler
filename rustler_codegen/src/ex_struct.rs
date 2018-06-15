@@ -3,8 +3,10 @@ use ::quote::{self, Tokens};
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &str> {
     let elixir_module = {
-        let ref attr_value = ast.attrs.first().expect("NifStruct requires a 'module' attribute").value;
-        assert!(attr_value.name() == "module", "NifStruct requires a 'module' attribute");
+        let ref attr_value = ast.attrs.iter()
+            .find(|attr| attr.name() == "module")
+            .expect("NifStruct requires a 'module' attribute")
+            .value;
         match *attr_value {
             MetaItem::NameValue(_, Lit::Str(ref value, _)) => format!("Elixir.{}", value),
             _ => panic!("NifStruct requires a 'module' attribute"),
