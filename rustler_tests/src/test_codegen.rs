@@ -1,4 +1,4 @@
-use rustler::{Env, Term, Encoder, NifResult};
+use rustler::{Encoder, Env, NifResult, Term};
 
 #[derive(NifTuple)]
 struct AddTuple {
@@ -12,6 +12,7 @@ pub fn tuple_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 }
 
 #[derive(NifRecord)]
+#[must_use] // Added to check attribute order (see similar issue #152)
 #[tag = "record"]
 struct AddRecord {
     lhs: i32,
