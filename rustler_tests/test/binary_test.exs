@@ -31,4 +31,8 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.realloc_grow() == <<1, 2, 3, 4, 5>>
   end
 
+  test "encode string" do
+    assert RustlerTest.encode_string() == {"first", "second"}
+  end
+
 end

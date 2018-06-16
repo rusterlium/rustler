@@ -48,6 +48,10 @@ pub fn realloc_grow<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>>
     Ok(binary.release(env).encode(env))
 }
 
+pub fn encode_string<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    Ok(("first".to_string(), "second").encode(env))
+}
+
 // OwnedBinary::new
 // OwnedBinary::from_unowned
 // OwnedBinary::realloc

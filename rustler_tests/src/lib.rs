@@ -55,6 +55,7 @@ rustler_export_nifs!(
         ("unowned_to_owned", 1, test_binary::unowned_to_owned),
         ("realloc_shrink", 0, test_binary::realloc_shrink),
         ("realloc_grow", 0, test_binary::realloc_grow),
+        ("encode_string", 0, test_binary::encode_string),
 
         ("threaded_fac", 1, test_thread::threaded_fac),
         ("threaded_sleep", 1, test_thread::threaded_sleep),
