@@ -21,7 +21,7 @@ mod untagged_enum;
 /// be translated directly from an Elixir struct to a Rust struct. For example, the following
 /// struct, annotated as such:
 ///
-/// ```rust
+/// ```text
 /// #[derive(Debug, NifStruct)]
 /// #[module = "AddStruct"]
 /// struct AddStruct {
@@ -32,7 +32,7 @@ mod untagged_enum;
 ///
 /// This would be translated by Rustler into:
 ///
-/// ```elixir
+/// ```text
 /// defmodule AddStruct do
 ///     defstruct lhs: 0, rhs: 0
 /// end
@@ -49,7 +49,7 @@ pub fn nif_struct(input: TokenStream) -> TokenStream {
 /// struct can be encoded or decoded from an Elixir map. For example, the following struct
 /// annotated as such:
 ///
-/// ```rust
+/// ```text
 /// #[derive(NifMap)]
 /// struct AddMap {
 ///     lhs: i32,
@@ -60,7 +60,7 @@ pub fn nif_struct(input: TokenStream) -> TokenStream {
 /// Given the values 33 and 21 for this struct, this would result, when encoded, in an elixir
 /// map with two elements like:
 ///
-/// ```elixir
+/// ```text
 /// %{lhs: 33, rhs: 21}
 /// ```
 #[proc_macro_derive(NifMap)]
@@ -75,7 +75,7 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 /// struct can be encoded or decoded from an Elixir map. For example, the following struct
 /// annotated as such:
 ///
-/// ```rust
+/// ```text
 /// #[derive(NifTuple)]
 /// struct AddTuple {
 ///     lhs: i32,
@@ -86,7 +86,7 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 /// Given the values 33 and 21 for this struct, this would result, when encoded, in an elixir
 /// tuple with two elements like:
 ///
-/// ```elixir
+/// ```text
 /// {33, 21}
 /// ```
 ///
@@ -103,7 +103,7 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
 /// be translated directly from an Elixir struct to a Rust struct. For example, the following
 /// struct, annotated as such:
 ///
-/// ```rust
+/// ```text
 /// #[derive(Debug, NifRecord)]
 /// #[tag = "record"]
 /// struct AddRecord {
@@ -114,7 +114,7 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
 ///
 /// This would be translated by Rustler into:
 ///
-/// ```elixir
+/// ```text
 /// defmodule AddRecord do
 ///     import Record
 ///     defrecord :record, [lhs: 1, rhs: 2]
@@ -131,7 +131,7 @@ pub fn nif_record(input: TokenStream) -> TokenStream {
 /// Implementation of the `NifUnitEnum` macro that lets the user annotate an enum with a unit type
 /// that will generate elixir atoms when encoded
 ///
-/// ```rust
+/// ```text
 /// #[derive(NifUnitEnum)]
 /// enum UnitEnum {
 ///    FooBar,
@@ -141,7 +141,7 @@ pub fn nif_record(input: TokenStream) -> TokenStream {
 ///
 /// An example usage in elixir would look like the following.
 ///
-/// ```elixir
+/// ```text
 /// test "unit enum transcoder" do
 ///    assert :foo_bar == RustlerTest.unit_enum_echo(:foo_bar)
 ///    assert :baz == RustlerTest.unit_enum_echo(:baz)
@@ -163,7 +163,7 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 /// generate elixir values when decoded. This can be used for rust enums that contain data and
 /// will generate a value based on the kind of data encoded. For example from the test code:
 ///
-/// ```rust
+/// ```text
 /// #[derive(NifUntaggedEnum)]
 /// enum UntaggedEnum {
 ///     Foo(u32),
@@ -179,7 +179,7 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 ///
 /// This can be used from elixir in the following manner.
 ///
-/// ```elixir
+/// ```text
 ///   test "untagged enum transcoder" do
 ///    assert 123 == RustlerTest.untagged_enum_echo(123)
 ///    assert "Hello" == RustlerTest.untagged_enum_echo("Hello")
