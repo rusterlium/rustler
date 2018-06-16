@@ -16,16 +16,16 @@ lazy_static = "1.0"
 [package.metadata.release]
 
 [[package.metadata.release.pre-release-replacements]]
-file = "rustler_mix/mix.exs"
+file = "../rustler_mix/mix.exs"
 search = "version: \"[^\"]+\", # Auto updated by cargo release, do not modify this line."
 replace = "version: \"{{version}}\", # Auto updated by cargo release, do not modify this line."
 
 [[package.metadata.release.pre-release-replacements]]
-file = "rustler_mix/lib/rustler.ex"
+file = "../rustler_mix/lib/rustler.ex"
 search = "def rustler_version, do: \"[^\"]+\""
 replace = "def rustler_version, do: \"{{version}}\""
 
 [[package.metadata.release.pre-release-replacements]]
-file = "rustler_codegen/Cargo.toml"
+file = "../rustler_codegen/Cargo.toml"
 search = "# rustler_codegen version\nversion = \"[^\"]+\""
 replace = "# rustler_codegen version\nversion = \"{{version}}\""
