@@ -32,6 +32,8 @@ Cargo.lock
 /rustler_codegen/test/target/
 /rustler_codegen/Cargo.lock
 
+/rustler_mix/native/*/target
+
 /_build
 /cover
 /deps

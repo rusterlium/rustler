@@ -1,0 +1,15 @@
+[package]
+name = "rustler_cargo_test_runner"
+version = "0.1.0"
+authors = ["Magnus Ottenklinger <evnu@posteo.de>"]
+
+[lib]
+name = "rustler_cargo_test_runner"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.17.0"
+rustler_codegen = "0.17.0"
+lazy_static = "1.0"
+cargo = "0.27"

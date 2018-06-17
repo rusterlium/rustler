@@ -16,7 +16,10 @@ defmodule Rustler.Mixfile do
        source_url_pattern: "https://github.com/hansihe/Rustler/blob/master/rustler_mix/%{path}#L%{line}"
      ],
      package: package(),
-     description: description()]
+     description: description(),
+     compilers: [:rustler] ++ Mix.compilers(),
+     rustler_crates: rustler_crates()
+    ]
   end
 
   def application do
@@ -38,5 +41,13 @@ defmodule Rustler.Mixfile do
      maintainers: ["hansihe"],
      licenses: ["MIT", "Apache-2.0"],
      links: %{"GitHub" => "https://github.com/hansihe/Rustler"}]
+  end
+
+  defp rustler_crates do
+    [
+      rustler_cargo_test_runner: [
+        path: "native/rustler_cargo_test_runner"
+      ]
+    ]
   end
 end

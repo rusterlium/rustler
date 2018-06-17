@@ -2,5 +2,6 @@
 members = [
   "rustler",
   "rustler_codegen",
-  "rustler_tests"
+  "rustler_tests",
+  "rustler_mix/native/rustler_cargo_test_runner"
 ]
