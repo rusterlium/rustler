@@ -17,7 +17,7 @@ defmodule Rustler.Mixfile do
      ],
      package: package(),
      description: description(),
-     compilers: [:rustler] ++ Mix.compilers(),
+     compilers: Mix.compilers() ++ [:rustler],
      rustler_crates: rustler_crates()
     ]
   end
