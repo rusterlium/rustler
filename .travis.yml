@@ -1,6 +1,6 @@
 language: erlang
 otp_release:
-  - 20.2.2
+  - 21.0
 
 sudo: required
 
