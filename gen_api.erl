@@ -28,7 +28,7 @@ version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,   % erl
                         dirty_scheduler_opt, nif_2_11];
 version_opts("2.12") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12];
-version_opts("2.13") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.1
+version_opts("2.13") -> [{major,2}, {minor,13}, exception, getenv, time,   % erlang 20.1
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13];
 version_opts(_) ->
     io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
