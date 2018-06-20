@@ -1,6 +1,6 @@
 [package]
 name = "erlang_nif-sys"
-version = "0.6.3-pre"
+version = "0.6.4-pre"
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 description = "Create Erlang NIF modules in Rust using the C NIF API."
 documentation = "https://docs.rs/erlang_nif-sys"
