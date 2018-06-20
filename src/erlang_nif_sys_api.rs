@@ -76,8 +76,8 @@ pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
 pub struct ErlNifBinary {
     pub size: size_t,
     pub data: *mut u8,
-    bin_term: ERL_NIF_TERM,
     ref_bin: *mut c_void,
+    _spare: [*mut c_void; 2],
 }
 
 #[cfg(windows)]

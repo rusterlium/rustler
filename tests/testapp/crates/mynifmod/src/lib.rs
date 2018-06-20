@@ -17,6 +17,7 @@ nif_init!("mynifmod", [
     ("rustmap_dtor_count", 0, rustmap_dtor_count),
     ("to_str", 1, slice_args!(to_str)),
     ("hash", 1, slice_args!(hash)),
+    ("make_map", 0, slice_args!(make_map)),
     ],
     {load: mynifmod_load});
 
@@ -99,6 +100,26 @@ unsafe fn hash(env: *mut ErlNifEnv, args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
     if 1==args.len() {
         let res = enif_hash(ErlNifHash::ERL_NIF_INTERNAL_HASH, args[0], 1234);
         enif_make_uint64(env, res)
+    }
+    else {
+        enif_make_badarg(env)
+    }
+}
+
+unsafe fn make_map(env: *mut ErlNifEnv, args: &[ERL_NIF_TERM]) -> ERL_NIF_TERM {
+    if 0==args.len() {
+        let keys: Vec<_> = ["one", "two", "three"].iter()
+            .map(|x| enif_make_atom_len(env, x.as_ptr(), x.len()))
+            .collect();
+        let values: Vec<_> = (1..=3)
+            .map(|x| enif_make_int(env, x))
+            .collect();
+        let mut map = mem::uninitialized();
+        if 0!=enif_make_map_from_arrays(env, keys.as_ptr(), values.as_ptr(), keys.len(), &mut map) {
+            map
+        } else {
+            enif_make_badarg(env)
+        }
     }
     else {
         enif_make_badarg(env)

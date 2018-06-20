@@ -30,6 +30,9 @@ version_opts("2.12") -> [{major,2}, {minor,12}, exception, getenv, time,   % erl
                         dirty_scheduler_opt, nif_2_11, nif_2_12];
 version_opts("2.13") -> [{major,2}, {minor,13}, exception, getenv, time,   % erlang 20.1
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13];
+version_opts("2.14") -> [{major,2}, {minor,14}, exception, getenv, time,   % erlang 21.0
+                        dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
+                        nif_2_14];
 version_opts(_) ->
     io:format("Unsupported Erlang version.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n"),
     halt(1).
@@ -315,6 +318,33 @@ api_list(Opts) -> [
             {"", "dummy_enif_ioq_peek",       ""},
             {"", "dummy_enif_inspect_iovec",  ""},
             {"", "dummy_enif_free_iovec",     ""}
+        ];
+        false -> []
+    end ++
+    case proplists:get_bool(nif_2_14, Opts) of
+        true -> [
+            %% Skip iovec and synchronization APIs for now (perhaps forever).
+            %% Consider safer Rust iovec crates like https://crates.io/crates/iovec instead of this API.
+            %% If anybody really does need this API in Rust, please file a bug.
+            % {"int",  "enif_ioq_peek_head",        "ErlNifEnv *env, ErlNifIOQueue *q, size_t *size, ERL_NIF_TERM *head"},
+            % {"char*, "enif_mutex_name",           "ErlNifMutex*"},
+            % {"char*, "enif_cond_name",            "ErlNifCond*"},
+            % {"char*, "enif_rwlock_name",          "ErlNifRWLock*"},
+            % {"char*, "enif_thread_name",          "ErlNifTid"},
+            {"", "dummy_enif_ioq_peek_head", ""},
+            {"", "dummy_enif_mutex_name",    ""},
+            {"", "dummy_enif_cond_name",     ""},
+            {"", "dummy_enif_rwlock_name",   ""},
+            {"", "dummy_enif_thread_name",   ""},
+
+
+            %% See format! and write!
+            % {"int",  "enif_vfprintf",             "FILE*, const char *fmt, va_list"},
+            % {"int",  "enif_vsnprintf",            "char*, size_t, const char *fmt, va_list"},
+            {"", "dummy_enif_vfprintf",             ""},
+            {"", "dummy_enif_vsnprintf",            ""},
+
+            {"c_int",  "enif_make_map_from_arrays", "env: *mut ErlNifEnv, keys: *const ERL_NIF_TERM, values: *const ERL_NIF_TERM, cnt: usize, map_out: *mut ERL_NIF_TERM"}
         ];
         false -> []
     end.

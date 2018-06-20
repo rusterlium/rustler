@@ -37,7 +37,8 @@ simple_test_() -> [
         ?_assertEqual(hash(and_this), hash(and_this)),
         ?_assertNotEqual(hash(hash_this), hash(and_this)),
         ?_assertEqual(hash(394749857), hash(394749857)),
-        ?_assertNotEqual(hash(394749857), hash(394749858))
+        ?_assertNotEqual(hash(394749857), hash(394749858)),
+        ?_assertEqual(make_map(), #{one=>1, two=>2, three=>3})
     ].
 
 
@@ -47,6 +48,6 @@ rustmap()            -> exit(nif_library_not_loaded).
 rustmap_dtor_count() -> exit(nif_library_not_loaded).
 to_str(_X)           -> exit(nif_library_not_loaded).
 hash(_X)             -> exit(nif_library_not_loaded).
-
+make_map()           -> exit(nif_library_not_loaded).
 
 
