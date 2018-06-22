@@ -14,6 +14,14 @@ pub struct OwnedBinary {
 }
 
 impl<'a> OwnedBinary {
+
+    pub unsafe fn from_raw(inner: ErlNifBinary) -> OwnedBinary {
+        OwnedBinary {
+            inner: inner,
+            release: true,
+        }
+    }
+
     /// Allocates a new OwnedBinary with size `size`.
     ///
     /// Note that the memory is not initially guaranteed to be any particular value.
@@ -140,13 +148,6 @@ impl<'a> Binary<'a> {
         }
     }
 
-    pub unsafe fn from_raw(env: Env<'a>, bin: ErlNifBinary) -> Binary<'a> {
-        Binary {
-            inner: bin,
-            term: Term::new(env, bin.bin_term),
-        }
-    }
-
     pub fn to_owned(&self) -> Option<OwnedBinary> {
         OwnedBinary::from_unowned(self)
     }
@@ -188,7 +189,7 @@ impl<'a> Binary<'a> {
         let raw_term = unsafe {
             nif_interface::enif_make_sub_binary(
                 self.term.get_env().as_c_arg(),
-                self.inner.bin_term,
+                self.term.as_c_arg(),
                 offset,
                 length,
             )

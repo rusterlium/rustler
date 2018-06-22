@@ -9,8 +9,7 @@ use std::mem::uninitialized;
 pub struct ErlNifBinary {
     pub size: size_t,
     pub data: *mut u8,
-    pub bin_term: NIF_TERM,
-    ref_bin: *mut c_void,
+    _internal: [*mut c_void; 3]
 }
 
 impl ErlNifBinary {
@@ -18,8 +17,7 @@ impl ErlNifBinary {
         ErlNifBinary {
             size: uninitialized(),
             data: uninitialized(),
-            bin_term: uninitialized(),
-            ref_bin: uninitialized(),
+            _internal: uninitialized()
         }
     }
     pub fn as_c_arg(&mut self) -> NIF_BINARY {
