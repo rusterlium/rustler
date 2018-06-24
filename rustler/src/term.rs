@@ -110,3 +110,6 @@ impl<'a> PartialOrd for Term<'a> {
         Some(cmp(self, other))
     }
 }
+
+unsafe impl<'a> Sync for Term<'a> {}
+unsafe impl<'a> Send for Term<'a> {}
