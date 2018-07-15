@@ -20,6 +20,7 @@ mod test_env;
 mod test_codegen;
 mod test_term;
 mod test_dirty;
+mod test_range;
 
 rustler_export_nifs!(
     "Elixir.RustlerTest",
@@ -72,6 +73,8 @@ rustler_export_nifs!(
 
         ("dirty_cpu", 0, test_dirty::dirty_cpu, SchedulerFlags::DirtyCpu),
         ("dirty_io", 0, test_dirty::dirty_io, SchedulerFlags::DirtyIo),
+
+        ("sum_range", 1, test_range::sum_range),
     ],
     Some(on_load)
 );
