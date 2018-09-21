@@ -28,13 +28,6 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
 
-    compile_command =
-      make_base_command(Keyword.get(config, :cargo, :system))
-      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
-      |> make_features_flag(Keyword.get(config, :features, []))
-      |> make_build_mode_flag(build_mode)
-      |> make_platform_hacks(:os.type())
-
     crate_full_path = Path.expand(crate_path, File.cwd!)
     target_dir = Path.join([Mix.Project.build_path(), "rustler_crates",
                             Atom.to_string(id)])
@@ -52,6 +45,13 @@ defmodule Mix.Tasks.Compile.Rustler do
         name ->
           {name, :lib}
       end
+
+    compile_command =
+      make_base_command(Keyword.get(config, :cargo, :system))
+      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
+      |> make_features_flag(Keyword.get(config, :features, []))
+      |> make_build_mode_flag(build_mode)
+      |> make_platform_hacks(output_type, :os.type())
 
     [cmd_bin | args] = compile_command
 
@@ -93,11 +93,11 @@ defmodule Mix.Tasks.Compile.Rustler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp make_platform_hacks(args, {:unix, :darwin}) do
+  defp make_platform_hacks(args, :lib, {:unix, :darwin}) do
     # Fix for https://github.com/hansihe/Rustler/issues/12
     args ++ ["--", "--codegen", "link-args=-flat_namespace -undefined suppress"]
   end
-  defp make_platform_hacks(args, _), do: args
+  defp make_platform_hacks(args, _, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args ++ []
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
