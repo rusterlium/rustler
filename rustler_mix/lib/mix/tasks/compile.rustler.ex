@@ -36,8 +36,8 @@ defmodule Mix.Tasks.Compile.Rustler do
       |> make_platform_hacks(:os.type())
 
     crate_full_path = Path.expand(crate_path, File.cwd!)
-    target_dir = Path.join([Mix.Project.build_path(), "rustler_crates",
-                            Atom.to_string(id)])
+    target_dir = Keyword.get(config, :target_dir,
+      Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(id)]))
 
     cargo_data = check_crate_env(crate_full_path)
     lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
