@@ -48,6 +48,8 @@ rustler_export_nifs!(
 
         ("atom_to_string", 1, test_atom::atom_to_string),
         ("atom_equals_ok", 1, test_atom::atom_equals_ok),
+        ("binary_to_atom", 1, test_atom::binary_to_atom),
+        ("binary_to_existing_atom", 1, test_atom::binary_to_existing_atom),
 
         ("make_shorter_subbinary", 1, test_binary::make_shorter_subbinary),
         ("parse_integer", 1, test_binary::parse_integer),

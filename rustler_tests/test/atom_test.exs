@@ -7,6 +7,16 @@ defmodule RustlerTest.AtomTest do
     assert RustlerTest.atom_to_string(:erlang.list_to_atom([197])) == "Å"
   end
 
+  test "binary to atom" do
+    assert RustlerTest.binary_to_atom("test_atom") == :test_atom
+  end
+
+  test "binary to existing atom" do
+    assert RustlerTest.binary_to_existing_atom("test_atom_nonexisting") == nil
+    RustlerTest.binary_to_atom("test_atom_nonexisting")
+    assert RustlerTest.binary_to_existing_atom("test_atom_nonexisting") != nil
+  end
+
   test "atom to string for non-atom should raise" do
     assert catch_error(RustlerTest.atom_to_string("already a string")) == :badarg
   end

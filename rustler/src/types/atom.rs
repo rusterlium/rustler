@@ -43,6 +43,22 @@ impl Atom {
         unsafe { Ok(Atom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes))) }
     }
 
+    /// Return the atom whose text representation is `bytes`, like `erlang:binary_to_existing_atom/2`, if atom with given text representation exists.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if `bytes.len() > 255`.
+    pub fn try_from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<Option<Atom>> {
+        if bytes.len() > 255 {
+            return Err(Error::BadArg);
+        }
+        unsafe {
+            match atom::make_existing_atom(env.as_c_arg(), bytes) {
+                Some(term) => Ok(Some(Atom::from_nif_term(term))),
+                None => return Ok(None),
+            }
+        }
+    }
+
     /// Return the atom whose text representation is the given `string`, like `erlang:list_to_atom/2`.
     ///
     /// # Errors

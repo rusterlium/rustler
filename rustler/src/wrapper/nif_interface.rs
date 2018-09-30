@@ -130,6 +130,21 @@ pub unsafe fn enif_is_tuple(env: NIF_ENV, term: NIF_TERM) -> c_int {
 pub unsafe fn enif_make_atom_len(env: NIF_ENV, string: *const u8, length: size_t) -> NIF_TERM {
     erlang_nif_sys::enif_make_atom_len(env, string, length)
 }
+pub unsafe fn enif_make_existing_atom_len(
+    env: NIF_ENV,
+    string: *const u8,
+    length: size_t,
+    atom_out: *mut NIF_TERM,
+) -> c_int {
+    erlang_nif_sys::enif_make_existing_atom_len(
+        env,
+        string,
+        length,
+        atom_out,
+        erlang_nif_sys::ErlNifCharEncoding::ERL_NIF_LATIN1,
+    )
+}
+
 pub unsafe fn enif_get_atom_latin1(
     env: NIF_ENV,
     term: NIF_TERM,
