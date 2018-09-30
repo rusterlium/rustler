@@ -4,9 +4,9 @@ use rustler::{Env, Term, Encoder, NifResult, Error};
 use rustler::types::binary::{ Binary, OwnedBinary };
 
 pub fn make_shorter_subbinary<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let binary: Binary = try!(args[0].decode());
+    let binary: Binary = args[0].decode()?;
     let length: usize = binary.as_slice().len();
-    Ok(try!(binary.make_subbinary(1, length-2)).encode(env))
+    Ok(binary.make_subbinary(1, length-2)?.encode(env))
 }
 
 pub fn parse_integer<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {

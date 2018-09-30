@@ -48,8 +48,8 @@ rustler_export_nifs!(
 );
 
 fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let num1: i64 = try!(args[0].decode());
-    let num2: i64 = try!(args[1].decode());
+    let num1: i64 = args[0].decode()?;
+    let num2: i64 = args[1].decode()?;
 
     Ok((atoms::ok(), num1 + num2).encode(env))
 }

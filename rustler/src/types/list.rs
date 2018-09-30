@@ -27,7 +27,7 @@ use {Decoder, Encoder, Env, Error, NifResult, Term};
 /// # use rustler::{Term, NifResult};
 /// # use rustler::types::list::ListIterator;
 /// # fn list_iterator_example(list_term: Term) -> NifResult<Vec<i64>> {
-/// let list_iterator: ListIterator = try!(list_term.decode());
+/// let list_iterator: ListIterator = list_term.decode()?;
 ///
 /// let result: NifResult<Vec<i64>> = list_iterator
 ///     // Produces an iterator of NifResult<i64>
@@ -107,7 +107,7 @@ where
     T: Decoder<'a>,
 {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let iter: ListIterator = try!(term.decode());
+        let iter: ListIterator = term.decode()?;
         let res: NifResult<Self> = iter.map(|x| x.decode::<T>()).collect();
         res
     }

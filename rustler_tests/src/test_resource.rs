@@ -30,15 +30,15 @@ pub fn resource_make<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>
 }
 
 pub fn resource_set_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let resource: ResourceArc<TestResource> = try!(args[0].decode());
+    let resource: ResourceArc<TestResource> = args[0].decode()?;
     let mut test_field = resource.test_field.write().unwrap();
-    *test_field = try!(args[1].decode());
+    *test_field = args[1].decode()?;
 
     Ok("ok".encode(env))
 }
 
 pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) ->  NifResult<Term<'a>> {
-    let resource: ResourceArc<TestResource> = try!(args[0].decode());
+    let resource: ResourceArc<TestResource> = args[0].decode()?;
     let test_field = resource.test_field.read().unwrap();
     Ok(test_field.encode(env))
 }
@@ -69,7 +69,7 @@ impl Drop for ImmutableResource {
 }
 
 pub fn resource_make_immutable<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let u: u32 = try!(args[0].decode());
+    let u: u32 = args[0].decode()?;
     Ok(ResourceArc::new(ImmutableResource::new(u)).encode(env))
 }
 
