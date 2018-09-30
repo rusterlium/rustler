@@ -1,5 +1,3 @@
-use std::ascii::AsciiExt;
-
 use wrapper::atom;
 use wrapper::nif_interface::NIF_TERM;
 use {Decoder, Encoder, Env, Error, NifResult, Term};

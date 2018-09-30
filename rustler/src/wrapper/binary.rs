@@ -1,5 +1,5 @@
 use super::nif_interface;
-use super::nif_interface::{NIF_BINARY, NIF_TERM};
+use super::nif_interface::NIF_BINARY;
 use wrapper::nif_interface::{c_void, size_t};
 
 use std::mem::uninitialized;
@@ -9,7 +9,7 @@ use std::mem::uninitialized;
 pub struct ErlNifBinary {
     pub size: size_t,
     pub data: *mut u8,
-    _internal: [*mut c_void; 3]
+    _internal: [*mut c_void; 3],
 }
 
 impl ErlNifBinary {
@@ -17,7 +17,7 @@ impl ErlNifBinary {
         ErlNifBinary {
             size: uninitialized(),
             data: uninitialized(),
-            _internal: uninitialized()
+            _internal: uninitialized(),
         }
     }
     pub fn as_c_arg(&mut self) -> NIF_BINARY {
