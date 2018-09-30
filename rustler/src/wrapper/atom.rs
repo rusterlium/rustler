@@ -6,6 +6,20 @@ pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
     nif_interface::enif_make_atom_len(env, name.as_ptr(), name.len())
 }
 
+pub unsafe fn make_existing_atom(env: NIF_ENV, name: &[u8]) -> Option<NIF_TERM> {
+    let mut atom_out: NIF_TERM = 0;
+    let success = nif_interface::enif_make_existing_atom_len(
+        env,
+        name.as_ptr(),
+        name.len(),
+        &mut atom_out as *mut NIF_TERM,
+    );
+    if success == 0 {
+        return None;
+    }
+    Some(atom_out)
+}
+
 /// Get the contents of this atom as a string.
 ///
 /// If you only need to test for equality, comparing the terms directly

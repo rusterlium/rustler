@@ -41,6 +41,8 @@ defmodule RustlerTest do
 
   def atom_to_string(_), do: err()
   def atom_equals_ok(_), do: err()
+  def binary_to_atom(_), do: err()
+  def binary_to_existing_atom(_), do: err()
 
   def threaded_fac(_), do: err()
   def threaded_sleep(_), do: err()
