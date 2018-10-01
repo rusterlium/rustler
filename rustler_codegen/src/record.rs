@@ -42,7 +42,7 @@ pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str
 pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens, has_lifetime: bool) -> Tokens {
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { try!(::rustler::Decoder::decode(terms[#idx + 1])) };
+        let decoder = quote! { ::rustler::Decoder::decode(terms[#idx + 1])? };
 
         let ident = field.clone().ident.unwrap();
         quote! { #ident: #decoder }
@@ -61,7 +61,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, atom_defs: &Tokens,
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                let terms = try!(::rustler::types::tuple::get_tuple(term));
+                let terms = ::rustler::types::tuple::get_tuple(term)?;
                 if terms.len() != #field_num + 1 {
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }

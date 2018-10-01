@@ -31,7 +31,7 @@ struct AddMap {
 }
 
 pub fn map_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let map: AddMap = try!(args[0].decode());
+    let map: AddMap = args[0].decode()?;
     Ok(map.encode(env))
 }
 

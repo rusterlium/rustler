@@ -43,7 +43,7 @@ pub fn sublists<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         my_env.send_and_clear(&pid, |env| {
             let result: NifResult<Term> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
-                let iter: ListIterator = try!(reversed_list.decode());
+                let iter: ListIterator = reversed_list.decode()?;
 
                 let empty_list = Vec::<Term>::new().encode(env);
                 let mut all_sublists = vec![empty_list];

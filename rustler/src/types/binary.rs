@@ -182,7 +182,7 @@ impl<'a> Binary<'a> {
     /// This will not copy anything.
     pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<Binary<'a>> {
         let min_len = length.checked_add(offset);
-        if try!(min_len.ok_or(Error::BadArg)) > self.inner.size {
+        if min_len.ok_or(Error::BadArg)? > self.inner.size {
             return Err(Error::BadArg);
         }
 

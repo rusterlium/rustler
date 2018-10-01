@@ -3,13 +3,13 @@ use {Decoder, Encoder, Env, Error, NifResult, Term};
 
 impl<'a> Decoder<'a> for String {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let string: &str = try!(Decoder::decode(term));
+        let string: &str = Decoder::decode(term)?;
         Ok(string.to_string())
     }
 }
 impl<'a> Decoder<'a> for &'a str {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let binary = try!(Binary::from_term(term));
+        let binary = Binary::from_term(term)?;
         match ::std::str::from_utf8(binary.as_slice()) {
             Ok(string) => Ok(string),
             Err(_) => Err(Error::BadArg),

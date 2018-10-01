@@ -67,7 +67,7 @@ impl<'a> Term<'a> {
     ///
     /// ```ignore
     /// let term: Term = ...;
-    /// let number: i32 = try!(term.decode());
+    /// let number: i32 = term.decode()?;
     /// ```
     pub fn decode<T>(self) -> NifResult<T>
     where

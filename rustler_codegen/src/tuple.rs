@@ -25,7 +25,7 @@ pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str
 pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has_lifetime: bool) -> Tokens {
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { try!(::rustler::Decoder::decode(terms[#idx])) };
+        let decoder = quote! { ::rustler::Decoder::decode(terms[#idx])? };
 
         if is_tuple {
             unimplemented!();
@@ -48,7 +48,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                let terms = try!(::rustler::types::tuple::get_tuple(term));
+                let terms = ::rustler::types::tuple::get_tuple(term)?;
                 if terms.len() != #field_num {
                     return Err(::rustler::Error::BadArg);
                 }

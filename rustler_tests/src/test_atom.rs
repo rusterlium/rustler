@@ -11,7 +11,7 @@ pub fn on_load(_env: Env) {
 }
 
 pub fn atom_to_string<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let atom_string = try!(args[0].atom_to_string());
+    let atom_string = args[0].atom_to_string()?;
     Ok(atom_string.encode(env))
 }
 
