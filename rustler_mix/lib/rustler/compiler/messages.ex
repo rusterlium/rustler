@@ -77,9 +77,9 @@ defmodule Rustler.Compiler.Messages do
     """
   end
 
-  def message({:cargo_no_library, crate}) do
+  def message({:cargo_no_name, crate}) do
     """
-    No library with name listed in Cargo.toml of crate '#{crate}'.
+    No library or binary with name listed in Cargo.toml of crate '#{crate}'.
     """
   end
 

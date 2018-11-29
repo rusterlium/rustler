@@ -28,23 +28,30 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
 
-    compile_command =
-      make_base_command(Keyword.get(config, :cargo, :system))
-      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
-      |> make_features_flag(Keyword.get(config, :features, []))
-      |> make_build_mode_flag(build_mode)
-      |> make_platform_hacks(:os.type())
-
     crate_full_path = Path.expand(crate_path, File.cwd!)
     target_dir = Keyword.get(config, :target_dir,
       Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(id)]))
 
     cargo_data = check_crate_env(crate_full_path)
-    lib_name = Rustler.TomlParser.get_table_val(cargo_data, ["lib"], "name")
+    
+    {output_name, output_type} =
+      case get_name(cargo_data, "lib") do
+        nil ->
+          case get_name(cargo_data, "bin") do
+            nil -> throw_error({:cargo_no_name, crate_path})
+            name -> {name, :bin}
+          end
 
-    if lib_name == nil do
-      throw_error({:cargo_no_library, crate_path})
-    end
+        name ->
+          {name, :lib}
+      end
+
+    compile_command =
+      make_base_command(Keyword.get(config, :cargo, :system))
+      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
+      |> make_features_flag(Keyword.get(config, :features, []))
+      |> make_build_mode_flag(build_mode)
+      |> make_platform_hacks(output_type, :os.type())
 
     [cmd_bin | args] = compile_command
 
@@ -60,7 +67,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
     end
 
-    {src_file, dst_file} = make_lib_name(lib_name)
+    {src_file, dst_file} = make_file_names(output_name, output_type)
     compiled_lib = Path.join([target_dir, Atom.to_string(build_mode), src_file])
     destination_lib = Path.join(priv_dir(), dst_file)
 
@@ -86,11 +93,11 @@ defmodule Mix.Tasks.Compile.Rustler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp make_platform_hacks(args, {:unix, :darwin}) do
+  defp make_platform_hacks(args, :lib, {:unix, :darwin}) do
     # Fix for https://github.com/hansihe/Rustler/issues/12
     args ++ ["--", "--codegen", "link-args=-flat_namespace -undefined suppress"]
   end
-  defp make_platform_hacks(args, _), do: args
+  defp make_platform_hacks(args, _, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args ++ []
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
@@ -101,11 +108,20 @@ defmodule Mix.Tasks.Compile.Rustler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args ++ []
 
-  def make_lib_name(base_name) do
-    case :os.type do
+  defp get_name(cargo_data, section),
+    do: Rustler.TomlParser.get_table_val(cargo_data, [section], "name")
+
+  def make_file_names(base_name, :lib) do
+    case :os.type() do
       {:win32, _} -> {"#{base_name}.dll", "lib#{base_name}.dll"}
       {:unix, :darwin} -> {"lib#{base_name}.dylib", "lib#{base_name}.so"}
       {:unix, _} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
+    end
+  end
+  def make_file_names(base_name, :bin) do
+    case :os.type() do
+      {:win32, _} -> {"#{base_name}.exe", "#{base_name}.exe"}
+      {:unix, _} -> {base_name, base_name}
     end
   end
 

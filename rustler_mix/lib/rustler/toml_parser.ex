@@ -73,12 +73,11 @@ defmodule Rustler.TomlParser do
   # Pass 2
 
   def get_table_vals(data, path) do
-    found = Enum.find(data, fn
-      {:table, inner_path, _values} -> path == inner_path
+    Enum.find_value(data, fn
+      {:table, ^path, values} -> values
+      {:table_array, ^path, values} -> values
       _ -> false
     end)
-
-    with {:table, _path, vals} <- found, do: vals
   end
 
   def get_keys_key(nil, _), do: nil
