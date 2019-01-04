@@ -35,12 +35,13 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
+      @on_load :__init__
+
       @rustler_opts opts
 
-      def load_nif(func, args) do
+      def __init__ do
         {so_path, load_data} = Rustler.compile_config(__MODULE__, @rustler_opts)
-        :ok = :erlang.load_nif(so_path, load_data)
-        apply(__MODULE__, func, args)
+        :erlang.load_nif(so_path, load_data)
       end
     end
   end
