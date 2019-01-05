@@ -40,6 +40,10 @@ defmodule Rustler do
       @rustler_opts opts
 
       def __init__ do
+        # Remove any old modules that may be loaded so we don't get
+        # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
+        :code.purge(__MODULE__)
+
         {so_path, load_data} = Rustler.compile_config(__MODULE__, @rustler_opts)
         :erlang.load_nif(so_path, load_data)
       end
