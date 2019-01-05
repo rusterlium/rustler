@@ -16,7 +16,7 @@ env:
 sudo: true
 
 before_install:
-  - curl https://static.rust-lang.org/rustup.sh | sh
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 install:
   - mix local.rebar --force
