@@ -23,5 +23,6 @@ install:
   - mix local.hex --force
 
 script:
+  - source $HOME/.cargo/env
   - cargo test
   - cd rustler_tests && mix test
