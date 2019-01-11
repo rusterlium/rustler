@@ -15,3 +15,4 @@ proc_macro = true
 syn = { version = "0.15.24", features = ["derive"] }
 quote = "0.6.10"
 heck = "0.3"
+proc-macro2 = "0.4"
