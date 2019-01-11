@@ -1,36 +1,47 @@
-use ::syn::{self, Body, Field, MetaItem, Lit, Ident};
-use ::quote::{self, Tokens};
+use proc_macro2::{Span, TokenStream};
 
-pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &str> {
+use ::syn::{self, Data, Field, Ident, Meta, Lit};
+
+pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let elixir_module = {
         let ref attr_value = ast.attrs.iter()
-            .find(|attr| attr.name() == "module")
-            .expect("NifStruct requires a 'module' attribute")
-            .value;
+            .map(|attr| attr.parse_meta())
+            .find(|meta| match meta {
+                Ok(Meta::NameValue(meta_name_value)) =>
+                    meta_name_value.ident == "module",
+                _ => false
+            })
+            .expect("NifStruct requires a 'module' attribute");
+
         match *attr_value {
-            MetaItem::NameValue(_, Lit::Str(ref value, _)) => format!("Elixir.{}", value),
+            Ok(Meta::NameValue(ref meta_name_value)) => match meta_name_value.lit {
+                Lit::Str(ref module) => format!("Elixir.{}", module.value()),
+                _ => panic!("Cannot parse module")
+            }
             _ => panic!("NifStruct requires a 'module' attribute"),
         }
     };
 
-    let struct_fields = match ast.body {
-        Body::Struct(ref data) => data.fields(),
-        Body::Enum(_) => panic!("NifStruct can only be used with structs"),
+    let struct_fields = match ast.data {
+        Data::Struct(ref data_struct) => &data_struct.fields,
+        Data::Enum(_) => panic!("NifStruct can only be used with structs"),
+        Data::Union(_) => panic!("NifStruct can only be used with structs"),
     };
 
-    let num_lifetimes = ast.generics.lifetimes.len();
+    let num_lifetimes = ast.generics.lifetimes().count();
     if num_lifetimes > 1 { panic!("Struct can only have one lifetime argument"); }
     let has_lifetime = num_lifetimes == 1;
 
-    let field_atoms: Vec<Tokens> = struct_fields.iter().map(|field| {
-        let ident = field.clone().ident.unwrap();
+    let field_atoms: Vec<TokenStream> = struct_fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
         let ident_str = ident.to_string();
-        let atom_fun = Ident::new(format!("atom_{}", ident_str));
+        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
         quote! {
             atom #atom_fun = #ident_str;
         }
     }).collect();
+
     let atom_defs = quote! {
         rustler_atoms! {
             atom atom_struct = "__struct__";
@@ -39,32 +50,36 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> Result<quote::Tokens, &st
         }
     };
 
-    let decoder = gen_decoder(&ast.ident, struct_fields, &atom_defs, has_lifetime);
-    let encoder = gen_encoder(&ast.ident, struct_fields, &atom_defs, has_lifetime);
+    let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    Ok(quote! {
+    let decoder = gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime);
+    let encoder = gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime);
+
+    let gen = quote! {
         #decoder
         #encoder
-    })
+    };
+
+    gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, has_lifetime: bool) -> Tokens {
+pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
     let struct_type = if has_lifetime {
         quote! { #struct_name <'a> }
     } else {
         quote! { #struct_name }
     };
 
-    let field_defs: Vec<Tokens> = fields.iter().map(|field| {
-        let ident = field.clone().ident.unwrap();
+    let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
         let ident_str = ident.to_string();
-        let atom_fun = Ident::new(format!("atom_{}", ident_str));
+        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
         quote! {
             #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
         }
     }).collect();
 
-    quote! {
+    let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 use ::rustler::Encoder;
@@ -80,26 +95,28 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
                 Ok(#struct_name { #(#field_defs),* })
             }
         }
-    }
+    };
+
+    gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, has_lifetime: bool) -> Tokens {
+pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
     let struct_type = if has_lifetime {
         quote! { #struct_name <'b> }
     } else {
         quote! { #struct_name }
     };
 
-    let field_defs: Vec<Tokens> = fields.iter().map(|field| {
-        let field_ident = field.clone().ident.unwrap();
+    let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
+        let field_ident = field.ident.as_ref().unwrap();
         let field_ident_str = field_ident.to_string();
-        let atom_fun = Ident::new(format!("atom_{}", field_ident_str));
+        let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
         quote! {
             map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).ok().unwrap();
         }
     }).collect();
 
-    quote! {
+    let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
@@ -110,5 +127,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[Field], atom_defs: &Tokens, ha
                 map
             }
         }
-    }
+    };
+
+    gen.into()
 }

@@ -1,36 +1,41 @@
-use ::syn::{self, Field, VariantData, Ident};
-use ::quote::{self, Tokens};
+use proc_macro2::TokenStream;
 
-pub fn transcoder_decorator(ast: &syn::MacroInput) -> Result<quote::Tokens, &str> {
-    let struct_fields = match ast.body {
-        syn::Body::Struct(VariantData::Struct(ref data)) => data,
-        _ => return Err("Must decorate a struct"),
+use ::syn::{self, Data, Field, Ident};
+
+pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
+    let struct_fields = match ast.data {
+        Data::Struct(ref struct_data) => &struct_data.fields,
+        _ => panic!("Must decorate a struct"),
     };
 
-    let num_lifetimes = ast.generics.lifetimes.len();
+    let num_lifetimes = ast.generics.lifetimes().count();
     if num_lifetimes > 1 {
-        return Err("Struct can only have one lifetime argument");
+        panic!("Struct can only have one lifetime argument");
     }
     let has_lifetime = num_lifetimes == 1;
 
-    let decoder = gen_decoder(&ast.ident, struct_fields, false, has_lifetime);
-    let encoder = gen_encoder(&ast.ident, struct_fields, false, has_lifetime);
+    let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    Ok(quote! {
+    let decoder = gen_decoder(&ast.ident, &struct_fields, false, has_lifetime);
+    let encoder = gen_encoder(&ast.ident, &struct_fields, false, has_lifetime);
+
+    let gen = quote! {
         #decoder
         #encoder
-    })
+    };
+
+    gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has_lifetime: bool) -> Tokens {
+pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], is_tuple: bool, has_lifetime: bool) -> TokenStream {
     // Make a decoder for each of the fields in the struct.
-    let field_defs: Vec<Tokens> = fields.iter().enumerate().map(|(idx, field)| {
+    let field_defs: Vec<TokenStream> = fields.iter().enumerate().map(|(idx, field)| {
         let decoder = quote! { ::rustler::Decoder::decode(terms[#idx])? };
 
         if is_tuple {
             unimplemented!();
         } else {
-            let ident = field.clone().ident.unwrap();
+            let ident = field.ident.as_ref().unwrap();
             quote! { #ident: #decoder }
         }
     }).collect();
@@ -45,7 +50,7 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     let field_num = field_defs.len();
 
     // The implementation itself
-    quote! {
+    let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 let terms = ::rustler::types::tuple::get_tuple(term)?;
@@ -59,16 +64,18 @@ pub fn gen_decoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
                 )
             }
         }
-    }
+    };
+
+    gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has_lifetime: bool) -> Tokens {
+pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], is_tuple: bool, has_lifetime: bool) -> TokenStream {
     // Make a field encoder expression for each of the items in the struct.
-    let field_encoders: Vec<Tokens> = fields.iter().map(|field| {
+    let field_encoders: Vec<TokenStream> = fields.iter().map(|field| {
         let field_source = if is_tuple {
             unimplemented!();
         } else {
-            let field_ident = field.clone().ident.unwrap();
+            let field_ident = field.ident.as_ref().unwrap();
             quote! { self.#field_ident }
         };
         quote! { #field_source.encode(env) }
@@ -87,7 +94,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
     };
 
     // The implementation itself
-    quote! {
+    let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_typ {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use ::rustler::Encoder;
@@ -95,5 +102,7 @@ pub fn gen_encoder(struct_name: &Ident, fields: &Vec<Field>, is_tuple: bool, has
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }
         }
-    }
+    };
+
+    gen.into()
 }
