@@ -5,6 +5,7 @@ use proc_macro::TokenStream;
 
 extern crate heck;
 extern crate syn;
+extern crate proc_macro2;
 
 #[macro_use]
 extern crate quote;
@@ -39,10 +40,8 @@ mod untagged_enum;
 /// ```
 #[proc_macro_derive(NifStruct, attributes(module))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = ex_struct::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    ex_struct::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifMap` so that the
@@ -65,10 +64,8 @@ pub fn nif_struct(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(NifMap)]
 pub fn nif_map(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = map::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    map::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifTuple` so that the
@@ -93,10 +90,8 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 /// The size of the tuple will depend on the number of elements in the struct.
 #[proc_macro_derive(NifTuple)]
 pub fn nif_tuple(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = tuple::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    tuple::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of the `NifRecord` macro that lets the user annotate a struct that will
@@ -122,10 +117,8 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(NifRecord, attributes(tag))]
 pub fn nif_record(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = record::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    record::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of the `NifUnitEnum` macro that lets the user annotate an enum with a unit type
@@ -153,10 +146,8 @@ pub fn nif_record(input: TokenStream) -> TokenStream {
 /// that isn't in the Rust enum.
 #[proc_macro_derive(NifUnitEnum)]
 pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = unit_enum::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    unit_enum::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of the `NifUntaggedEnum` macro that lets the user annotate an enum that will
@@ -192,8 +183,6 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 /// type is lost in the translation because Elixir has no such concept.
 #[proc_macro_derive(NifUntaggedEnum)]
 pub fn nif_untagged_enum(input: TokenStream) -> TokenStream {
-    let s = input.to_string();
-    let ast = syn::parse_macro_input(&s).unwrap();
-    let gen = untagged_enum::transcoder_decorator(&ast);
-    gen.unwrap().parse().unwrap()
+    let ast = syn::parse(input).unwrap();
+    untagged_enum::transcoder_decorator(&ast).into()
 }
