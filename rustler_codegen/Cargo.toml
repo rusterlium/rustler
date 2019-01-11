@@ -12,6 +12,6 @@ name = "rustler_codegen"
 proc_macro = true
 
 [dependencies]
-syn = { version = "0.11.9", features = ["aster", "visit"] }
+syn = { version = "0.15.24", features = ["derive"] }
 quote = "0.6.10"
 heck = "0.3"
