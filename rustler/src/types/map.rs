@@ -19,6 +19,32 @@ impl<'a> Term<'a> {
         map_new(env)
     }
 
+    /// Construct a new map from two vectors
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// List.zip(keys, values) |> Map.new()
+    /// ```
+    #[cfg(nif_2_14)]
+    pub fn map_from_arrays(env: Env<'a>, keys: &[Term], values: &[Term]) -> NifResult<Term<'a>> {
+        let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
+        let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
+
+        unsafe {
+            map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
+        }
+    }
+
+    // Fallback for older NIF version
+    #[cfg(not(nif_2_14))]
+    pub fn map_from_arrays(env: Env<'a>, keys: &[Term<'a>], values: &[Term<'a>]) -> NifResult<Term<'a>> {
+        let map = map_new(env);
+        keys.iter().zip(values.iter()).try_fold(map, |map, (k, v)| {
+            map.map_put(*k, *v)
+        })
+    }
+
     /// Gets the value corresponding to a key in a map term.
     ///
     /// Returns Err(Error::BadArg) if the term is not a map or if

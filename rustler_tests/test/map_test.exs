@@ -10,4 +10,11 @@ defmodule RustlerTest.MapTest do
     assert [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, {"e", 4}] ==
       RustlerTest.map_entries_sorted(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
   end
+
+  test "map from arrays" do
+    keys = Enum.into(1..10, [])
+    values = Enum.into(11..20, [])
+    expected_map = Enum.zip(keys, values) |> Enum.into(%{})
+    assert expected_map == RustlerTest.map_from_arrays(keys, values)
+  end
 end
