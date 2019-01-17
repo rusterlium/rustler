@@ -235,6 +235,17 @@ pub unsafe fn enif_make_map_remove(
     erlang_nif_sys::enif_make_map_remove(env, map_in, key, map_out)
 }
 
+#[cfg(nif_2_14)]
+pub unsafe fn enif_make_map_from_arrays(
+    env: NIF_ENV,
+    keys: *const NIF_TERM,
+    value: *const NIF_TERM,
+    cnt: size_t,
+    map_out: *mut NIF_TERM
+) -> c_int {
+    erlang_nif_sys::enif_make_map_from_arrays(env, keys, value, cnt, map_out)
+}
+
 // Tuple
 pub unsafe fn enif_get_tuple(
     env: NIF_ENV,

@@ -39,6 +39,7 @@ rustler::rustler_export_nifs!(
 
         ("sum_map_values", 1, test_map::sum_map_values),
         ("map_entries_sorted", 1, test_map::map_entries_sorted),
+        ("map_from_arrays", 2, test_map::map_from_arrays),
 
         ("resource_make", 0, test_resource::resource_make),
         ("resource_set_integer_field", 2, test_resource::resource_set_integer_field),

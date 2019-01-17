@@ -30,3 +30,10 @@ pub fn map_entries_sorted<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term
         .collect();
     Ok(erlang_pairs.encode(env))
 }
+
+pub fn map_from_arrays<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    let keys: Vec<Term> = args[0].decode()?;
+    let values: Vec<Term> = args[1].decode()?;
+
+    Term::map_from_arrays(env, &keys, &values)
+}
