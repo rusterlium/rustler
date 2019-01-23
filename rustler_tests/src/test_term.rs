@@ -10,7 +10,7 @@ pub fn term_debug<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 }
 
 mod atoms {
-    rustler_atoms! {
+    rustler::rustler_atoms! {
         atom equal;
         atom less;
         atom greater;

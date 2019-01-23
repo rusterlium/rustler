@@ -1,9 +1,9 @@
-#[macro_use]
+//#[macro_use]
 extern crate rustler;
 #[macro_use]
 extern crate rustler_codegen;
 
-#[macro_use]
+//#[macro_use]
 extern crate lazy_static;
 
 use rustler::{Env, Term};
@@ -21,7 +21,7 @@ mod test_codegen;
 mod test_term;
 mod test_dirty;
 
-rustler_export_nifs!(
+rustler::rustler_export_nifs!(
     "Elixir.RustlerTest",
     [
         ("add_u32", 2, test_primitives::add_u32),

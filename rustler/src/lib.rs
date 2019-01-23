@@ -30,8 +30,7 @@ mod wrapper;
 #[doc(hidden)]
 pub mod codegen_runtime;
 
-#[macro_use]
-extern crate lazy_static;
+pub extern crate lazy_static;
 
 #[macro_use]
 pub mod types;
@@ -53,7 +52,7 @@ pub use env::Env;
 pub mod thread;
 
 pub mod error;
-mod export;
+pub mod export;
 pub use error::Error;
 
 pub type NifResult<T> = Result<T, Error>;

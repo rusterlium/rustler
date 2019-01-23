@@ -193,10 +193,10 @@ macro_rules! rustler_atoms {
         struct RustlerAtoms {
             $( $name : $crate::types::atom::Atom ),*
         }
-        lazy_static! {
+        $crate::lazy_static::lazy_static! {
             static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
                 RustlerAtoms {
-                    $( $name: rustler_atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
+                    $( $name: $crate::rustler_atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
                 }
             });
         }
@@ -210,7 +210,7 @@ macro_rules! rustler_atoms {
 
     // Internal helper macros.
     { @internal_make_atom($env:ident, $name:ident) } => {
-        rustler_atoms!(@internal_make_atom($env, $name = stringify!($name)))
+        $crate::rustler_atoms!(@internal_make_atom($env, $name = stringify!($name)))
     };
     { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
         $crate::types::atom::Atom::from_str($env, $str)

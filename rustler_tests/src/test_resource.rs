@@ -15,8 +15,8 @@ struct ImmutableResource {
 }
 
 pub fn on_load<'a>(env: Env<'a>) -> bool {
-    resource_struct_init!(TestResource, env);
-    resource_struct_init!(ImmutableResource, env);
+    rustler::resource_struct_init!(TestResource, env);
+    rustler::resource_struct_init!(ImmutableResource, env);
     true
 }
 
@@ -46,7 +46,7 @@ pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) ->  NifRe
 
 use std::sync::atomic::{ AtomicUsize, Ordering };
 
-lazy_static! {
+::lazy_static::lazy_static! {
     static ref COUNT: AtomicUsize = AtomicUsize::new(0);
 }
 

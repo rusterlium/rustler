@@ -30,7 +30,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     }).collect();
 
     let atom_defs = quote! {
-        rustler_atoms! {
+        ::rustler::rustler_atoms! {
             #(#atoms)*
         }
     };

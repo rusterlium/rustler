@@ -18,12 +18,12 @@
 macro_rules! rustler_export_nifs {
     // Strip trailing comma.
     ($name:expr, [$( $exported_nif:tt ),+,], $on_load:expr) => {
-        rustler_export_nifs!($name, [$( $exported_nif ),*], $on_load);
+        $crate::rustler_export_nifs!($name, [$( $exported_nif ),*], $on_load);
     };
     ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
         static mut NIF_ENTRY: Option<$crate::codegen_runtime::DEF_NIF_ENTRY> = None;
 
-        rustler_export_nifs!(internal_platform_init, ({
+        $crate::rustler_export_nifs!(internal_platform_init, ({
             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
 
             extern "C" fn nif_load(
@@ -37,7 +37,7 @@ macro_rules! rustler_export_nifs {
             }
 
             const FUN_ENTRIES: &'static [$crate::codegen_runtime::DEF_NIF_FUNC] = &[
-                $(rustler_export_nifs!(internal_item_init, $exported_nif)),*
+                $($crate::rustler_export_nifs!(internal_item_init, $exported_nif)),*
             ];
 
             let entry = $crate::codegen_runtime::DEF_NIF_ENTRY {
@@ -61,7 +61,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
+        $crate::rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
     };
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {

@@ -4,7 +4,7 @@ use rustler::{Env, Term, NifResult};
 use std::time;
 
 mod atoms {
-    rustler_atoms! {
+    rustler::rustler_atoms! {
         atom ok;
     }
 }

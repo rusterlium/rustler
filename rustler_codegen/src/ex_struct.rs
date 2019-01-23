@@ -43,7 +43,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     }).collect();
 
     let atom_defs = quote! {
-        rustler_atoms! {
+        ::rustler::rustler_atoms! {
             atom atom_struct = "__struct__";
             atom atom_module = #elixir_module;
             #(#field_atoms)*
