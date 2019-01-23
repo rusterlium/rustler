@@ -3,7 +3,7 @@ defmodule Rustler.Mixfile do
 
   def project do
     [app: :rustler,
-     version: "0.18.0", # Auto updated by cargo release, do not modify this line.
+     version: "0.19.0", # Auto updated by cargo release, do not modify this line.
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
