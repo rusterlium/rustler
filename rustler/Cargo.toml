@@ -13,6 +13,10 @@ alternative_nif_init_name = []
 erlang_nif-sys = ">=0.6.4"
 lazy_static = "1.0"
 
+[build-dependencies]
+lazy_static = "1.0"
+which = "2"
+
 [package.metadata.release]
 
 [[package.metadata.release.pre-release-replacements]]
