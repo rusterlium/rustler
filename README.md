@@ -55,6 +55,17 @@ fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 }
 ```
 
+#### Supported nif_version
+
+Rustler uses `erlang:system_info(nif_version)` to detect the supported NIF version of the Erlang/OTP
+system for which the NIF is to be compiled. It is possible to restrict the NIF version to an older
+version if the NIF is to be compiled for an older version of Erlang. For example, if the target NIF
+version should be `2.7` (Erlang/OTP 17.3), this can be defined using an environment variable:
+
+```
+RUSTLER_NIF_VERSION=2.7 mix compile
+```
+
 #### Community
 
 You can find us in `#rustler` on [freenode](http://freenode.net/) or [the elixir-lang slack](https://elixir-slackin.herokuapp.com/).
