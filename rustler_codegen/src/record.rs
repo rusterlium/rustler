@@ -2,25 +2,12 @@ use proc_macro2::TokenStream;
 
 use ::syn::{self, Data, Field, Meta, Ident, Lit};
 
-pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
-    let record_tag: String = {
-        let ref attr_value = ast.attrs.iter()
-            .map(|attr| attr.parse_meta())
-            .find(|meta| match meta {
-                Ok(Meta::NameValue(meta_name_value)) =>
-                    meta_name_value.ident == "tag",
-                _ => false
-            })
-            .expect("NifRecord requires a 'tag' attribute");
+use super::{Context, RustlerAttr};
 
-        match *attr_value {
-            Ok(Meta::NameValue(ref meta_name_value)) => match meta_name_value.lit {
-                Lit::Str(ref tag) => tag.value(),
-                _ => panic!("Cannot parse tag")
-            }
-            _ => panic!("NifRecord requires a 'tag' attribute"),
-        }
-    };
+pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
+    let ctx = Context::from_ast(ast);
+
+    let record_tag = get_tag(ast, &ctx);
 
     let struct_fields = match ast.data {
         Data::Struct(ref data_struct) => &data_struct.fields,
@@ -42,8 +29,19 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder = gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime);
-    let encoder = gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime);
+    let decoder =
+        if ctx.decode() {
+            gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        } else {
+            quote! {}
+        };
+
+    let encoder =
+        if ctx.encode() {
+            gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        } else {
+            quote! {}
+        };
 
     let gen = quote! {
         #decoder
@@ -136,4 +134,27 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
     };
 
     gen.into()
+}
+
+fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
+    ctx.attrs.iter().find_map(|attr| match attr {
+        RustlerAttr::Tag(ref tag) => Some(tag.clone()),
+        _ => None
+    }).or_else(|| {
+        let ref attr_value = ast.attrs.iter()
+            .map(|attr| attr.parse_meta())
+            .find(|meta| match meta {
+                Ok(Meta::NameValue(meta_name_value)) =>
+                    meta_name_value.ident == "tag",
+                _ => false
+            });
+
+        match *attr_value {
+            Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
+                Lit::Str(ref tag) => Some(tag.value()),
+                _ => panic!("Cannot parse tag")
+            }
+            _ => None
+        }
+    }).expect("NifStruct requires a 'tag' attribute")
 }

@@ -12,6 +12,7 @@ pub fn tuple_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 }
 
 #[derive(NifRecord)]
+#[rustler(encode, decode)] // Added to check encode/decode attribute, #180
 #[must_use] // Added to check attribute order (see similar issue #152)
 #[tag = "record"]
 struct AddRecord {
