@@ -40,7 +40,6 @@ fn get_version_from_erl() -> String {
         .stdout;
 
     let version = String::from_utf8(version).expect("convert version to String");
-    dbg!(version.clone());
 
     version.trim().into()
 }
