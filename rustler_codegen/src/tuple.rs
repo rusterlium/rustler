@@ -2,7 +2,11 @@ use proc_macro2::TokenStream;
 
 use ::syn::{self, Data, Field, Ident};
 
+use super::Context;
+
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
+    let ctx = Context::from_ast(ast);
+
     let struct_fields = match ast.data {
         Data::Struct(ref struct_data) => &struct_data.fields,
         _ => panic!("Must decorate a struct"),
@@ -16,8 +20,19 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder = gen_decoder(&ast.ident, &struct_fields, false, has_lifetime);
-    let encoder = gen_encoder(&ast.ident, &struct_fields, false, has_lifetime);
+    let decoder =
+        if ctx.decode() {
+            gen_decoder(&ast.ident, &struct_fields, false, has_lifetime)
+        } else {
+            quote! {}
+        };
+
+    let encoder =
+        if ctx.encode() {
+            gen_encoder(&ast.ident, &struct_fields, false, has_lifetime)
+        } else {
+            quote! {}
+        };
 
     let gen = quote! {
         #decoder
