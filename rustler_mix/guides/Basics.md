@@ -13,35 +13,49 @@ Setting up a new Rust NIF in your project is fairly easy:
 
 ## Crate configuration
 
-The `rustler_crates` configuration is a keyword list mapping the NIF id (an atom) to the NIF configuration (another keyword list). The nif configuration may contain the following entries:
+The `rustler_crates` configuration is a keyword list mapping the crate name (an atom) to the NIF configuration (another keyword list).
+The nif configuration may contain the following entries:
 
-* `path` - The path to the crate directory relative to the project root.
-* `cargo` (:system default) - The rust/cargo version to build the NIF with. May be one of the following:
-    * `:system` - Use the version installed on the system.
-    * `{:rustup, "rust-version"}` - Use `rustup` to compile the NIF with a spesific version.
-    * `{:bin, "path"}` - Use `path` as the cargo command. This is not portable, and you should not normally use this.
-* `default_features` (true default) - Boolean indicating if you want the NIF built with or without default cargo features.
-* `features` ([] default) - List of binaries indicating what cargo features you want enabled when building.
-* `mode` (:release default) - Indicates what cargo build flavor you want.
-    * `:release` - Optimized build, normally a LOT faster than debug.
-    * `:debug` - Unoptimized debug build with debug assertions and more.
+- `path` - The path to the crate directory relative to the project root
+  (default: `native/<crate-name>`)
+- `cargo` (:system default) - The rust/cargo version to build the NIF with. May be one of the following:
+  - `:system` - Use the version installed on the system.
+  - `{:rustup, "rust-version"}` - Use `rustup` to compile the NIF with a specific version.
+  - `{:bin, "path"}` - Use `path` as the cargo command. This is not portable, and you should not normally use this.
+- `default_features` (true default) - Boolean indicating if you want the NIF built with or without default cargo features.
+- `features` ([] default) - List of binaries indicating what cargo features you want enabled when building.
+- `mode` (:release default) - Indicates what cargo build flavor you want.
+  - `:release` - Optimized build, normally a LOT faster than debug.
+  - `:debug` - Unoptimized debug build with debug assertions and more.
 
 When you are done, the project section might look something like this:
 
 ```elixir
 def project do
-[app: :my_app,
- version: "0.1.0",
- compilers: [:rustler] ++ Mix.compilers,
- rustler_crates: rustler_crates(),
- deps: deps()]
+  [app: :my_app,
+   version: "0.1.0",
+   compilers: [:rustler] ++ Mix.compilers(),
+   rustler_crates: [my_crate: []],
+   deps: deps()]
 end
+```
 
-defp rustler_crates do
-  [io: [
-    path: "native/io",
-    mode: (if Mix.env == :prod, do: :release, else: :debug),
-  ]]
+### Conditionally setting the mode
+
+The `rustc` mode defaults to `release`, but if you wish to compile your crate
+in `debug` mode for `dev`/`test` but want `release` mode for `prod`:
+
+```elixir
+def project do
+  [app: :my_app,
+   version: "0.1.0",
+   compilers: [:rustler] ++ Mix.compilers(),
+   rustler_crates: [
+     my_crate: [
+       mode: (if Mix.env() == :prod, do: :release, else: :debug)
+     ]
+   ],
+   deps: deps()]
 end
 ```
 
@@ -55,7 +69,7 @@ loaded.
 
 ```elixir
 defmodule MyProject.MyModule do
-  use Rustler, otp_app: :my_project, crate: :my_crate
+  use Rustler, otp_app: :my_app, crate: :my_crate
 
   # When loading a NIF module, dummy clauses for all NIF function are required.
   # NIF dummies usually just error out when called when the NIF is not loaded, as that should never normally happen.
