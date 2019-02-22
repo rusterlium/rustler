@@ -3,7 +3,7 @@ defmodule Rustler.Mixfile do
 
   def project do
     [app: :rustler,
-     version: "0.19.0", # Auto updated by cargo release, do not modify this line.
+     version: "0.19.1", # Auto updated by cargo release, do not modify this line.
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -35,6 +35,7 @@ defmodule Rustler.Mixfile do
 
   defp package do
     [files: ["lib", "src", "priv", "mix.exs", "README.md"],
+    exclude_patterns: ["src/toml_lexer.erl", "src/toml_parser.erl"],
      maintainers: ["hansihe"],
      licenses: ["MIT", "Apache-2.0"],
      links: %{"GitHub" => "https://github.com/hansihe/Rustler"}]
