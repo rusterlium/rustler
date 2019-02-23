@@ -22,18 +22,18 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp priv_dir, do: "priv/native"
 
-  def compile_crate({id, config}) do
-    crate_path = Keyword.get(config, :path)
+  def compile_crate({name, config}) do
+    crate_path = Keyword.get(config, :path, "native/#{name}")
     build_mode = Keyword.get(config, :mode, :release)
 
-    Mix.shell.info "Compiling NIF crate #{inspect id} (#{crate_path})..."
+    Mix.shell.info "Compiling NIF crate #{inspect name} (#{crate_path})..."
 
     crate_full_path = Path.expand(crate_path, File.cwd!)
     target_dir = Keyword.get(config, :target_dir,
-      Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(id)]))
+      Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(name)]))
 
     cargo_data = check_crate_env(crate_full_path)
-    
+
     {output_name, output_type} =
       case get_name(cargo_data, "lib") do
         nil ->
