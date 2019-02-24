@@ -38,8 +38,9 @@ pub mod types;
 mod term;
 
 pub use term::Term;
-pub use types::{Decoder, Encoder};
+pub use types::{Decoder, Encoder, Binary, ListIterator, MapIterator, OwnedBinary, Pid};
 pub mod resource;
+pub use resource::ResourceArc;
 
 #[doc(hidden)]
 pub mod dynamic;
@@ -48,8 +49,9 @@ pub use dynamic::TermType;
 pub mod schedule;
 pub use schedule::SchedulerFlags;
 pub mod env;
-pub use env::Env;
+pub use env::{Env, OwnedEnv};
 pub mod thread;
+pub use thread::{spawn, JobSpawner, ThreadSpawner};
 
 pub mod error;
 pub mod export;
