@@ -235,7 +235,7 @@ pub unsafe fn enif_make_map_remove(
     erlang_nif_sys::enif_make_map_remove(env, map_in, key, map_out)
 }
 
-#[cfg(nif_2_14)]
+#[cfg(nif_version_2_14)]
 pub unsafe fn enif_make_map_from_arrays(
     env: NIF_ENV,
     keys: *const NIF_TERM,
