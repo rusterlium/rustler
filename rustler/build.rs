@@ -11,7 +11,7 @@ use which::which;
 
 lazy_static! {
     // keep this sorted by version number
-    static ref ERTS_VERSIONS: Vec<&'static str> = vec![
+    static ref NIF_VERSION: Vec<&'static str> = vec![
         "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14"
     ];
 }
@@ -45,13 +45,13 @@ fn get_version_from_erl() -> String {
 }
 
 fn activate_versions(version: &str) {
-    let index = ERTS_VERSIONS
+    let index = NIF_VERSION
         .iter()
         .position(|&v| v == version)
         .expect(&format!("Erlang version {} not handled, please file a a bug report.", version));
 
     for i in 0..=index {
-        println!("cargo:rustc-cfg=nif_version_{}", version_feature(ERTS_VERSIONS[i]));
+        println!("cargo:rustc-cfg=nif_version_{}", version_feature(NIF_VERSION[i]));
     }
 }
 
