@@ -25,8 +25,8 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// List.zip(keys, values) |> Map.new()
     /// ```
-    #[cfg(nif_2_14)]
-    pub fn map_from_arrays(env: Env<'a>, keys: &[Term], values: &[Term]) -> NifResult<Term<'a>> {
+    #[cfg(nif_version_2_14)]
+    pub fn map_from_arrays(env: Env<'a>, keys: &[Term<'a>], values: &[Term<'a>]) -> NifResult<Term<'a>> {
         let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
         let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
 
@@ -37,7 +37,7 @@ impl<'a> Term<'a> {
     }
 
     // Fallback for older NIF version
-    #[cfg(not(nif_2_14))]
+    #[cfg(not(nif_version_2_14))]
     pub fn map_from_arrays(env: Env<'a>, keys: &[Term<'a>], values: &[Term<'a>]) -> NifResult<Term<'a>> {
         let map = map_new(env);
         keys.iter().zip(values.iter()).try_fold(map, |map, (k, v)| {
