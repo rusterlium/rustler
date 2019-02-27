@@ -2,7 +2,7 @@ use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::mem::MaybeUninit;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct LocalPid {
     c: ErlNifPid,
 }
