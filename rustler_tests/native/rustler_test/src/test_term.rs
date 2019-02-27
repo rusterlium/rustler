@@ -30,3 +30,13 @@ pub fn term_cmp<'a>(a: Term<'a>, b: Term<'a>) -> Atom {
         Ordering::Greater => atoms::greater(),
     }
 }
+
+#[rustler::nif]
+pub fn term_internal_hash(term: Term, salt: u32) -> u32 {
+    term.hash_internal(salt)
+}
+
+#[rustler::nif]
+pub fn term_phash2_hash(term: Term) -> u32 {
+    term.hash_phash2()
+}

@@ -26,6 +26,8 @@ rustler::init!(
         test_term::term_debug,
         test_term::term_eq,
         test_term::term_cmp,
+        test_term::term_internal_hash,
+        test_term::term_phash2_hash,
         test_map::sum_map_values,
         test_map::map_entries_sorted,
         test_map::map_from_arrays,
