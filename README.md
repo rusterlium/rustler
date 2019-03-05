@@ -66,6 +66,23 @@ version should be `2.7` (Erlang/OTP 17.3), this can be defined using an environm
 RUSTLER_NIF_VERSION=2.7 mix compile
 ```
 
+#### Building a binary on OSX
+When running `cargo build` on OSX you may run into a linker error similar to this [Issue](https://github.com/hansihe/rustler/issues/151).
+This linker error is occuring because Erlang has chosen to go with a flat namespace on OSX instead of 
+the 2 layer namespace the OSX dynamic linker expects, for more information you read the [this](https://github.com/goertzenator/erlang_nif-sys/issues/3#issuecomment-234609123) comment on a similar issue.
+To avoid this you need to pass some arguments to `rustc`. This can be done by adding cargo config.
+```
+$ mkdir .cargo
+$ touch .cargo/config
+```
+and add the following to the the `config` file
+```toml    
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-undefined",
+    "-C", "link-arg=dynamic_lookup",
+
+```
 #### Community
 
 You can find us in `#rustler` on [freenode](http://freenode.net/) or [the elixir-lang slack](https://elixir-slackin.herokuapp.com/).
