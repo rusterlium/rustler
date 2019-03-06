@@ -5,10 +5,10 @@ defmodule RustlerTest.Mixfile do
     [app: :rustler_test,
      version: "0.0.1",
      elixir: "~> 1.2",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     compilers: [:rustler] ++ Mix.compilers,
-     rustler_crates: rustler_crates(),
+     build_embedded: Mix.env() == :prod,
+     start_permanent: Mix.env() == :prod,
+     compilers: [:rustler] ++ Mix.compilers(),
+     rustler_crates: [rustler_test: [mode: :debug]],
      deps: deps()]
   end
 
@@ -18,12 +18,5 @@ defmodule RustlerTest.Mixfile do
 
   defp deps do
     [{:rustler, path: "../rustler_mix"}]
-  end
-
-  defp rustler_crates do
-    [rustler_test: [
-        path: ".",
-        mode: :debug,
-    ]]
   end
 end

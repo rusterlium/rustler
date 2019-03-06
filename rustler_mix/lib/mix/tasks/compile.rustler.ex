@@ -1,5 +1,6 @@
 defmodule Mix.Tasks.Compile.Rustler do
   use Mix.Task
+  require Logger
 
   alias Rustler.Compiler.{Messages, Rustup}
 
@@ -51,7 +52,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
       |> make_features_flag(Keyword.get(config, :features, []))
       |> make_build_mode_flag(build_mode)
-      |> make_platform_hacks(output_type, :os.type())
+      |> make_platform_hacks(crate_full_path, output_type, :os.type())
 
     [cmd_bin | args] = compile_command
 
@@ -93,11 +94,44 @@ defmodule Mix.Tasks.Compile.Rustler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp make_platform_hacks(args, :lib, {:unix, :darwin}) do
-    # Fix for https://github.com/hansihe/Rustler/issues/12
-    args ++ ["--", "--codegen", "link-args=-flat_namespace -undefined suppress"]
+  defp make_platform_hacks(args, crate_path, :lib, {:unix, :darwin}) do
+    path = Path.join([crate_path, ".cargo", "config"])
+
+    if File.exists?(path) do
+      args
+    else
+      IO.write([
+        "\n",
+        IO.ANSI.yellow(),
+        """
+        Compiling on macOS requires special link args in order to compile
+        correctly.
+
+        Rustler is currently working around this issue in the compiler task.
+        This will be removed in v1.0.0 in favor of a user supplied .cargo/config
+        file.
+
+        To remove this warning, please create #{path}
+        with the following content:
+
+              [target.x86_64-apple-darwin]
+              rustflags = [
+                  "-C", "link-arg=-undefined",
+                  "-C", "link-arg=dynamic_lookup",
+              ]
+
+        See https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
+        for more details.
+
+        """,
+        IO.ANSI.default_color(),
+        "\n"
+      ])
+
+      args ++ ["--", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+    end
   end
-  defp make_platform_hacks(args, _, _), do: args
+  defp make_platform_hacks(args, _, _, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args ++ []
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
