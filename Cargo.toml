@@ -2,5 +2,5 @@
 members = [
   "rustler",
   "rustler_codegen",
-  "rustler_tests"
+  "rustler_tests/native/rustler_test",
 ]
