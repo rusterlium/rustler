@@ -1,4 +1,5 @@
 use {types, wrapper, Encoder, Env, Term};
+use ::codegen_runtime::{ NifReturnable, NifReturned };
 
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have
@@ -13,35 +14,26 @@ pub enum Error {
     RaiseTerm(Box<Encoder>),
 }
 
-impl Error {
-    /// # Unsafe
-    ///
-    /// If `self` is a `BadArg`, `RaiseAtom`, or `RaiseTerm` value, then the
-    /// term returned from this method must not be used except as the return
-    /// value from the calling NIF.
-    pub unsafe fn encode<'a>(self, env: Env<'a>) -> Term<'a> {
+unsafe impl NifReturnable for ::error::Error {
+    unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         match self {
-            Error::BadArg => {
-                let exception = wrapper::exception::raise_badarg(env.as_c_arg());
-                Term::new(env, exception)
+            Error::BadArg => NifReturned::BadArg,
+            Error::Atom(atom_str) => {
+                let atom = types::atom::Atom::from_str(env, atom_str)
+                    .ok()
+                    .expect("Error::Atom: bad atom")
+                    .to_term(env);
+                NifReturned::Term(atom.as_c_arg())
             }
-            Error::Atom(atom_str) => types::atom::Atom::from_str(env, atom_str)
-                .ok()
-                .expect("Error::Atom: bad atom")
-                .to_term(env),
             Error::RaiseAtom(atom_str) => {
                 let atom = types::atom::Atom::from_str(env, atom_str)
                     .ok()
                     .expect("Error::RaiseAtom: bad argument");
-                let exception =
-                    wrapper::exception::raise_exception(env.as_c_arg(), atom.as_c_arg());
-                Term::new(env, exception)
+                NifReturned::Raise(atom.as_c_arg())
             }
             Error::RaiseTerm(ref term_unencoded) => {
                 let term = term_unencoded.encode(env);
-                let exception =
-                    wrapper::exception::raise_exception(env.as_c_arg(), term.as_c_arg());
-                Term::new(env, exception)
+                NifReturned::Raise(term.as_c_arg())
             }
         }
     }
