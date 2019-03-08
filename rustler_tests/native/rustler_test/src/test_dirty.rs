@@ -1,5 +1,4 @@
-use rustler::Encoder;
-use rustler::{Env, Term, NifResult};
+use rustler::{Env, Term, Atom};
 
 use std::time;
 
@@ -11,16 +10,16 @@ mod atoms {
 
 // TODO: Make these realistic
 
-pub fn dirty_cpu<'a>(env: Env<'a>, _: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn dirty_cpu<'a>(_env: Env<'a>, _: &[Term<'a>]) -> Atom {
     let duration = time::Duration::from_millis(100);
     ::std::thread::sleep(duration);
 
-    Ok(atoms::ok().encode(env))
+    atoms::ok()
 }
 
-pub fn dirty_io<'a>(env: Env<'a>, _: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn dirty_io<'a>(_env: Env<'a>, _: &[Term<'a>]) -> Atom {
     let duration = time::Duration::from_millis(100);
     ::std::thread::sleep(duration);
 
-    Ok(atoms::ok().encode(env))
+    atoms::ok()
 }

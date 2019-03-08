@@ -1,12 +1,12 @@
-use rustler::{Env, Term, NifResult, Encoder};
+use rustler::{Env, Term, NifResult};
+use rustler::Atom;
 use std::io::Write;
 use std::cmp::Ordering;
 
-pub fn term_debug<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn term_debug<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<String> {
     let mut bytes: Vec<u8> = Vec::new();
     write!(&mut bytes, "{:?}", args[0]).expect("debug formatting should succeed");
-    let s = String::from_utf8_lossy(&bytes).to_string();
-    Ok(s.encode(env))
+    Ok(String::from_utf8_lossy(&bytes).to_string())
 }
 
 mod atoms {
@@ -17,13 +17,13 @@ mod atoms {
     }
 }
 
-pub fn term_eq<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    Ok((args[0] == args[1]).encode(env))
+pub fn term_eq<'a>(_env: Env<'a>, args: &[Term<'a>]) -> bool {
+    args[0] == args[1]
 }
-pub fn term_cmp<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+pub fn term_cmp<'a>(_env: Env<'a>, args: &[Term<'a>]) -> Atom {
     match Ord::cmp(&args[0], &args[1]) {
-        Ordering::Equal => Ok(atoms::equal().encode(env)),
-        Ordering::Less => Ok(atoms::less().encode(env)),
-        Ordering::Greater => Ok(atoms::greater().encode(env)),
+        Ordering::Equal => atoms::equal(),
+        Ordering::Less => atoms::less(),
+        Ordering::Greater => atoms::greater(),
     }
 }
