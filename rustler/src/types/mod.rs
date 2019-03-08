@@ -2,6 +2,7 @@ use {Env, Error, NifResult, Term};
 
 #[macro_use]
 pub mod atom;
+pub use types::atom::Atom;
 
 #[doc(hidden)]
 pub mod binary;

@@ -38,7 +38,7 @@ pub mod types;
 mod term;
 
 pub use term::Term;
-pub use types::{Decoder, Encoder, Binary, ListIterator, MapIterator, OwnedBinary, Pid};
+pub use types::{Decoder, Encoder, Binary, ListIterator, MapIterator, OwnedBinary, Pid, Atom};
 pub mod resource;
 pub use resource::ResourceArc;
 
@@ -58,3 +58,4 @@ pub mod export;
 pub use error::Error;
 
 pub type NifResult<T> = Result<T, Error>;
+

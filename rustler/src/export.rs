@@ -73,15 +73,41 @@ macro_rules! rustler_export_nifs {
                     argc: $crate::codegen_runtime::c_int,
                     argv: *const $crate::codegen_runtime::NIF_TERM)
                     -> $crate::codegen_runtime::NIF_TERM {
-                    unsafe {
-                        $crate::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
-                    }
+                        unsafe {
+                            $crate::rustler_export_nifs!(
+                                internal_handle_nif_call, ($nif_fun, $nif_arity, env, argc, argv))
+                        }
+                    //unsafe {
+                    //    $crate::codegen_runtime::handle_nif_call($nif_fun, $nif_arity, env, argc, argv)
+                    //}
                 }
                 nif_func
             },
             flags: ($nif_flag as $crate::schedule::SchedulerFlags) as u32,
         }
     };
+
+    (internal_handle_nif_call, ($fun:path, $arity:expr, $env:expr, $argc:expr, $argv:expr)) => ({
+        let env_lifetime = ();
+        let env = $crate::Env::new(&env_lifetime, $env);
+
+        let terms = ::std::slice::from_raw_parts($argv, $argc as usize)
+            .iter()
+            .map(|x| $crate::Term::new(env, *x))
+            .collect::<Vec<Term>>();
+
+        let result: ::std::thread::Result<_> = ::std::panic::catch_unwind(move || {
+            $crate::codegen_runtime::NifReturn::as_return($fun(env, &terms), env)
+        });
+
+        match result {
+            Ok(res) => res.apply(env),
+            Err(_err) => $crate::codegen_runtime::raise_exception(
+                env.as_c_arg(),
+                $crate::types::atom::Atom::from_bytes(env, b"nif_panic").ok().unwrap().as_c_arg(),
+            ),
+        }
+    });
 
     (internal_platform_init, ($inner:expr)) => {
         #[cfg(not(feature = "alternative_nif_init_name"))]
