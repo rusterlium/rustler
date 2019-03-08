@@ -57,5 +57,8 @@ pub mod error;
 pub mod export;
 pub use error::Error;
 
+pub mod return_enum;
+pub use return_enum::Return;
+
 pub type NifResult<T> = Result<T, Error>;
 
