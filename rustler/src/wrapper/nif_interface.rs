@@ -337,16 +337,16 @@ pub unsafe fn enif_consume_timeslice(env: NIF_ENV, percent: c_int) -> c_int {
     erlang_nif_sys::enif_consume_timeslice(env, percent)
 }
 
-//pub unsafe fn enif_schedule_nif(
-//    env: NIF_ENV,
-//    fun_name: *const c_uchar,
-//    flags: c_int,
-//    fp: Option<unsafe extern "C" fn(env: NIF_ENV, argc: c_int, argv: *const NIF_TERM) -> NIF_TERM>,
-//    argc: c_int,
-//    argv: *const NIF_TERM,
-//) -> NIF_TERM {
-//    erlang_nif_sys::enif_schedule_nif(env, fun_name, flags, fp, argc, argv)
-//}
+pub unsafe fn enif_schedule_nif(
+    env: NIF_ENV,
+    fun_name: *const c_uchar,
+    flags: c_int,
+    fp: unsafe extern "C" fn(env: NIF_ENV, argc: c_int, argv: *const NIF_TERM) -> NIF_TERM,
+    argc: c_int,
+    argv: *const NIF_TERM,
+) -> NIF_TERM {
+    erlang_nif_sys::enif_schedule_nif(env, fun_name, flags, fp, argc, argv)
+}
 
 // Processes
 pub unsafe fn enif_send(env: NIF_ENV, to_pid: NIF_PID, msg_env: NIF_ENV, msg: NIF_TERM) -> c_int {

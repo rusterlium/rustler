@@ -1,4 +1,4 @@
-use {types, wrapper, Encoder, Env, Term};
+use {types, Encoder, Env};
 use ::codegen_runtime::{ NifReturnable, NifReturned };
 
 /// Represents usual errors that can happen in a nif. This enables you

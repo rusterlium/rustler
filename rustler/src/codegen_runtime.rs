@@ -1,6 +1,8 @@
 //! Functions used by runtime generated code. Should not be used.
 
-use {Env, Term, Atom};
+use ::std::ffi::CString;
+
+use {Env, Term};
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
 pub use wrapper::nif_interface::{c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY,
@@ -33,7 +35,7 @@ pub enum NifReturned {
     Raise(NIF_TERM),
     BadArg,
     Reschedule {
-        fun_name: NIF_TERM,
+        fun_name: CString,
         flags: ::schedule::SchedulerFlags,
         fun: unsafe extern "C" fn(NIF_ENV, i32, *const NIF_TERM) -> NIF_TERM,
         args: Vec<NIF_TERM>,
@@ -48,7 +50,14 @@ impl NifReturned {
                 ::wrapper::exception::raise_exception(env.as_c_arg(), inner)
             }
             NifReturned::Reschedule { fun_name, flags, fun, args } => {
-                unimplemented!()
+                ::wrapper::nif_interface::enif_schedule_nif(
+                    env.as_c_arg(),
+                    fun_name.as_ptr() as *const u8,
+                    flags as i32,
+                    fun,
+                    args.len() as i32,
+                    args.as_ptr() as *const usize
+                )
             }
         }
     }
