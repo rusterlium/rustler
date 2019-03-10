@@ -8,12 +8,12 @@ defmodule Rustler.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      name: "Rustler Mix",
-     source_url: "https://github.com/hansihe/Rustler",
-     homepage_url: "https://github.com/hansihe/Rustler",
+     source_url: "https://github.com/rustlerium/rustler",
+     homepage_url: "https://github.com/rusterlium/rustler",
      deps: deps(),
      docs: [
        extras: ["guides/Basics.md"],
-       source_url_pattern: "https://github.com/hansihe/Rustler/blob/master/rustler_mix/%{path}#L%{line}"
+       source_url_pattern: "https://github.com/rusterlium/rustler/blob/master/rustler_mix/%{path}#L%{line}"
      ],
      package: package(),
      description: description()]
@@ -38,6 +38,6 @@ defmodule Rustler.Mixfile do
     exclude_patterns: ["src/toml_lexer.erl", "src/toml_parser.erl"],
      maintainers: ["hansihe"],
      licenses: ["MIT", "Apache-2.0"],
-     links: %{"GitHub" => "https://github.com/hansihe/Rustler"}]
+     links: %{"GitHub" => "https://github.com/rusterlium/rustler"}]
   end
 end

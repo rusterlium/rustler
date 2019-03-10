@@ -7,7 +7,7 @@ defmodule Rustler.TomlParserTest do
   [package]
   name = "rustler"
   description = "Safe Rust wrappers for creating Erlang NIF functions"
-  repository = "https://github.com/hansihe/Rustler"
+  repository = "https://github.com/rusterlium/rustler"
   version = "0.8.1"
   authors = ["Hansihe <me@hansihe.com>"]
   license = "MIT/Apache-2.0"
