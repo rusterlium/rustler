@@ -1,7 +1,7 @@
 [package]
 name = "rustler_codegen"
 description = "Compiler plugin for Rustler"
-repository = "https://github.com/hansihe/rustler/tree/master/rustler_codegen"
+repository = "https://github.com/rusterlium/rustler/tree/master/rustler_codegen"
 version = "0.20.0" # rustler_codegen version
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "MIT/Apache-2.0"
