@@ -1,5 +1,7 @@
 [workspace]
 members = [
+  "erl_nif_sys",
+  "erl_nif_sys/tests/testapp/crates/mynifmod",
   "rustler",
   "rustler_codegen",
   "rustler_tests/native/rustler_test",

@@ -8,4 +8,4 @@ name = "mynifmod"
 crate-type = ["dylib"]
 
 [dependencies]
-erlang_nif-sys = { path = "../../../../../../../../" }  #please don't judge me
+erl_nif_sys = { path = "../../../../" }

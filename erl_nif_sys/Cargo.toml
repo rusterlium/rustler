@@ -1,5 +1,5 @@
 [package]
-name = "erlang_nif-sys"
+name = "erl_nif_sys"
 version = "0.6.6-alpha.0"
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 description = "Create Erlang NIF modules in Rust using the C NIF API."
@@ -11,7 +11,6 @@ keywords = ["FFI", "Erlang", "NIF"]
 build = "build.rs"
 
 categories = ["external-ffi-bindings"]
-
 
 [badges]
 travis-ci = { repository = "goertzenator/erlang_nif-sys" }
