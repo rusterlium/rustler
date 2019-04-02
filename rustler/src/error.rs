@@ -1,5 +1,5 @@
+use codegen_runtime::{NifReturnable, NifReturned};
 use {types, Encoder, Env};
-use ::codegen_runtime::{ NifReturnable, NifReturned };
 
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have

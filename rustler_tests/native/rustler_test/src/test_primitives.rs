@@ -1,4 +1,4 @@
-use rustler::{Env, Term, Encoder, NifResult};
+use rustler::{Encoder, Env, NifResult, Term};
 
 pub fn add_u32<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let lhs: u32 = args[0].decode()?;

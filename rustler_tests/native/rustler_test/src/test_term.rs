@@ -1,7 +1,7 @@
-use rustler::{Env, Term, NifResult};
 use rustler::Atom;
-use std::io::Write;
+use rustler::{Env, NifResult, Term};
 use std::cmp::Ordering;
+use std::io::Write;
 
 pub fn term_debug<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<String> {
     let mut bytes: Vec<u8> = Vec::new();

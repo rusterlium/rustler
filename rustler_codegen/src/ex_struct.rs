@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 
-use ::syn::{self, Data, Field, Ident, Meta, Lit};
+use syn::{self, Data, Field, Ident, Lit, Meta};
 
 use super::{Context, RustlerAttr};
 
@@ -16,18 +16,23 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let num_lifetimes = ast.generics.lifetimes().count();
-    if num_lifetimes > 1 { panic!("Struct can only have one lifetime argument"); }
+    if num_lifetimes > 1 {
+        panic!("Struct can only have one lifetime argument");
+    }
     let has_lifetime = num_lifetimes == 1;
 
-    let field_atoms: Vec<TokenStream> = struct_fields.iter().map(|field| {
-        let ident = field.ident.as_ref().unwrap();
-        let ident_str = ident.to_string();
-        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+    let field_atoms: Vec<TokenStream> = struct_fields
+        .iter()
+        .map(|field| {
+            let ident = field.ident.as_ref().unwrap();
+            let ident_str = ident.to_string();
+            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
-        quote! {
-            atom #atom_fun = #ident_str;
-        }
-    }).collect();
+            quote! {
+                atom #atom_fun = #ident_str;
+            }
+        })
+        .collect();
 
     let atom_defs = quote! {
         ::rustler::rustler_atoms! {
@@ -39,19 +44,17 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder =
-        if ctx.decode() {
-            gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let decoder = if ctx.decode() {
+        gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
-    let encoder =
-        if ctx.encode() {
-            gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let encoder = if ctx.encode() {
+        gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
     let gen = quote! {
         #decoder
@@ -61,21 +64,29 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
+pub fn gen_decoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
     let struct_type = if has_lifetime {
         quote! { #struct_name <'a> }
     } else {
         quote! { #struct_name }
     };
 
-    let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
-        let ident = field.ident.as_ref().unwrap();
-        let ident_str = ident.to_string();
-        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-        quote! {
-            #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
-        }
-    }).collect();
+    let field_defs: Vec<TokenStream> = fields
+        .iter()
+        .map(|field| {
+            let ident = field.ident.as_ref().unwrap();
+            let ident_str = ident.to_string();
+            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            quote! {
+                #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
+            }
+        })
+        .collect();
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
@@ -98,7 +109,12 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
     gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
+pub fn gen_encoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
     let struct_type = if has_lifetime {
         quote! { #struct_name <'b> }
     } else {
@@ -131,24 +147,29 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
 }
 
 fn get_module(ast: &syn::DeriveInput, ctx: &Context) -> String {
-    ctx.attrs.iter().find_map(|attr| match attr {
-        RustlerAttr::Module(ref module) => Some(module.clone()),
-        _ => None
-    }).or_else(|| {
-        let ref attr_value = ast.attrs.iter()
-            .map(|attr| attr.parse_meta())
-            .find(|meta| match meta {
-                Ok(Meta::NameValue(meta_name_value)) =>
-                    meta_name_value.ident == "module",
-                _ => false
-            });
+    ctx.attrs
+        .iter()
+        .find_map(|attr| match attr {
+            RustlerAttr::Module(ref module) => Some(module.clone()),
+            _ => None,
+        })
+        .or_else(|| {
+            let ref attr_value =
+                ast.attrs
+                    .iter()
+                    .map(|attr| attr.parse_meta())
+                    .find(|meta| match meta {
+                        Ok(Meta::NameValue(meta_name_value)) => meta_name_value.ident == "module",
+                        _ => false,
+                    });
 
-        match *attr_value {
-            Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
-                Lit::Str(ref module) => Some(format!("Elixir.{}", module.value())),
-                _ => panic!("Cannot parse module")
+            match *attr_value {
+                Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
+                    Lit::Str(ref module) => Some(format!("Elixir.{}", module.value())),
+                    _ => panic!("Cannot parse module"),
+                },
+                _ => None,
             }
-            _ => None
-        }
-    }).expect("NifStruct requires a 'module' attribute")
+        })
+        .expect("NifStruct requires a 'module' attribute")
 }

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use ::syn::{self, Data, Field, Ident};
+use syn::{self, Data, Field, Ident};
 
 use super::Context;
 
@@ -20,19 +20,17 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder =
-        if ctx.decode() {
-            gen_decoder(&ast.ident, &struct_fields, false, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let decoder = if ctx.decode() {
+        gen_decoder(&ast.ident, &struct_fields, false, has_lifetime)
+    } else {
+        quote! {}
+    };
 
-    let encoder =
-        if ctx.encode() {
-            gen_encoder(&ast.ident, &struct_fields, false, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let encoder = if ctx.encode() {
+        gen_encoder(&ast.ident, &struct_fields, false, has_lifetime)
+    } else {
+        quote! {}
+    };
 
     let gen = quote! {
         #decoder
@@ -42,18 +40,27 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], is_tuple: bool, has_lifetime: bool) -> TokenStream {
+pub fn gen_decoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    is_tuple: bool,
+    has_lifetime: bool,
+) -> TokenStream {
     // Make a decoder for each of the fields in the struct.
-    let field_defs: Vec<TokenStream> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { ::rustler::Decoder::decode(terms[#idx])? };
+    let field_defs: Vec<TokenStream> = fields
+        .iter()
+        .enumerate()
+        .map(|(idx, field)| {
+            let decoder = quote! { ::rustler::Decoder::decode(terms[#idx])? };
 
-        if is_tuple {
-            unimplemented!();
-        } else {
-            let ident = field.ident.as_ref().unwrap();
-            quote! { #ident: #decoder }
-        }
-    }).collect();
+            if is_tuple {
+                unimplemented!();
+            } else {
+                let ident = field.ident.as_ref().unwrap();
+                quote! { #ident: #decoder }
+            }
+        })
+        .collect();
 
     // If the struct has a lifetime argument, put that in the struct type.
     let struct_typ = if has_lifetime {
@@ -84,17 +91,25 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], is_tuple: bool, has_l
     gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], is_tuple: bool, has_lifetime: bool) -> TokenStream {
+pub fn gen_encoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    is_tuple: bool,
+    has_lifetime: bool,
+) -> TokenStream {
     // Make a field encoder expression for each of the items in the struct.
-    let field_encoders: Vec<TokenStream> = fields.iter().map(|field| {
-        let field_source = if is_tuple {
-            unimplemented!();
-        } else {
-            let field_ident = field.ident.as_ref().unwrap();
-            quote! { self.#field_ident }
-        };
-        quote! { #field_source.encode(env) }
-    }).collect();
+    let field_encoders: Vec<TokenStream> = fields
+        .iter()
+        .map(|field| {
+            let field_source = if is_tuple {
+                unimplemented!();
+            } else {
+                let field_ident = field.ident.as_ref().unwrap();
+                quote! { self.#field_ident }
+            };
+            quote! { #field_source.encode(env) }
+        })
+        .collect();
 
     // Build a slice ast from the field_encoders
     let field_list_ast = quote! {

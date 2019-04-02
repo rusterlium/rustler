@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 
-use ::syn::{self, Data, Field, Ident};
+use syn::{self, Data, Field, Ident};
 
 use super::Context;
 
@@ -18,16 +18,19 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     }
     let has_lifetime = num_lifetimes == 1;
 
-    let field_atoms: Vec<TokenStream> = struct_fields.iter().map(|field| {
-        let ident = field.ident.as_ref().unwrap();
-        let ident_str = ident.to_string();
+    let field_atoms: Vec<TokenStream> = struct_fields
+        .iter()
+        .map(|field| {
+            let ident = field.ident.as_ref().unwrap();
+            let ident_str = ident.to_string();
 
-        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
-        quote! {
-            atom #atom_fun = #ident_str;
-        }
-    }).collect();
+            quote! {
+                atom #atom_fun = #ident_str;
+            }
+        })
+        .collect();
     let atom_defs = quote! {
         ::rustler::rustler_atoms! {
             #(#field_atoms)*
@@ -36,19 +39,17 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder =
-        if ctx.decode() {
-            gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let decoder = if ctx.decode() {
+        gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
-    let encoder =
-        if ctx.encode() {
-            gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let encoder = if ctx.encode() {
+        gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
     let gen = quote! {
         #decoder
@@ -58,17 +59,25 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
-    let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
-        let ident = field.ident.as_ref().unwrap();
-        let ident_str = ident.to_string();
+pub fn gen_decoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
+    let field_defs: Vec<TokenStream> = fields
+        .iter()
+        .map(|field| {
+            let ident = field.ident.as_ref().unwrap();
+            let ident_str = ident.to_string();
 
-        let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
-        quote! {
-            #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
-        }
-    }).collect();
+            quote! {
+                #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
+            }
+        })
+        .collect();
 
     let struct_type = if has_lifetime {
         quote! { #struct_name <'a> }
@@ -90,7 +99,12 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
     gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
+pub fn gen_encoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
     let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
         let field_ident = field.ident.as_ref().unwrap();
         let field_ident_str = field_ident.to_string();
