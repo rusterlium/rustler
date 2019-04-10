@@ -19,6 +19,8 @@ defmodule Rustler.TomlParserTest do
 
   [a."b.c"]
 
+  [foo.'cfg(bar)'.baz]
+
   [[testing]]
   wooo = "hoo"
   """

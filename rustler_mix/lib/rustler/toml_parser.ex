@@ -53,6 +53,10 @@ defmodule Rustler.TomlParser do
     name
   end
 
+  def proc_key({:literal, name}) do
+    name
+  end
+
   def proc_val({:val_basic, raw_str}) do
     # TODO: Escapes
     :binary.part(raw_str, 1, byte_size(raw_str) - 2)
