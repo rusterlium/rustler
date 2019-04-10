@@ -183,7 +183,7 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifTuple` so that the
-/// struct can be encoded or decoded from an Elixir map. For example, the following struct
+/// struct can be encoded or decoded from an Elixir tuple. For example, the following struct
 /// annotated as such:
 ///
 /// ```text
