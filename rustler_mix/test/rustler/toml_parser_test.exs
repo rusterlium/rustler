@@ -19,6 +19,8 @@ defmodule Rustler.TomlParserTest do
 
   [a."b.c"]
 
+  [foo.'cfg(bar)'.baz]
+
   [[testing]]
   wooo = "hoo"
   """
@@ -27,7 +29,7 @@ defmodule Rustler.TomlParserTest do
     res = Rustler.TomlParser.parse(@simple_toml)
     assert Rustler.TomlParser.get_table_val(res, ["dependencies"], "libc") == ">=0.1"
     assert Rustler.TomlParser.get_table_val(res, ["dependencies"], "none") == nil
-    assert Rustler.TomlParser.get_table_val(res, ["testing"], "wooo") == nil
+    assert Rustler.TomlParser.get_table_val(res, ["testing"], "wooo") == "hoo"
     assert Rustler.TomlParser.get_table_val(res, [], "root_var") == 5
   end
 end
