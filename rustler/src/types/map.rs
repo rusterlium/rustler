@@ -2,6 +2,7 @@
 
 use wrapper::map;
 use {Decoder, Env, Error, NifResult, Term};
+use std::ops::RangeInclusive;
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
@@ -213,6 +214,23 @@ impl<'a> Decoder<'a> for MapIterator<'a> {
         match MapIterator::new(term) {
             Some(iter) => Ok(iter),
             None => Err(Error::BadArg),
+        }
+    }
+}
+
+impl<'a, T> Decoder<'a> for RangeInclusive<T>
+where
+    T: Decoder<'a>,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let vec:Vec<(Term, Term)> = term.decode::<MapIterator>()?.collect();
+        match (&*vec[0].0.atom_to_string()?, &*vec[0].1.atom_to_string()?) {
+            ("__struct__", "Elixir.Range") => {
+                let first = vec[1].1.decode::<T>()?;
+                let last = vec[2].1.decode::<T>()?;
+                Ok(first ..= last)
+            },
+            _ => Err(Error::BadArg),
         }
     }
 }
