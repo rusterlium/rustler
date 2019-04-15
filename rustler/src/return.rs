@@ -1,6 +1,6 @@
-use ::{ Term, Env };
-use ::error::Error;
-use ::codegen_runtime::{ NifReturnable, NifReturned };
+use codegen_runtime::{NifReturnable, NifReturned};
+use error::Error;
+use {Env, Term};
 
 pub enum Return<'a> {
     Term(Term<'a>),

@@ -1,12 +1,12 @@
-use ::std::io::Write;
+use std::io::Write;
 
-use rustler::{Env, Term, NifResult, Error};
-use rustler::types::binary::{ Binary, OwnedBinary };
+use rustler::types::binary::{Binary, OwnedBinary};
+use rustler::{Env, Error, NifResult, Term};
 
 pub fn make_shorter_subbinary<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<Binary<'a>> {
     let binary: Binary = args[0].decode()?;
     let length: usize = binary.as_slice().len();
-    Ok(binary.make_subbinary(1, length-2)?)
+    Ok(binary.make_subbinary(1, length - 2)?)
 }
 
 pub fn parse_integer<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<i64> {
@@ -33,7 +33,10 @@ pub fn unowned_to_owned<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Binary
 
 pub fn realloc_shrink<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Binary<'a>> {
     let mut binary = OwnedBinary::new(8).unwrap();
-    binary.as_mut_slice().write(&[1, 2, 3, 4, 5, 6, 7, 8]).unwrap();
+    binary
+        .as_mut_slice()
+        .write(&[1, 2, 3, 4, 5, 6, 7, 8])
+        .unwrap();
     if !binary.realloc(4) {
         panic!("Realloc failed");
     }

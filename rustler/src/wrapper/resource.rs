@@ -1,10 +1,12 @@
 use super::nif_interface;
-use super::nif_interface::{NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE,
-                           NIF_RESOURCE_TYPE, NIF_TERM};
+use super::nif_interface::{
+    NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_RESOURCE_TYPE, NIF_TERM,
+};
 
-pub use super::nif_interface::{enif_alloc_resource as alloc_resource,
-                               enif_keep_resource as keep_resource,
-                               enif_make_resource as make_resource};
+pub use super::nif_interface::{
+    enif_alloc_resource as alloc_resource, enif_keep_resource as keep_resource,
+    enif_make_resource as make_resource,
+};
 
 #[allow(dead_code)]
 pub use super::nif_interface::enif_release_resource as release_resource;

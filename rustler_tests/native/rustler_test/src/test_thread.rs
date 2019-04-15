@@ -1,6 +1,6 @@
-use rustler::{ Env, Term, NifResult, Encoder };
 use rustler::thread;
 use rustler::types::atom;
+use rustler::{Encoder, Env, NifResult, Term};
 use std;
 
 pub fn threaded_fac<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
@@ -13,7 +13,7 @@ pub fn threaded_fac<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> 
 
     let n: u64 = args[0].decode()?;
     thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
-        let result = (1 .. n + 1).fold(1, mul);
+        let result = (1..n + 1).fold(1, mul);
         result.encode(thread_env)
     });
 

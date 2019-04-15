@@ -26,7 +26,11 @@ impl<'a> Term<'a> {
     /// List.zip(keys, values) |> Map.new()
     /// ```
     #[cfg(nif_version_2_14)]
-    pub fn map_from_arrays(env: Env<'a>, keys: &[Term<'a>], values: &[Term<'a>]) -> NifResult<Term<'a>> {
+    pub fn map_from_arrays(
+        env: Env<'a>,
+        keys: &[Term<'a>],
+        values: &[Term<'a>],
+    ) -> NifResult<Term<'a>> {
         let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
         let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
 
@@ -38,11 +42,15 @@ impl<'a> Term<'a> {
 
     // Fallback for older NIF version
     #[cfg(not(nif_version_2_14))]
-    pub fn map_from_arrays(env: Env<'a>, keys: &[Term<'a>], values: &[Term<'a>]) -> NifResult<Term<'a>> {
+    pub fn map_from_arrays(
+        env: Env<'a>,
+        keys: &[Term<'a>],
+        values: &[Term<'a>],
+    ) -> NifResult<Term<'a>> {
         let map = map_new(env);
-        keys.iter().zip(values.iter()).try_fold(map, |map, (k, v)| {
-            map.map_put(*k, *v)
-        })
+        keys.iter()
+            .zip(values.iter())
+            .try_fold(map, |map, (k, v)| map.map_put(*k, *v))
     }
 
     /// Gets the value corresponding to a key in a map term.

@@ -14,7 +14,6 @@ pub struct OwnedBinary {
 }
 
 impl<'a> OwnedBinary {
-
     pub unsafe fn from_raw(inner: ErlNifBinary) -> OwnedBinary {
         OwnedBinary {
             inner: inner,

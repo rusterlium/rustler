@@ -1,5 +1,4 @@
 /// Detect NIF version to build against
-
 use std::env;
 use std::process::Command;
 
@@ -19,7 +18,7 @@ lazy_static! {
 fn main() {
     let version = match env::var("RUSTLER_NIF_VERSION") {
         Ok(version) => version,
-        Err(_) => get_version_from_erl()
+        Err(_) => get_version_from_erl(),
     };
 
     activate_versions(&version);
@@ -30,7 +29,7 @@ fn get_version_from_erl() -> String {
     let args = vec![
         "-noshell",
         "-eval",
-        r#"io:format("~s~n", [erlang:system_info(nif_version)]), init:stop()."#
+        r#"io:format("~s~n", [erlang:system_info(nif_version)]), init:stop()."#,
     ];
 
     let version = Command::new(erl)
@@ -48,10 +47,16 @@ fn activate_versions(version: &str) {
     let index = NIF_VERSION
         .iter()
         .position(|&v| v == version)
-        .expect(&format!("Erlang version {} not handled, please file a a bug report.", version));
+        .expect(&format!(
+            "Erlang version {} not handled, please file a a bug report.",
+            version
+        ));
 
     for i in 0..=index {
-        println!("cargo:rustc-cfg=nif_version_{}", version_feature(NIF_VERSION[i]));
+        println!(
+            "cargo:rustc-cfg=nif_version_{}",
+            version_feature(NIF_VERSION[i])
+        );
     }
 }
 
