@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use ::syn::{self, Data, Field, Meta, Ident, Lit};
+use syn::{self, Data, Field, Ident, Lit, Meta};
 
 use super::{Context, RustlerAttr};
 
@@ -29,19 +29,17 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
-    let decoder =
-        if ctx.decode() {
-            gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let decoder = if ctx.decode() {
+        gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
-    let encoder =
-        if ctx.encode() {
-            gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
-        } else {
-            quote! {}
-        };
+    let encoder = if ctx.encode() {
+        gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+    } else {
+        quote! {}
+    };
 
     let gen = quote! {
         #decoder
@@ -51,14 +49,23 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen.into()
 }
 
-pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
+pub fn gen_decoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
     // Make a decoder for each of the fields in the struct.
-    let field_defs: Vec<TokenStream> = fields.iter().enumerate().map(|(idx, field)| {
-        let decoder = quote! { ::rustler::Decoder::decode(terms[#idx + 1])? };
+    let field_defs: Vec<TokenStream> = fields
+        .iter()
+        .enumerate()
+        .map(|(idx, field)| {
+            let decoder = quote! { ::rustler::Decoder::decode(terms[#idx + 1])? };
 
-        let ident = field.ident.as_ref().unwrap();
-        quote! { #ident: #decoder }
-    }).collect();
+            let ident = field.ident.as_ref().unwrap();
+            quote! { #ident: #decoder }
+        })
+        .collect();
 
     // If the struct has a lifetime argument, put that in the struct type.
     let struct_typ = if has_lifetime {
@@ -97,13 +104,21 @@ pub fn gen_decoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
     gen.into()
 }
 
-pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStream, has_lifetime: bool) -> TokenStream {
+pub fn gen_encoder(
+    struct_name: &Ident,
+    fields: &[&Field],
+    atom_defs: &TokenStream,
+    has_lifetime: bool,
+) -> TokenStream {
     // Make a field encoder expression for each of the items in the struct.
-    let field_encoders: Vec<TokenStream> = fields.iter().map(|field| {
-        let field_ident = field.ident.as_ref().unwrap();
-        let field_source = quote! { self.#field_ident };
-        quote! { #field_source.encode(env) }
-    }).collect();
+    let field_encoders: Vec<TokenStream> = fields
+        .iter()
+        .map(|field| {
+            let field_ident = field.ident.as_ref().unwrap();
+            let field_source = quote! { self.#field_ident };
+            quote! { #field_source.encode(env) }
+        })
+        .collect();
 
     let tag_encoder = quote! { atom_tag().encode(env) };
 
@@ -137,24 +152,29 @@ pub fn gen_encoder(struct_name: &Ident, fields: &[&Field], atom_defs: &TokenStre
 }
 
 fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
-    ctx.attrs.iter().find_map(|attr| match attr {
-        RustlerAttr::Tag(ref tag) => Some(tag.clone()),
-        _ => None
-    }).or_else(|| {
-        let ref attr_value = ast.attrs.iter()
-            .map(|attr| attr.parse_meta())
-            .find(|meta| match meta {
-                Ok(Meta::NameValue(meta_name_value)) =>
-                    meta_name_value.ident == "tag",
-                _ => false
-            });
+    ctx.attrs
+        .iter()
+        .find_map(|attr| match attr {
+            RustlerAttr::Tag(ref tag) => Some(tag.clone()),
+            _ => None,
+        })
+        .or_else(|| {
+            let ref attr_value =
+                ast.attrs
+                    .iter()
+                    .map(|attr| attr.parse_meta())
+                    .find(|meta| match meta {
+                        Ok(Meta::NameValue(meta_name_value)) => meta_name_value.ident == "tag",
+                        _ => false,
+                    });
 
-        match *attr_value {
-            Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
-                Lit::Str(ref tag) => Some(tag.value()),
-                _ => panic!("Cannot parse tag")
+            match *attr_value {
+                Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
+                    Lit::Str(ref tag) => Some(tag.value()),
+                    _ => panic!("Cannot parse tag"),
+                },
+                _ => None,
             }
-            _ => None
-        }
-    }).expect("NifStruct requires a 'tag' attribute")
+        })
+        .expect("NifStruct requires a 'tag' attribute")
 }

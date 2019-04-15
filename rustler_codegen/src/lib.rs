@@ -50,31 +50,38 @@ impl Context {
             attrs.push(RustlerAttr::Decode);
         }
 
-        Self {
-            attrs
-        }
+        Self { attrs }
     }
 
     fn encode(&self) -> bool {
-        self.attrs.iter().find(|attr| match attr {
-            RustlerAttr::Encode => true,
-            _ => false
-        }).is_some()
+        self.attrs
+            .iter()
+            .find(|attr| match attr {
+                RustlerAttr::Encode => true,
+                _ => false,
+            })
+            .is_some()
     }
 
     fn decode(&self) -> bool {
-        self.attrs.iter().find(|attr| match attr {
-            RustlerAttr::Decode => true,
-            _ => false
-        }).is_some()
+        self.attrs
+            .iter()
+            .find(|attr| match attr {
+                RustlerAttr::Decode => true,
+                _ => false,
+            })
+            .is_some()
     }
 
     fn encode_decode_attr_set(attrs: &[RustlerAttr]) -> bool {
-        attrs.iter().find(|attr| match attr {
-            RustlerAttr::Encode => true,
-            RustlerAttr::Decode => true,
-            _ => false
-        }).is_some()
+        attrs
+            .iter()
+            .find(|attr| match attr {
+                RustlerAttr::Encode => true,
+                RustlerAttr::Decode => true,
+                _ => false,
+            })
+            .is_some()
     }
 
     fn get_rustler_attrs(attr: &syn::Attribute) -> Option<Vec<RustlerAttr>> {
@@ -183,7 +190,7 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifTuple` so that the
-/// struct can be encoded or decoded from an Elixir map. For example, the following struct
+/// struct can be encoded or decoded from an Elixir tuple. For example, the following struct
 /// annotated as such:
 ///
 /// ```text

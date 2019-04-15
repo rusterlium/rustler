@@ -104,10 +104,20 @@ pub unsafe fn map_iterator_next(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
 }
 
 #[cfg(nif_version_2_14)]
-pub unsafe fn make_map_from_arrays(env: NIF_ENV, keys: &[NIF_TERM], values: &[NIF_TERM]) -> Option<NIF_TERM> {
+pub unsafe fn make_map_from_arrays(
+    env: NIF_ENV,
+    keys: &[NIF_TERM],
+    values: &[NIF_TERM],
+) -> Option<NIF_TERM> {
     let mut map = mem::uninitialized();
     if nif_interface::enif_make_map_from_arrays(
-        env, keys.as_ptr(), values.as_ptr(), keys.len() as usize, &mut map) == 0 {
+        env,
+        keys.as_ptr(),
+        values.as_ptr(),
+        keys.len() as usize,
+        &mut map,
+    ) == 0
+    {
         return None;
     }
 

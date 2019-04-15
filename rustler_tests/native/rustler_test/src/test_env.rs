@@ -1,8 +1,8 @@
-use rustler::{Env, Term, NifResult, Encoder};
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
 use rustler::types::list::ListIterator;
 use rustler::types::pid::Pid;
+use rustler::{Encoder, Env, NifResult, Term};
 use std::thread;
 
 // Send a message to several PIDs.
@@ -49,7 +49,7 @@ pub fn sublists<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
                 let mut all_sublists = vec![empty_list];
 
                 for element in iter {
-                    for i in 0 .. all_sublists.len() {
+                    for i in 0..all_sublists.len() {
                         let new_list = all_sublists[i].list_prepend(element);
                         all_sublists.push(new_list);
                     }
@@ -60,7 +60,7 @@ pub fn sublists<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 
             match result {
                 Err(_err) => env.error_tuple("test failed".encode(env)),
-                Ok(term) => term
+                Ok(term) => term,
             }
         });
     });

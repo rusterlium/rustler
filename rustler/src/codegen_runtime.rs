@@ -1,27 +1,34 @@
 //! Functions used by runtime generated code. Should not be used.
 
-use ::std::ffi::CString;
+use std::ffi::CString;
 
 use {Env, Term};
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
-pub use wrapper::nif_interface::{c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY,
-                                 DEF_NIF_FUNC, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV,
-                                 NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM};
 pub use wrapper::exception::raise_exception;
+pub use wrapper::nif_interface::{
+    c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
+    MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
+};
 
 #[cfg(windows)]
-pub use erlang_nif_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
+pub use erl_nif_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
 
 pub unsafe trait NifReturnable {
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned;
 }
-unsafe impl<T> NifReturnable for T where T: ::Encoder {
+unsafe impl<T> NifReturnable for T
+where
+    T: ::Encoder,
+{
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         NifReturned::Term(self.encode(env).as_c_arg())
     }
 }
-unsafe impl<T> NifReturnable for Result<T, ::error::Error> where T: ::Encoder {
+unsafe impl<T> NifReturnable for Result<T, ::error::Error>
+where
+    T: ::Encoder,
+{
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         match self {
             Ok(inner) => NifReturned::Term(inner.encode(env).as_c_arg()),
@@ -49,16 +56,19 @@ impl NifReturned {
             NifReturned::Raise(inner) => {
                 ::wrapper::exception::raise_exception(env.as_c_arg(), inner)
             }
-            NifReturned::Reschedule { fun_name, flags, fun, args } => {
-                ::wrapper::nif_interface::enif_schedule_nif(
-                    env.as_c_arg(),
-                    fun_name.as_ptr() as *const u8,
-                    flags as i32,
-                    fun,
-                    args.len() as i32,
-                    args.as_ptr() as *const usize
-                )
-            }
+            NifReturned::Reschedule {
+                fun_name,
+                flags,
+                fun,
+                args,
+            } => ::wrapper::nif_interface::enif_schedule_nif(
+                env.as_c_arg(),
+                fun_name.as_ptr() as *const u8,
+                flags as i32,
+                fun,
+                args.len() as i32,
+                args.as_ptr() as *const usize,
+            ),
         }
     }
 }

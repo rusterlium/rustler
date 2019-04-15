@@ -1,6 +1,6 @@
-use rustler::Encoder;
-use rustler::{Env, Term, NifResult};
 use rustler::resource::ResourceArc;
+use rustler::Encoder;
+use rustler::{Env, NifResult, Term};
 use std::sync::RwLock;
 
 struct TestResource {
@@ -11,7 +11,7 @@ struct TestResource {
 /// chance of segfaults if the implementation is wrong.
 struct ImmutableResource {
     a: u32,
-    b: u32
+    b: u32,
 }
 
 pub fn on_load<'a>(env: Env<'a>) -> bool {
@@ -37,14 +37,13 @@ pub fn resource_set_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifRes
     Ok("ok".encode(env))
 }
 
-pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) ->  NifResult<Term<'a>> {
+pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let resource: ResourceArc<TestResource> = args[0].decode()?;
     let test_field = resource.test_field.read().unwrap();
     Ok(test_field.encode(env))
 }
 
-
-use std::sync::atomic::{ AtomicUsize, Ordering };
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 ::lazy_static::lazy_static! {
     static ref COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -53,10 +52,7 @@ use std::sync::atomic::{ AtomicUsize, Ordering };
 impl ImmutableResource {
     fn new(u: u32) -> ImmutableResource {
         COUNT.fetch_add(1, Ordering::SeqCst);
-        ImmutableResource {
-            a: u,
-            b: !u
-        }
+        ImmutableResource { a: u, b: !u }
     }
 }
 

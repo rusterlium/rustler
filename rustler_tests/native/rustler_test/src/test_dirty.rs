@@ -1,4 +1,4 @@
-use rustler::{Env, Term, Atom};
+use rustler::{Atom, Env, Term};
 
 use std::time;
 

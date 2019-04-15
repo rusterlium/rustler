@@ -23,7 +23,7 @@
 //! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
 #[macro_use(enif_snprintf)]
-extern crate erlang_nif_sys;
+extern crate erl_nif_sys;
 
 mod wrapper;
 
@@ -38,7 +38,7 @@ pub mod types;
 mod term;
 
 pub use term::Term;
-pub use types::{Decoder, Encoder, Binary, ListIterator, MapIterator, OwnedBinary, Pid, Atom};
+pub use types::{Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, Pid};
 pub mod resource;
 pub use resource::ResourceArc;
 
@@ -61,4 +61,3 @@ pub mod r#return;
 pub use r#return::Return;
 
 pub type NifResult<T> = Result<T, Error>;
-

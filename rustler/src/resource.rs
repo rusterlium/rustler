@@ -11,8 +11,9 @@ use std::ptr;
 
 use super::{Decoder, Encoder, Env, Error, NifResult, Term};
 use wrapper::nif_interface::c_void;
-use wrapper::nif_interface::{NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV,
-                             NIF_RESOURCE_TYPE};
+use wrapper::nif_interface::{
+    NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
+};
 
 /// Re-export a type used by the `resource_struct_init!` macro.
 #[doc(hidden)]
@@ -125,16 +126,8 @@ where
 }
 
 // Safe because T is `Sync` and `Send`.
-unsafe impl<T> Send for ResourceArc<T>
-where
-    T: ResourceTypeProvider,
-{
-}
-unsafe impl<T> Sync for ResourceArc<T>
-where
-    T: ResourceTypeProvider,
-{
-}
+unsafe impl<T> Send for ResourceArc<T> where T: ResourceTypeProvider {}
+unsafe impl<T> Sync for ResourceArc<T> where T: ResourceTypeProvider {}
 
 impl<T> ResourceArc<T>
 where

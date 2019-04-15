@@ -25,4 +25,5 @@ install:
 script:
   - source $HOME/.cargo/env
   - cargo test
-  - cd rustler_tests && mix test
+  - cd rustler_mix && mix do deps.get, test && cd -
+  - cd rustler_tests && mix test && cd -
