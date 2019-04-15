@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types)]
 
-//! [Github](https://github.com/hansihe/Rustler)
+//! [Github](https://github.com/rusterlium/rustler)
 //! [Example](https://github.com/hansihe/Rustler_Example)
 //!
 //! Rustler is a library for writing Erlang NIFs in safe Rust code. That means there should be no
