@@ -1,8 +1,9 @@
 //! Utilities used to access and create Erlang maps.
 
+use super::atom;
+use std::ops::RangeInclusive;
 use wrapper::map;
 use {Decoder, Env, Error, NifResult, Term};
-use std::ops::RangeInclusive;
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
@@ -223,14 +224,17 @@ where
     T: Decoder<'a>,
 {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let vec:Vec<(Term, Term)> = term.decode::<MapIterator>()?.collect();
-        match (&*vec[0].0.atom_to_string()?, &*vec[0].1.atom_to_string()?) {
-            ("__struct__", "Elixir.Range") => {
-                let first = vec[1].1.decode::<T>()?;
-                let last = vec[2].1.decode::<T>()?;
-                Ok(first ..= last)
-            },
-            _ => Err(Error::BadArg),
+        let env = term.get_env();
+        let name = term.map_get(atom::__struct__().to_term(env))?;
+
+        match name.atom_to_string()?.as_ref() {
+            "Elixir.Range" => (),
+            _ => return Err(Error::BadArg),
         }
+
+        let first = term.map_get(atom::first().to_term(env))?.decode::<T>()?;
+        let last = term.map_get(atom::last().to_term(env))?.decode::<T>()?;
+
+        Ok(first..=last)
     }
 }
