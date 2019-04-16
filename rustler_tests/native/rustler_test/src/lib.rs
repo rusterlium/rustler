@@ -17,6 +17,7 @@ mod test_env;
 mod test_list;
 mod test_map;
 mod test_primitives;
+mod test_range;
 mod test_resource;
 mod test_term;
 mod test_thread;
@@ -94,6 +95,7 @@ rustler::rustler_export_nifs!(
             SchedulerFlags::DirtyCpu
         ),
         ("dirty_io", 0, test_dirty::dirty_io, SchedulerFlags::DirtyIo),
+        ("sum_range", 1, test_range::sum_range),
     ],
     Some(on_load)
 );

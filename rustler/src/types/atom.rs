@@ -246,4 +246,10 @@ rustler_atoms! {
 
     /// The `__struct__` atom used by Elixir.
     atom __struct__;
+
+    /// The `first` atom used by `Elixir.Range`.
+    atom first;
+
+    /// The `last` atom used by `Elixir.Range`.
+    atom last;
 }

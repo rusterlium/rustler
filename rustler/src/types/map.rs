@@ -1,5 +1,7 @@
 //! Utilities used to access and create Erlang maps.
 
+use super::atom;
+use std::ops::RangeInclusive;
 use wrapper::map;
 use {Decoder, Env, Error, NifResult, Term};
 
@@ -214,5 +216,25 @@ impl<'a> Decoder<'a> for MapIterator<'a> {
             Some(iter) => Ok(iter),
             None => Err(Error::BadArg),
         }
+    }
+}
+
+impl<'a, T> Decoder<'a> for RangeInclusive<T>
+where
+    T: Decoder<'a>,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let env = term.get_env();
+        let name = term.map_get(atom::__struct__().to_term(env))?;
+
+        match name.atom_to_string()?.as_ref() {
+            "Elixir.Range" => (),
+            _ => return Err(Error::BadArg),
+        }
+
+        let first = term.map_get(atom::first().to_term(env))?.decode::<T>()?;
+        let last = term.map_get(atom::last().to_term(env))?.decode::<T>()?;
+
+        Ok(first..=last)
     }
 }
