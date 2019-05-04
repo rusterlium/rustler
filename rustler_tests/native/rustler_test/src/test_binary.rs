@@ -55,6 +55,11 @@ pub fn encode_string<'a>(_env: Env<'a>, _args: &[Term<'a>]) -> NifResult<(String
     Ok(("first".to_string(), "second"))
 }
 
+pub fn decode_iolist<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<Binary<'a>> {
+    let input: Binary = args[0].decode_as_binary()?;
+    Ok(input)
+}
+
 // OwnedBinary::new
 // OwnedBinary::from_unowned
 // OwnedBinary::realloc

@@ -35,4 +35,8 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.encode_string() == {"first", "second"}
   end
 
+  test "decode iolist as binary" do
+      assert RustlerTest.decode_iolist(["hi", " ", "there"]) == ["hi", " ", "there"]
+  end
+
 end

@@ -1,7 +1,7 @@
 use crate::types::binary::OwnedBinary;
 use crate::wrapper::env::term_to_binary;
 use crate::wrapper::NIF_TERM;
-use crate::{Decoder, Env, NifResult};
+use crate::{Decoder, Env, NifResult, Binary};
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
 
@@ -79,6 +79,19 @@ impl<'a> Term<'a> {
         T: Decoder<'a>,
     {
         Decoder::decode(self)
+    }
+
+    /// Decodes the Term into Binary
+    ///
+    /// This could be used as a replacement for [`decode`] when decoding Binary from an iolist
+    /// is needed.
+    ///
+    /// [`decode`]: #method.decode
+    pub fn decode_as_binary(self) -> NifResult<Binary<'a>> {
+        if self.is_binary() {
+            return Binary::from_term(self);
+        }
+        return Binary::from_iolist(self)
     }
 
     pub fn to_binary(self) -> OwnedBinary {
