@@ -70,6 +70,7 @@ rustler::rustler_export_nifs!(
         ("realloc_shrink", 0, test_binary::realloc_shrink),
         ("realloc_grow", 0, test_binary::realloc_grow),
         ("encode_string", 0, test_binary::encode_string),
+        ("decode_iolist", 1, test_binary::decode_iolist),
         ("threaded_fac", 1, test_thread::threaded_fac),
         ("threaded_sleep", 1, test_thread::threaded_sleep),
         ("send_all", 2, test_env::send_all),

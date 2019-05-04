@@ -168,6 +168,24 @@ impl<'a> Binary<'a> {
         })
     }
 
+    pub fn from_iolist(term: Term<'a>) -> Result<Self, Error> {
+        let mut binary = unsafe { ErlNifBinary::new_empty() };
+        if unsafe {
+            erl_nif_sys::enif_inspect_iolist_as_binary(
+                term.get_env().as_c_arg(),
+                term.as_c_arg(),
+                binary.as_c_arg(),
+            )
+        } == 0
+        {
+            return Err(Error::BadArg);
+        }
+        return Ok(Binary {
+            inner: binary,
+            term: term,
+        })
+    }
+
     pub fn to_term<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.term.in_env(env)
     }
