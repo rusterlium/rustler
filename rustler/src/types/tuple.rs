@@ -1,6 +1,6 @@
-use wrapper::nif_interface::NIF_TERM;
-use wrapper::tuple;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::wrapper::nif_interface::NIF_TERM;
+use crate::wrapper::tuple;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// ## Tuple terms
 //impl<'a> Term<'a> {

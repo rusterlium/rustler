@@ -1,6 +1,6 @@
-use wrapper::atom;
-use wrapper::nif_interface::NIF_TERM;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::wrapper::atom;
+use crate::wrapper::nif_interface::NIF_TERM;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -83,7 +83,7 @@ impl Atom {
 use std::fmt;
 impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        ::wrapper::term::fmt(self.as_c_arg(), f)
+        crate::wrapper::term::fmt(self.as_c_arg(), f)
     }
 }
 

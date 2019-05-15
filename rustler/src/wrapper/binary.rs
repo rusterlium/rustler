@@ -1,6 +1,6 @@
 use super::nif_interface;
 use super::nif_interface::NIF_BINARY;
-use wrapper::nif_interface::{c_void, size_t};
+use crate::wrapper::nif_interface::{c_void, size_t};
 
 use std::mem::uninitialized;
 

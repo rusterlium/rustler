@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 use std::ptr;
 use std::sync::{Arc, Weak};
-use types::pid::Pid;
-use wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
-use {Encoder, Term};
+use crate::types::pid::Pid;
+use crate::wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
+use crate::{Encoder, Term};
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
@@ -56,7 +56,7 @@ impl<'a> Env<'a> {
     where
         T: Encoder,
     {
-        let error = ::types::atom::error().to_term(self);
+        let error = crate::types::atom::error().to_term(self);
         (error, reason).encode(self)
     }
 
@@ -104,7 +104,7 @@ impl<'a> Env<'a> {
     /// [External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html).
     pub fn binary_to_term(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
         unsafe {
-            ::wrapper::env::binary_to_term(self.as_c_arg(), data, true)
+            crate::wrapper::env::binary_to_term(self.as_c_arg(), data, true)
                 .map(|(term, size)| (Term::new(self, term), size))
         }
     }
@@ -112,7 +112,7 @@ impl<'a> Env<'a> {
     /// Like `binary_to_term`, but can only be called on valid
     /// and trusted data.
     pub unsafe fn binary_to_term_trusted(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
-        ::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
+        crate::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
             .map(|(term, size)| (Term::new(self, term), size))
     }
 }

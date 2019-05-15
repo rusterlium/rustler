@@ -1,6 +1,6 @@
 use super::nif_interface;
 use super::nif_interface::{c_uint, NIF_ENV, NIF_TERM};
-use {Error, NifResult};
+use crate::{Error, NifResult};
 
 pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
     nif_interface::enif_make_atom_len(env, name.as_ptr(), name.len())

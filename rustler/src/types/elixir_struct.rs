@@ -8,7 +8,7 @@
 
 use super::atom::{self, Atom};
 use super::map::map_new;
-use {Env, NifResult, Term};
+use crate::{Env, NifResult, Term};
 
 pub fn get_ex_struct_name(map: Term) -> NifResult<Atom> {
     let env = map.get_env();

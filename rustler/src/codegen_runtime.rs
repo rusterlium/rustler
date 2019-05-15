@@ -2,11 +2,11 @@
 
 use std::ffi::CString;
 
-use {Env, Term};
+use crate::{Env, Term};
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
-pub use wrapper::exception::raise_exception;
-pub use wrapper::nif_interface::{
+pub use crate::wrapper::exception::raise_exception;
+pub use crate::wrapper::nif_interface::{
     c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
     MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
@@ -19,15 +19,15 @@ pub unsafe trait NifReturnable {
 }
 unsafe impl<T> NifReturnable for T
 where
-    T: ::Encoder,
+    T: crate::Encoder,
 {
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         NifReturned::Term(self.encode(env).as_c_arg())
     }
 }
-unsafe impl<T> NifReturnable for Result<T, ::error::Error>
+unsafe impl<T> NifReturnable for Result<T, crate::error::Error>
 where
-    T: ::Encoder,
+    T: crate::Encoder,
 {
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         match self {
@@ -43,7 +43,7 @@ pub enum NifReturned {
     BadArg,
     Reschedule {
         fun_name: CString,
-        flags: ::schedule::SchedulerFlags,
+        flags: crate::schedule::SchedulerFlags,
         fun: unsafe extern "C" fn(NIF_ENV, i32, *const NIF_TERM) -> NIF_TERM,
         args: Vec<NIF_TERM>,
     },
@@ -52,16 +52,16 @@ impl NifReturned {
     pub unsafe fn apply<'a>(self, env: Env<'a>) -> NIF_TERM {
         match self {
             NifReturned::Term(inner) => inner,
-            NifReturned::BadArg => ::wrapper::exception::raise_badarg(env.as_c_arg()),
+            NifReturned::BadArg => crate::wrapper::exception::raise_badarg(env.as_c_arg()),
             NifReturned::Raise(inner) => {
-                ::wrapper::exception::raise_exception(env.as_c_arg(), inner)
+                crate::wrapper::exception::raise_exception(env.as_c_arg(), inner)
             }
             NifReturned::Reschedule {
                 fun_name,
                 flags,
                 fun,
                 args,
-            } => ::wrapper::nif_interface::enif_schedule_nif(
+            } => crate::wrapper::nif_interface::enif_schedule_nif(
                 env.as_c_arg(),
                 fun_name.as_ptr() as *const u8,
                 flags as i32,

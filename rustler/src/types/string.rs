@@ -1,5 +1,5 @@
 use super::binary::{Binary, OwnedBinary};
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 impl<'a> Decoder<'a> for String {
     fn decode(term: Term<'a>) -> NifResult<Self> {
