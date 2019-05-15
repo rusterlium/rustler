@@ -1,9 +1,9 @@
-use std::cmp::Ordering;
-use std::fmt::{self, Debug};
 use crate::types::binary::OwnedBinary;
 use crate::wrapper::env::term_to_binary;
-use crate::wrapper::nif_interface::NIF_TERM;
+use crate::wrapper::NIF_TERM;
 use crate::{Decoder, Env, NifResult};
+use std::cmp::Ordering;
+use std::fmt::{self, Debug};
 
 /// Term is used to represent all erlang terms. Terms are always lifetime limited by a Env.
 ///
@@ -55,7 +55,12 @@ impl<'a> Term<'a> {
             // lifetimes of two .run() calls on the same OwnedEnv.)
             unsafe { Term::new(env, self.as_c_arg()) }
         } else {
-            unsafe { Term::new(env, crate::wrapper::copy_term(env.as_c_arg(), self.as_c_arg())) }
+            unsafe {
+                Term::new(
+                    env,
+                    erl_nif_sys::enif_make_copy(env.as_c_arg(), self.as_c_arg()),
+                )
+            }
         }
     }
 
@@ -84,15 +89,13 @@ impl<'a> Term<'a> {
 
 impl<'a> PartialEq for Term<'a> {
     fn eq(&self, other: &Term) -> bool {
-        unsafe {
-            crate::wrapper::nif_interface::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1
-        }
+        unsafe { erl_nif_sys::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
     }
 }
 impl<'a> Eq for Term<'a> {}
 
 fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
-    let ord = unsafe { crate::wrapper::nif_interface::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
+    let ord = unsafe { erl_nif_sys::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
     match ord {
         0 => Ordering::Equal,
         n if n < 0 => Ordering::Less,

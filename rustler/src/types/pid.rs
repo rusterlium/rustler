@@ -1,7 +1,6 @@
-use std::mem;
-use crate::wrapper::nif_interface::{self, ErlNifPid};
-use crate::wrapper::pid;
+use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::mem;
 
 #[derive(Clone)]
 pub struct Pid {
@@ -38,7 +37,7 @@ impl<'a> Env<'a> {
     /// called is always associated with the calling Erlang process.)
     pub fn pid(self) -> Pid {
         let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
-        if unsafe { nif_interface::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
+        if unsafe { erl_nif_sys::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
             panic!("environment is process-independent");
         }
         Pid { c: pid }

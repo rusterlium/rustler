@@ -1,5 +1,4 @@
-use crate::wrapper::nif_interface::NIF_TERM;
-use crate::wrapper::tuple;
+use crate::wrapper::{tuple, NIF_TERM};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// ## Tuple terms

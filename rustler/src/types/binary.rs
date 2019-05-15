@@ -1,5 +1,4 @@
 use crate::wrapper::binary::{alloc, realloc, ErlNifBinary};
-use crate::wrapper::nif_interface;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::borrow::{Borrow, BorrowMut};
@@ -115,7 +114,7 @@ impl DerefMut for OwnedBinary {
 impl Drop for OwnedBinary {
     fn drop(&mut self) {
         if self.release {
-            unsafe { nif_interface::enif_release_binary(self.inner.as_c_arg()) };
+            unsafe { erl_nif_sys::enif_release_binary(self.inner.as_c_arg()) };
         }
     }
 }
@@ -138,7 +137,7 @@ impl<'a> Binary<'a> {
         let term = unsafe {
             Term::new(
                 env,
-                nif_interface::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()),
+                erl_nif_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()),
             )
         };
         Binary {
@@ -154,7 +153,7 @@ impl<'a> Binary<'a> {
     pub fn from_term(term: Term<'a>) -> Result<Self, Error> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe {
-            nif_interface::enif_inspect_binary(
+            erl_nif_sys::enif_inspect_binary(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
                 binary.as_c_arg(),
@@ -186,7 +185,7 @@ impl<'a> Binary<'a> {
         }
 
         let raw_term = unsafe {
-            nif_interface::enif_make_sub_binary(
+            erl_nif_sys::enif_make_sub_binary(
                 self.term.get_env().as_c_arg(),
                 self.term.as_c_arg(),
                 offset,
