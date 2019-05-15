@@ -1,5 +1,4 @@
-use super::nif_interface;
-use super::nif_interface::{NIF_ENV, NIF_TERM};
+use crate::wrapper::{NIF_ENV, NIF_TERM};
 
 /// Raise an "error exception".
 ///
@@ -11,7 +10,7 @@ use super::nif_interface::{NIF_ENV, NIF_TERM};
 ///
 /// And of course the usual rules about `env` and `term` still apply.
 pub unsafe fn raise_exception(env: NIF_ENV, term: NIF_TERM) -> NIF_TERM {
-    nif_interface::enif_raise_exception(env, term)
+    erl_nif_sys::enif_raise_exception(env, term)
 }
 
 /// Raise a `badarg` exception.
@@ -24,5 +23,5 @@ pub unsafe fn raise_exception(env: NIF_ENV, term: NIF_TERM) -> NIF_TERM {
 ///
 /// And of course `env` must be a valid environment.
 pub unsafe fn raise_badarg(env: NIF_ENV) -> NIF_TERM {
-    nif_interface::enif_make_badarg(env)
+    erl_nif_sys::enif_make_badarg(env)
 }

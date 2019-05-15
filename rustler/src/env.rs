@@ -1,9 +1,9 @@
+use crate::types::pid::Pid;
+use crate::wrapper::{NIF_ENV, NIF_TERM};
+use crate::{Encoder, Term};
 use std::marker::PhantomData;
 use std::ptr;
 use std::sync::{Arc, Weak};
-use crate::types::pid::Pid;
-use crate::wrapper::nif_interface::{self, NIF_ENV, NIF_TERM};
-use crate::{Encoder, Term};
 
 /// Private type system hack to help ensure that each environment exposed to safe Rust code is
 /// given a different lifetime. The size of this type is zero, so it costs nothing at run time. Its
@@ -77,12 +77,12 @@ impl<'a> Env<'a> {
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
     pub fn send(self, pid: &Pid, message: Term<'a>) {
-        let thread_type = nif_interface::enif_thread_type();
-        let env = if thread_type == nif_interface::ERL_NIF_THR_UNDEFINED {
+        let thread_type = unsafe { erl_nif_sys::enif_thread_type() };
+        let env = if thread_type == erl_nif_sys::ERL_NIF_THR_UNDEFINED {
             ptr::null_mut()
-        } else if thread_type == nif_interface::ERL_NIF_THR_NORMAL_SCHEDULER
-            || thread_type == nif_interface::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-            || thread_type == nif_interface::ERL_NIF_THR_DIRTY_IO_SCHEDULER
+        } else if thread_type == erl_nif_sys::ERL_NIF_THR_NORMAL_SCHEDULER
+            || thread_type == erl_nif_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
+            || thread_type == erl_nif_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
         {
             // Panic if `self` is not the environment of the calling process.
             self.pid();
@@ -94,7 +94,7 @@ impl<'a> Env<'a> {
 
         // Send the message.
         unsafe {
-            nif_interface::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
+            erl_nif_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
         }
     }
 
@@ -144,7 +144,7 @@ impl OwnedEnv {
     /// Allocates a new process-independent environment.
     pub fn new() -> OwnedEnv {
         OwnedEnv {
-            env: Arc::new(unsafe { nif_interface::enif_alloc_env() }),
+            env: Arc::new(unsafe { erl_nif_sys::enif_alloc_env() }),
         }
     }
 
@@ -173,7 +173,7 @@ impl OwnedEnv {
     where
         F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
     {
-        if nif_interface::enif_thread_type() != nif_interface::ERL_NIF_THR_UNDEFINED {
+        if unsafe { erl_nif_sys::enif_thread_type() } != erl_nif_sys::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
         }
 
@@ -182,7 +182,7 @@ impl OwnedEnv {
         let c_env = *self.env;
         self.env = Arc::new(c_env); // invalidate SavedTerms
         unsafe {
-            nif_interface::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
+            erl_nif_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
         }
     }
 
@@ -198,7 +198,7 @@ impl OwnedEnv {
         let c_env = *self.env;
         self.env = Arc::new(c_env);
         unsafe {
-            nif_interface::enif_clear_env(c_env);
+            erl_nif_sys::enif_clear_env(c_env);
         }
     }
 
@@ -241,7 +241,7 @@ impl OwnedEnv {
 impl Drop for OwnedEnv {
     fn drop(&mut self) {
         unsafe {
-            nif_interface::enif_free_env(*self.env);
+            erl_nif_sys::enif_free_env(*self.env);
         }
     }
 }

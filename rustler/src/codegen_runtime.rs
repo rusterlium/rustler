@@ -6,7 +6,7 @@ use crate::{Env, Term};
 
 // Names used by the `rustler_export_nifs!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
-pub use crate::wrapper::nif_interface::{
+pub use crate::wrapper::{
     c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
     MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
@@ -61,7 +61,7 @@ impl NifReturned {
                 flags,
                 fun,
                 args,
-            } => crate::wrapper::nif_interface::enif_schedule_nif(
+            } => erl_nif_sys::enif_schedule_nif(
                 env.as_c_arg(),
                 fun_name.as_ptr() as *const u8,
                 flags as i32,

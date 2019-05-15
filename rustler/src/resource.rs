@@ -10,14 +10,13 @@ use std::ops::Deref;
 use std::ptr;
 
 use super::{Decoder, Encoder, Env, Error, NifResult, Term};
-use crate::wrapper::nif_interface::c_void;
-use crate::wrapper::nif_interface::{
-    NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
+use crate::wrapper::{
+    c_void, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
 
 /// Re-export a type used by the `resource_struct_init!` macro.
 #[doc(hidden)]
-pub use crate::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
+pub use crate::wrapper::NIF_RESOURCE_FLAGS;
 
 /// The ResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
@@ -137,7 +136,8 @@ where
     /// ResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
-        let mem_raw = unsafe { crate::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
+        let mem_raw =
+            unsafe { crate::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
         unsafe { ptr::write(aligned_mem, data) };
@@ -226,7 +226,7 @@ where
     /// at an unpredictable time: whenever the VM decides to do garbage
     /// collection.
     fn drop(&mut self) {
-        unsafe { crate::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
+        unsafe { erl_nif_sys::enif_release_resource(self.as_c_arg()) };
     }
 }
 

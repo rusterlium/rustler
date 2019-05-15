@@ -1,4 +1,3 @@
-extern crate erl_nif_sys;
 use crate::types::atom;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 

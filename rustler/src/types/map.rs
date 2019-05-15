@@ -1,9 +1,9 @@
 //! Utilities used to access and create Erlang maps.
 
 use super::atom;
-use std::ops::RangeInclusive;
 use crate::wrapper::map;
 use crate::{Decoder, Env, Error, NifResult, Term};
+use std::ops::RangeInclusive;
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }

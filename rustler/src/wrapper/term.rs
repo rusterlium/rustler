@@ -1,8 +1,6 @@
+use crate::wrapper::NIF_TERM;
 use std::fmt;
-
 use std::os::raw::c_char;
-
-use super::nif_interface::NIF_TERM;
 
 pub fn fmt<'a>(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     const SIZE: usize = 1024;

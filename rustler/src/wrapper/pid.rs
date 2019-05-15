@@ -1,18 +1,18 @@
-use super::nif_interface::{self, ErlNifPid, NIF_ENV, NIF_TERM};
+use crate::wrapper::{ErlNifPid, NIF_ENV, NIF_TERM};
 use std::mem;
 
 pub unsafe fn get_local_pid(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifPid> {
     let mut pid: ErlNifPid = mem::uninitialized();
-    if nif_interface::enif_get_local_pid(env, term, &mut pid) == 0 {
+    if erl_nif_sys::enif_get_local_pid(env, term, &mut pid) == 0 {
         return None;
     }
     Some(pid)
 }
 
 // pub unsafe fn is_process_alive(env: NIF_ENV, pid: &ErlNifPid) -> bool {
-//     nif_interface::enif_is_process_alive(env, pid) != 0
+//     erl_nif_sys::enif_is_process_alive(env, pid) != 0
 // }
 
 pub unsafe fn make_pid(env: NIF_ENV, pid: &ErlNifPid) -> NIF_TERM {
-    nif_interface::enif_make_pid(env, pid)
+    erl_nif_sys::enif_make_pid(env, pid)
 }
