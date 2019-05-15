@@ -1,7 +1,7 @@
 use std::mem;
-use wrapper::nif_interface::{self, ErlNifPid};
-use wrapper::pid;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::wrapper::nif_interface::{self, ErlNifPid};
+use crate::wrapper::pid;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 #[derive(Clone)]
 pub struct Pid {

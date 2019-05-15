@@ -1,5 +1,5 @@
-use wrapper::nif_interface;
-use wrapper::nif_interface::{NIF_ENV, NIF_TERM};
+use crate::wrapper::nif_interface;
+use crate::wrapper::nif_interface::{NIF_ENV, NIF_TERM};
 
 macro_rules! impl_check_fun {
     ($name:ident, $inner:path) => {

@@ -1,6 +1,6 @@
-use wrapper::binary::{alloc, realloc, ErlNifBinary};
-use wrapper::nif_interface;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::wrapper::binary::{alloc, realloc, ErlNifBinary};
+use crate::wrapper::nif_interface;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::borrow::{Borrow, BorrowMut};
 use std::io::Write;

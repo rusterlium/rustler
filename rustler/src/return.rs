@@ -1,6 +1,6 @@
-use codegen_runtime::{NifReturnable, NifReturned};
-use error::Error;
-use {Env, Term};
+use crate::codegen_runtime::{NifReturnable, NifReturned};
+use crate::error::Error;
+use crate::{Env, Term};
 
 pub enum Return<'a> {
     Term(Term<'a>),

@@ -5,6 +5,7 @@ repository = "https://github.com/rusterlium/rustler/tree/master/rustler_codegen"
 version = "0.20.0" # rustler_codegen version
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 [lib]
 name = "rustler_codegen"

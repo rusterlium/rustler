@@ -1,5 +1,5 @@
-use codegen_runtime::{NifReturnable, NifReturned};
-use {types, Encoder, Env};
+use crate::codegen_runtime::{NifReturnable, NifReturned};
+use crate::{types, Encoder, Env};
 
 /// Represents usual errors that can happen in a nif. This enables you
 /// to return an error from anywhere, even places where you don't have
@@ -14,7 +14,7 @@ pub enum Error {
     RaiseTerm(Box<Encoder>),
 }
 
-unsafe impl NifReturnable for ::error::Error {
+unsafe impl NifReturnable for crate::error::Error {
     unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
         match self {
             Error::BadArg => NifReturned::BadArg,

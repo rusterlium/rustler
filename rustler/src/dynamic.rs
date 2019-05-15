@@ -1,5 +1,5 @@
-use wrapper::check;
-use Term;
+use crate::wrapper::check;
+use crate::Term;
 
 pub enum TermType {
     Atom,

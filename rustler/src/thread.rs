@@ -1,8 +1,8 @@
-use env::OwnedEnv;
+use crate::env::OwnedEnv;
 use std::panic;
 use std::thread;
-use types::atom::Atom;
-use {Encoder, Env, Term};
+use crate::types::atom::Atom;
+use crate::{Encoder, Env, Term};
 
 /// A `JobSpawner` is a value that can run Rust code on non-Erlang system threads.
 /// Abstracts away details of thread management for `spawn()`.

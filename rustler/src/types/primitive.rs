@@ -1,6 +1,6 @@
 extern crate erl_nif_sys;
-use types::atom;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::types::atom;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {

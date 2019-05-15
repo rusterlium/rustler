@@ -10,14 +10,14 @@ use std::ops::Deref;
 use std::ptr;
 
 use super::{Decoder, Encoder, Env, Error, NifResult, Term};
-use wrapper::nif_interface::c_void;
-use wrapper::nif_interface::{
+use crate::wrapper::nif_interface::c_void;
+use crate::wrapper::nif_interface::{
     NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
 
 /// Re-export a type used by the `resource_struct_init!` macro.
 #[doc(hidden)]
-pub use wrapper::nif_interface::NIF_RESOURCE_FLAGS;
+pub use crate::wrapper::nif_interface::NIF_RESOURCE_FLAGS;
 
 /// The ResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
 /// is for. It serves as a holder for the information needed to interact with the Erlang VM about
@@ -79,7 +79,7 @@ pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        ::wrapper::resource::open_resource_type(
+        crate::wrapper::resource::open_resource_type(
             env.as_c_arg(),
             name.as_bytes(),
             Some(resource_destructor::<T>),
@@ -137,7 +137,7 @@ where
     /// ResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
-        let mem_raw = unsafe { ::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
+        let mem_raw = unsafe { crate::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
         unsafe { ptr::write(aligned_mem, data) };
@@ -150,7 +150,7 @@ where
 
     fn from_term(term: Term) -> Result<Self, Error> {
         let res_resource = match unsafe {
-            ::wrapper::resource::get_resource(
+            crate::wrapper::resource::get_resource(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
                 T::get_type().res,
@@ -160,7 +160,7 @@ where
             None => return Err(Error::BadArg),
         };
         unsafe {
-            ::wrapper::resource::keep_resource(res_resource);
+            crate::wrapper::resource::keep_resource(res_resource);
         }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
         Ok(ResourceArc {
@@ -173,7 +173,7 @@ where
         unsafe {
             Term::new(
                 env,
-                ::wrapper::resource::make_resource(env.as_c_arg(), self.raw),
+                crate::wrapper::resource::make_resource(env.as_c_arg(), self.raw),
             )
         }
     }
@@ -206,7 +206,7 @@ where
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
         unsafe {
-            ::wrapper::resource::keep_resource(self.raw);
+            crate::wrapper::resource::keep_resource(self.raw);
         }
         ResourceArc {
             raw: self.raw,
@@ -226,7 +226,7 @@ where
     /// at an unpredictable time: whenever the VM decides to do garbage
     /// collection.
     fn drop(&mut self) {
-        unsafe { ::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
+        unsafe { crate::wrapper::nif_interface::enif_release_resource(self.as_c_arg()) };
     }
 }
 

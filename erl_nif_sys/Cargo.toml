@@ -7,6 +7,7 @@ documentation = "https://docs.rs/erl_nif_sys"
 repository = "https://github.com/rusterlium/rustler"
 license = "MIT/Apache-2.0"
 keywords = ["FFI", "Erlang", "NIF"]
+edition = "2018"
 
 build = "build.rs"
 

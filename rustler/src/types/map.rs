@@ -2,8 +2,8 @@
 
 use super::atom;
 use std::ops::RangeInclusive;
-use wrapper::map;
-use {Decoder, Env, Error, NifResult, Term};
+use crate::wrapper::map;
+use crate::{Decoder, Env, Error, NifResult, Term};
 
 pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }

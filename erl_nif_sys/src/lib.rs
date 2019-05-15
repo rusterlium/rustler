@@ -138,4 +138,4 @@ mod initmacro;
 
 pub mod erl_nif_sys_api;
 
-pub use erl_nif_sys_api::*;
+pub use crate::erl_nif_sys_api::*;

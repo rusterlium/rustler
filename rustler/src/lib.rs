@@ -37,27 +37,27 @@ pub mod types;
 
 mod term;
 
-pub use term::Term;
-pub use types::{Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, Pid};
+pub use crate::term::Term;
+pub use crate::types::{Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, Pid};
 pub mod resource;
-pub use resource::ResourceArc;
+pub use crate::resource::ResourceArc;
 
 #[doc(hidden)]
 pub mod dynamic;
-pub use dynamic::TermType;
+pub use crate::dynamic::TermType;
 
 pub mod schedule;
-pub use schedule::SchedulerFlags;
+pub use crate::schedule::SchedulerFlags;
 pub mod env;
-pub use env::{Env, OwnedEnv};
+pub use crate::env::{Env, OwnedEnv};
 pub mod thread;
-pub use thread::{spawn, JobSpawner, ThreadSpawner};
+pub use crate::thread::{spawn, JobSpawner, ThreadSpawner};
 
 pub mod error;
 pub mod export;
-pub use error::Error;
+pub use crate::error::Error;
 
 pub mod r#return;
-pub use r#return::Return;
+pub use crate::r#return::Return;
 
 pub type NifResult<T> = Result<T, Error>;

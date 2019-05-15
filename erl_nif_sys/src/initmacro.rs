@@ -276,7 +276,7 @@ mod initmacro_namespace_tests {
 
     // explicitly disable for this test:
     // use erl_nif_sys_api::*;
-    use erl_nif_sys_api;
+    use crate::erl_nif_sys_api;
 
     use std;
     use std::ffi::{CStr, CString};
@@ -355,7 +355,7 @@ mod initmacro_namespace_tests {
 
 #[cfg(test)]
 mod initmacro_tests {
-    use erl_nif_sys_api::*;
+    use crate::erl_nif_sys_api::*;
     use std;
     use std::ffi::{CStr, CString};
     use std::ptr;

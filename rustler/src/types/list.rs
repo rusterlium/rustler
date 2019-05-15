@@ -2,8 +2,8 @@
 //!
 //! Right now the only supported way to read lists are through the ListIterator.
 
-use wrapper::list;
-use {Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::wrapper::list;
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// Enables iteration over the items in the list.
 ///
@@ -118,7 +118,7 @@ where
     T: Encoder,
 {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
+        let term_array: Vec<crate::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
@@ -128,7 +128,7 @@ where
     T: Encoder,
 {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-        let term_array: Vec<::wrapper::nif_interface::NIF_TERM> =
+        let term_array: Vec<crate::wrapper::nif_interface::NIF_TERM> =
             self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }

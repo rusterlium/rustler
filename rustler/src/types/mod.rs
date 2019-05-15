@@ -1,20 +1,20 @@
-use {Env, Error, NifResult, Term};
+use crate::{Env, Error, NifResult, Term};
 
 #[macro_use]
 pub mod atom;
-pub use types::atom::Atom;
+pub use crate::types::atom::Atom;
 
 #[doc(hidden)]
 pub mod binary;
-pub use types::binary::{Binary, OwnedBinary};
+pub use crate::types::binary::{Binary, OwnedBinary};
 
 #[doc(hidden)]
 pub mod list;
-pub use types::list::ListIterator;
+pub use crate::types::list::ListIterator;
 
 #[doc(hidden)]
 pub mod map;
-pub use types::map::MapIterator;
+pub use crate::types::map::MapIterator;
 
 #[doc(hidden)]
 pub mod primitive;
@@ -24,7 +24,7 @@ pub mod tuple;
 
 #[doc(hidden)]
 pub mod pid;
-pub use types::pid::Pid;
+pub use crate::types::pid::Pid;
 
 pub mod elixir_struct;
 
