@@ -37,7 +37,11 @@ version_opts("2.15") -> [{major,2}, {minor,14}, exception, getenv, time,   % erl
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
                         nif_2_14, nif_2_15];
 version_opts(Ver) ->
-    io:format("Unsupported Erlang NIF version: ~p.\n\nIs the erlang_nif-sys version up to date in the Cargo.toml?\nDoes 'cargo update' fix it?\nIf not please report at https://github.com/goertzenator/erlang_nif-sys.\n", [Ver]),
+    io:format(
+        "This OTP release uses the unsupported Erlang NIF version ~p.\n\n"
+        "Please report at https://github.com/rustlerium/rustler.\n",
+        [Ver]
+    ),
     halt(1).
 
 ulong_opts("4") -> [{ulongsize, 4}];
