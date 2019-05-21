@@ -33,7 +33,7 @@ version_opts("2.13") -> [{major,2}, {minor,13}, exception, getenv, time,   % erl
 version_opts("2.14") -> [{major,2}, {minor,14}, exception, getenv, time,   % erlang 21.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
                         nif_2_14];
-version_opts("2.15") -> [{major,2}, {minor,14}, exception, getenv, time,   % erlang 22.0
+version_opts("2.15") -> [{major,2}, {minor,15}, exception, getenv, time,   % erlang 22.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
                         nif_2_14, nif_2_15];
 version_opts(Ver) ->
