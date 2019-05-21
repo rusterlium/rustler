@@ -29,6 +29,7 @@ defmodule RustlerTest.ResourceTest do
 
     # Clean them up. Don't crash.
     :erlang.garbage_collect()
+    :timer.sleep(100)
 
     # Erlang's exact GC should have cleaned all that up.
     assert RustlerTest.resource_immutable_count() == 0
