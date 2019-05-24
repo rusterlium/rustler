@@ -65,6 +65,7 @@ pub enum UntaggedEnum {
     Foo(u32),
     Bar(String),
     Baz(AddStruct),
+    Bool(bool),
 }
 
 pub fn untagged_enum_echo<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<UntaggedEnum> {
