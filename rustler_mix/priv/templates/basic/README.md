@@ -1,4 +1,4 @@
-# Nif for <%= project_name %>
+# NIF for <%= project_name %>
 
 ## To build the NIF module:
 
