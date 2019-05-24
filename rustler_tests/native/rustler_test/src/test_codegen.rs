@@ -1,4 +1,5 @@
 use rustler::{Encoder, Env, NifResult, Term};
+use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
 
 #[derive(NifTuple)]
 pub struct AddTuple {

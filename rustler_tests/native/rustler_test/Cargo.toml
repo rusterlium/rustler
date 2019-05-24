@@ -2,6 +2,7 @@
 name = "rustler_test"
 version = "0.1.0"
 authors = ["HansiHE <hansihe@hansihe.com>"]
+edition = "2018"
 
 [lib]
 name = "rustler_test"
@@ -11,4 +12,3 @@ crate-type = ["cdylib"]
 [dependencies]
 lazy_static = "1.2"
 rustler = { path = "../../../rustler" }
-rustler_codegen = { path = "../../../rustler_codegen" }

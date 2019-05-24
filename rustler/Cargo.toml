@@ -11,6 +11,7 @@ edition = "2018"
 alternative_nif_init_name = []
 
 [dependencies]
+rustler_codegen = { path = "../rustler_codegen" }
 erl_nif_sys = { path = "../erl_nif_sys" }
 lazy_static = "1.2"
 
