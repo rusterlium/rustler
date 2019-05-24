@@ -24,7 +24,10 @@ defmodule Rustler.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.19", only: :dev}]
+    [
+      {:toml, "~> 0.5.2"},
+      {:ex_doc, "~> 0.19", only: :dev}
+    ]
   end
 
   defp description do

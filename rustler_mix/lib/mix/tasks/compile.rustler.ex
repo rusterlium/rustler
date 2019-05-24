@@ -142,8 +142,9 @@ defmodule Mix.Tasks.Compile.Rustler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args ++ []
 
-  defp get_name(cargo_data, section),
-    do: Rustler.TomlParser.get_table_val(cargo_data, [section], "name")
+  defp get_name(cargo_data, section) do
+    get_in(cargo_data, [section, "name"])
+  end
 
   def make_file_names(base_name, :lib) do
     case :os.type() do
@@ -169,15 +170,12 @@ defmodule Mix.Tasks.Compile.Rustler do
       throw_error({:nonexistent_crate_directory, crate})
     end
 
-    cargo_data =
-      case File.read("#{crate}/Cargo.toml") do
-        {:error, :enoent} ->
-          throw_error({:cargo_toml_not_found, crate})
-        {:ok, text} ->
-          Rustler.TomlParser.parse(text)
-      end
-
-    cargo_data
+    case File.read("#{crate}/Cargo.toml") do
+      {:error, :enoent} ->
+        throw_error({:cargo_toml_not_found, crate})
+      {:ok, text} ->
+        Toml.decode!(text)
+    end
   end
 
   defp raise_missing_crates do
