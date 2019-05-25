@@ -37,8 +37,7 @@ defmodule Rustler.Mixfile do
   end
 
   defp package do
-    [files: ["lib", "src", "priv", "mix.exs", "README.md"],
-    exclude_patterns: ["src/toml_lexer.erl", "src/toml_parser.erl"],
+    [files: ["lib", "priv", "mix.exs", "README.md"],
      maintainers: ["hansihe"],
      licenses: ["MIT", "Apache-2.0"],
      links: %{"GitHub" => "https://github.com/rusterlium/rustler"}]
