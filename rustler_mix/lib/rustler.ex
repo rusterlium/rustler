@@ -56,23 +56,24 @@ defmodule Rustler do
   @doc """
   Supported NIF API versions.
   """
-  def nif_versions, do: [
-    '2.7',
-    '2.8',
-    '2.9',
-    '2.10',
-    '2.11',
-    '2.12',
-    '2.13',
-    '2.14',
-  ]
+  def nif_versions,
+    do: [
+      '2.7',
+      '2.8',
+      '2.9',
+      '2.10',
+      '2.11',
+      '2.12',
+      '2.13',
+      '2.14'
+    ]
 
   @doc """
   Retrieves the compile time configuration.
   """
   def compile_config(mod, opts) do
     otp_app = Keyword.fetch!(opts, :otp_app)
-    config  = Application.get_env(otp_app, mod, [])
+    config = Application.get_env(otp_app, mod, [])
 
     crate = to_string(opts[:crate] || config[:crate] || otp_app)
     crate = if String.starts_with?(crate, "lib"), do: crate, else: "lib" <> crate

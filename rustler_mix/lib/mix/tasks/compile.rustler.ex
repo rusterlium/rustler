@@ -15,11 +15,13 @@ defmodule Mix.Tasks.Compile.Rustler do
     Enum.map(crates, &compile_crate/1)
 
     # Workaround for a mix problem. We should REALLY get this fixed properly.
-    _ = symlink_or_copy(config,
-      Path.expand("priv"),
-      Path.join(Mix.Project.app_path(config), "priv"))
+    _ =
+      symlink_or_copy(
+        config,
+        Path.expand("priv"),
+        Path.join(Mix.Project.app_path(config), "priv")
+      )
   end
-
 
   defp priv_dir, do: "priv/native"
 
@@ -27,11 +29,16 @@ defmodule Mix.Tasks.Compile.Rustler do
     crate_path = Keyword.get(config, :path, "native/#{name}")
     build_mode = Keyword.get(config, :mode, :release)
 
-    Mix.shell.info "Compiling NIF crate #{inspect name} (#{crate_path})..."
+    Mix.shell().info("Compiling NIF crate #{inspect(name)} (#{crate_path})...")
 
-    crate_full_path = Path.expand(crate_path, File.cwd!)
-    target_dir = Keyword.get(config, :target_dir,
-      Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(name)]))
+    crate_full_path = Path.expand(crate_path, File.cwd!())
+
+    target_dir =
+      Keyword.get(
+        config,
+        :target_dir,
+        Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(name)])
+      )
 
     cargo_data = check_crate_env(crate_full_path)
 
@@ -56,12 +63,13 @@ defmodule Mix.Tasks.Compile.Rustler do
 
     [cmd_bin | args] = compile_command
 
-    compile_return = System.cmd(cmd_bin, args, [
-      cd: crate_full_path,
-      stderr_to_stdout: true,
-      env: [{"CARGO_TARGET_DIR", target_dir} | Keyword.get(config, :env, [])],
-      into: IO.stream(:stdio, :line),
-    ])
+    compile_return =
+      System.cmd(cmd_bin, args,
+        cd: crate_full_path,
+        stderr_to_stdout: true,
+        env: [{"CARGO_TARGET_DIR", target_dir} | Keyword.get(config, :env, [])],
+        into: IO.stream(:stdio, :line)
+      )
 
     case compile_return do
       {_, 0} -> nil
@@ -82,8 +90,9 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
   defp make_base_command({:bin, path}), do: [path, "rustc"]
+
   defp make_base_command({:rustup, version}) do
-    if Rustup.version == :none do
+    if Rustup.version() == :none do
       throw_error(:rustup_not_installed)
     end
 
@@ -131,6 +140,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       args ++ ["--", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
     end
   end
+
   defp make_platform_hacks(args, _, _, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args ++ []
@@ -153,6 +163,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       {:unix, _} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
     end
   end
+
   def make_file_names(base_name, :bin) do
     case :os.type() do
       {:win32, _} -> {"#{base_name}.exe", "#{base_name}.exe"}
@@ -161,7 +172,7 @@ defmodule Mix.Tasks.Compile.Rustler do
   end
 
   def throw_error(error_descr) do
-    Mix.shell.error Messages.message(error_descr)
+    Mix.shell().error(Messages.message(error_descr))
     raise "Compilation error"
   end
 
@@ -179,9 +190,9 @@ defmodule Mix.Tasks.Compile.Rustler do
   end
 
   defp raise_missing_crates do
-    Mix.raise """
+    Mix.raise("""
     Missing required :rustler_crates option in mix.exs.
-    """
+    """)
   end
 
   # https://github.com/elixir-lang/elixir/blob/b13404e913fff70e080c08c2da3dbd5c41793b54/lib/mix/lib/mix/project.ex#L553-L562
@@ -191,6 +202,7 @@ defmodule Mix.Tasks.Compile.Rustler do
         File.rm_rf!(target)
         File.cp_r!(source, target)
       end
+
       :ok
     else
       Mix.Utils.symlink_or_copy(source, target)

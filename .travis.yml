@@ -29,6 +29,7 @@ install:
 script:
   - source $HOME/.cargo/env
   - cargo test
-  - cd rustler_mix && mix do deps.get, test && cd -
+
+  - cd rustler_mix && mix do deps.get, test, format --check-formatted && cd -
   - cd rustler_tests && mix do deps.get, test && cd -
   - cargo clippy --all-targets --all-features -- -D warnings
