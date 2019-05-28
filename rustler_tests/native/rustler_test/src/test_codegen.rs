@@ -1,3 +1,4 @@
+use rustler::types::truthy::Truthy;
 use rustler::{Encoder, Env, NifResult, Term};
 use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
 
@@ -66,9 +67,24 @@ pub enum UntaggedEnum {
     Foo(u32),
     Bar(String),
     Baz(AddStruct),
+    Bool(bool),
 }
 
 pub fn untagged_enum_echo<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<UntaggedEnum> {
     let untagged_enum: UntaggedEnum = args[0].decode()?;
+    Ok(untagged_enum)
+}
+
+#[derive(NifUntaggedEnum)]
+pub enum UntaggedEnumWithTruthy {
+    Baz(AddStruct),
+    Truthy(Truthy),
+}
+
+pub fn untagged_enum_with_truthy<'a>(
+    _env: Env<'a>,
+    args: &[Term<'a>],
+) -> NifResult<UntaggedEnumWithTruthy> {
+    let untagged_enum: UntaggedEnumWithTruthy = args[0].decode()?;
     Ok(untagged_enum)
 }

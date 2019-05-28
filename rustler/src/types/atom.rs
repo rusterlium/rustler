@@ -123,6 +123,20 @@ pub fn is_truthy(term: Term) -> bool {
     !((term.as_c_arg() == false_().as_c_arg()) || (term.as_c_arg() == nil().as_c_arg()))
 }
 
+pub(in crate::types) fn decode_bool(term: Term) -> NifResult<bool> {
+    let as_c_arg = term.as_c_arg();
+
+    if as_c_arg == true_().as_c_arg() {
+        return Ok(true);
+    }
+
+    if as_c_arg == false_().as_c_arg() {
+        return Ok(false);
+    }
+
+    Err(Error::BadArg)
+}
+
 // This is safe because atoms are never removed/changed once they are created.
 unsafe impl Sync for Atom {}
 unsafe impl Send for Atom {}

@@ -90,7 +90,17 @@ defmodule RustlerTest.CodegenTest do
   test "untagged enum transcoder" do
     assert 123 == RustlerTest.untagged_enum_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_echo("Hello")
+    assert RustlerTest.untagged_enum_echo(true)
     assert %AddStruct{lhs: 45, rhs: 123} = RustlerTest.untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
+    assert true == RustlerTest.untagged_enum_echo(true)
     assert :invalid_variant == RustlerTest.untagged_enum_echo([1,2,3,4])
+  end
+
+  test "untagged enum with truthy" do
+    assert %AddStruct{lhs: 45, rhs: 123} =
+      RustlerTest.untagged_enum_with_truthy(%AddStruct{lhs: 45, rhs: 123})
+    assert true == RustlerTest.untagged_enum_with_truthy([1,2,3,4])
+    assert false == RustlerTest.untagged_enum_with_truthy(false)
+    assert false == RustlerTest.untagged_enum_with_truthy(nil)
   end
 end

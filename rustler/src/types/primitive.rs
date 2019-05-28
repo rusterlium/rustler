@@ -57,6 +57,6 @@ impl Encoder for bool {
 }
 impl<'a> Decoder<'a> for bool {
     fn decode(term: Term<'a>) -> NifResult<bool> {
-        Ok(atom::is_truthy(term))
+        atom::decode_bool(term)
     }
 }
