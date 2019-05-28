@@ -5,6 +5,7 @@ macro_rules! impl_number_transcoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident, $decode_fun:ident) => {
         impl Encoder for $dec_type {
             fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
+                #[allow(clippy::cast_lossless)]
                 unsafe {
                     Term::new(
                         env,

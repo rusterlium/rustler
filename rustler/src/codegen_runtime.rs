@@ -15,13 +15,13 @@ pub use crate::wrapper::{
 pub use erl_nif_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
 
 pub unsafe trait NifReturnable {
-    unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned;
+    unsafe fn as_returned(self, env: Env) -> NifReturned;
 }
 unsafe impl<T> NifReturnable for T
 where
     T: crate::Encoder,
 {
-    unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
+    unsafe fn as_returned(self, env: Env) -> NifReturned {
         NifReturned::Term(self.encode(env).as_c_arg())
     }
 }
@@ -29,7 +29,7 @@ unsafe impl<T> NifReturnable for Result<T, crate::error::Error>
 where
     T: crate::Encoder,
 {
-    unsafe fn as_returned<'a>(self, env: Env<'a>) -> NifReturned {
+    unsafe fn as_returned(self, env: Env) -> NifReturned {
         match self {
             Ok(inner) => NifReturned::Term(inner.encode(env).as_c_arg()),
             Err(inner) => inner.as_returned(env),
@@ -49,7 +49,7 @@ pub enum NifReturned {
     },
 }
 impl NifReturned {
-    pub unsafe fn apply<'a>(self, env: Env<'a>) -> NIF_TERM {
+    pub unsafe fn apply(self, env: Env) -> NIF_TERM {
         match self {
             NifReturned::Term(inner) => inner,
             NifReturned::BadArg => crate::wrapper::exception::raise_badarg(env.as_c_arg()),
@@ -81,8 +81,7 @@ pub unsafe fn handle_nif_init_call(
     r_env: NIF_ENV,
     load_info: NIF_TERM,
 ) -> c_int {
-    let env_lifetime = ();
-    let env = Env::new(&env_lifetime, r_env);
+    let env = Env::new(&(), r_env);
     let term = Term::new(env, load_info);
 
     if let Some(inner) = function {

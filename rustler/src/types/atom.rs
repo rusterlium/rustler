@@ -10,23 +10,24 @@ pub struct Atom {
 }
 
 impl Atom {
-    pub fn as_c_arg(&self) -> NIF_TERM {
+    pub fn as_c_arg(self) -> NIF_TERM {
         self.term
     }
 
-    pub fn to_term<'a>(self, env: Env<'a>) -> Term<'a> {
+    pub fn to_term(self, env: Env) -> Term {
         // Safe because atoms are not associated with any environment.
         unsafe { Term::new(env, self.term) }
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
-        Atom { term: term }
+        Atom { term }
     }
 
     pub fn from_term(term: Term) -> NifResult<Self> {
-        match term.is_atom() {
-            true => Ok(unsafe { Atom::from_nif_term(term.as_c_arg()) }),
-            false => Err(Error::BadArg),
+        if term.is_atom() {
+            Ok(unsafe { Atom::from_nif_term(term.as_c_arg()) })
+        } else {
+            Err(Error::BadArg)
         }
     }
 
@@ -52,7 +53,7 @@ impl Atom {
         unsafe {
             match atom::make_existing_atom(env.as_c_arg(), bytes) {
                 Some(term) => Ok(Some(Atom::from_nif_term(term))),
-                None => return Ok(None),
+                None => Ok(None),
             }
         }
     }

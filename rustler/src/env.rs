@@ -42,12 +42,12 @@ impl<'a> Env<'a> {
     /// Don't create multiple `Env`s with the same lifetime.
     pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
         Env {
-            env: env,
+            env,
             id: PhantomData,
         }
     }
 
-    pub fn as_c_arg(&self) -> NIF_ENV {
+    pub fn as_c_arg(self) -> NIF_ENV {
         self.env
     }
 
@@ -153,8 +153,7 @@ impl OwnedEnv {
     where
         F: for<'a> FnOnce(Env<'a>) -> R,
     {
-        let env_lifetime = ();
-        let env = unsafe { Env::new(&env_lifetime, *self.env) };
+        let env = unsafe { Env::new(&(), *self.env) };
         closure(env)
     }
 
@@ -275,5 +274,11 @@ impl SavedTerm {
             },
             _ => panic!("can't load SavedTerm into a different environment"),
         }
+    }
+}
+
+impl Default for OwnedEnv {
+    fn default() -> Self {
+        Self::new()
     }
 }

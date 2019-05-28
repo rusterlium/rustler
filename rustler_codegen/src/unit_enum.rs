@@ -63,7 +63,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         #encoder
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_decoder(
@@ -107,7 +107,7 @@ pub fn gen_decoder(
         }
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_encoder(
@@ -147,5 +147,5 @@ pub fn gen_encoder(
         }
     };
 
-    gen.into()
+    gen
 }

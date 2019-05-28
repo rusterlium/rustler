@@ -2,7 +2,7 @@ use crate::wrapper::NIF_TERM;
 use std::fmt;
 use std::os::raw::c_char;
 
-pub fn fmt<'a>(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+pub fn fmt(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     const SIZE: usize = 1024;
     let mut bytes: Vec<u8> = Vec::with_capacity(SIZE);
 

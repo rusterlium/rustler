@@ -23,7 +23,7 @@ impl<'a> Decoder<'a> for Pid {
 
 impl Encoder for Pid {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), &self.c)) }
+        unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), self.c)) }
     }
 }
 
