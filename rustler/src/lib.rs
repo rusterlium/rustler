@@ -64,4 +64,5 @@ pub use crate::r#return::Return;
 
 pub type NifResult<T> = Result<T, Error>;
 
+#[cfg(feature = "derive")]
 pub use rustler_codegen::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
