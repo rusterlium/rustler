@@ -18,7 +18,6 @@ mod record;
 mod tuple;
 mod unit_enum;
 mod untagged_enum;
-mod util;
 
 #[derive(Debug)]
 enum RustlerAttr {
