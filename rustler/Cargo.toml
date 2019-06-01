@@ -8,9 +8,12 @@ license = "MIT/Apache-2.0"
 edition = "2018"
 
 [features]
+default = ["derive"]
+derive = ["rustler_codegen"]
 alternative_nif_init_name = []
 
 [dependencies]
+rustler_codegen = { path = "../rustler_codegen", optional = true }
 erl_nif_sys = { path = "../erl_nif_sys" }
 lazy_static = "1.2"
 

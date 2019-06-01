@@ -2,6 +2,7 @@
 name = "<%= library_name %>"
 version = "0.1.0"
 authors = []
+edition = "2018"
 
 [lib]
 name = "<%= library_name %>"
@@ -10,5 +11,4 @@ crate-type = ["dylib"]
 
 [dependencies]
 rustler = "<%= rustler_version %>"
-rustler_codegen = "<%= rustler_version %>"
 lazy_static = "1.0"

@@ -1,8 +1,4 @@
-#[macro_use] extern crate rustler;
-#[macro_use] extern crate rustler_codegen;
-#[macro_use] extern crate lazy_static;
-
-use rustler::{Env, Term, NifResult, Encoder};
+use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
     rustler_atoms! {
@@ -13,13 +9,15 @@ mod atoms {
     }
 }
 
-rustler_export_nifs! {
+rustler::rustler_export_nifs! {
     "<%= native_module %>",
-    [("add", 2, add)],
+    [
+        ("add", 2, add)
+    ],
     None
 }
 
-fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     let num1: i64 = args[0].decode()?;
     let num2: i64 = args[1].decode()?;
 

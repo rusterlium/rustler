@@ -38,7 +38,9 @@ pub mod types;
 mod term;
 
 pub use crate::term::Term;
-pub use crate::types::{Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, Pid};
+pub use crate::types::{
+    Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, Pid,
+};
 pub mod resource;
 pub use crate::resource::ResourceArc;
 
@@ -61,3 +63,6 @@ pub mod r#return;
 pub use crate::r#return::Return;
 
 pub type NifResult<T> = Result<T, Error>;
+
+#[cfg(feature = "derive")]
+pub use rustler_codegen::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
