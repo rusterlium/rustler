@@ -26,6 +26,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .map(|field| {
             let ident = field.ident.as_ref().unwrap();
             let ident_str = ident.to_string();
+
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
             quote! {
@@ -82,8 +83,12 @@ pub fn gen_decoder(
             let ident = field.ident.as_ref().unwrap();
             let ident_str = ident.to_string();
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            let error_message = format!("Could not decode field :{} on %{}{{}}", ident.to_string(), struct_name.to_string());
             quote! {
-                #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
+                #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
+                    Ok(stuff) => stuff
+                }
             }
         })
         .collect();
@@ -96,6 +101,7 @@ pub fn gen_decoder(
                 #atom_defs
 
                 let env = term.get_env();
+
                 let module: ::rustler::types::atom::Atom = term.map_get(atom_struct().to_term(env))?.decode()?;
                 if module != atom_module() {
                     return Err(::rustler::Error::Atom("invalid_struct"));

@@ -4,7 +4,8 @@
 //! # Elixir struct transcoders
 //! The compiler plugin has functionality for automatically generating a transcoder that can decode
 //! and encode a Rust struct to an Elixir struct. To do so, simply annotate a struct with
-//! `#[ExStruct(module = "Elixir.TheStructModule")]`.
+//! `#[derive(NifStruct)]
+//! `#[module = "Elixir.TheStructModule"]`.
 
 use super::atom::{self, Atom};
 use super::map::map_new;

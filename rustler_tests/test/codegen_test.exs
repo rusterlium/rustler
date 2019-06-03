@@ -20,10 +20,21 @@ defmodule RustlerTest.CodegenTest do
     assert value == RustlerTest.map_echo(value)
   end
 
-  test "struct transcoder" do
-    value = %AddStruct{lhs: 45, rhs: 123}
-    assert value == RustlerTest.struct_echo(value)
-    assert :invalid_struct == RustlerTest.struct_echo(DateTime.utc_now())
+
+  describe "struct" do
+    test "transcoder" do
+      value = %AddStruct{lhs: 45, rhs: 123}
+      assert value == RustlerTest.struct_echo(value)
+      assert :invalid_struct == RustlerTest.struct_echo(DateTime.utc_now())
+    end
+
+    test "struct with invalid types" do
+       value = %AddStruct{lhs: "lhs", rhs: 123}
+
+      assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"", fn ->
+         RustlerTest.struct_echo(value)
+      end
+    end
   end
 
   test "record transcoder" do
