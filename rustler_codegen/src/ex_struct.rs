@@ -87,7 +87,7 @@ pub fn gen_decoder(
             quote! {
                 #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
-                    Ok(stuff) => stuff
+                    Ok(value) => value
                 }
             }
         })
