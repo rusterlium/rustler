@@ -15,3 +15,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `erlang_nif-sys` has been renamed to `erl_nif_sys` and vendored into the rustler repo.
 - Replaced the hand-rolled TOML parser in `rustler_mix` with the `toml-elixir` package.
 - Improve error messages for derived encoders/decoders.
+- Rust `bool` now corresponds only to booleans (`false`, `true`) in Elixir. Previously, `nil` and `false` were both decodable to
+  `bool`. To use the previous behaviour, a `Truthy` newtype was introduced.
