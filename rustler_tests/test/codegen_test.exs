@@ -10,16 +10,35 @@ end
 defmodule RustlerTest.CodegenTest do
   use ExUnit.Case, async: true
 
-  test "tuple transcoder" do
-    value = {1, 2}
-    assert value == RustlerTest.tuple_echo(value)
+  describe "tuple" do
+    test "transcoder" do
+      value = {1, 2}
+      assert value == RustlerTest.tuple_echo(value)
+    end
+
+    test "with invalid tuple" do
+      value = {"invalid", 2}
+
+      assert_raise ErlangError, "Erlang error: \"Could not decode index 0 on tuple\"", fn ->
+        RustlerTest.tuple_echo(value)
+      end
+    end
   end
 
-  test "map transcoder" do
-    value = %{lhs: 1, rhs: 2}
-    assert value == RustlerTest.map_echo(value)
-  end
+  describe "map" do
+    test "transcoder" do
+      value = %{lhs: 1, rhs: 2}
+      assert value == RustlerTest.map_echo(value)
+    end
 
+    test "with invalid map" do
+      value = %{lhs: "invalid", rhs: 2}
+
+      assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
+        assert value == RustlerTest.map_echo(value)
+      end
+    end
+  end
 
   describe "struct" do
     test "transcoder" do
@@ -28,7 +47,7 @@ defmodule RustlerTest.CodegenTest do
       assert :invalid_struct == RustlerTest.struct_echo(DateTime.utc_now())
     end
 
-    test "struct with invalid types" do
+    test "with invalid struct" do
        value = %AddStruct{lhs: "lhs", rhs: 123}
 
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"", fn ->
@@ -37,13 +56,29 @@ defmodule RustlerTest.CodegenTest do
     end
   end
 
-  test "record transcoder" do
-    import AddRecord
-    value = record()
-    assert value == RustlerTest.record_echo(value)
-    assert :invalid_record == RustlerTest.record_echo({})
-    assert :invalid_record == RustlerTest.record_echo({:wrong_tag, 1, 2})
-    assert_raise ArgumentError, fn -> RustlerTest.record_echo(:somethingelse) end
+  describe "record" do
+    test "transcoder" do
+      require AddRecord
+      value = AddRecord.record()
+      assert value == RustlerTest.record_echo(value)
+      assert :invalid_record == RustlerTest.record_echo({})
+      assert :invalid_record == RustlerTest.record_echo({:wrong_tag, 1, 2})
+    end
+
+    test "with invalid Record structure" do
+      assert_raise ErlangError, "Erlang error: \"Invalid Record structure for AddRecord\"", fn ->
+        RustlerTest.record_echo(:somethingelse)
+      end
+    end
+
+    test "with invalid Record" do
+      require AddRecord
+      value = AddRecord.record(lhs: 5, rhs: "invalid")
+
+      assert_raise ErlangError, "Erlang error: \"Could not decode field :rhs on Record AddRecord\"", fn ->
+        RustlerTest.record_echo(value)
+      end
+    end
   end
 
   test "unit enum transcoder" do

@@ -50,8 +50,14 @@ pub fn gen_decoder(
     let field_defs: Vec<TokenStream> = fields
         .iter()
         .enumerate()
-        .map(|(idx, field)| {
-            let decoder = quote! { ::rustler::Decoder::decode(terms[#idx])? };
+        .map(|(index, field)| {
+            let error_message = format!("Could not decode index {} on tuple", index);
+            let decoder = quote! {
+                match ::rustler::Decoder::decode(terms[#index]) {
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
+                    Ok(value) => value
+                }
+            };
 
             if is_tuple {
                 unimplemented!();

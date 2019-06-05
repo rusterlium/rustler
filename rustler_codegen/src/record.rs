@@ -59,10 +59,20 @@ pub fn gen_decoder(
     let field_defs: Vec<TokenStream> = fields
         .iter()
         .enumerate()
-        .map(|(idx, field)| {
-            let decoder = quote! { ::rustler::Decoder::decode(terms[#idx + 1])? };
-
+        .map(|(index, field)| {
             let ident = field.ident.as_ref().unwrap();
+            let error_message = format!(
+                "Could not decode field :{} on Record {}",
+                ident.to_string(),
+                struct_name.to_string()
+            );
+            let decoder = quote! {
+                match ::rustler::Decoder::decode(terms[#index + 1]) {
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
+                    Ok(value) => value
+                }
+            };
+
             quote! { #ident: #decoder }
         })
         .collect();
@@ -75,19 +85,25 @@ pub fn gen_decoder(
     };
 
     let field_num = field_defs.len();
+    let struct_name_str = struct_name.to_string();
 
     // The implementation itself
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_typ {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                let terms = ::rustler::types::tuple::get_tuple(term)?;
+                let terms = match ::rustler::types::tuple::get_tuple(term) {
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(format!("Invalid Record structure for {}", #struct_name_str)))),
+                    Ok(value) => value,
+                };
+
                 if terms.len() != #field_num + 1 {
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
                 #atom_defs
 
-                let tag : ::rustler::types::atom::Atom  = terms[0].decode()?;
+                let tag : ::rustler::types::atom::Atom = terms[0].decode()?;
+
                 if tag != atom_tag() {
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }

@@ -72,9 +72,13 @@ pub fn gen_decoder(
             let ident_str = ident.to_string();
 
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-
+            let error_message = format!("Could not decode field :{} on %{{}}", ident.to_string());
             quote! {
-                #ident: ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?)?
+                #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
+                    Ok(value) => value
+                }
+
             }
         })
         .collect();
