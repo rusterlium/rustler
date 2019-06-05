@@ -14,17 +14,20 @@ fn test1() {
     let out_dir = env::var("OUT_DIR").unwrap();
 
     // use environment escript and cc if available
-    let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
-    let cc = env::var("CC").unwrap_or("cc".to_string());
+    let escript = env::var("ESCRIPT").unwrap_or_else(|_| "escript".to_string());
+    let cc = env::var("CC").unwrap_or_else(|_| "cc".to_string());
 
     // get erts include path
     let erts_include = Command::new(escript)
         .arg("get_erts_path.erl")
         .output()
         .map_err(|_| "Can't run escript")
-        .map(|out| match out.status.success() {
-            true => out.stdout,
-            false => panic!("Can't run get_erts_path.erl"),
+        .map(|out| {
+            if out.status.success() {
+                out.stdout
+            } else {
+                panic!("Can't run get_erts_path.erl")
+            }
         })
         .map(String::from_utf8)
         .unwrap()
@@ -34,7 +37,7 @@ fn test1() {
 
     // Compile C program
     let exe = Path::new(&out_dir).join("struct_size");
-    match Command::new(cc)
+    if !Command::new(cc)
         .arg("-o")
         .arg(&exe)
         .arg("-I")
@@ -45,8 +48,7 @@ fn test1() {
         .unwrap()
         .success()
     {
-        false => panic!("Can't compile struct_size.c"),
-        _ => (),
+        panic!("Can't compile struct_size.c")
     }
 
     // Run C program that lists C NIF runtime information.
@@ -62,7 +64,7 @@ fn test1() {
     let sizemap = HashMap::<&str, usize>::from_iter(
         output
             .lines()
-            .map(|ln| ln.split(" "))
+            .map(|ln| ln.split(' '))
             .map(|mut it| (it.next().unwrap(), it.next().unwrap().parse().unwrap())),
     );
 

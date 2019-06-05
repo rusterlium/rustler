@@ -14,5 +14,5 @@ pub unsafe fn get_local_pid(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifPid> {
 // }
 
 pub unsafe fn make_pid(env: NIF_ENV, pid: ErlNifPid) -> NIF_TERM {
-    erl_nif_sys::enif_make_pid(env, &pid)
+    erl_nif_sys::enif_make_pid(env, pid)
 }
