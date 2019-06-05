@@ -2,10 +2,6 @@ language: elixir
 
 matrix:
   include:
-    - otp_release: 19.3
-      elixir: 1.4
-    - otp_release: 20.3
-      elixir: 1.5
     - otp_release: 21.0
       elixir: 1.6
     - otp_release: 21.3
@@ -32,4 +28,4 @@ script:
   - source $HOME/.cargo/env
   - cargo test
   - cd rustler_mix && mix do deps.get, test && cd -
-  - cd rustler_tests && mix test && cd -
+  - cd rustler_tests && mix do deps.get, test && cd -

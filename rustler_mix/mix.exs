@@ -4,7 +4,7 @@ defmodule Rustler.Mixfile do
   def project do
     [app: :rustler,
      version: "0.20.0", # rustler_mix version
-     elixir: "~> 1.2",
+     elixir: "~> 1.6",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      name: "Rustler Mix",
@@ -24,7 +24,10 @@ defmodule Rustler.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.19", only: :dev}]
+    [
+      {:toml, "~> 0.5.2"},
+      {:ex_doc, "~> 0.19", only: :dev}
+    ]
   end
 
   defp description do
@@ -34,8 +37,7 @@ defmodule Rustler.Mixfile do
   end
 
   defp package do
-    [files: ["lib", "src", "priv", "mix.exs", "README.md"],
-    exclude_patterns: ["src/toml_lexer.erl", "src/toml_parser.erl"],
+    [files: ["lib", "priv", "mix.exs", "README.md"],
      maintainers: ["hansihe"],
      licenses: ["MIT", "Apache-2.0"],
      links: %{"GitHub" => "https://github.com/rusterlium/rustler"}]

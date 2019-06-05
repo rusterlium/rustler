@@ -3,6 +3,3 @@
 /deps
 erl_crash.dump
 *.ez
-
-/src/toml_parser.erl
-/src/toml_lexer.erl
