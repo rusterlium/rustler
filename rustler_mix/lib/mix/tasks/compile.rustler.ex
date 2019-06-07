@@ -184,6 +184,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     case File.read("#{crate}/Cargo.toml") do
       {:error, :enoent} ->
         throw_error({:cargo_toml_not_found, crate})
+
       {:ok, text} ->
         Toml.decode!(text)
     end
