@@ -49,7 +49,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         #encoder
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_decoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool) -> TokenStream {
@@ -83,7 +83,7 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool)
         }
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_encoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool) -> TokenStream {
@@ -114,5 +114,5 @@ pub fn gen_encoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool)
         }
     };
 
-    gen.into()
+    gen
 }

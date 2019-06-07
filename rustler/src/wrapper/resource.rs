@@ -7,7 +7,6 @@ pub use erl_nif_sys::{
     enif_make_resource as make_resource,
 };
 
-#[allow(dead_code)]
 pub use erl_nif_sys::enif_release_resource as release_resource;
 
 use std::mem;

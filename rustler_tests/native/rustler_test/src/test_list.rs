@@ -7,7 +7,7 @@ pub fn sum_list<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let res: Result<Vec<i64>, Error> = iter.map(|x| x.decode::<i64>()).collect();
 
     match res {
-        Ok(result) => Ok(result.iter().fold(0, |acc, &x| acc + x).encode(env)),
+        Ok(result) => Ok(result.iter().sum::<i64>().encode(env)),
         Err(err) => Err(err),
     }
 }

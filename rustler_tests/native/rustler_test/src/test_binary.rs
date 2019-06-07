@@ -20,7 +20,7 @@ pub fn parse_integer<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<i64> {
 
 pub fn binary_new<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Binary<'a>> {
     let mut binary = OwnedBinary::new(4).unwrap();
-    binary.as_mut_slice().write(&[1, 2, 3, 4]).unwrap();
+    binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     Ok(binary.release(env))
 }
 
@@ -35,7 +35,7 @@ pub fn realloc_shrink<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Binary<
     let mut binary = OwnedBinary::new(8).unwrap();
     binary
         .as_mut_slice()
-        .write(&[1, 2, 3, 4, 5, 6, 7, 8])
+        .write_all(&[1, 2, 3, 4, 5, 6, 7, 8])
         .unwrap();
     if !binary.realloc(4) {
         panic!("Realloc failed");
@@ -45,7 +45,7 @@ pub fn realloc_shrink<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Binary<
 
 pub fn realloc_grow<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Binary<'a>> {
     let mut binary = OwnedBinary::new(4).unwrap();
-    binary.as_mut_slice().write(&[1, 2, 3, 4]).unwrap();
+    binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     binary.realloc_or_copy(5);
     binary.as_mut_slice()[4] = 5;
     Ok(binary.release(env))

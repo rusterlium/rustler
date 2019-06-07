@@ -28,10 +28,7 @@ impl<'a> Term<'a> {
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
     /// unless `inner` is an atom term.
     pub unsafe fn new(env: Env<'a>, inner: NIF_TERM) -> Self {
-        Term {
-            term: inner,
-            env: env,
-        }
+        Term { term: inner, env }
     }
     /// This extracts the raw term pointer. It is usually used in order to obtain a type that can
     /// be passed to calls into the erlang vm.

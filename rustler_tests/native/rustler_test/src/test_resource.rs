@@ -14,7 +14,7 @@ struct ImmutableResource {
     b: u32,
 }
 
-pub fn on_load<'a>(env: Env<'a>) -> bool {
+pub fn on_load(env: Env) -> bool {
     rustler::resource_struct_init!(TestResource, env);
     rustler::resource_struct_init!(ImmutableResource, env);
     true

@@ -15,7 +15,7 @@ pub struct OwnedBinary {
 impl<'a> OwnedBinary {
     pub unsafe fn from_raw(inner: ErlNifBinary) -> OwnedBinary {
         OwnedBinary {
-            inner: inner,
+            inner,
             release: true,
         }
     }
@@ -84,7 +84,7 @@ impl<'a> OwnedBinary {
 
     /// Releases control of the binary to the VM. After this point
     /// the binary will be immutable.
-    pub fn release<'b>(self, env: Env<'b>) -> Binary<'b> {
+    pub fn release(self, env: Env) -> Binary {
         Binary::from_owned(self, env)
     }
 }
@@ -141,8 +141,8 @@ impl<'a> Binary<'a> {
             )
         };
         Binary {
-            inner: bin.inner.clone(),
-            term: term,
+            inner: bin.inner,
+            term,
         }
     }
 
@@ -164,7 +164,7 @@ impl<'a> Binary<'a> {
         }
         Ok(Binary {
             inner: binary,
-            term: term,
+            term,
         })
     }
 

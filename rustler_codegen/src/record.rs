@@ -46,7 +46,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         #encoder
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_decoder(
@@ -101,7 +101,7 @@ pub fn gen_decoder(
         }
     };
 
-    gen.into()
+    gen
 }
 
 pub fn gen_encoder(
@@ -148,7 +148,7 @@ pub fn gen_encoder(
         }
     };
 
-    gen.into()
+    gen
 }
 
 fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
@@ -159,8 +159,8 @@ fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
             _ => None,
         })
         .or_else(|| {
-            let ref attr_value =
-                ast.attrs
+            let attr_value =
+                &ast.attrs
                     .iter()
                     .map(|attr| attr.parse_meta())
                     .find(|meta| match meta {

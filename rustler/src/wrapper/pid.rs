@@ -13,6 +13,6 @@ pub unsafe fn get_local_pid(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifPid> {
 //     erl_nif_sys::enif_is_process_alive(env, pid) != 0
 // }
 
-pub unsafe fn make_pid(env: NIF_ENV, pid: &ErlNifPid) -> NIF_TERM {
+pub unsafe fn make_pid(env: NIF_ENV, pid: ErlNifPid) -> NIF_TERM {
     erl_nif_sys::enif_make_pid(env, pid)
 }

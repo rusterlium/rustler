@@ -33,7 +33,7 @@ impl Encoder for str {
             None => panic!("binary term allocation fail"),
         };
         bin.as_mut_slice()
-            .write(self.as_bytes())
+            .write_all(self.as_bytes())
             .expect("memory copy of string failed");
         bin.release(env).to_term(env)
     }

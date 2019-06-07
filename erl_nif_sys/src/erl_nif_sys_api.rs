@@ -146,6 +146,7 @@ pub struct ErlNifResourceTypeInit {
 
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
 pub type ErlNifSelectFlags = c_int;
+#[allow(clippy::identity_op)]
 pub const ERL_NIF_SELECT_READ: ErlNifSelectFlags = (1 << 0);
 pub const ERL_NIF_SELECT_WRITE: ErlNifSelectFlags = (1 << 1);
 pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = (1 << 2);
@@ -186,7 +187,7 @@ pub struct ErlNifPid {
 }
 
 /// See [enif_make_pid](http://erlang.org/doc/man/erl_nif.html#enif_make_pid) in the Erlang docs
-pub unsafe fn enif_make_pid(_env: *mut ErlNifEnv, pid: &ErlNifPid) -> ERL_NIF_TERM {
+pub unsafe fn enif_make_pid(_env: *mut ErlNifEnv, pid: ErlNifPid) -> ERL_NIF_TERM {
     pid.pid
 }
 
@@ -243,7 +244,7 @@ pub enum ErlNifMapIteratorEntry {
 pub type ErlNifTime = i64;
 
 /// Error return value for `enif_monotonic_time()`, `enif_time_offset()`, and `enif_convert_time_unit()`.
-pub const ERL_NIF_TIME_ERROR: i64 = -9223372036854775808;
+pub const ERL_NIF_TIME_ERROR: i64 = -9_223_372_036_854_775_808;
 //const ERL_NIF_TIME_ERROR:i64 = i64::min_value();  "error: const fn's not yet stable"
 
 /// See [ErlNifTimeUnit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTimeUnit) in the Erlang docs.
@@ -259,7 +260,9 @@ pub enum ErlNifTimeUnit {
 
 /// See [ErlNifUniqueInteger](http://erlang.org/doc/man/erl_nif.html#ErlNifUniqueInteger) in the Erlang docs.
 pub type ErlNifUniqueInteger = c_int;
+#[allow(clippy::identity_op)]
 pub const ERL_NIF_UNIQUE_POSITIVE: ErlNifUniqueInteger = (1 << 0);
+#[allow(clippy::identity_op)]
 pub const ERL_NIF_UNIQUE_MONOTONIC: ErlNifUniqueInteger = (1 << 1);
 // ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L203
 // FIXME: Should actually be C enum, but repr(C) enums in Rust can't be used as bitfields.
@@ -275,7 +278,7 @@ pub struct ErlNifPort {
 
 /// See [ErlNifBinaryToTerm](http://erlang.org/doc/man/erl_nif.html#ErlNifBinaryToTerm) in the Erlang docs.
 pub type ErlNifBinaryToTerm = c_int;
-pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x20000000;
+pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x20_000_000;
 
 pub const ERL_NIF_THR_UNDEFINED: c_int = 0;
 pub const ERL_NIF_THR_NORMAL_SCHEDULER: c_int = 1;
@@ -312,9 +315,8 @@ pub enum ErlNifTermType {
      * unhandled values in a switch even if all the above values have been
      * handled. We can add new entries at any time so the user must always
      * have a default case. */
-    ERL_NIF_TERM_TYPE__MISSING_DEFAULT_CASE__READ_THE_MANUAL = -1
+    ERL_NIF_TERM_TYPE__MISSING_DEFAULT_CASE__READ_THE_MANUAL = -1,
 }
-
 
 include!(concat!(env!("OUT_DIR"), "/nif_api.snippet"));
 // example of included content:

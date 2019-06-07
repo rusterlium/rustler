@@ -53,34 +53,25 @@ impl Context {
     }
 
     fn encode(&self) -> bool {
-        self.attrs
-            .iter()
-            .find(|attr| match attr {
-                RustlerAttr::Encode => true,
-                _ => false,
-            })
-            .is_some()
+        self.attrs.iter().any(|attr| match attr {
+            RustlerAttr::Encode => true,
+            _ => false,
+        })
     }
 
     fn decode(&self) -> bool {
-        self.attrs
-            .iter()
-            .find(|attr| match attr {
-                RustlerAttr::Decode => true,
-                _ => false,
-            })
-            .is_some()
+        self.attrs.iter().any(|attr| match attr {
+            RustlerAttr::Decode => true,
+            _ => false,
+        })
     }
 
     fn encode_decode_attr_set(attrs: &[RustlerAttr]) -> bool {
-        attrs
-            .iter()
-            .find(|attr| match attr {
-                RustlerAttr::Encode => true,
-                RustlerAttr::Decode => true,
-                _ => false,
-            })
-            .is_some()
+        attrs.iter().any(|attr| match attr {
+            RustlerAttr::Encode => true,
+            RustlerAttr::Decode => true,
+            _ => false,
+        })
     }
 
     fn get_rustler_attrs(attr: &syn::Attribute) -> Option<Vec<RustlerAttr>> {

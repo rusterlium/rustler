@@ -5,7 +5,7 @@ use crate::wrapper::map;
 use crate::{Decoder, Env, Error, NifResult, Term};
 use std::ops::RangeInclusive;
 
-pub fn map_new<'a>(env: Env<'a>) -> Term<'a> {
+pub fn map_new(env: Env) -> Term {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
 }
 
@@ -180,12 +180,8 @@ pub struct MapIterator<'a> {
 impl<'a> MapIterator<'a> {
     pub fn new(map: Term<'a>) -> Option<MapIterator<'a>> {
         let env = map.get_env();
-        unsafe { map::map_iterator_create(env.as_c_arg(), map.as_c_arg()) }.map(|iter| {
-            MapIterator {
-                env: env,
-                iter: iter,
-            }
-        })
+        unsafe { map::map_iterator_create(env.as_c_arg(), map.as_c_arg()) }
+            .map(|iter| MapIterator { env, iter })
     }
 }
 

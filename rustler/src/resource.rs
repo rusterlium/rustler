@@ -104,7 +104,7 @@ fn get_alloc_size_struct<T>() -> usize {
 /// Unsafe: `ptr` must point to a large enough allocation and not be null.
 unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
     let offset = mem::align_of::<T>() - ((ptr as usize) % mem::align_of::<T>());
-    ptr.offset(offset as isize)
+    ptr.add(offset)
 }
 
 /// A reference to a resource of type `T`.
