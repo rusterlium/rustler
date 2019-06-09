@@ -11,7 +11,7 @@ pub enum Error {
     /// Encodes the string into an atom and returns it from the NIF.
     Atom(&'static str),
     RaiseAtom(&'static str),
-    RaiseTerm(Box<Encoder>),
+    RaiseTerm(Box<dyn Encoder>),
 }
 
 unsafe impl NifReturnable for crate::error::Error {

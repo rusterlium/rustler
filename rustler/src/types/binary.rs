@@ -180,9 +180,9 @@ impl<'a> Binary<'a> {
         {
             return Err(Error::BadArg);
         }
-        return Ok(Binary {
+        Ok(Binary {
             inner: binary,
-            term: term,
+            term,
         })
     }
 

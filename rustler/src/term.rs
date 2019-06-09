@@ -88,7 +88,7 @@ impl<'a> Term<'a> {
         if self.is_binary() {
             return Binary::from_term(self);
         }
-        return Binary::from_iolist(self)
+        Binary::from_iolist(self)
     }
 
     pub fn to_binary(self) -> OwnedBinary {
