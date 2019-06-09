@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `rustler_codegen` is now reexported by the `rustler` crate. Depending on the `rustler_codegen` crate is deprecated.
 - `erlang_nif-sys` has been renamed to `erl_nif_sys` and vendored into the rustler repo.
 - Replaced the hand-rolled TOML parser in `rustler_mix` with the `toml-elixir` package.
+- Improve error messages for derived encoders/decoders.
