@@ -35,17 +35,19 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      @on_load :__init__
+      {resource_path, lib_path, load_data} = Rustler.compile_config(__MODULE__, opts)
 
-      @rustler_opts opts
+      @lib_path lib_path
+      @load_data load_data
+
+      @on_load :__init__
+      @external_resource resource_path
 
       def __init__ do
         # Remove any old modules that may be loaded so we don't get
         # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
-
-        {so_path, load_data} = Rustler.compile_config(__MODULE__, @rustler_opts)
-        :erlang.load_nif(so_path, load_data)
+        :erlang.load_nif(@lib_path, @load_data)
       end
     end
   end
@@ -77,10 +79,17 @@ defmodule Rustler do
     crate = to_string(opts[:crate] || config[:crate] || otp_app)
     crate = if String.starts_with?(crate, "lib"), do: crate, else: "lib" <> crate
 
-    priv_dir = otp_app |> :code.priv_dir() |> to_string()
+    lib_path = Application.app_dir(otp_app, "priv/native/#{crate}") |> to_charlist()
     load_data = opts[:load_data] || config[:load_data] || 0
-    so_path = String.to_charlist("#{priv_dir}/native/#{crate}")
+    resource_path = Path.join(lib_path, ressource_extension())
 
-    {so_path, load_data}
+    {resource_path, lib_path, load_data}
+  end
+
+  defp ressource_extension do
+    case :os.type() do
+      {:win32, _} -> ".dll"
+      {:unix, _} -> ".so"
+    end
   end
 end
