@@ -81,12 +81,12 @@ defmodule Rustler do
 
     lib_path = Application.app_dir(otp_app, "priv/native/#{crate}") |> to_charlist()
     load_data = opts[:load_data] || config[:load_data] || 0
-    resource_path = Path.join(lib_path, ressource_extension())
+    resource_path = Path.join(lib_path, resource_extension())
 
     {resource_path, lib_path, load_data}
   end
 
-  defp ressource_extension do
+  defp resource_extension do
     case :os.type() do
       {:win32, _} -> ".dll"
       {:unix, _} -> ".so"
