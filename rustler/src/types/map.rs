@@ -33,12 +33,16 @@ impl<'a> Term<'a> {
         keys: &[Term<'a>],
         values: &[Term<'a>],
     ) -> NifResult<Term<'a>> {
-        let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
-        let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
+        if keys.len() == values.len() {
+            let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
+            let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
 
-        unsafe {
-            map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
-                .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
+            unsafe {
+                map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                    .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
+            }
+        } else {
+            Err(Error::BadArg)
         }
     }
 
