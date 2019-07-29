@@ -17,4 +17,10 @@ defmodule RustlerTest.MapTest do
     expected_map = Enum.zip(keys, values) |> Enum.into(%{})
     assert expected_map == RustlerTest.map_from_arrays(keys, values)
   end
+
+  test "map from arrays with non-matching length raises ArgumentError" do
+    keys = Enum.into(1..10, [])
+    values = []
+    assert_raise(ArgumentError, fn -> RustlerTest.map_from_arrays(keys, values) end)
+  end
 end
