@@ -29,7 +29,7 @@ The easiest way of getting started is the [rustler elixir library](https://hex.p
 
 NOTE: If you have previously used Rustler, you need to run `mix archive.uninstall rustler_installer.ez` to remove it before generating the NIF.
 
-#### How it looks like
+#### What it looks like
 
 This is the code for a minimal NIF that adds two numbers and returns the result.
 
