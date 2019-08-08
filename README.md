@@ -26,6 +26,7 @@ The easiest way of getting started is the [rustler elixir library](https://hex.p
 
 - Add the [rustler elixir library](https://hex.pm/packages/rustler) as a dependency of your project.
 - Run `mix rustler.new` to generate a new NIF in your project. Follow the instructions.
+- If you're already using [`serde`](https://serde.rs), consider using [`serde_rustler`](https://github.com/sunny-g/serde_rustler/tree/master/serde_rustler) to easily encode and decode your data types into and from Elixir terms.
 
 NOTE: If you have previously used Rustler, you need to run `mix archive.uninstall rustler_installer.ez` to remove it before generating the NIF.
 
