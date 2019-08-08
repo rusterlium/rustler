@@ -359,13 +359,9 @@ api_list(Opts) -> [
         true -> [
             {"ErlNifTermType", "enif_term_type", "env: *mut ErlNifEnv, term: *const ERL_NIF_TERM"},
 
-            {"c_int", "enif_compare_pids", "pid1: *const ErlNifPid, pid2: *const ErlNifPid"},
             {"c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid"},
             {"", "enif_set_pid_undefined", "pid: *mut ErlNifPid"},
-            {"ERL_NIF_TERM", "enif_make_monitor_term", "env: *mut ErlNifEnv, mon: *const ErlNifMonitor"},
-
-            {"c_int", "enif_select_read", "env: *mut ErlNifEnv, e: ErlNifEvent, obj: *const c_void, pid: *const ErlNifPid, msg: *const ERL_NIF_TERM, msg_env: *mut ErlNifEnv"},
-            {"c_int", "enif_select_write", "env: *mut ErlNifEnv, e: ErlNifEvent, obj: *const c_void, pid: *const ErlNifPid, msg: *const ERL_NIF_TERM, msg_env: *mut ErlNifEnv"}
+            {"ERL_NIF_TERM", "enif_make_monitor_term", "env: *mut ErlNifEnv, mon: *const ErlNifMonitor"}
         ];
         false -> []
     end.
