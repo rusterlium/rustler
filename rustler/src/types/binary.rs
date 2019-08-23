@@ -114,7 +114,7 @@ impl DerefMut for OwnedBinary {
 impl Drop for OwnedBinary {
     fn drop(&mut self) {
         if self.release {
-            unsafe { erl_nif_sys::enif_release_binary(self.inner.as_c_arg()) };
+            unsafe { rustler_sys::enif_release_binary(self.inner.as_c_arg()) };
         }
     }
 }
@@ -137,7 +137,7 @@ impl<'a> Binary<'a> {
         let term = unsafe {
             Term::new(
                 env,
-                erl_nif_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()),
+                rustler_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()),
             )
         };
         Binary {
@@ -153,7 +153,7 @@ impl<'a> Binary<'a> {
     pub fn from_term(term: Term<'a>) -> Result<Self, Error> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe {
-            erl_nif_sys::enif_inspect_binary(
+            rustler_sys::enif_inspect_binary(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
                 binary.as_c_arg(),
@@ -171,7 +171,7 @@ impl<'a> Binary<'a> {
     pub fn from_iolist(term: Term<'a>) -> Result<Self, Error> {
         let mut binary = unsafe { ErlNifBinary::new_empty() };
         if unsafe {
-            erl_nif_sys::enif_inspect_iolist_as_binary(
+            rustler_sys::enif_inspect_iolist_as_binary(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
                 binary.as_c_arg(),
@@ -203,7 +203,7 @@ impl<'a> Binary<'a> {
         }
 
         let raw_term = unsafe {
-            erl_nif_sys::enif_make_sub_binary(
+            rustler_sys::enif_make_sub_binary(
                 self.term.get_env().as_c_arg(),
                 self.term.as_c_arg(),
                 offset,

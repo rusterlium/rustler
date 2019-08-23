@@ -37,7 +37,7 @@ impl<'a> Env<'a> {
     /// called is always associated with the calling Erlang process.)
     pub fn pid(self) -> Pid {
         let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
-        if unsafe { erl_nif_sys::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
+        if unsafe { rustler_sys::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
             panic!("environment is process-independent");
         }
         Pid { c: pid }
