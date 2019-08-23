@@ -29,15 +29,15 @@ macro_rules! platform_nif_init {
     ($get_entry:expr) => {
         #[cfg(unix)]
         #[no_mangle]
-        pub extern "C" fn nif_init() -> *const $crate::erl_nif_sys_api::ErlNifEntry {
+        pub extern "C" fn nif_init() -> *const $crate::rustler_sys_api::ErlNifEntry {
             $get_entry()
         }
 
         #[cfg(windows)]
         #[no_mangle]
         pub extern "C" fn nif_init(
-            callbacks: *mut $crate::erl_nif_sys_api::TWinDynNifCallbacks,
-        ) -> *const $crate::erl_nif_sys_api::ErlNifEntry {
+            callbacks: *mut $crate::rustler_sys_api::TWinDynNifCallbacks,
+        ) -> *const $crate::rustler_sys_api::ErlNifEntry {
             unsafe {
                 WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
@@ -57,8 +57,8 @@ macro_rules! platform_nif_init {
 /// # Examples
 /// ```
 /// #[macro_use]
-/// extern crate erl_nif_sys;
-/// use erl_nif_sys::*;
+/// extern crate rustler_sys;
+/// use rustler_sys::*;
 /// use std::mem;
 ///
 /// nif_init!("mymod", [
@@ -84,7 +84,7 @@ macro_rules! platform_nif_init {
 #[macro_export]
 macro_rules! slice_args {
     ($f:expr) => {{
-        use $crate::erl_nif_sys_api as ens;
+        use $crate::rustler_sys_api as ens;
         |env: *mut ens::ErlNifEnv,
          argc: ens::c_int,
          args: *const ens::ERL_NIF_TERM|
@@ -104,7 +104,7 @@ macro_rules! get_entry {
 
     ( $module:expr, [$($funcs:tt),*], {$($inits:tt)*} ) => (
         || { // start closure
-            use $crate::erl_nif_sys_api as ens;
+            use $crate::rustler_sys_api as ens;
             const FUNCS: &'static [ens::ErlNifFunc] = &[$(make_func_entry!($funcs)),*];
 
             // initialize as much as possible statically
@@ -138,7 +138,7 @@ macro_rules! get_entry {
     // For legacy nif_init!() invocation, deprecated
     ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, $($func:expr),* ) => (
         || { // start closure
-            use $crate::erl_nif_sys_api as ens;
+            use $crate::rustler_sys_api as ens;
             const FUNCS: &'static [ens::ErlNifFunc] = &[$($func),*];
             static mut ENTRY: ens::ErlNifEntry = ens::ErlNifEntry{
                 major : ens::NIF_MAJOR_VERSION,
@@ -275,8 +275,8 @@ macro_rules! set_optional {
 mod initmacro_namespace_tests {
 
     // explicitly disable for this test:
-    // use erl_nif_sys_api::*;
-    use crate::erl_nif_sys_api;
+    // use rustler_sys_api::*;
+    use crate::rustler_sys_api;
 
     use std;
     use std::ffi::{CStr, CString};
@@ -285,27 +285,27 @@ mod initmacro_namespace_tests {
 
     // Initializer tests
     fn load(
-        _env: *mut erl_nif_sys_api::ErlNifEnv,
-        _priv_data: *mut *mut erl_nif_sys_api::c_void,
-        _load_info: erl_nif_sys_api::ERL_NIF_TERM,
-    ) -> erl_nif_sys_api::c_int {
+        _env: *mut rustler_sys_api::ErlNifEnv,
+        _priv_data: *mut *mut rustler_sys_api::c_void,
+        _load_info: rustler_sys_api::ERL_NIF_TERM,
+    ) -> rustler_sys_api::c_int {
         14
     }
 
-    fn unload(_env: *mut erl_nif_sys_api::ErlNifEnv, _priv_data: *mut erl_nif_sys_api::c_void) {}
+    fn unload(_env: *mut rustler_sys_api::ErlNifEnv, _priv_data: *mut rustler_sys_api::c_void) {}
 
     fn raw_nif1(
-        _env: *mut erl_nif_sys_api::ErlNifEnv,
-        argc: erl_nif_sys_api::c_int,
-        _args: *const erl_nif_sys_api::ERL_NIF_TERM,
-    ) -> erl_nif_sys_api::ERL_NIF_TERM {
+        _env: *mut rustler_sys_api::ErlNifEnv,
+        argc: rustler_sys_api::c_int,
+        _args: *const rustler_sys_api::ERL_NIF_TERM,
+    ) -> rustler_sys_api::ERL_NIF_TERM {
         (argc * 7) as usize
     }
 
     fn slice_nif(
-        _env: *mut erl_nif_sys_api::ErlNifEnv,
-        args: &[erl_nif_sys_api::ERL_NIF_TERM],
-    ) -> erl_nif_sys_api::ERL_NIF_TERM {
+        _env: *mut rustler_sys_api::ErlNifEnv,
+        args: &[rustler_sys_api::ERL_NIF_TERM],
+    ) -> rustler_sys_api::ERL_NIF_TERM {
         args.len() * 17
     }
 
@@ -355,7 +355,7 @@ mod initmacro_namespace_tests {
 
 #[cfg(test)]
 mod initmacro_tests {
-    use crate::erl_nif_sys_api::*;
+    use crate::rustler_sys_api::*;
     use std;
     use std::ffi::{CStr, CString};
     use std::ptr;

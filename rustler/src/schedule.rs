@@ -8,6 +8,6 @@ pub enum SchedulerFlags {
 }
 
 pub fn consume_timeslice(env: Env, percent: i32) -> bool {
-    let success = unsafe { erl_nif_sys::enif_consume_timeslice(env.as_c_arg(), percent) };
+    let success = unsafe { rustler_sys::enif_consume_timeslice(env.as_c_arg(), percent) };
     success == 1
 }

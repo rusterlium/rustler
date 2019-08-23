@@ -1,7 +1,7 @@
 use crate::types::binary::OwnedBinary;
 use crate::wrapper::env::term_to_binary;
 use crate::wrapper::NIF_TERM;
-use crate::{Decoder, Env, NifResult, Binary};
+use crate::{Binary, Decoder, Env, NifResult};
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
 
@@ -55,7 +55,7 @@ impl<'a> Term<'a> {
             unsafe {
                 Term::new(
                     env,
-                    erl_nif_sys::enif_make_copy(env.as_c_arg(), self.as_c_arg()),
+                    rustler_sys::enif_make_copy(env.as_c_arg(), self.as_c_arg()),
                 )
             }
         }
@@ -99,13 +99,13 @@ impl<'a> Term<'a> {
 
 impl<'a> PartialEq for Term<'a> {
     fn eq(&self, other: &Term) -> bool {
-        unsafe { erl_nif_sys::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
+        unsafe { rustler_sys::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
     }
 }
 impl<'a> Eq for Term<'a> {}
 
 fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
-    let ord = unsafe { erl_nif_sys::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
+    let ord = unsafe { rustler_sys::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
     match ord {
         0 => Ordering::Equal,
         n if n < 0 => Ordering::Less,

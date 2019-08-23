@@ -1,9 +1,9 @@
-extern crate erl_nif_sys;
+extern crate rustler_sys;
 
 #[cfg(unix)]
 #[test]
 fn test1() {
-    use erl_nif_sys::*;
+    use rustler_sys::*;
     use std::collections::HashMap;
     use std::env;
     use std::iter::FromIterator;

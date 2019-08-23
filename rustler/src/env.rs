@@ -77,12 +77,12 @@ impl<'a> Env<'a> {
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
     pub fn send(self, pid: &Pid, message: Term<'a>) {
-        let thread_type = unsafe { erl_nif_sys::enif_thread_type() };
-        let env = if thread_type == erl_nif_sys::ERL_NIF_THR_UNDEFINED {
+        let thread_type = unsafe { rustler_sys::enif_thread_type() };
+        let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
             ptr::null_mut()
-        } else if thread_type == erl_nif_sys::ERL_NIF_THR_NORMAL_SCHEDULER
-            || thread_type == erl_nif_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-            || thread_type == erl_nif_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
+        } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
+            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
+            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
         {
             // Panic if `self` is not the environment of the calling process.
             self.pid();
@@ -94,7 +94,7 @@ impl<'a> Env<'a> {
 
         // Send the message.
         unsafe {
-            erl_nif_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
+            rustler_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
         }
     }
 
@@ -144,7 +144,7 @@ impl OwnedEnv {
     /// Allocates a new process-independent environment.
     pub fn new() -> OwnedEnv {
         OwnedEnv {
-            env: Arc::new(unsafe { erl_nif_sys::enif_alloc_env() }),
+            env: Arc::new(unsafe { rustler_sys::enif_alloc_env() }),
         }
     }
 
@@ -172,7 +172,7 @@ impl OwnedEnv {
     where
         F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
     {
-        if unsafe { erl_nif_sys::enif_thread_type() } != erl_nif_sys::ERL_NIF_THR_UNDEFINED {
+        if unsafe { rustler_sys::enif_thread_type() } != rustler_sys::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
         }
 
@@ -181,7 +181,7 @@ impl OwnedEnv {
         let c_env = *self.env;
         self.env = Arc::new(c_env); // invalidate SavedTerms
         unsafe {
-            erl_nif_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
+            rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
         }
     }
 
@@ -197,7 +197,7 @@ impl OwnedEnv {
         let c_env = *self.env;
         self.env = Arc::new(c_env);
         unsafe {
-            erl_nif_sys::enif_clear_env(c_env);
+            rustler_sys::enif_clear_env(c_env);
         }
     }
 
@@ -240,7 +240,7 @@ impl OwnedEnv {
 impl Drop for OwnedEnv {
     fn drop(&mut self) {
         unsafe {
-            erl_nif_sys::enif_free_env(*self.env);
+            rustler_sys::enif_free_env(*self.env);
         }
     }
 }

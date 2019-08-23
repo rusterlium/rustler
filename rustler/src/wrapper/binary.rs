@@ -24,7 +24,7 @@ impl ErlNifBinary {
 
 pub unsafe fn alloc(size: size_t) -> Option<ErlNifBinary> {
     let mut binary = ErlNifBinary::new_empty();
-    let success = erl_nif_sys::enif_alloc_binary(size, binary.as_c_arg());
+    let success = rustler_sys::enif_alloc_binary(size, binary.as_c_arg());
     if success == 0 {
         return None;
     }
@@ -32,6 +32,6 @@ pub unsafe fn alloc(size: size_t) -> Option<ErlNifBinary> {
 }
 
 pub unsafe fn realloc(binary: &mut ErlNifBinary, size: size_t) -> bool {
-    let success = erl_nif_sys::enif_realloc_binary(binary.as_c_arg(), size);
+    let success = rustler_sys::enif_realloc_binary(binary.as_c_arg(), size);
     success != 0
 }

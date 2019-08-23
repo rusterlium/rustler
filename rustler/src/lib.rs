@@ -23,7 +23,7 @@
 //! rustler_mix](https://hexdocs.pm/rustler/basics.html).
 
 #[macro_use(enif_snprintf)]
-extern crate erl_nif_sys;
+extern crate rustler_sys;
 
 mod wrapper;
 
