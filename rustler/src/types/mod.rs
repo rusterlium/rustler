@@ -26,6 +26,8 @@ pub mod tuple;
 pub mod pid;
 pub use crate::types::pid::Pid;
 
+pub mod truthy;
+
 pub mod elixir_struct;
 
 pub trait Encoder {

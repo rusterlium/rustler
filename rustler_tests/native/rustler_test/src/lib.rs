@@ -82,6 +82,11 @@ rustler::rustler_export_nifs!(
         ("unit_enum_echo", 1, test_codegen::unit_enum_echo),
         ("untagged_enum_echo", 1, test_codegen::untagged_enum_echo),
         (
+            "untagged_enum_with_truthy",
+            1,
+            test_codegen::untagged_enum_with_truthy
+        ),
+        (
             "dirty_cpu",
             0,
             test_dirty::dirty_cpu,
