@@ -26,6 +26,8 @@ Session.vim
 /target/
 /rustler_tests/target/
 /rustler_tests/_build
+/rustler_tests/deps
+/rustler_tests/mix.lock
 Cargo.lock
 
 /rustler_codegen/target/

@@ -1,6 +1,27 @@
 [package]
 name = "rustler_sys"
-version = "0.6.6-alpha.0"
+
+# In order to ensure no breakage occurs for depending
+# crates, Semver is used in a non-standard way for
+# this crate.
+#
+# The MAJOR version of this crate represents the 
+# major version of the NIF api.
+# The following versions are defined:
+# 0: ^0 (0.1)
+# 1: ^1 (1.0)
+# 2: ^2 (2.0, 2.1, 2.2, etc)
+#
+# The MINOR version of this crate represents breaking
+# changes in the API of the crate.
+#
+# The PATCH version is as standard.
+#
+# When depending on this crate, you should ALWAYS
+# use a tilde requirements with AT LEAST `~MAJOR.MINOR`.
+# Example: "~2.0"
+version = "2.0.0"
+
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 description = "Create Erlang NIF modules in Rust using the C NIF API."
 documentation = "https://docs.rs/rustler_sys"
