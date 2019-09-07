@@ -4,16 +4,16 @@
 //
 
 use std::env;
-use std::os::raw::c_ulong;
 use std::path::Path;
 use std::process::Command;
 
 fn main() {
-    // use environment escript if available
     let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
 
-    // get size of C long
-    let ulong_size = std::mem::size_of::<c_ulong>();
+    let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
+        Ok(ref val) if val == "32" => "4",
+        _ => "8",
+    };
 
     // setup output directory
     let out_dir = env::var("OUT_DIR")
@@ -23,7 +23,7 @@ fn main() {
     let dst = Path::new(&out_dir);
     match Command::new(escript)
         .arg("gen_api.erl")
-        .arg(ulong_size.to_string())
+        .arg(target_pointer_width.to_string())
         .arg(dst)
         .status()
         .map_err(|_| "Failed to start gen_api.erl.  Is 'escript' available in the path?")
