@@ -35,4 +35,4 @@ build = "build.rs"
 categories = ["external-ffi-bindings"]
 
 [dependencies]
-unreachable = "0.1"
+unreachable = "1.0"
