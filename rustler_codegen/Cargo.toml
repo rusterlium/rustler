@@ -13,6 +13,6 @@ proc_macro = true
 
 [dependencies]
 syn = { version = "0.15.24", features = ["derive"] }
-quote = "0.6.10"
+quote = "0.6.13"
 heck = "0.3"
 proc-macro2 = "0.4"
