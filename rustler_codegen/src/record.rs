@@ -180,12 +180,15 @@ fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
                     .iter()
                     .map(|attr| attr.parse_meta())
                     .find(|meta| match meta {
-                        Ok(Meta::NameValue(meta_name_value)) => meta_name_value.ident == "tag",
+                        Ok(Meta::NameValue(name_value)) => {
+                            let ident = name_value.path.segments[0].ident.to_string();
+                            ident == "tag"
+                        }
                         _ => false,
                     });
 
             match *attr_value {
-                Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
+                Some(Ok(Meta::NameValue(ref name_value))) => match name_value.lit {
                     Lit::Str(ref tag) => Some(tag.value()),
                     _ => panic!("Cannot parse tag"),
                 },

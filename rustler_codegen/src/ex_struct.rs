@@ -83,7 +83,11 @@ pub fn gen_decoder(
             let ident = field.ident.as_ref().unwrap();
             let ident_str = ident.to_string();
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-            let error_message = format!("Could not decode field :{} on %{}{{}}", ident.to_string(), struct_name.to_string());
+            let error_message = format!(
+                "Could not decode field :{} on %{}{{}}",
+                ident.to_string(),
+                struct_name.to_string()
+            );
             quote! {
                 #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
@@ -165,12 +169,15 @@ fn get_module(ast: &syn::DeriveInput, ctx: &Context) -> String {
                     .iter()
                     .map(|attr| attr.parse_meta())
                     .find(|meta| match meta {
-                        Ok(Meta::NameValue(meta_name_value)) => meta_name_value.ident == "module",
+                        Ok(Meta::NameValue(name_value)) => {
+                            let ident = name_value.path.segments[0].ident.to_string();
+                            ident == "module"
+                        }
                         _ => false,
                     });
 
             match *attr_value {
-                Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
+                Some(Ok(Meta::NameValue(ref name_value))) => match name_value.lit {
                     Lit::Str(ref module) => Some(format!("Elixir.{}", module.value())),
                     _ => panic!("Cannot parse module"),
                 },

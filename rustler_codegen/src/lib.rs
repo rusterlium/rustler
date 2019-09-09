@@ -79,12 +79,7 @@ impl Context {
             let meta = attr.parse_meta().expect("can parse meta");
             match meta {
                 Meta::List(list) => Some(Context::parse_attribute_list(list)),
-                Meta::Word(word) => {
-                    panic!("Unexpected Ident {}", word);
-                }
-                Meta::NameValue(name_value) => {
-                    panic!("Unexpected name-value {}", name_value.ident);
-                }
+                _meta => panic!("Unexpected meta"),
             }
         } else {
             None
@@ -95,37 +90,38 @@ impl Context {
         list.nested
             .iter()
             .map(|nested| match nested {
-                NestedMeta::Meta(meta) => match meta.name().to_string().as_ref() {
-                    "encode" => RustlerAttr::Encode,
-                    "decode" => RustlerAttr::Decode,
-                    "module" => match meta {
-                        Meta::NameValue(name_value) => {
-                            let module = match name_value.lit {
-                                Lit::Str(ref module) => module.value(),
-                                _ => panic!("Cannot parse module"),
-                            };
-                            RustlerAttr::Module(module)
-                        }
-                        _ => panic!("Cannot parse module"),
-                    },
-                    "tag" => match meta {
-                        Meta::NameValue(name_value) => {
-                            let tag = match name_value.lit {
-                                Lit::Str(ref tag) => tag.value(),
-                                _ => panic!("Cannot parse tag"),
-                            };
-                            RustlerAttr::Tag(tag)
-                        }
-                        _ => panic!("Cannot parse tag"),
-                    },
-                    attribute => panic!("Unhandled attribute {}", attribute),
-                },
-                NestedMeta::Literal(lit) => match lit {
-                    Lit::Str(lit_str) => panic!("Unexpected literal {}", lit_str.value()),
-                    _ => panic!("Unexpected literal"),
-                },
+                NestedMeta::Lit(_) => panic!("Unexpected lit"),
+                NestedMeta::Meta(ref meta) => Context::parse_attribute(meta),
             })
             .collect()
+    }
+
+    fn parse_attribute(meta: &Meta) -> RustlerAttr {
+        match meta {
+            Meta::Path(path) => match path.segments[0].ident.to_string().as_ref() {
+                "encode" => RustlerAttr::Encode,
+                "decode" => RustlerAttr::Decode,
+                unknown => panic!("Unexpected path {}", unknown),
+            },
+            Meta::NameValue(name_value) => {
+                match name_value.path.segments[0].ident.to_string().as_ref() {
+                    "module" => {
+                        if let Lit::Str(ref module) = name_value.lit {
+                            return RustlerAttr::Module(module.value().into());
+                        }
+                        panic!("Cannot parse module")
+                    }
+                    "tag" => {
+                        if let Lit::Str(ref tag) = name_value.lit {
+                            return RustlerAttr::Tag(tag.value().into());
+                        }
+                        panic!("Cannot parse tag")
+                    }
+                    path => panic!("Unexpected path {:?}", path),
+                }
+            }
+            Meta::List(_) => panic!("Unexpected list"),
+        }
     }
 }
 
