@@ -1,13 +1,13 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Field, Ident, Lit, Meta};
+use syn::{self, Data, Field, Ident};
 
 use super::{Context, RustlerAttr};
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let record_tag = get_tag(ast, &ctx);
+    let record_tag = get_tag(&ctx);
 
     let struct_fields = match ast.data {
         Data::Struct(ref data_struct) => &data_struct.fields,
@@ -167,33 +167,12 @@ pub fn gen_encoder(
     gen
 }
 
-fn get_tag(ast: &syn::DeriveInput, ctx: &Context) -> String {
+fn get_tag(ctx: &Context) -> String {
     ctx.attrs
         .iter()
         .find_map(|attr| match attr {
             RustlerAttr::Tag(ref tag) => Some(tag.clone()),
             _ => None,
-        })
-        .or_else(|| {
-            let attr_value =
-                &ast.attrs
-                    .iter()
-                    .map(|attr| attr.parse_meta())
-                    .find(|meta| match meta {
-                        Ok(Meta::NameValue(name_value)) => {
-                            let ident = name_value.path.segments[0].ident.to_string();
-                            ident == "tag"
-                        }
-                        _ => false,
-                    });
-
-            match *attr_value {
-                Some(Ok(Meta::NameValue(ref name_value))) => match name_value.lit {
-                    Lit::Str(ref tag) => Some(tag.value()),
-                    _ => panic!("Cannot parse tag"),
-                },
-                _ => None,
-            }
         })
         .expect("NifStruct requires a 'tag' attribute")
 }

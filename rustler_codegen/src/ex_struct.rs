@@ -1,13 +1,13 @@
 use proc_macro2::{Span, TokenStream};
 
-use syn::{self, Data, Field, Ident, Lit, Meta};
+use syn::{self, Data, Field, Ident};
 
 use super::{Context, RustlerAttr};
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let elixir_module = get_module(ast, &ctx);
+    let elixir_module = get_module(&ctx);
 
     let struct_fields = match ast.data {
         Data::Struct(ref data_struct) => &data_struct.fields,
@@ -156,33 +156,12 @@ pub fn gen_encoder(
     gen
 }
 
-fn get_module(ast: &syn::DeriveInput, ctx: &Context) -> String {
+fn get_module(ctx: &Context) -> String {
     ctx.attrs
         .iter()
         .find_map(|attr| match attr {
             RustlerAttr::Module(ref module) => Some(module.clone()),
             _ => None,
-        })
-        .or_else(|| {
-            let attr_value =
-                &ast.attrs
-                    .iter()
-                    .map(|attr| attr.parse_meta())
-                    .find(|meta| match meta {
-                        Ok(Meta::NameValue(name_value)) => {
-                            let ident = name_value.path.segments[0].ident.to_string();
-                            ident == "module"
-                        }
-                        _ => false,
-                    });
-
-            match *attr_value {
-                Some(Ok(Meta::NameValue(ref name_value))) => match name_value.lit {
-                    Lit::Str(ref module) => Some(format!("Elixir.{}", module.value())),
-                    _ => panic!("Cannot parse module"),
-                },
-                _ => None,
-            }
         })
         .expect("NifStruct requires a 'module' attribute")
 }
