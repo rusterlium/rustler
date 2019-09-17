@@ -1,7 +1,7 @@
 use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
-    rustler_atoms! {
+    rustler::rustler_atoms! {
         atom ok;
         //atom error;
         //atom __true__ = "true";
