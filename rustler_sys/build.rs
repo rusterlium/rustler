@@ -3,13 +3,32 @@
 // Execute Erlang script to generate API lists and extract config.
 //
 
-use std::env;
+use std::{env, fs};
+use std::os::raw::c_ulong;
 use std::path::Path;
 use std::process::Command;
 
-fn main() {
+const SNIPPET_NAME: &str = "nif_api.snippet";
+
+fn try_gen_api(dst: &Path, pointer_size: usize) -> bool {
+    // use environment escript if available
     let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
 
+    if let Ok(res) = Command::new(escript)
+        .arg("gen_api.erl")
+        .arg(pointer_size.to_string())
+        .arg(dst)
+        .status()
+        .map_err(|_| "Failed to start gen_api.erl.  Is 'escript' available in the path?")
+    {
+        res.success()
+    } else {
+        false
+    }
+}
+
+fn main() {
+    // get size of C long
     let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
         Ok(ref val) if val == "32" => "4",
         Ok(ref val) if val == "64" => "8",
@@ -25,17 +44,13 @@ fn main() {
         .map_err(|_| "Can't read OUT_DIR env variable.")
         .unwrap();
 
-    let dst = Path::new(&out_dir);
-    match Command::new(escript)
-        .arg("gen_api.erl")
-        .arg(target_pointer_width.to_string())
-        .arg(dst)
-        .status()
-        .map_err(|_| "Failed to start gen_api.erl.  Is 'escript' available in the path?")
-        .unwrap()
-        .success()
-    {
-        true => (),
-        false => panic!("gen_api.erl encountered an error."),
+    let dst = Path::new(&out_dir).join(SNIPPET_NAME);
+
+    if !try_gen_api(&dst, target_pointer_width) {
+        eprintln!("Failed to generate API from local installation, falling back to precompiled");
+
+        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", ulong_size));
+
+        fs::copy(&source, &dst).unwrap();
     }
 }

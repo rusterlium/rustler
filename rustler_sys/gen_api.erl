@@ -367,8 +367,8 @@ api_list(Opts) -> [
     end.
 
 
-main([UlongSizeT]) -> main([UlongSizeT,"."]);
-main([UlongSizeT, OutputDir]) ->
+main([UlongSizeT]) -> main([UlongSizeT,"nif_api.snippet"]);
+main([UlongSizeT, Filename]) ->
     %% Round up all configuration options
     Version = (catch erlang:system_info(nif_version)),
     Opts = version_opts(Version) ++ ulong_opts(UlongSizeT) ++ dirty_scheduler_opts(Version),
@@ -382,8 +382,7 @@ main([UlongSizeT, OutputDir]) ->
         int64_mappers_rust(proplists:get_value(ulongsize, Opts))
     ],
     %% And write it
-    Filename = filename:join(OutputDir, "nif_api.snippet"),
-    file:write_file(Filename, Rust),
+    ok = file:write_file(Filename, Rust),
     ok.
 
 nif_entry_options_rust(Opts) ->
