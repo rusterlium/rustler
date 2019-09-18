@@ -16,16 +16,15 @@ lazy_static! {
 }
 
 fn main() {
-    let version = match env::var("RUSTLER_NIF_VERSION") {
-        Ok(version) => version,
-        Err(_) => get_version_from_erl(),
-    };
+    let latest_version = NIF_VERSION.last().unwrap().to_string();
+    let version = env::var("RUSTLER_NIF_VERSION")
+        .unwrap_or_else(|_| get_version_from_erl().unwrap_or(latest_version));
 
     activate_versions(&version);
 }
 
-fn get_version_from_erl() -> String {
-    let erl = which("erl").expect("expected to find 'erl' executable");
+fn get_version_from_erl() -> Option<String> {
+    let erl = which("erl").ok()?;
     let args = vec![
         "-noshell",
         "-eval",
@@ -35,12 +34,12 @@ fn get_version_from_erl() -> String {
     let version = Command::new(erl)
         .args(&args)
         .output()
-        .expect("failed to execute 'erl'")
+        .ok()?
         .stdout;
 
-    let version = String::from_utf8(version).expect("convert version to String");
+    let version = String::from_utf8(version).ok()?;
 
-    version.trim().into()
+    Some(version.trim().into())
 }
 
 fn activate_versions(version: &str) {
