@@ -20,7 +20,7 @@ pub fn echo_u8<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 
 pub fn option_inc<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     let opt: Option<f64> = args[0].decode()?;
-    let incremented = opt.and_then(|num| Some(num + 1.0));
+    let incremented = opt.map(|num| num + 1.0);
     Ok(incremented.encode(env))
 }
 
