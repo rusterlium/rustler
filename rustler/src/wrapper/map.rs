@@ -1,25 +1,25 @@
 pub use crate::wrapper::ErlNifMapIterator;
 use crate::wrapper::{ErlNifMapIteratorEntry, NIF_ENV, NIF_TERM};
-use std::mem;
+use std::mem::MaybeUninit;
 
 pub unsafe fn get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
-    let mut result: NIF_TERM = mem::uninitialized();
-    let success = rustler_sys::enif_get_map_value(env, map, key, &mut result);
+    let mut result = MaybeUninit::uninit();
+    let success = rustler_sys::enif_get_map_value(env, map, key, result.as_mut_ptr());
 
     if success != 1 {
         return None;
     }
-    Some(result)
+    Some(result.assume_init())
 }
 
 pub unsafe fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Option<usize> {
-    let mut size: rustler_sys::size_t = mem::uninitialized();
-    let success = rustler_sys::enif_get_map_size(env, map, &mut size);
+    let mut size = MaybeUninit::uninit();
+    let success = rustler_sys::enif_get_map_size(env, map, size.as_mut_ptr());
 
     if success != 1 {
         return None;
     }
-    Some(size)
+    Some(size.assume_init())
 }
 
 pub unsafe fn map_new(env: NIF_ENV) -> NIF_TERM {
@@ -32,23 +32,23 @@ pub unsafe fn map_put(
     key: NIF_TERM,
     value: NIF_TERM,
 ) -> Option<NIF_TERM> {
-    let mut result: NIF_TERM = mem::uninitialized();
-    let success = rustler_sys::enif_make_map_put(env, map, key, value, &mut result);
+    let mut result = MaybeUninit::uninit();
+    let success = rustler_sys::enif_make_map_put(env, map, key, value, result.as_mut_ptr());
 
     if success != 1 {
         return None;
     }
-    Some(result)
+    Some(result.assume_init())
 }
 
 pub unsafe fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
-    let mut result: NIF_TERM = mem::uninitialized();
-    let success = rustler_sys::enif_make_map_remove(env, map, key, &mut result);
+    let mut result = MaybeUninit::uninit();
+    let success = rustler_sys::enif_make_map_remove(env, map, key, result.as_mut_ptr());
 
     if success != 1 {
         return None;
     }
-    Some(result)
+    Some(result.assume_init())
 }
 
 pub unsafe fn map_update(
@@ -57,27 +57,27 @@ pub unsafe fn map_update(
     key: NIF_TERM,
     new_value: NIF_TERM,
 ) -> Option<NIF_TERM> {
-    let mut result: NIF_TERM = mem::uninitialized();
-    let success = rustler_sys::enif_make_map_update(env, map, key, new_value, &mut result);
+    let mut result = MaybeUninit::uninit();
+    let success = rustler_sys::enif_make_map_update(env, map, key, new_value, result.as_mut_ptr());
 
     if success != 1 {
         return None;
     }
-    Some(result)
+    Some(result.assume_init())
 }
 
 pub unsafe fn map_iterator_create(env: NIF_ENV, map: NIF_TERM) -> Option<ErlNifMapIterator> {
-    let mut iter = mem::uninitialized();
+    let mut iter = MaybeUninit::uninit();
     let success = rustler_sys::enif_map_iterator_create(
         env,
         map,
-        &mut iter,
+        iter.as_mut_ptr(),
         ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_HEAD,
     );
     if success == 0 {
         None
     } else {
-        Some(iter)
+        Some(iter.assume_init())
     }
 }
 
@@ -89,12 +89,13 @@ pub unsafe fn map_iterator_get_pair(
     env: NIF_ENV,
     iter: &mut ErlNifMapIterator,
 ) -> Option<(NIF_TERM, NIF_TERM)> {
-    let mut key: NIF_TERM = mem::uninitialized();
-    let mut value: NIF_TERM = mem::uninitialized();
-    if rustler_sys::enif_map_iterator_get_pair(env, iter, &mut key, &mut value) == 0 {
+    let mut key = MaybeUninit::uninit();
+    let mut value = MaybeUninit::uninit();
+    if rustler_sys::enif_map_iterator_get_pair(env, iter, key.as_mut_ptr(), value.as_mut_ptr()) == 0
+    {
         None
     } else {
-        Some((key, value))
+        Some((key.assume_init(), value.assume_init()))
     }
 }
 
@@ -108,17 +109,17 @@ pub unsafe fn make_map_from_arrays(
     keys: &[NIF_TERM],
     values: &[NIF_TERM],
 ) -> Option<NIF_TERM> {
-    let mut map = mem::uninitialized();
+    let mut map = MaybeUninit::uninit();
     if rustler_sys::enif_make_map_from_arrays(
         env,
         keys.as_ptr(),
         values.as_ptr(),
         keys.len() as usize,
-        &mut map,
+        map.as_mut_ptr(),
     ) == 0
     {
         return None;
     }
 
-    Some(map)
+    Some(map.assume_init())
 }

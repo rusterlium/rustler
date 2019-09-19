@@ -1,6 +1,6 @@
 use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-use std::mem;
+use std::mem::MaybeUninit;
 
 #[derive(Clone)]
 pub struct Pid {
@@ -36,10 +36,12 @@ impl<'a> Env<'a> {
     /// environment is to use `OwnedEnv`.  The `Env` that Rustler passes to NIFs when they're
     /// called is always associated with the calling Erlang process.)
     pub fn pid(self) -> Pid {
-        let mut pid: ErlNifPid = unsafe { mem::uninitialized() };
-        if unsafe { rustler_sys::enif_self(self.as_c_arg(), &mut pid) }.is_null() {
+        let mut pid = MaybeUninit::uninit();
+        if unsafe { rustler_sys::enif_self(self.as_c_arg(), pid.as_mut_ptr()) }.is_null() {
             panic!("environment is process-independent");
         }
-        Pid { c: pid }
+        Pid {
+            c: unsafe { pid.assume_init() },
+        }
     }
 }

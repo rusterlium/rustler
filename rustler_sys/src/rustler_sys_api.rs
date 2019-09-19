@@ -91,7 +91,7 @@ pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
 
 /// See [ErlNifBinary](http://www.erlang.org/doc/man/erl_nif.html#ErlNifBinary) in the Erlang docs.
 #[allow(missing_copy_implementations)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifBinary {
     pub size: size_t,
