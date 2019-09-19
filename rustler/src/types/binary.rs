@@ -1,9 +1,9 @@
 use crate::wrapper::binary::{alloc, realloc, ErlNifBinary};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
-use std::mem::MaybeUninit;
 use std::borrow::{Borrow, BorrowMut};
 use std::io::Write;
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 
 // Owned
