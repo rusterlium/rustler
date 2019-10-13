@@ -157,7 +157,6 @@ pub fn gen_encoder(
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
 
-                use ::rustler::Encoder;
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }

@@ -133,7 +133,6 @@ pub fn gen_encoder(
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_typ {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                use ::rustler::Encoder;
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }
