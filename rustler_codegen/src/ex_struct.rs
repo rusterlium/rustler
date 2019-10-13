@@ -100,8 +100,6 @@ pub fn gen_decoder(
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                use ::rustler::Encoder;
-
                 #atom_defs
 
                 let env = term.get_env();
