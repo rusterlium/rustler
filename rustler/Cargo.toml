@@ -19,7 +19,7 @@ lazy_static = "1.2"
 
 [build-dependencies]
 lazy_static = "1.2"
-which = "2"
+which = "3"
 
 [package.metadata.release]
 
