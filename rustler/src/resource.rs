@@ -85,9 +85,9 @@ pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
             flags,
         )
     };
-    if res.is_some() {
+    if let Some(res) = res {
         Some(ResourceType {
-            res: res.unwrap(),
+            res,
             struct_type: PhantomData,
         })
     } else {
