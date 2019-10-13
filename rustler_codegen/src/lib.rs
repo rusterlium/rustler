@@ -10,7 +10,7 @@ extern crate syn;
 #[macro_use]
 extern crate quote;
 
-use syn::{Lit, Meta, MetaList, NestedMeta};
+use syn::{Lit, Meta, NestedMeta};
 
 mod ex_struct;
 mod map;
@@ -37,7 +37,7 @@ impl Context {
         let mut attrs: Vec<_> = ast
             .attrs
             .iter()
-            .filter_map(Context::get_rustler_attrs)
+            .map(Context::get_rustler_attrs)
             .flatten()
             .collect();
 
@@ -74,58 +74,67 @@ impl Context {
         })
     }
 
-    fn get_rustler_attrs(attr: &syn::Attribute) -> Option<Vec<RustlerAttr>> {
-        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "rustler" {
-            let meta = attr.parse_meta().expect("can parse meta");
-            match meta {
-                Meta::List(list) => Some(Context::parse_attribute_list(list)),
-                Meta::Word(word) => {
-                    panic!("Unexpected Ident {}", word);
+    fn get_rustler_attrs(attr: &syn::Attribute) -> Vec<RustlerAttr> {
+        attr.path
+            .segments
+            .iter()
+            .filter_map(|segment| {
+                let meta = attr.parse_meta().expect("can parse meta");
+                match segment.ident.to_string().as_ref() {
+                    "rustler" => Context::parse_rustler(&meta),
+                    "tag" => Context::try_parse_tag(&meta),
+                    "module" => Context::try_parse_module(&meta),
+                    _ => None,
                 }
-                Meta::NameValue(name_value) => {
-                    panic!("Unexpected name-value {}", name_value.ident);
-                }
-            }
-        } else {
-            None
-        }
+            })
+            .flatten()
+            .collect()
     }
 
-    fn parse_attribute_list(list: MetaList) -> Vec<RustlerAttr> {
-        list.nested
-            .iter()
-            .map(|nested| match nested {
-                NestedMeta::Meta(meta) => match meta.name().to_string().as_ref() {
-                    "encode" => RustlerAttr::Encode,
-                    "decode" => RustlerAttr::Decode,
-                    "module" => match meta {
-                        Meta::NameValue(name_value) => {
-                            let module = match name_value.lit {
-                                Lit::Str(ref module) => module.value(),
-                                _ => panic!("Cannot parse module"),
-                            };
-                            RustlerAttr::Module(module)
-                        }
-                        _ => panic!("Cannot parse module"),
-                    },
-                    "tag" => match meta {
-                        Meta::NameValue(name_value) => {
-                            let tag = match name_value.lit {
-                                Lit::Str(ref tag) => tag.value(),
-                                _ => panic!("Cannot parse tag"),
-                            };
-                            RustlerAttr::Tag(tag)
-                        }
-                        _ => panic!("Cannot parse tag"),
-                    },
-                    attribute => panic!("Unhandled attribute {}", attribute),
-                },
-                NestedMeta::Literal(lit) => match lit {
-                    Lit::Str(lit_str) => panic!("Unexpected literal {}", lit_str.value()),
-                    _ => panic!("Unexpected literal"),
-                },
-            })
-            .collect()
+    fn parse_rustler(meta: &Meta) -> Option<Vec<RustlerAttr>> {
+        if let Meta::List(ref list) = meta {
+            return Some(
+                list.nested
+                    .iter()
+                    .map(Context::parse_nested_rustler)
+                    .collect(),
+            );
+        }
+
+        panic!("Expected encode and/or decode in rustler attribute");
+    }
+
+    fn parse_nested_rustler(nested: &NestedMeta) -> RustlerAttr {
+        if let NestedMeta::Meta(ref meta) = nested {
+            if let Meta::Path(ref path) = meta {
+                match path.segments[0].ident.to_string().as_ref() {
+                    "encode" => return RustlerAttr::Encode,
+                    "decode" => return RustlerAttr::Decode,
+                    other => panic!("Unexpected literal {}", other),
+                }
+            }
+        }
+
+        panic!("Expected encode and/or decode in rustler attribute");
+    }
+
+    fn try_parse_tag(meta: &Meta) -> Option<Vec<RustlerAttr>> {
+        if let Meta::NameValue(ref name_value) = meta {
+            if let Lit::Str(ref tag) = name_value.lit {
+                return Some(vec![RustlerAttr::Tag(tag.value())]);
+            }
+        }
+        panic!("Cannot parse module")
+    }
+
+    fn try_parse_module(meta: &Meta) -> Option<Vec<RustlerAttr>> {
+        if let Meta::NameValue(name_value) = meta {
+            if let Lit::Str(ref module) = name_value.lit {
+                let ident = format!("Elixir.{}", module.value());
+                return Some(vec![RustlerAttr::Module(ident)]);
+            }
+        }
+        panic!("Cannot parse tag")
     }
 }
 

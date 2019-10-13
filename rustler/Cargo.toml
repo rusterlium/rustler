@@ -15,10 +15,10 @@ alternative_nif_init_name = []
 [dependencies]
 rustler_codegen = { path = "../rustler_codegen", version = "0.21.0", optional = true }
 rustler_sys = { path = "../rustler_sys", version = "~2.0" }
-lazy_static = "1.2"
+lazy_static = "1.4"
 
 [build-dependencies]
-lazy_static = "1.2"
+lazy_static = "1.4"
 which = "3"
 
 [package.metadata.release]

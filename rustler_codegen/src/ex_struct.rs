@@ -1,13 +1,13 @@
 use proc_macro2::{Span, TokenStream};
 
-use syn::{self, Data, Field, Ident, Lit, Meta};
+use syn::{self, Data, Field, Ident};
 
 use super::{Context, RustlerAttr};
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let elixir_module = get_module(ast, &ctx);
+    let elixir_module = get_module(&ctx);
 
     let struct_fields = match ast.data {
         Data::Struct(ref data_struct) => &data_struct.fields,
@@ -83,7 +83,11 @@ pub fn gen_decoder(
             let ident = field.ident.as_ref().unwrap();
             let ident_str = ident.to_string();
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-            let error_message = format!("Could not decode field :{} on %{}{{}}", ident.to_string(), struct_name.to_string());
+            let error_message = format!(
+                "Could not decode field :{} on %{}{{}}",
+                ident.to_string(),
+                struct_name.to_string()
+            );
             quote! {
                 #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
@@ -150,30 +154,12 @@ pub fn gen_encoder(
     gen
 }
 
-fn get_module(ast: &syn::DeriveInput, ctx: &Context) -> String {
+fn get_module(ctx: &Context) -> String {
     ctx.attrs
         .iter()
         .find_map(|attr| match attr {
             RustlerAttr::Module(ref module) => Some(module.clone()),
             _ => None,
-        })
-        .or_else(|| {
-            let attr_value =
-                &ast.attrs
-                    .iter()
-                    .map(|attr| attr.parse_meta())
-                    .find(|meta| match meta {
-                        Ok(Meta::NameValue(meta_name_value)) => meta_name_value.ident == "module",
-                        _ => false,
-                    });
-
-            match *attr_value {
-                Some(Ok(Meta::NameValue(ref meta_name_value))) => match meta_name_value.lit {
-                    Lit::Str(ref module) => Some(format!("Elixir.{}", module.value())),
-                    _ => panic!("Cannot parse module"),
-                },
-                _ => None,
-            }
         })
         .expect("NifStruct requires a 'module' attribute")
 }
