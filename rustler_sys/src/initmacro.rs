@@ -350,7 +350,6 @@ mod initmacro_namespace_tests {
         });
         assert_eq!(0, funcs[0].flags);
     }
-
 }
 
 #[cfg(test)]
@@ -629,5 +628,4 @@ mod initmacro_tests {
         });
         assert_eq!(0, funcs[0].flags);
     }
-
 }

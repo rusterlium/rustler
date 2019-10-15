@@ -3,6 +3,7 @@ use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::borrow::{Borrow, BorrowMut};
 use std::io::Write;
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 
 // Owned
@@ -114,7 +115,7 @@ impl DerefMut for OwnedBinary {
 impl Drop for OwnedBinary {
     fn drop(&mut self) {
         if self.release {
-            unsafe { rustler_sys::enif_release_binary(self.inner.as_c_arg()) };
+            unsafe { rustler_sys::enif_release_binary(&mut self.inner) };
         }
     }
 }
@@ -123,7 +124,6 @@ unsafe impl Send for OwnedBinary {}
 
 // Borrowed
 
-#[derive(Copy, Clone)]
 pub struct Binary<'a> {
     inner: ErlNifBinary,
     term: Term<'a>,
@@ -137,7 +137,7 @@ impl<'a> Binary<'a> {
         let term = unsafe {
             Term::new(
                 env,
-                rustler_sys::enif_make_binary(env.as_c_arg(), bin.inner.as_c_arg()),
+                rustler_sys::enif_make_binary(env.as_c_arg(), &mut bin.inner),
             )
         };
         Binary {
@@ -151,37 +151,37 @@ impl<'a> Binary<'a> {
     }
 
     pub fn from_term(term: Term<'a>) -> Result<Self, Error> {
-        let mut binary = unsafe { ErlNifBinary::new_empty() };
+        let mut binary = MaybeUninit::uninit();
         if unsafe {
             rustler_sys::enif_inspect_binary(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
-                binary.as_c_arg(),
+                binary.as_mut_ptr(),
             )
         } == 0
         {
             return Err(Error::BadArg);
         }
         Ok(Binary {
-            inner: binary,
+            inner: unsafe { binary.assume_init() },
             term,
         })
     }
 
     pub fn from_iolist(term: Term<'a>) -> Result<Self, Error> {
-        let mut binary = unsafe { ErlNifBinary::new_empty() };
+        let mut binary = MaybeUninit::uninit();
         if unsafe {
             rustler_sys::enif_inspect_iolist_as_binary(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
-                binary.as_c_arg(),
+                binary.as_mut_ptr(),
             )
         } == 0
         {
             return Err(Error::BadArg);
         }
         Ok(Binary {
-            inner: binary,
+            inner: unsafe { binary.assume_init() },
             term,
         })
     }
