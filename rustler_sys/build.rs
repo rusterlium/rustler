@@ -12,7 +12,12 @@ fn main() {
 
     let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
         Ok(ref val) if val == "32" => "4",
-        _ => "8",
+        Ok(ref val) if val == "64" => "8",
+        Ok(ref val) => panic!("Unsupported target pointer width: {}", val),
+        Err(err) => panic!(
+            "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
+            err
+        ),
     };
 
     // setup output directory
