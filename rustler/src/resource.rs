@@ -85,14 +85,8 @@ pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
             flags,
         )
     };
-    if let Some(res) = res {
-        Some(ResourceType {
-            res,
-            struct_type: PhantomData,
-        })
-    } else {
-        None
-    }
+
+    res.map(|r| ResourceType { res: r, struct_type: PhantomData})
 }
 
 fn get_alloc_size_struct<T>() -> usize {

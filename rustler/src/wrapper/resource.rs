@@ -9,7 +9,7 @@ pub use rustler_sys::{
 
 pub use rustler_sys::enif_release_resource as release_resource;
 
-use std::mem;
+use std::mem::MaybeUninit;
 use std::ptr;
 
 pub unsafe fn open_resource_type(
@@ -25,8 +25,8 @@ pub unsafe fn open_resource_type(
     let module_p: *const u8 = ptr::null();
     let name_p = name.as_ptr();
     let res = {
-        let mut tried: NifResourceFlags = mem::uninitialized();
-        rustler_sys::enif_open_resource_type(env, module_p, name_p, dtor, flags, &mut tried)
+        let mut tried = MaybeUninit::uninit();
+        rustler_sys::enif_open_resource_type(env, module_p, name_p, dtor, flags, tried.as_mut_ptr())
     };
 
     if res.is_null() {
@@ -42,12 +42,12 @@ pub unsafe fn get_resource(
     term: NIF_TERM,
     typ: NIF_RESOURCE_TYPE,
 ) -> Option<NIF_RESOURCE_HANDLE> {
-    let mut ret_obj: NIF_RESOURCE_HANDLE = mem::uninitialized();
-    let res = rustler_sys::enif_get_resource(env, term, typ, &mut ret_obj);
+    let mut ret_obj = MaybeUninit::uninit();
+    let res = rustler_sys::enif_get_resource(env, term, typ, ret_obj.as_mut_ptr());
 
     if res == 0 {
         None
     } else {
-        Some(ret_obj)
+        Some(ret_obj.assume_init())
     }
 }

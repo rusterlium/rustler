@@ -30,7 +30,6 @@ pub type size_t = usize;
 
 pub type NIF_ENV = *mut rustler_sys::ErlNifEnv;
 pub type NIF_TERM = size_t;
-pub type NIF_BINARY = *mut rustler_sys::ErlNifBinary;
 pub type NIF_RESOURCE_TYPE = *const rustler_sys::ErlNifResourceType;
 
 pub fn get_nif_resource_type_init_size() -> usize {

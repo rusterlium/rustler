@@ -1,12 +1,12 @@
 use crate::wrapper::{ErlNifPid, NIF_ENV, NIF_TERM};
-use std::mem;
+use std::mem::MaybeUninit;
 
 pub unsafe fn get_local_pid(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifPid> {
-    let mut pid: ErlNifPid = mem::uninitialized();
-    if rustler_sys::enif_get_local_pid(env, term, &mut pid) == 0 {
+    let mut pid = MaybeUninit::uninit();
+    if rustler_sys::enif_get_local_pid(env, term, pid.as_mut_ptr()) == 0 {
         return None;
     }
-    Some(pid)
+    Some(pid.assume_init())
 }
 
 // pub unsafe fn is_process_alive(env: NIF_ENV, pid: &ErlNifPid) -> bool {
