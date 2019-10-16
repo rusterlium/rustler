@@ -4,7 +4,6 @@
 //
 
 use std::{env, fs};
-use std::os::raw::c_ulong;
 use std::path::Path;
 use std::process::Command;
 
@@ -28,10 +27,10 @@ fn try_gen_api(dst: &Path, pointer_size: usize) -> bool {
 }
 
 fn main() {
-    // get size of C long
+    // get size of C pointer
     let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
-        Ok(ref val) if val == "32" => "4",
-        Ok(ref val) if val == "64" => "8",
+        Ok(ref val) if val == "32" => 4,
+        Ok(ref val) if val == "64" => 8,
         Ok(ref val) => panic!("Unsupported target pointer width: {}", val),
         Err(err) => panic!(
             "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
@@ -49,7 +48,7 @@ fn main() {
     if !try_gen_api(&dst, target_pointer_width) {
         eprintln!("Failed to generate API from local installation, falling back to precompiled");
 
-        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", ulong_size));
+        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", target_pointer_width));
 
         fs::copy(&source, &dst).unwrap();
     }
