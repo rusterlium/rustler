@@ -20,10 +20,6 @@ macro_rules! rustler_export_nifs {
     ($name:expr, [$( $exported_nif:tt ),+,], $on_load:expr) => {
         $crate::init!($name, [$( $exported_nif ),*], $on_load);
     };
-
-    ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
-        $crate::init!($name, [$( $exported_nif ),*], $on_load);
-    };
 }
 
 #[macro_export]
