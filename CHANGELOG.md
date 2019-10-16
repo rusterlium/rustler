@@ -18,14 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `rustler::atoms!` macro removed the `atom` prefix from the name:
 
 ```rs
-# Before
+// Before
 
 rustler::rustler_atoms! {
     atom ok;
     atom error;
 }
 
-# After
+// After
 
 rustler::atoms! {
     ok,
