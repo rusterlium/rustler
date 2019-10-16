@@ -1,4 +1,4 @@
-use rustler::schedule::SchedulerFlags;
+use rustler::schedule::SchedulerFlags::*;
 use rustler::{Env, Term};
 
 mod test_atom;
@@ -14,7 +14,7 @@ mod test_resource;
 mod test_term;
 mod test_thread;
 
-rustler::rustler_export_nifs!(
+rustler::init!(
     "Elixir.RustlerTest",
     [
         ("add_u32", 2, test_primitives::add_u32),
@@ -86,13 +86,8 @@ rustler::rustler_export_nifs!(
             1,
             test_codegen::untagged_enum_with_truthy
         ),
-        (
-            "dirty_cpu",
-            0,
-            test_dirty::dirty_cpu,
-            SchedulerFlags::DirtyCpu
-        ),
-        ("dirty_io", 0, test_dirty::dirty_io, SchedulerFlags::DirtyIo),
+        ("dirty_cpu", 0, test_dirty::dirty_cpu, DirtyCpu),
+        ("dirty_io", 0, test_dirty::dirty_io, DirtyIo),
         ("sum_range", 1, test_range::sum_range),
     ],
     Some(on_load)

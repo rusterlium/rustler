@@ -22,7 +22,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let has_lifetime = num_lifetimes == 1;
 
     let atom_defs = quote! {
-        ::rustler::rustler_atoms! {
+        rustler::atoms! {
             atom atom_tag = #record_tag;
         }
     };

@@ -38,12 +38,12 @@ This is the code for a minimal NIF that adds two numbers and returns the result.
 use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
-    rustler::rustler_atoms! {
+    rustler::atoms! {
         atom ok;
     }
 }
 
-rustler::rustler_export_nifs!(
+rustler::init!(
     "Elixir.Math",
     [
         ("add", 2, add)

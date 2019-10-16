@@ -14,7 +14,7 @@ use crate::wrapper::{
     c_void, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
 
-/// Re-export a type used by the `resource_struct_init!` macro.
+/// Re-export a type used by the `resource!` macro.
 #[doc(hidden)]
 pub use crate::wrapper::NIF_RESOURCE_FLAGS;
 
@@ -30,7 +30,7 @@ pub struct ResourceType<T> {
 }
 
 /// This trait gets implemented for the type we want to put into a resource when
-/// resource_struct_init! is called on it. It provides the ResourceType.
+/// resource! is called on it. It provides the ResourceType.
 ///
 /// In most cases the user should not have to worry about this.
 #[doc(hidden)]
@@ -65,7 +65,7 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
     }
 }
 
-/// This is the function that gets called from resource_struct_init! in on_load to create a new
+/// This is the function that gets called from resource! in on_load to create a new
 /// resource type.
 ///
 /// # Panics
@@ -86,7 +86,10 @@ pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
         )
     };
 
-    res.map(|r| ResourceType { res: r, struct_type: PhantomData})
+    res.map(|r| ResourceType {
+        res: r,
+        struct_type: PhantomData,
+    })
 }
 
 fn get_alloc_size_struct<T>() -> usize {
@@ -225,7 +228,15 @@ where
 }
 
 #[macro_export]
+#[deprecated(since = "0.22.0", note = "Please use `resource!` instead.")]
 macro_rules! resource_struct_init {
+    ($struct_name:ty, $env: ident) => {
+        $crate::resource!($struct_name, $env)
+    };
+}
+
+#[macro_export]
+macro_rules! resource {
     ($struct_name:ty, $env: ident) => {
         {
             static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
@@ -247,7 +258,7 @@ macro_rules! resource_struct_init {
             impl $crate::resource::ResourceTypeProvider for $struct_name {
                 fn get_type() -> &'static $crate::resource::ResourceType<Self> {
                     unsafe { &STRUCT_TYPE }.as_ref()
-                        .expect("The resource type hasn't been inited. Did you remember to call the function where you used the `resource_struct_init!` macro?")
+                        .expect("The resource type hasn't been initialized. Did you remember to call the function where you used the `resource!` macro?")
                 }
             }
         }

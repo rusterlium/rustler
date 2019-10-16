@@ -4,7 +4,7 @@ use std::ffi::CString;
 
 use crate::{Env, Term};
 
-// Names used by the `rustler_export_nifs!` macro or other generated code.
+// Names used by the `init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
     c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,

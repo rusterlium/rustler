@@ -2,7 +2,7 @@ use rustler::types::{atom::Atom, binary::Binary};
 use rustler::{Env, NifResult, Term};
 
 mod atoms {
-    rustler::rustler_atoms! {
+    rustler::atoms! {
         atom ok;
     }
 }

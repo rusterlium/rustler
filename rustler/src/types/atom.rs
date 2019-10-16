@@ -150,7 +150,7 @@ unsafe impl Send for Atom {}
 ///     #[macro_use] extern crate lazy_static;
 ///
 ///     mod my_atoms {
-///         rustler_atoms! {
+///         rustler::atoms! {
 ///             atom jpeg;
 ///         }
 ///     }
@@ -162,7 +162,7 @@ unsafe impl Send for Atom {}
 ///
 ///     # #[macro_use] extern crate rustler;
 ///     # #[macro_use] extern crate lazy_static;
-///     rustler_atoms! {
+///     rustler::atoms! {
 ///         /// The `jpeg` atom.
 ///         atom jpeg;
 ///
@@ -179,7 +179,7 @@ unsafe impl Send for Atom {}
 ///
 ///     # #[macro_use] extern crate rustler;
 ///     # #[macro_use] extern crate lazy_static;
-///     rustler_atoms! {
+///     rustler::atoms! {
 ///         /// The `mod` atom. The function isn't called `mod` because that's
 ///         /// a Rust keyword.
 ///         atom mod_atom = "mod";
@@ -197,6 +197,44 @@ unsafe impl Send for Atom {}
 /// The only overhead is checking that the atoms have been created (an atomic integer read).
 ///
 #[macro_export]
+macro_rules! atoms {
+    {
+        $(
+            $( #[$attr:meta] )*
+            atom $name:ident $( = $str:expr )*;
+        )*
+    } => {
+        #[allow(non_snake_case)]
+        struct RustlerAtoms {
+            $( $name : $crate::types::atom::Atom ),*
+        }
+        $crate::lazy_static::lazy_static! {
+            static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
+                RustlerAtoms {
+                    $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
+                }
+            });
+        }
+        $(
+            $( #[$attr] )*
+            pub fn $name() -> $crate::types::atom::Atom {
+                RUSTLER_ATOMS.$name
+            }
+        )*
+    };
+
+    // Internal helper macros.
+    { @internal_make_atom($env:ident, $name:ident) } => {
+        $crate::atoms!(@internal_make_atom($env, $name = stringify!($name)))
+    };
+    { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
+        $crate::types::atom::Atom::from_str($env, $str)
+            .ok().expect("rustler::atoms!: bad atom string")
+    };
+}
+
+#[macro_export]
+#[deprecated(since = "0.22.0", note = "Please use `atoms!` instead.")]
 macro_rules! rustler_atoms {
     {
         $(
@@ -211,7 +249,7 @@ macro_rules! rustler_atoms {
         $crate::lazy_static::lazy_static! {
             static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
                 RustlerAtoms {
-                    $( $name: $crate::rustler_atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
+                    $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
                 }
             });
         }
@@ -225,15 +263,15 @@ macro_rules! rustler_atoms {
 
     // Internal helper macros.
     { @internal_make_atom($env:ident, $name:ident) } => {
-        $crate::rustler_atoms!(@internal_make_atom($env, $name = stringify!($name)))
+        $crate::atoms!(@internal_make_atom($env, $name = stringify!($name)))
     };
     { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
         $crate::types::atom::Atom::from_str($env, $str)
-            .ok().expect("rustler_atoms: bad atom string")
+            .ok().expect("rustler::atoms!: bad atom string")
     };
 }
 
-rustler_atoms! {
+atoms! {
     /// The `nil` atom.
     atom nil;
 
