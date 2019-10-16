@@ -1,16 +1,16 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Fields, Variant};
+use syn::{self, Fields, Variant};
 
 use super::context::Context;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
-    let variants = match ast.data {
-        Data::Enum(ref data_enum) => &data_enum.variants,
-        Data::Struct(_) => panic!("NifUntaggedEnum can only be used with enums"),
-        Data::Union(_) => panic!("NifUntaggedEnum can only be used with enums"),
-    };
+
+    let variants = ctx
+        .variants
+        .as_ref()
+        .expect("NifUntaggedEnum can only be used with enums");
 
     for variant in variants {
         if let Fields::Unnamed(_) = variant.fields {
@@ -23,8 +23,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             );
         }
     }
-
-    let variants: Vec<&Variant> = variants.iter().collect();
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &variants)

@@ -1,38 +1,25 @@
 use proc_macro2::{Span, TokenStream};
 
-use syn::{self, Data, Field, Ident};
+use syn::{self, Field, Ident};
 
 use super::context::Context;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let struct_fields = match ast.data {
-        Data::Struct(ref data_struct) => &data_struct.fields,
-        _ => panic!("Must decorate a struct"),
-    };
+    let struct_fields = ctx
+        .struct_fields
+        .as_ref()
+        .expect("NifMap can only be used with structs");
 
-    let field_atoms: Vec<TokenStream> = struct_fields
-        .iter()
-        .map(|field| {
-            let ident = field.ident.as_ref().unwrap();
-            let ident_str = ident.to_string();
-
-            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-
-            quote! {
-                #atom_fun = #ident_str,
-            }
-        })
-        .collect();
+    // Unwrap is ok here, as we already determined that struct_fields is not None
+    let field_atoms = ctx.field_atoms().unwrap();
 
     let atom_defs = quote! {
         rustler::atoms! {
             #(#field_atoms)*
         }
     };
-
-    let struct_fields: Vec<_> = struct_fields.iter().collect();
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &struct_fields, &atom_defs)

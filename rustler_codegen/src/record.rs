@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Field};
+use syn::{self, Field};
 
 use super::context::Context;
 use super::RustlerAttr;
@@ -10,19 +10,16 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let record_tag = get_tag(&ctx);
 
-    let struct_fields = match ast.data {
-        Data::Struct(ref data_struct) => &data_struct.fields,
-        Data::Enum(_) => panic!("NifRecord can only be used with structs"),
-        Data::Union(_) => panic!("NifRecord can only be used with enums"),
-    };
+    let struct_fields = ctx
+        .struct_fields
+        .as_ref()
+        .expect("NifRecord can only be used with structs");
 
     let atom_defs = quote! {
         rustler::atoms! {
             atom_tag = #record_tag,
         }
     };
-
-    let struct_fields: Vec<_> = struct_fields.iter().collect();
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &atom_defs, &struct_fields)

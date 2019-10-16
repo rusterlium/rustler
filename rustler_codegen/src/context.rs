@@ -1,4 +1,5 @@
-use syn::{Lit, Meta, NestedMeta};
+use proc_macro2::{Span, TokenStream};
+use syn::{Data, Field, Ident, Lit, Meta, NestedMeta, Variant};
 
 use super::RustlerAttr;
 
@@ -7,11 +8,12 @@ use super::RustlerAttr;
 ///
 /// `Context` holds information usable for different codegen modules.
 ///
-#[derive(Debug)]
 pub(crate) struct Context<'a> {
     pub(crate) attrs: Vec<RustlerAttr>,
     pub(crate) ident: &'a proc_macro2::Ident,
     pub(crate) ident_with_lifetime: proc_macro2::TokenStream,
+    pub(crate) variants: Option<Vec<&'a Variant>>,
+    pub(crate) struct_fields: Option<Vec<&'a Field>>,
 }
 
 impl<'a> Context<'a> {
@@ -44,10 +46,22 @@ impl<'a> Context<'a> {
             quote! { #ident }
         };
 
+        let variants = match ast.data {
+            Data::Enum(ref data_enum) => Some(data_enum.variants.iter().collect()),
+            _ => None,
+        };
+
+        let struct_fields = match ast.data {
+            Data::Struct(ref data_struct) => Some(data_struct.fields.iter().collect()),
+            _ => None,
+        };
+
         Self {
             attrs,
             ident,
             ident_with_lifetime,
+            variants,
+            struct_fields,
         }
     }
 
@@ -62,6 +76,24 @@ impl<'a> Context<'a> {
         self.attrs.iter().any(|attr| match attr {
             RustlerAttr::Decode => true,
             _ => false,
+        })
+    }
+
+    pub(crate) fn field_atoms(&self) -> Option<Vec<TokenStream>> {
+        self.struct_fields.as_ref().map(|struct_fields| {
+            struct_fields
+                .iter()
+                .map(|field| {
+                    let ident = field.ident.as_ref().unwrap();
+                    let ident_str = ident.to_string();
+
+                    let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+
+                    quote! {
+                        #atom_fun = #ident_str,
+                    }
+                })
+                .collect()
         })
     }
 

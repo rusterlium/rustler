@@ -1,18 +1,17 @@
 use proc_macro2::{Span, TokenStream};
 
 use heck::SnakeCase;
-use syn::{self, Data, Fields, Ident, Variant};
+use syn::{self, Fields, Ident, Variant};
 
 use super::context::Context;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let variants = match ast.data {
-        Data::Enum(ref data_enum) => &data_enum.variants,
-        Data::Struct(_) => panic!("NifUnitEnum can only be used with enums"),
-        Data::Union(_) => panic!("NifUnitEnum can only be used with enums"),
-    };
+    let variants = ctx
+        .variants
+        .as_ref()
+        .expect("NifUnitEnum can only be used with enums");
 
     for variant in variants {
         if let Fields::Unit = variant.fields {
@@ -37,8 +36,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             #(#atoms)*
         }
     };
-
-    let variants: Vec<&Variant> = variants.iter().collect();
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &variants, &atom_defs)

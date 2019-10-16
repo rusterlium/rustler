@@ -1,18 +1,16 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Field};
+use syn::{self, Field};
 
 use super::context::Context;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let struct_fields = match ast.data {
-        Data::Struct(ref struct_data) => &struct_data.fields,
-        _ => panic!("Must decorate a struct"),
-    };
-
-    let struct_fields: Vec<_> = struct_fields.iter().collect();
+    let struct_fields = ctx
+        .struct_fields
+        .as_ref()
+        .expect("NifStruct can only be used with structs");
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &struct_fields, false)
