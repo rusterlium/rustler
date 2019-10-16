@@ -7,13 +7,6 @@ mod atoms {
     }
 }
 
-// This is only to show that the old is still supported.
-mod old_atoms {
-    rustler::rustler_atoms! {
-        atom ok;
-    }
-}
-
 pub fn on_load(_env: Env) {}
 
 pub fn atom_to_string<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<String> {

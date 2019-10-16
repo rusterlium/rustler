@@ -4,4 +4,5 @@ members = [
   "rustler_codegen",
   "rustler_sys",
   "rustler_tests/native/rustler_test",
+  "rustler_tests/native/deprecated_macros",
 ]

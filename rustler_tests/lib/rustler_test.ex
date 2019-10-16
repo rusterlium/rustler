@@ -3,7 +3,9 @@ defmodule NifNotLoadedError do
 end
 
 defmodule RustlerTest do
-  use Rustler, otp_app: :rustler_test
+  use Rustler,
+    otp_app: :rustler_test,
+    crate: :rustler_test
 
   defp err do
     throw NifNotLoadedError
