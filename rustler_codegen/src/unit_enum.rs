@@ -33,7 +33,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             let atom_str = variant.ident.to_string().to_snake_case();
             let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
             quote! {
-                atom #atom_fn = #atom_str;
+                #atom_fn = #atom_str;
             }
         })
         .collect();

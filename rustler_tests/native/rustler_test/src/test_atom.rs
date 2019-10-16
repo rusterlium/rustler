@@ -3,7 +3,7 @@ use rustler::{Env, NifResult, Term};
 
 mod atoms {
     rustler::atoms! {
-        atom ok;
+        ok;
     }
 }
 

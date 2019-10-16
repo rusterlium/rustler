@@ -4,7 +4,7 @@ use std::time;
 
 mod atoms {
     rustler::atoms! {
-        atom ok;
+        ok;
     }
 }
 

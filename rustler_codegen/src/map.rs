@@ -27,7 +27,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
 
             quote! {
-                atom #atom_fun = #ident_str;
+                #atom_fun = #ident_str;
             }
         })
         .collect();
