@@ -11,9 +11,9 @@ pub fn term_debug<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<String> {
 
 mod atoms {
     rustler::atoms! {
-        equal;
-        less;
-        greater;
+        equal,
+        less,
+        greater,
     }
 }
 

@@ -150,7 +150,7 @@ unsafe impl Send for Atom {}
 ///
 ///     mod my_atoms {
 ///         rustler::atoms! {
-///             jpeg;
+///             jpeg,
 ///         }
 ///     }
 ///     # fn main() {}
@@ -162,13 +162,13 @@ unsafe impl Send for Atom {}
 ///     # #[macro_use] extern crate rustler;
 ///     rustler::atoms! {
 ///         /// The `jpeg` atom.
-///         jpeg;
+///         jpeg,
 ///
 ///         /// The `png` atom.
-///         png;
+///         png,
 ///
 ///         #[allow(non_snake_case)]
-///         WebP;
+///         WebP,
 ///     }
 ///     # fn main() {}
 ///
@@ -179,11 +179,11 @@ unsafe impl Send for Atom {}
 ///     rustler::atoms! {
 ///         /// The `mod` atom. The function isn't called `mod` because that's
 ///         /// a Rust keyword.
-///         mod_atom = "mod";
+///         mod_atom = "mod",
 ///
 ///         /// The atom `'hello world'`. Obviously this function can't be
 ///         /// called `hello world` because there's a space in it.
-///         hello_world = "hello world";
+///         hello_world = "hello world",
 ///     }
 ///     # fn main() {}
 ///
@@ -198,7 +198,7 @@ macro_rules! atoms {
     {
         $(
             $( #[$attr:meta] )*
-            $name:ident $( = $str:expr )*;
+            $name:ident $( = $str:expr )*,
         )*
     } => {
         #[allow(non_snake_case)]
@@ -270,36 +270,36 @@ macro_rules! rustler_atoms {
 
 atoms! {
     /// The `nil` atom.
-    nil;
+    nil,
 
     /// The `ok` atom, commonly used in success tuples.
-    ok;
+    ok,
 
     /// The `error` atom, commonly used in error tuples.
-    error;
+    error,
 
     /// The `badarg` atom, which Rustler sometimes returns to indicate that a function was
     /// called with incorrect arguments.
-    badarg;
+    badarg,
 
     /// The `false` atom. (Trailing underscore because `false` is a keyword in Rust.)
     ///
     /// If you're looking to convert between Erlang terms and Rust `bool`
     /// values, use `Encoder` and `Decoder` instead.
-    false_ = "false";
+    false_ = "false",
 
     /// The `true` atom. (Trailing underscore because `true` is a keyword in Rust.)
     ///
     /// If you're looking to convert between Erlang terms and Rust `bool`
     /// values, use `Encoder` and `Decoder` instead.
-    true_ = "true";
+    true_ = "true",
 
     /// The `__struct__` atom used by Elixir.
-    __struct__;
+    __struct__,
 
     /// The `first` atom used by `Elixir.Range`.
-    first;
+    first,
 
     /// The `last` atom used by `Elixir.Range`.
-    last;
+    last,
 }

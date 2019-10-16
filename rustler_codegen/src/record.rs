@@ -23,7 +23,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
     let atom_defs = quote! {
         rustler::atoms! {
-            atom_tag = #record_tag;
+            atom_tag = #record_tag,
         }
     };
 

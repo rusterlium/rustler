@@ -39,7 +39,7 @@ use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
     rustler::atoms! {
-        atom ok;
+        ok,
     }
 }
 

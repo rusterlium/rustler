@@ -27,9 +27,9 @@ rustler::rustler_atoms! {
 
 # After
 
-rustler::rustler_atoms! {
-    ok;
-    error;
+rustler::atoms! {
+    ok,
+    error,
 }
 ```
 
