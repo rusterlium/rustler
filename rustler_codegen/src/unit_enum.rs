@@ -3,7 +3,7 @@ use proc_macro2::{Span, TokenStream};
 use heck::SnakeCase;
 use syn::{self, Data, Fields, Ident, Variant};
 
-use super::Context;
+use super::context::Context;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);

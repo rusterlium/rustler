@@ -2,7 +2,8 @@ use proc_macro2::{Span, TokenStream};
 
 use syn::{self, Data, Field, Ident};
 
-use super::{Context, RustlerAttr};
+use super::context::Context;
+use super::RustlerAttr;
 
 pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let ctx = Context::from_ast(ast);
