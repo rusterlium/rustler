@@ -21,14 +21,12 @@ unsafe impl NifReturnable for crate::error::Error {
             Error::BadArg => NifReturned::BadArg,
             Error::Atom(atom_str) => {
                 let atom = types::atom::Atom::from_str(env, atom_str)
-                    .ok()
                     .expect("Error::Atom: bad atom")
                     .to_term(env);
                 NifReturned::Term(atom.as_c_arg())
             }
             Error::RaiseAtom(atom_str) => {
                 let atom = types::atom::Atom::from_str(env, atom_str)
-                    .ok()
                     .expect("Error::RaiseAtom: bad argument");
                 NifReturned::Raise(atom.as_c_arg())
             }
