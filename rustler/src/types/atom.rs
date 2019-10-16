@@ -198,8 +198,8 @@ macro_rules! atoms {
     {
         $(
             $( #[$attr:meta] )*
-            $name:ident $( = $str:expr )?,
-        )*
+            $name:ident $( = $str:expr )?
+        ),*$(,)?
     } => {
         #[allow(non_snake_case)]
         struct RustlerAtoms {
