@@ -3,8 +3,8 @@ use rustler::{Atom, Env, Term};
 use std::time;
 
 mod atoms {
-    rustler::rustler_atoms! {
-        atom ok;
+    rustler::atoms! {
+        ok,
     }
 }
 

@@ -1,7 +1,7 @@
 use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
-    rustler::rustler_atoms! {
+    rustler::atoms! {
         atom ok;
         //atom error;
         //atom __true__ = "true";
@@ -9,7 +9,7 @@ mod atoms {
     }
 }
 
-rustler::rustler_export_nifs! {
+rustler::init! {
     "<%= native_module %>",
     [
         ("add", 2, add)

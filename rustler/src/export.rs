@@ -15,15 +15,23 @@
 /// The third argument is an `Option<fn(env: &Env, load_info: Term) -> bool>`. If this is
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
 #[macro_export]
+#[deprecated(since = "0.22.0", note = "Please use `init!` instead.")]
 macro_rules! rustler_export_nifs {
+    ($name:expr, [$( $exported_nif:tt ),+,], $on_load:expr) => {
+        $crate::init!($name, [$( $exported_nif ),*], $on_load);
+    };
+}
+
+#[macro_export]
+macro_rules! init {
     // Strip trailing comma.
     ($name:expr, [$( $exported_nif:tt ),+,], $on_load:expr) => {
-        $crate::rustler_export_nifs!($name, [$( $exported_nif ),*], $on_load);
+        $crate::init!($name, [$( $exported_nif ),*], $on_load);
     };
     ($name:expr, [$( $exported_nif:tt ),*], $on_load:expr) => {
         static mut NIF_ENTRY: Option<$crate::codegen_runtime::DEF_NIF_ENTRY> = None;
 
-        $crate::rustler_export_nifs!(internal_platform_init, ({
+        $crate::init!(internal_platform_init, ({
             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
 
             extern "C" fn nif_load(
@@ -37,7 +45,7 @@ macro_rules! rustler_export_nifs {
             }
 
             const FUN_ENTRIES: &'static [$crate::codegen_runtime::DEF_NIF_FUNC] = &[
-                $($crate::rustler_export_nifs!(internal_item_init, $exported_nif)),*
+                $($crate::init!(internal_item_init, $exported_nif)),*
             ];
 
             let entry = $crate::codegen_runtime::DEF_NIF_ENTRY {
@@ -61,7 +69,7 @@ macro_rules! rustler_export_nifs {
     };
 
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path)) => {
-        $crate::rustler_export_nifs!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
+        $crate::init!(internal_item_init, ($nif_name, $nif_arity, $nif_fun, $crate::schedule::SchedulerFlags::Normal))
     };
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
@@ -74,7 +82,7 @@ macro_rules! rustler_export_nifs {
                     argv: *const $crate::codegen_runtime::NIF_TERM)
                     -> $crate::codegen_runtime::NIF_TERM {
                         unsafe {
-                            $crate::rustler_export_nifs!(
+                            $crate::init!(
                                 internal_handle_nif_call, ($nif_fun, $nif_arity, env, argc, argv))
                         }
                     //unsafe {

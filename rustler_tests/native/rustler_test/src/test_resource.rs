@@ -1,6 +1,4 @@
-use rustler::resource::ResourceArc;
-use rustler::Encoder;
-use rustler::{Env, NifResult, Term};
+use rustler::{Encoder, Env, NifResult, ResourceArc, Term};
 use std::sync::RwLock;
 
 struct TestResource {
@@ -15,8 +13,8 @@ struct ImmutableResource {
 }
 
 pub fn on_load(env: Env) -> bool {
-    rustler::resource_struct_init!(TestResource, env);
-    rustler::resource_struct_init!(ImmutableResource, env);
+    rustler::resource!(TestResource, env);
+    rustler::resource!(ImmutableResource, env);
     true
 }
 
@@ -45,7 +43,7 @@ pub fn resource_get_integer_field<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifRes
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-::lazy_static::lazy_static! {
+lazy_static::lazy_static! {
     static ref COUNT: AtomicUsize = AtomicUsize::new(0);
 }
 
