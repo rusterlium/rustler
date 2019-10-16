@@ -10,7 +10,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let struct_fields = ctx
         .struct_fields
         .as_ref()
-        .expect("NifStruct can only be used with structs");
+        .expect("NifTuple can only be used with structs");
 
     let decoder = if ctx.decode() {
         gen_decoder(&ctx, &struct_fields, false)
