@@ -1,4 +1,5 @@
 use crate::codegen_runtime::{NifReturnable, NifReturned};
+use crate::types::atom;
 use crate::{types, Encoder, Env};
 use std::fmt;
 
@@ -13,6 +14,9 @@ pub enum Error {
     Atom(&'static str),
     RaiseAtom(&'static str),
     RaiseTerm(Box<dyn Encoder>),
+    /// Encodes an arbitrary Boxed Encoder and returns `{:error, term}` from
+    /// the NIF. Very useful for returning descriptive, context-full errors.
+    Term(Box<dyn Encoder>),
 }
 
 unsafe impl NifReturnable for crate::error::Error {
@@ -34,6 +38,11 @@ unsafe impl NifReturnable for crate::error::Error {
                 let term = term_unencoded.encode(env);
                 NifReturned::Raise(term.as_c_arg())
             }
+            Error::Term(ref term_unencoded) => {
+                let term = term_unencoded.encode(env);
+                let error_tuple = (atom::error(), term).encode(env);
+                NifReturned::Term(error_tuple.as_c_arg())
+            }
         }
     }
 }
@@ -45,6 +54,7 @@ impl fmt::Debug for Error {
             Error::Atom(ref s) => write!(fmt, "{{error, {}}}", s),
             Error::RaiseAtom(ref s) => write!(fmt, "throw({})", s),
             Error::RaiseTerm(_) => write!(fmt, "throw(<term>)"),
+            Error::Term(_) => write!(fmt, "{{error, {{:error, <term>}}}}"),
         }
     }
 }

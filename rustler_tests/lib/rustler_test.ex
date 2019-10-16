@@ -70,4 +70,11 @@ defmodule RustlerTest do
   def dirty_cpu(), do: err()
 
   def sum_range(_), do: err()
+
+  def bad_arg_error(), do: err()
+  def atom_str_error(), do: err()
+  def raise_atom_error(), do: err()
+  def raise_term_with_string_error(), do: err()
+  def raise_term_with_atom_error(), do: err()
+  def term_with_tuple_error(), do: err()
 end
