@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Field, Ident};
+use syn::{self, Data, Field};
 
 use super::{Context, RustlerAttr};
 
@@ -15,12 +15,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         Data::Union(_) => panic!("NifRecord can only be used with enums"),
     };
 
-    let num_lifetimes = ast.generics.lifetimes().count();
-    if num_lifetimes > 1 {
-        panic!("Struct can only have one lifetime argument");
-    }
-    let has_lifetime = num_lifetimes == 1;
-
     let atom_defs = quote! {
         rustler::atoms! {
             atom_tag = #record_tag,
@@ -30,13 +24,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        gen_decoder(&ctx, &atom_defs, &struct_fields)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        gen_encoder(&ctx, &atom_defs, &struct_fields)
     } else {
         quote! {}
     };
@@ -49,12 +43,10 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-pub fn gen_decoder(
-    struct_name: &Ident,
-    fields: &[&Field],
-    atom_defs: &TokenStream,
-    has_lifetime: bool,
-) -> TokenStream {
+fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+    let struct_type = &ctx.ident_with_lifetime;
+    let struct_name = ctx.ident;
+
     // Make a decoder for each of the fields in the struct.
     let field_defs: Vec<TokenStream> = fields
         .iter()
@@ -77,20 +69,15 @@ pub fn gen_decoder(
         })
         .collect();
 
-    // If the struct has a lifetime argument, put that in the struct type.
-    let struct_typ = if has_lifetime {
-        quote! { #struct_name <'a> }
-    } else {
-        quote! { #struct_name }
-    };
-
     let field_num = field_defs.len();
     let struct_name_str = struct_name.to_string();
 
     // The implementation itself
     let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_typ {
+        impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+                #atom_defs
+
                 let terms = match ::rustler::types::tuple::get_tuple(term) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(format!("Invalid Record structure for {}", #struct_name_str)))),
                     Ok(value) => value,
@@ -99,8 +86,6 @@ pub fn gen_decoder(
                 if terms.len() != #field_num + 1 {
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }
-
-                #atom_defs
 
                 let tag : ::rustler::types::atom::Atom = terms[0].decode()?;
 
@@ -120,12 +105,9 @@ pub fn gen_decoder(
     gen
 }
 
-pub fn gen_encoder(
-    struct_name: &Ident,
-    fields: &[&Field],
-    atom_defs: &TokenStream,
-    has_lifetime: bool,
-) -> TokenStream {
+fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+    let struct_type = &ctx.ident_with_lifetime;
+
     // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<TokenStream> = fields
         .iter()
@@ -144,19 +126,11 @@ pub fn gen_encoder(
         [#tag_encoder, #(#field_encoders),*]
     };
 
-    // If the struct has a lifetime argument, put that in the struct type.
-    let struct_typ = if has_lifetime {
-        quote! { #struct_name <'b> }
-    } else {
-        quote! { #struct_name }
-    };
-
     // The implementation itself
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_typ {
+        impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 #atom_defs
-
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }

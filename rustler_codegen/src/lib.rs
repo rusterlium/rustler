@@ -28,12 +28,14 @@ enum RustlerAttr {
 }
 
 #[derive(Debug)]
-struct Context {
+struct Context<'a> {
     attrs: Vec<RustlerAttr>,
+    ident: &'a proc_macro2::Ident,
+    ident_with_lifetime: proc_macro2::TokenStream,
 }
 
-impl Context {
-    fn from_ast(ast: &syn::DeriveInput) -> Self {
+impl<'a> Context<'a> {
+    fn from_ast(ast: &'a syn::DeriveInput) -> Self {
         let mut attrs: Vec<_> = ast
             .attrs
             .iter()
@@ -49,7 +51,24 @@ impl Context {
             attrs.push(RustlerAttr::Decode);
         }
 
-        Self { attrs }
+        let has_lifetime = match ast.generics.lifetimes().count() {
+            0 => false,
+            1 => true,
+            _ => panic!("Struct can only have one lifetime argument"),
+        };
+
+        let ident = &ast.ident;
+        let ident_with_lifetime = if has_lifetime {
+            quote! { #ident <'a> }
+        } else {
+            quote! { #ident }
+        };
+
+        Self {
+            attrs,
+            ident,
+            ident_with_lifetime,
+        }
     }
 
     fn encode(&self) -> bool {

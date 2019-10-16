@@ -15,12 +15,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         Data::Union(_) => panic!("NifStruct can only be used with structs"),
     };
 
-    let num_lifetimes = ast.generics.lifetimes().count();
-    if num_lifetimes > 1 {
-        panic!("Struct can only have one lifetime argument");
-    }
-    let has_lifetime = num_lifetimes == 1;
-
     let field_atoms: Vec<TokenStream> = struct_fields
         .iter()
         .map(|field| {
@@ -46,13 +40,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let struct_fields: Vec<_> = struct_fields.iter().collect();
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        gen_decoder(&ctx, &atom_defs, &struct_fields)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ast.ident, &struct_fields, &atom_defs, has_lifetime)
+        gen_encoder(&ctx, &atom_defs, &struct_fields)
     } else {
         quote! {}
     };
@@ -65,17 +59,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-pub fn gen_decoder(
-    struct_name: &Ident,
-    fields: &[&Field],
-    atom_defs: &TokenStream,
-    has_lifetime: bool,
-) -> TokenStream {
-    let struct_type = if has_lifetime {
-        quote! { #struct_name <'a> }
-    } else {
-        quote! { #struct_name }
-    };
+fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+    let struct_type = &ctx.ident_with_lifetime;
+    let struct_name = ctx.ident;
 
     let field_defs: Vec<TokenStream> = fields
         .iter()
@@ -117,17 +103,8 @@ pub fn gen_decoder(
     gen
 }
 
-pub fn gen_encoder(
-    struct_name: &Ident,
-    fields: &[&Field],
-    atom_defs: &TokenStream,
-    has_lifetime: bool,
-) -> TokenStream {
-    let struct_type = if has_lifetime {
-        quote! { #struct_name <'b> }
-    } else {
-        quote! { #struct_name }
-    };
+fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+    let struct_type = &ctx.ident_with_lifetime;
 
     let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
         let field_ident = field.ident.as_ref().unwrap();

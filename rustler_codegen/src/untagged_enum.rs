@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Data, Fields, Ident, Variant};
+use syn::{self, Data, Fields, Variant};
 
 use super::Context;
 
@@ -11,12 +11,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         Data::Struct(_) => panic!("NifUntaggedEnum can only be used with enums"),
         Data::Union(_) => panic!("NifUntaggedEnum can only be used with enums"),
     };
-
-    let num_lifetimes = ast.generics.lifetimes().count();
-    if num_lifetimes > 1 {
-        panic!("Enum can only have one lifetime argument");
-    }
-    let has_lifetime = num_lifetimes == 1;
 
     for variant in variants {
         if let Fields::Unnamed(_) = variant.fields {
@@ -33,13 +27,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let variants: Vec<&Variant> = variants.iter().collect();
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ast.ident, &variants, has_lifetime)
+        gen_decoder(&ctx, &variants)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ast.ident, &variants, has_lifetime)
+        gen_encoder(&ctx, &variants)
     } else {
         quote! {}
     };
@@ -52,12 +46,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-pub fn gen_decoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool) -> TokenStream {
-    let enum_type = if has_lifetime {
-        quote! { #enum_name <'b> }
-    } else {
-        quote! { #enum_name }
-    };
+fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
+    let enum_type = &ctx.ident_with_lifetime;
+    let enum_name = ctx.ident;
 
     let variant_defs: Vec<_> = variants
         .iter()
@@ -86,12 +77,9 @@ pub fn gen_decoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool)
     gen
 }
 
-pub fn gen_encoder(enum_name: &Ident, variants: &[&Variant], has_lifetime: bool) -> TokenStream {
-    let enum_type = if has_lifetime {
-        quote! { #enum_name <'b> }
-    } else {
-        quote! { #enum_name }
-    };
+fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
+    let enum_type = &ctx.ident_with_lifetime;
+    let enum_name = ctx.ident;
 
     let variant_defs: Vec<_> = variants
         .iter()
