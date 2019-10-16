@@ -264,7 +264,7 @@ macro_rules! rustler_atoms {
     };
     { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
         $crate::types::atom::Atom::from_str($env, $str)
-            .ok().expect("rustler::atoms!: bad atom string")
+            .expect("rustler::atoms!: bad atom string")
     };
 }
 
