@@ -26,6 +26,7 @@ defmodule Mix.Tasks.Compile.Rustler do
   def compile_crate({name, config}) do
     crate_path = Keyword.get(config, :path, "native/#{name}")
     build_mode = Keyword.get(config, :mode, :release)
+    target = Keyword.get(config, :target, nil)
 
     Mix.shell.info "Compiling NIF crate #{inspect name} (#{crate_path})..."
 
@@ -52,6 +53,7 @@ defmodule Mix.Tasks.Compile.Rustler do
       |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
       |> make_features_flag(Keyword.get(config, :features, []))
       |> make_build_mode_flag(build_mode)
+      |> make_target_flag(target)
       |> make_platform_hacks(crate_full_path, output_type, :os.type())
 
     [cmd_bin | args] = compile_command
@@ -141,6 +143,9 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args ++ []
+
+  defp make_target_flag(args, target) when is_binary(target), do: args ++ ["--target=#{target}"]
+  defp make_target_flag(args, _), do: args ++ []
 
   defp get_name(cargo_data, section) do
     get_in(cargo_data, [section, "name"])
