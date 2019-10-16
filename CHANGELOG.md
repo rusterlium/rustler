@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.22.0] - 2019-09-07
+### Changes
+
+- Dependencies have been updated.
+- Derive macros have been refactored.
+- Macros have been renamed and old ones have been deprecated:
+  - `rustler_export_nifs!` is now `rustler::init!`
+  - `rustler_atoms!` is now `rustler::atoms!`
+  - `resource_struct_init!` is now `rustler::resource!`
+- New `rustler::atoms!` macro removed the `atom` prefix from the name:
+
+```rs
+# Before
+
+rustler::rustler_atoms! {
+    atom ok;
+    atom error;
+}
+
+# After
+
+rustler::rustler_atoms! {
+    ok;
+    error;
+}
+```
+
+## [0.21.0] - 2019-09-07
+
 ### Added
 
 - Support for OTP22.
