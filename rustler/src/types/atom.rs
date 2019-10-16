@@ -198,7 +198,7 @@ macro_rules! atoms {
     {
         $(
             $( #[$attr:meta] )*
-            $name:ident $( = $str:expr )*,
+            $name:ident $( = $str:expr )?,
         )*
     } => {
         #[allow(non_snake_case)]
@@ -208,7 +208,7 @@ macro_rules! atoms {
         $crate::lazy_static::lazy_static! {
             static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
                 RustlerAtoms {
-                    $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
+                    $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)? )) ),*
                 }
             });
         }
@@ -236,7 +236,7 @@ macro_rules! rustler_atoms {
     {
         $(
             $( #[$attr:meta] )*
-            atom $name:ident $( = $str:expr )*;
+            atom $name:ident $( = $str:expr )?;
         )*
     } => {
         #[allow(non_snake_case)]
@@ -246,7 +246,7 @@ macro_rules! rustler_atoms {
         $crate::lazy_static::lazy_static! {
             static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
                 RustlerAtoms {
-                    $( $name: $crate::rustler_atoms!(@internal_make_atom(env, $name $( = $str)* )) ),*
+                    $( $name: $crate::rustler_atoms!(@internal_make_atom(env, $name $( = $str)? )) ),*
                 }
             });
         }
