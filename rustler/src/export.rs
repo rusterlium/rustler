@@ -96,6 +96,7 @@ macro_rules! init {
     };
 
     (internal_handle_nif_call, ($fun:path, $arity:expr, $env:expr, $argc:expr, $argv:expr)) => ({
+        use $crate::Term;
         let env_lifetime = ();
         let env = $crate::Env::new(&env_lifetime, $env);
 
