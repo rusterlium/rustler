@@ -1,0 +1,98 @@
+name: CI
+
+on: push
+
+jobs:
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: component
+        uses: actions-rs/components-nightly@v1
+        with:
+          component: clippy
+      - run: rustup component add clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets --all-features -- -D warnings
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: component
+        uses: actions-rs/components-nightly@v1
+        with:
+          component: rustfmt
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+
+      - name: Install Erlang/Elixir
+        uses: actions/setup-elixir@v1.0.0
+        with:
+          otp-version: 22.1.3
+          elixir-version: 1.9.2
+
+      - name: Check cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Check mix format (rustler_mix)
+        working-directory: rustler_mix
+        run: mix format --check-formatted
+
+      - name: Check mix format (rustler_tests)
+        working-directory: rustler_tests
+        run: mix format --check-formatted
+
+  test:
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / Rust ${{matrix.rust}}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        otp: 
+          - 22.1.3
+          - 21.3.8
+        elixir:
+          - 1.9.2
+          - 1.8.2
+          - 1.7.4
+          - 1.6.6
+        rust:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v1
+
+      - name: Install Erlang/Elixir
+        uses: actions/setup-elixir@v1.0.0
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+
+      - name: Install Rust ${{matrix.rust}} toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{matrix.rust}}
+          override: true
+
+      - run: cargo test
+
+      - name: Test rustler_mix
+        working-directory: rustler_mix
+        run: |
+          mix deps.get
+          mix test
+
+      - name: Test rustler_tests
+        working-directory: rustler_tests
+        run: |
+          mix deps.get
+          mix test
