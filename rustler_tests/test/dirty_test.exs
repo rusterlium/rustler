@@ -8,5 +8,4 @@ defmodule RustlerTest.DirtyTest do
   test "dirty cpu" do
     RustlerTest.dirty_cpu()
   end
-
 end

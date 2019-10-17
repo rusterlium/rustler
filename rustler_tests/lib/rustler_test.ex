@@ -8,7 +8,7 @@ defmodule RustlerTest do
     crate: :rustler_test
 
   defp err do
-    throw NifNotLoadedError
+    throw(NifNotLoadedError)
   end
 
   def add_u32(_, _), do: err()

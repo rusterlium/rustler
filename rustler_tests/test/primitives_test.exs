@@ -11,7 +11,7 @@ defmodule RustlerTest.PrimitivesTest do
   test "number decoding should fail on invalid terms" do
     assert_raise ArgumentError, fn -> RustlerTest.add_u32(-1, 1) end
     assert_raise ArgumentError, fn -> RustlerTest.add_u32("1", 1) end
-    assert_raise ArgumentError, fn -> RustlerTest.add_i32(2147483648, 1) end
+    assert_raise ArgumentError, fn -> RustlerTest.add_i32(2_147_483_648, 1) end
   end
 
   test "option decoding and encoding" do

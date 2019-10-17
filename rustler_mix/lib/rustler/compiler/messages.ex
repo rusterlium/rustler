@@ -1,5 +1,4 @@
 defmodule Rustler.Compiler.Messages do
-
   def message(:rustup_not_installed) do
     """
     Rustup could not be found on your machine.
@@ -34,9 +33,9 @@ defmodule Rustler.Compiler.Messages do
   end
 
   def message(:no_config) do
-  """
-  Add your crate to the 'rustler_crates' attribute in the project function.
-  """
+    """
+    Add your crate to the 'rustler_crates' attribute in the project function.
+    """
   end
 
   def message({:differing_versions, crate, rustler_version, codegen_version}) do
@@ -86,10 +85,9 @@ defmodule Rustler.Compiler.Messages do
   def message({:unsupported_nif_version, version}) do
     """
     Your current version of Erlang is on NIF version '#{version}'.
-    Rustler currently supports versions #{inspect Rustler.nif_versions}.
+    Rustler currently supports versions #{inspect(Rustler.nif_versions())}.
 
     Go open an issue about this on github!
     """
   end
-
 end

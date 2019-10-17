@@ -8,7 +8,7 @@ defmodule RustlerTest.MapTest do
 
   test "map iteration with keys" do
     assert [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, {"e", 4}] ==
-      RustlerTest.map_entries_sorted(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
+             RustlerTest.map_entries_sorted(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
   end
 
   test "map from arrays" do

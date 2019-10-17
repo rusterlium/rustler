@@ -14,10 +14,10 @@ defmodule RustlerTest.ListTest do
   end
 
   test "simple list construction" do
-    assert RustlerTest.make_list == [1, 2, 3]
+    assert RustlerTest.make_list() == [1, 2, 3]
   end
 
   test "simple list construction with sum" do
-    assert RustlerTest.sum_list(RustlerTest.make_list) == 6
+    assert RustlerTest.sum_list(RustlerTest.make_list()) == 6
   end
 end
