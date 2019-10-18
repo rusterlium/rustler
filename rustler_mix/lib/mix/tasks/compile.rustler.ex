@@ -153,7 +153,11 @@ defmodule Mix.Tasks.Compile.Rustler do
   defp make_build_mode_flag(args, :debug), do: args ++ []
 
   defp get_name(cargo_data, section) do
-    get_in(cargo_data, [section, "name"])
+    case cargo_data[section] do
+      nil -> nil
+      values when is_map(values) -> values["name"]
+      values when is_list(values) -> Enum.find_value(values, & &1["name"])
+    end
   end
 
   def make_file_names(base_name, :lib) do
