@@ -93,7 +93,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
 
         quote! {
-            map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).ok().unwrap();
+            map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
         }
     }).collect();
 

@@ -104,7 +104,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         let field_ident_str = field_ident.to_string();
         let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
         quote! {
-            map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).ok().unwrap();
+            map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
         }
     }).collect();
 
@@ -113,7 +113,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);
-                map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).ok().unwrap();
+                map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).unwrap();
                 #(#field_defs)*
                 map
             }
