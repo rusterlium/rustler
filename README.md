@@ -35,28 +35,12 @@ NOTE: If you have previously used Rustler, you need to run `mix archive.uninstal
 This is the code for a minimal NIF that adds two numbers and returns the result.
 
 ```rust
-use rustler::{Encoder, Env, Error, Term};
-
-mod atoms {
-    rustler::atoms! {
-        ok,
-    }
+#[rustler::nif]
+fn add(a: i64, b: i64) -> i64 {
+    a + b
 }
 
-rustler::init!(
-    "Elixir.Math",
-    [
-        ("add", 2, add)
-    ],
-    None
-);
-
-fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
-    let a: i64 = args[0].decode()?;
-    let b: i64 = args[1].decode()?;
-
-    Ok((atoms::ok(), a + b).encode(env))
-}
+rustler::init!("Elixir.Math", [add]);
 ```
 
 #### Supported nif_version

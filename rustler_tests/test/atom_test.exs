@@ -13,7 +13,7 @@ defmodule RustlerTest.AtomTest do
 
   test "binary to existing atom" do
     assert RustlerTest.binary_to_existing_atom("test_atom_nonexisting") == nil
-    RustlerTest.binary_to_atom("test_atom_nonexisting")
+    assert RustlerTest.binary_to_atom("test_atom_nonexisting")
     assert RustlerTest.binary_to_existing_atom("test_atom_nonexisting") != nil
   end
 
@@ -21,9 +21,9 @@ defmodule RustlerTest.AtomTest do
     assert catch_error(RustlerTest.atom_to_string("already a string")) == :badarg
   end
 
-  test "term equals ok" do
+  test "atom equals ok" do
     assert RustlerTest.atom_equals_ok(:ok)
     refute RustlerTest.atom_equals_ok(:fish)
-    refute RustlerTest.atom_equals_ok("ok")
+    assert catch_error(RustlerTest.atom_equals_ok("ok")) == :badarg
   end
 end

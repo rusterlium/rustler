@@ -12,7 +12,7 @@ defmodule RustlerTest.TermTest do
 
     assert RustlerTest.term_debug(Enum.to_list(0..5)) == "[0,1,2,3,4,5]"
     assert RustlerTest.term_debug(Enum.to_list(0..1000)) == "[#{Enum.join(0..1000, ",")}]"
-    # assert RustlerTest.term_debug([[[[]],[]],[[]],[]]) == "[[[[]],[]],[[]],[]]"
+    assert RustlerTest.term_debug([[[[]], []], [[]], []]) == "[[[[]],[]],[[]],[]]"
 
     sues = Enum.map(1..500, fn i -> %{name: "Aunt Sue", id: i} end)
     sue_strs = Enum.map(1..500, fn i -> "\#{id=>#{i},name=><<\"Aunt Sue\">>}" end)

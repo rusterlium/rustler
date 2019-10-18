@@ -1,9 +1,9 @@
 use rustler::thread;
 use rustler::types::atom;
-use rustler::{Encoder, Env, NifResult, Term};
-use std;
+use rustler::{Atom, Encoder, Env};
 
-pub fn threaded_fac<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+#[rustler::nif]
+pub fn threaded_fac(env: Env, n: u64) -> Atom {
     // Multiply two numbers; panic on overflow. In Rust, the `*` operator wraps (rather than
     // panicking) in release builds. A test depends on this panicking, so we make sure it panics in
     // all builds. The test also checks the panic message.
@@ -11,18 +11,16 @@ pub fn threaded_fac<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> 
         a.checked_mul(b).expect("threaded_fac: integer overflow")
     }
 
-    let n: u64 = args[0].decode()?;
     thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
         let result = (1..=n).fold(1, mul);
         result.encode(thread_env)
     });
 
-    Ok(atom::ok().to_term(env))
+    atom::ok()
 }
 
-pub fn threaded_sleep<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let msec: u64 = args[0].decode()?;
-
+#[rustler::nif]
+pub fn threaded_sleep(env: Env, msec: u64) -> Atom {
     let q = msec / 1000;
     let r = (msec % 1000) as u32;
     thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
@@ -30,5 +28,5 @@ pub fn threaded_sleep<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>
         msec.encode(thread_env)
     });
 
-    Ok(atom::ok().to_term(env))
+    atom::ok()
 }

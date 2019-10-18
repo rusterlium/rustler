@@ -269,6 +269,9 @@ macro_rules! rustler_atoms {
 }
 
 atoms! {
+    /// The `nif_panicked` atom.
+    nif_panicked,
+
     /// The `nil` atom.
     nil,
 

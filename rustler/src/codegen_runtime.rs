@@ -1,10 +1,11 @@
 //! Functions used by runtime generated code. Should not be used.
 
 use std::ffi::CString;
+use std::fmt;
 
 use crate::{Env, Term};
 
-// Names used by the `init!` macro or other generated code.
+// Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
     c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
@@ -17,6 +18,7 @@ pub use rustler_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
 pub unsafe trait NifReturnable {
     unsafe fn as_returned(self, env: Env) -> NifReturned;
 }
+
 unsafe impl<T> NifReturnable for T
 where
     T: crate::Encoder,
@@ -25,6 +27,7 @@ where
         NifReturned::Term(self.encode(env).as_c_arg())
     }
 }
+
 unsafe impl<T> NifReturnable for Result<T, crate::error::Error>
 where
     T: crate::Encoder,
@@ -48,6 +51,7 @@ pub enum NifReturned {
         args: Vec<NIF_TERM>,
     },
 }
+
 impl NifReturned {
     pub unsafe fn apply(self, env: Env) -> NIF_TERM {
         match self {
@@ -73,6 +77,17 @@ impl NifReturned {
     }
 }
 
+impl fmt::Debug for NifReturned {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        match self {
+            NifReturned::BadArg => write!(fmt, "{{error, badarg}}"),
+            NifReturned::Term(ref s) => write!(fmt, "{{ok, {}}}", s),
+            NifReturned::Raise(ref s) => write!(fmt, "throw({})", s),
+            NifReturned::Reschedule { .. } => write!(fmt, "reschedule()"),
+        }
+    }
+}
+
 /// # Unsafe
 ///
 /// This takes arguments, including raw pointers, that must be correct.
@@ -92,5 +107,29 @@ pub unsafe fn handle_nif_init_call(
         }
     } else {
         0
+    }
+}
+
+pub fn handle_nif_result<T>(
+    result: std::thread::Result<Result<T, crate::error::Error>>,
+    env: Env,
+) -> NifReturned
+where
+    T: NifReturnable,
+{
+    unsafe {
+        match result {
+            Ok(res) => match res {
+                Ok(res) => NifReturnable::as_returned(res, env),
+                Err(err) => NifReturnable::as_returned(err, env),
+            },
+            Err(err) => match err.downcast::<NifReturned>() {
+                Ok(ty) => NifReturned::Term(ty.apply(env)),
+                Err(_) => {
+                    let term = crate::types::atom::nif_panicked().as_c_arg();
+                    NifReturned::Raise(term)
+                }
+            },
+        }
     }
 }
