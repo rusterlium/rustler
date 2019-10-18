@@ -9,15 +9,15 @@ use super::RustlerAttr;
 /// `Context` holds information usable for different codegen modules.
 ///
 pub(crate) struct Context<'a> {
-    pub(crate) attrs: Vec<RustlerAttr>,
-    pub(crate) ident: &'a proc_macro2::Ident,
-    pub(crate) ident_with_lifetime: proc_macro2::TokenStream,
-    pub(crate) variants: Option<Vec<&'a Variant>>,
-    pub(crate) struct_fields: Option<Vec<&'a Field>>,
+    pub attrs: Vec<RustlerAttr>,
+    pub ident: &'a proc_macro2::Ident,
+    pub ident_with_lifetime: proc_macro2::TokenStream,
+    pub variants: Option<Vec<&'a Variant>>,
+    pub struct_fields: Option<Vec<&'a Field>>,
 }
 
 impl<'a> Context<'a> {
-    pub(crate) fn from_ast(ast: &'a syn::DeriveInput) -> Self {
+    pub fn from_ast(ast: &'a syn::DeriveInput) -> Self {
         let mut attrs: Vec<_> = ast
             .attrs
             .iter()
@@ -65,21 +65,21 @@ impl<'a> Context<'a> {
         }
     }
 
-    pub(crate) fn encode(&self) -> bool {
+    pub fn encode(&self) -> bool {
         self.attrs.iter().any(|attr| match attr {
             RustlerAttr::Encode => true,
             _ => false,
         })
     }
 
-    pub(crate) fn decode(&self) -> bool {
+    pub fn decode(&self) -> bool {
         self.attrs.iter().any(|attr| match attr {
             RustlerAttr::Decode => true,
             _ => false,
         })
     }
 
-    pub(crate) fn field_atoms(&self) -> Option<Vec<TokenStream>> {
+    pub fn field_atoms(&self) -> Option<Vec<TokenStream>> {
         self.struct_fields.as_ref().map(|struct_fields| {
             struct_fields
                 .iter()
