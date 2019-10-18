@@ -26,19 +26,25 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
 
+    let atoms_module_name = ctx.atoms_module_name(Span::call_site());
+
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &atom_defs, &struct_fields)
+        gen_decoder(&ctx, &struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &atom_defs, &struct_fields)
+        gen_encoder(&ctx, &struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let gen = quote! {
+        mod #atoms_module_name {
+            #atom_defs
+        }
+
         #decoder
         #encoder
     };
@@ -46,7 +52,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
 
@@ -73,7 +79,7 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                #atom_defs
+                use #atoms_module_name::*;
 
                 let env = term.get_env();
 
@@ -90,7 +96,7 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     gen
 }
 
-fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
     let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
@@ -105,8 +111,7 @@ fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                #atom_defs
-
+                use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);
                 map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).ok().unwrap();
                 #(#field_defs)*
