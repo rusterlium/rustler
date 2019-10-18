@@ -99,14 +99,17 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
-    let field_defs: Vec<TokenStream> = fields.iter().map(|field| {
-        let field_ident = field.ident.as_ref().unwrap();
-        let field_ident_str = field_ident.to_string();
-        let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
-        quote! {
-            map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
-        }
-    }).collect();
+    let field_defs: Vec<TokenStream> = fields
+        .iter()
+        .map(|field| {
+            let field_ident = field.ident.as_ref().unwrap();
+            let field_ident_str = field_ident.to_string();
+            let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
+            quote! {
+                map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
+            }
+        })
+        .collect();
 
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
