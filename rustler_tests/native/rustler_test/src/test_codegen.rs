@@ -88,3 +88,40 @@ pub fn untagged_enum_with_truthy<'a>(
     let untagged_enum: UntaggedEnumWithTruthy = args[0].decode()?;
     Ok(untagged_enum)
 }
+
+#[derive(NifTuple)]
+pub struct Newtype(i64);
+
+pub fn newtype_echo<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<Newtype> {
+    let newtype: Newtype = args[0].decode()?;
+    Ok(newtype)
+}
+
+#[derive(NifTuple)]
+pub struct TupleStruct(i64, i64, i64);
+
+pub fn tuplestruct_echo<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<TupleStruct> {
+    let tuplestruct: TupleStruct = args[0].decode()?;
+    Ok(tuplestruct)
+}
+
+#[derive(NifRecord)]
+#[tag = "newtype"]
+pub struct NewtypeRecord(i64);
+
+pub fn newtype_record_echo<'a>(_env: Env<'a>, args: &[Term<'a>]) -> NifResult<NewtypeRecord> {
+    let newtype: NewtypeRecord = args[0].decode()?;
+    Ok(newtype)
+}
+
+#[derive(NifRecord)]
+#[tag = "tuplestruct"]
+pub struct TupleStructRecord(i64, i64, i64);
+
+pub fn tuplestruct_record_echo<'a>(
+    _env: Env<'a>,
+    args: &[Term<'a>],
+) -> NifResult<TupleStructRecord> {
+    let tuplestruct: TupleStructRecord = args[0].decode()?;
+    Ok(tuplestruct)
+}

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Field};
+use syn::{self, Field, Index};
 
 use super::context::Context;
 use super::RustlerAttr;
@@ -50,20 +50,29 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
         .iter()
         .enumerate()
         .map(|(index, field)| {
-            let ident = field.ident.as_ref().unwrap();
+            let ident = field.ident.as_ref();
+            let pos_in_struct = if let Some(ident) = ident {
+                ident.to_string()
+            } else {
+                index.to_string()
+            };
             let error_message = format!(
-                "Could not decode field :{} on Record {}",
-                ident.to_string(),
+                "Could not decode field {} on Record {}",
+                pos_in_struct,
                 struct_name.to_string()
             );
+            let actual_index = index + 1;
             let decoder = quote! {
-                match ::rustler::Decoder::decode(terms[#index + 1]) {
+                match ::rustler::Decoder::decode(terms[#actual_index]) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
                     Ok(value) => value
                 }
             };
 
-            quote! { #ident: #decoder }
+            match ident {
+                None => quote! { #decoder },
+                Some(ident) => quote! { #ident: #decoder },
+            }
         })
         .collect();
 
@@ -71,13 +80,23 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     let struct_name_str = struct_name.to_string();
 
     // The implementation itself
+    let construct = if ctx.is_tuple_struct {
+        quote! {
+            #struct_name ( #(#field_defs),* )
+        }
+    } else {
+        quote! {
+            #struct_name { #(#field_defs),* }
+        }
+    };
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #atom_defs
 
                 let terms = match ::rustler::types::tuple::get_tuple(term) {
-                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(format!("Invalid Record structure for {}", #struct_name_str)))),
+                    Err(_) => return Err(::rustler::Error::RaiseTerm(
+                            Box::new(format!("Invalid Record structure for {}", #struct_name_str)))),
                     Ok(value) => value,
                 };
 
@@ -92,9 +111,7 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
                 }
 
                 Ok(
-                    #struct_name {
-                        #(#field_defs),*
-                    }
+                    #construct
                 )
             }
         }
@@ -109,9 +126,14 @@ fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<TokenStream> = fields
         .iter()
-        .map(|field| {
-            let field_ident = field.ident.as_ref().unwrap();
-            let field_source = quote! { self.#field_ident };
+        .enumerate()
+        .map(|(index, field)| {
+            let literal_index = Index::from(index);
+            let field_source = match field.ident.as_ref() {
+                None => quote! { self.#literal_index },
+                Some(ident) => quote! { self.#ident },
+            };
+
             quote! { #field_source.encode(env) }
         })
         .collect();

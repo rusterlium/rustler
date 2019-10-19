@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use syn::{Data, Field, Ident, Lit, Meta, NestedMeta, Variant};
+use syn::{Data, Field, Fields, Ident, Lit, Meta, NestedMeta, Variant};
 
 use super::RustlerAttr;
 
@@ -14,6 +14,7 @@ pub(crate) struct Context<'a> {
     pub ident_with_lifetime: proc_macro2::TokenStream,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
+    pub is_tuple_struct: bool,
 }
 
 impl<'a> Context<'a> {
@@ -56,12 +57,21 @@ impl<'a> Context<'a> {
             _ => None,
         };
 
+        let is_tuple_struct = match ast.data {
+            Data::Struct(ref data_struct) => match data_struct.fields {
+                Fields::Unnamed(_) => true,
+                _ => false,
+            },
+            _ => false,
+        };
+
         Self {
             attrs,
             ident,
             ident_with_lifetime,
             variants,
             struct_fields,
+            is_tuple_struct,
         }
     }
 

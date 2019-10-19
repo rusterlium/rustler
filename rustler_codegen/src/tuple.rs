@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Field};
+use syn::{self, Field, Index};
 
 use super::context::Context;
 
@@ -13,13 +13,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .expect("NifTuple can only be used with structs");
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &struct_fields, false)
+        gen_decoder(&ctx, &struct_fields)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &struct_fields, false)
+        gen_encoder(&ctx, &struct_fields)
     } else {
         quote! {}
     };
@@ -32,7 +32,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
 
@@ -41,7 +41,18 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream 
         .iter()
         .enumerate()
         .map(|(index, field)| {
-            let error_message = format!("Could not decode index {} on tuple", index);
+            let ident = field.ident.as_ref();
+            let pos_in_struct = if let Some(ident) = ident {
+                ident.to_string()
+            } else {
+                index.to_string()
+            };
+            let error_message = format!(
+                "Could not decode field {} on {}",
+                pos_in_struct,
+                struct_name.to_string()
+            );
+
             let decoder = quote! {
                 match ::rustler::Decoder::decode(terms[#index]) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
@@ -49,11 +60,9 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream 
                 }
             };
 
-            if is_tuple {
-                unimplemented!();
-            } else {
-                let ident = field.ident.as_ref().unwrap();
-                quote! { #ident: #decoder }
+            match ident {
+                None => quote! { #decoder },
+                Some(ident) => quote! { #ident: #decoder },
             }
         })
         .collect();
@@ -61,6 +70,15 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream 
     let field_num = field_defs.len();
 
     // The implementation itself
+    let construct = if ctx.is_tuple_struct {
+        quote! {
+            #struct_name ( #(#field_defs),* )
+        }
+    } else {
+        quote! {
+            #struct_name { #(#field_defs),* }
+        }
+    };
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
@@ -69,9 +87,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream 
                     return Err(::rustler::Error::BadArg);
                 }
                 Ok(
-                    #struct_name {
-                        #(#field_defs),*
-                    }
+                    #construct
                 )
             }
         }
@@ -80,19 +96,20 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream 
     gen
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field], is_tuple: bool) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
     // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<TokenStream> = fields
         .iter()
-        .map(|field| {
-            let field_source = if is_tuple {
-                unimplemented!();
-            } else {
-                let field_ident = field.ident.as_ref().unwrap();
-                quote! { self.#field_ident }
+        .enumerate()
+        .map(|(index, field)| {
+            let literal_index = Index::from(index);
+            let field_source = match field.ident.as_ref() {
+                None => quote! { self.#literal_index },
+                Some(ident) => quote! { self.#ident },
             };
+
             quote! { #field_source.encode(env) }
         })
         .collect();
