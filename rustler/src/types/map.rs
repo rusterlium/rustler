@@ -53,10 +53,14 @@ impl<'a> Term<'a> {
         keys: &[Term<'a>],
         values: &[Term<'a>],
     ) -> NifResult<Term<'a>> {
-        let map = map_new(env);
-        keys.iter()
-            .zip(values.iter())
-            .try_fold(map, |map, (k, v)| map.map_put(*k, *v))
+        if keys.len() == values.len() {
+            let map = map_new(env);
+            keys.iter()
+                .zip(values.iter())
+                .try_fold(map, |map, (k, v)| map.map_put(*k, *v))
+        } else {
+            Err(Error::BadArg)
+        }
     }
 
     /// Gets the value corresponding to a key in a map term.

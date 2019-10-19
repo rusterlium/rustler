@@ -86,7 +86,7 @@ defmodule RustlerTest.CodegenTest do
     test "with invalid Record" do
       require AddRecord
       value = AddRecord.record(lhs: 5, rhs: "invalid")
-      message = "Erlang error: \"Could not decode field :rhs on Record AddRecord\""
+      message = "Erlang error: \"Could not decode field rhs on Record AddRecord\""
 
       assert_raise ErlangError, message, fn -> RustlerTest.record_echo(value) end
     end
