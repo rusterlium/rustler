@@ -2,14 +2,17 @@ language: elixir
 
 matrix:
   include:
-    - otp_release: 21.0
+    - otp_release: 20.0
       elixir: 1.6
-    - otp_release: 21.3
-      elixir: 1.7.4
-    - otp_release: 21.3
-      elixir: 1.8.1
-    - otp_release: 22.0
-      elixir: 1.8.1
+
+    - otp_release: 20.0
+      elixir: 1.7
+
+    - otp_release: 20.0
+      elixir: 1.8
+
+    - otp_release: 20.0
+      elixir: 1.9
 
 env:
   global:
@@ -24,11 +27,9 @@ install:
   - mix local.rebar --force
   - mix local.hex --force
   - source $HOME/.cargo/env
-  - rustup component add clippy
 
 script:
   - source $HOME/.cargo/env
   - cargo test
   - cd rustler_mix && mix do deps.get, test && cd -
   - cd rustler_tests && mix do deps.get, test && cd -
-  - cargo clippy --all-targets --all-features -- -D warnings

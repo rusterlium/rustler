@@ -4,17 +4,17 @@ end
 
 defmodule AddRecord do
   import Record
-  defrecord :record, [lhs: 1, rhs: 2]
+  defrecord :record, lhs: 1, rhs: 2
 end
 
 defmodule NewtypeRecord do
   import Record
-  defrecord :newtype, [a: 1]
+  defrecord :newtype, a: 1
 end
 
 defmodule TupleStructRecord do
   import Record
-  defrecord :tuplestruct, [a: 1, b: 2, c: 3]
+  defrecord :tuplestruct, a: 1, b: 2, c: 3
 end
 
 defmodule RustlerTest.CodegenTest do
@@ -58,11 +58,13 @@ defmodule RustlerTest.CodegenTest do
     end
 
     test "with invalid struct" do
-       value = %AddStruct{lhs: "lhs", rhs: 123}
+      value = %AddStruct{lhs: "lhs", rhs: 123}
 
-      assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"", fn ->
-         RustlerTest.struct_echo(value)
-      end
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"",
+                   fn ->
+                     RustlerTest.struct_echo(value)
+                   end
     end
   end
 
@@ -84,10 +86,9 @@ defmodule RustlerTest.CodegenTest do
     test "with invalid Record" do
       require AddRecord
       value = AddRecord.record(lhs: 5, rhs: "invalid")
+      message = "Erlang error: \"Could not decode field rhs on Record AddRecord\""
 
-      assert_raise ErlangError, "Erlang error: \"Could not decode field rhs on Record AddRecord\"", fn ->
-        RustlerTest.record_echo(value)
-      end
+      assert_raise ErlangError, message, fn -> RustlerTest.record_echo(value) end
     end
   end
 
@@ -101,24 +102,30 @@ defmodule RustlerTest.CodegenTest do
     assert 123 == RustlerTest.untagged_enum_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_echo("Hello")
     assert RustlerTest.untagged_enum_echo(true)
-    assert %AddStruct{lhs: 45, rhs: 123} = RustlerTest.untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
+
+    assert %AddStruct{lhs: 45, rhs: 123} =
+             RustlerTest.untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
+
     assert true == RustlerTest.untagged_enum_echo(true)
-    assert :invalid_variant == RustlerTest.untagged_enum_echo([1,2,3,4])
+    assert :invalid_variant == RustlerTest.untagged_enum_echo([1, 2, 3, 4])
   end
 
   test "untagged enum with truthy" do
     assert %AddStruct{lhs: 45, rhs: 123} =
-      RustlerTest.untagged_enum_with_truthy(%AddStruct{lhs: 45, rhs: 123})
-    assert true == RustlerTest.untagged_enum_with_truthy([1,2,3,4])
+             RustlerTest.untagged_enum_with_truthy(%AddStruct{lhs: 45, rhs: 123})
+
+    assert true == RustlerTest.untagged_enum_with_truthy([1, 2, 3, 4])
     assert false == RustlerTest.untagged_enum_with_truthy(false)
     assert false == RustlerTest.untagged_enum_with_truthy(nil)
   end
 
   test "newtype tuple" do
     assert {1} == RustlerTest.newtype_echo({1})
+
     assert_raise ErlangError, "Erlang error: \"Could not decode field 0 on Newtype\"", fn ->
       RustlerTest.newtype_echo({"with error message"})
     end
+
     assert_raise ArgumentError, fn ->
       RustlerTest.newtype_echo("will result in argument error")
     end
@@ -146,13 +153,17 @@ defmodule RustlerTest.CodegenTest do
     assert value == RustlerTest.newtype_record_echo(value)
     assert :invalid_record == RustlerTest.newtype_record_echo({"with error message"})
 
-    assert_raise ErlangError, "Erlang error: \"Invalid Record structure for NewtypeRecord\"", fn ->
-      RustlerTest.newtype_record_echo("error")
-    end
+    assert_raise ErlangError,
+                 "Erlang error: \"Invalid Record structure for NewtypeRecord\"",
+                 fn ->
+                   RustlerTest.newtype_record_echo("error")
+                 end
 
-    assert_raise ErlangError, "Erlang error: \"Could not decode field 0 on Record NewtypeRecord\"", fn ->
-      RustlerTest.newtype_record_echo(NewtypeRecord.newtype(a: "error"))
-    end
+    assert_raise ErlangError,
+                 "Erlang error: \"Could not decode field 0 on Record NewtypeRecord\"",
+                 fn ->
+                   RustlerTest.newtype_record_echo(NewtypeRecord.newtype(a: "error"))
+                 end
   end
 
   test "tuplestruct record" do
@@ -161,8 +172,10 @@ defmodule RustlerTest.CodegenTest do
     assert value == RustlerTest.tuplestruct_record_echo(value)
     assert :invalid_record == RustlerTest.tuplestruct_record_echo({"invalid"})
 
-    assert_raise ErlangError, "Erlang error: \"Invalid Record structure for TupleStructRecord\"", fn ->
-      RustlerTest.tuplestruct_record_echo("error")
-    end
+    assert_raise ErlangError,
+                 "Erlang error: \"Invalid Record structure for TupleStructRecord\"",
+                 fn ->
+                   RustlerTest.tuplestruct_record_echo("error")
+                 end
   end
 end

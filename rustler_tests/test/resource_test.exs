@@ -4,7 +4,8 @@ defmodule RustlerTest.ResourceTest do
 
   test "resource creation and interaction" do
     resource = RustlerTest.resource_make()
-    assert resource == "" || is_reference(resource) # A resource looks like an empty binary < OTP20
+    # A resource looks like an empty binary < OTP20
+    assert resource == "" || is_reference(resource)
     assert RustlerTest.resource_get_integer_field(resource) == 0
     RustlerTest.resource_set_integer_field(resource, 10)
     assert RustlerTest.resource_get_integer_field(resource) == 10
@@ -24,7 +25,7 @@ defmodule RustlerTest.ResourceTest do
   test "resource cleanup 2" do
     # Create a bunch of unreferenced resources for the GC to cleanup.
     for i <- 0..1000 do
-      RustlerTest.resource_make_immutable((i * 0x11235813) &&& 0xffffffff)
+      RustlerTest.resource_make_immutable(i * 0x11235813 &&& 0xFFFFFFFF)
     end
 
     # Clean them up. Don't crash.

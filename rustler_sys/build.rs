@@ -3,9 +3,9 @@
 // Execute Erlang script to generate API lists and extract config.
 //
 
-use std::{env, fs};
 use std::path::Path;
 use std::process::Command;
+use std::{env, fs};
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
 
@@ -48,7 +48,8 @@ fn main() {
     if !try_gen_api(&dst, target_pointer_width) {
         eprintln!("Failed to generate API from local installation, falling back to precompiled");
 
-        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", target_pointer_width));
+        let source =
+            Path::new(&"precompiled").join(format!("nif_api.{}.snippet", target_pointer_width));
 
         fs::copy(&source, &dst).unwrap();
     }
