@@ -86,6 +86,14 @@ rustler::init!(
             1,
             test_codegen::untagged_enum_with_truthy
         ),
+        ("newtype_echo", 1, test_codegen::newtype_echo),
+        ("tuplestruct_echo", 1, test_codegen::tuplestruct_echo),
+        ("newtype_record_echo", 1, test_codegen::newtype_record_echo),
+        (
+            "tuplestruct_record_echo",
+            1,
+            test_codegen::tuplestruct_record_echo
+        ),
         ("dirty_cpu", 0, test_dirty::dirty_cpu, DirtyCpu),
         ("dirty_io", 0, test_dirty::dirty_io, DirtyIo),
         ("sum_range", 1, test_range::sum_range),
