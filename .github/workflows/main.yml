@@ -51,18 +51,36 @@ jobs:
         run: mix format --check-formatted
 
   test:
-    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}} / Rust ${{matrix.rust}}
+    name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp: 
-          - 22.1.3
-          - 21.3.8
-        elixir:
-          - 1.9.2
-          - 1.8.2
-          - 1.7.4
-          - 1.6.6
+        pair:
+          - erlang: 22.x
+            elixir: 1.9
+          - erlang: 22.x
+            elixir: 1.8
+          - erlang: 22.x
+            elixir: 1.7
+          - erlang: 22.x
+            elixir: 1.6
+
+          - erlang: 21.x
+            elixir: 1.9
+          - erlang: 21.x
+            elixir: 1.8
+          - erlang: 21.x
+            elixir: 1.7
+          - erlang: 21.x
+            elixir: 1.6
+
+          - erlang: 20.3.8.23
+            elixir: 1.8
+          - erlang: 20.3.8.23
+            elixir: 1.7
+          - erlang: 20.3.8.23
+            elixir: 1.6
+
         rust:
           - stable
           - beta
@@ -74,8 +92,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: actions/setup-elixir@v1.0.0
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
+          otp-version: ${{matrix.pair.erlang}}
+          elixir-version: ${{matrix.pair.elixir}}
 
       - name: Install Rust ${{matrix.rust}} toolchain
         uses: actions-rs/toolchain@v1
