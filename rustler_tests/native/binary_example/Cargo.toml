@@ -1,0 +1,9 @@
+[package]
+name = "binary_example"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[[bin]]
+name = "binary_example"
+path = "src/main.rs"
