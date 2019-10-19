@@ -2,7 +2,7 @@
 
 [Documentation](https://docs.rs/crate/rustler) | [Getting Started](https://github.com/rusterlium/rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/NifIo)
 
-[![Build Status](https://travis-ci.org/rusterlium/rustler.svg?branch=master)](https://travis-ci.org/rusterlium/rustler)
+![Build Status](https://github.com/rusterlium/rustler/workflows/CI/badge.svg?branch=master)
 
 Rustler is a library for writing Erlang NIFs in safe Rust code. That means
 there should be no ways to crash the BEAM (Erlang VM). The library provides
