@@ -10,6 +10,7 @@ defmodule RustlerTest.Mixfile do
       start_permanent: Mix.env() == :prod,
       compilers: [:rustler] ++ Mix.compilers(),
       rustler_crates: [
+       binary_example: [mode: :debug],
         rustler_test: [mode: :debug],
         deprecated_macros: [mode: :debug]
       ],
