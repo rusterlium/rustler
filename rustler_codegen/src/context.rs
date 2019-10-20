@@ -75,6 +75,10 @@ impl<'a> Context<'a> {
         }
     }
 
+    pub fn atoms_module_name(&self, span: Span) -> Ident {
+        Ident::new(&format!("RUSTLER_ATOMS_{}", self.ident), span)
+    }
+
     pub fn encode(&self) -> bool {
         self.attrs.iter().any(|attr| match attr {
             RustlerAttr::Encode => true,

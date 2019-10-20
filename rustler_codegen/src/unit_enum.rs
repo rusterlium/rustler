@@ -37,19 +37,25 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
 
+    let atoms_module_name = ctx.atoms_module_name(Span::call_site());
+
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &variants, &atom_defs)
+        gen_decoder(&ctx, &variants, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &variants, &atom_defs)
+        gen_encoder(&ctx, &variants, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let gen = quote! {
+        mod #atoms_module_name {
+            #atom_defs
+        }
+
         #decoder
         #encoder
     };
@@ -57,7 +63,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, variants: &[&Variant], atom_defs: &TokenStream) -> TokenStream {
+fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
@@ -79,7 +85,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atom_defs: &TokenStream) ->
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                #atom_defs
+                use #atoms_module_name::*;
 
                 let value = ::rustler::types::atom::Atom::from_term(term)?;
 
@@ -93,7 +99,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atom_defs: &TokenStream) ->
     gen
 }
 
-fn gen_encoder(ctx: &Context, variants: &[&Variant], atom_defs: &TokenStream) -> TokenStream {
+fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
@@ -113,7 +119,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atom_defs: &TokenStream) ->
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #enum_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                #atom_defs
+                use #atoms_module_name::*;
 
                 match *self {
                     #(#variant_defs)*

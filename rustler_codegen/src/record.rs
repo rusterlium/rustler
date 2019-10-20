@@ -1,6 +1,6 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 
-use syn::{self, Field, Index};
+use syn::{self, Field, Ident, Index};
 
 use super::context::Context;
 use super::RustlerAttr;
@@ -21,19 +21,25 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         }
     };
 
+    let atoms_module_name = ctx.atoms_module_name(Span::call_site());
+
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &atom_defs, &struct_fields)
+        gen_decoder(&ctx, &struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &atom_defs, &struct_fields)
+        gen_encoder(&ctx, &struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let gen = quote! {
+        mod #atoms_module_name {
+            #atom_defs
+        }
+
         #decoder
         #encoder
     };
@@ -41,7 +47,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
 
@@ -92,7 +98,7 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
-                #atom_defs
+                use #atoms_module_name::*;
 
                 let terms = match ::rustler::types::tuple::get_tuple(term) {
                     Err(_) => return Err(::rustler::Error::RaiseTerm(
@@ -120,7 +126,7 @@ fn gen_decoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     gen
 }
 
-fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
     // Make a field encoder expression for each of the items in the struct.
@@ -150,7 +156,8 @@ fn gen_encoder(ctx: &Context, atom_defs: &TokenStream, fields: &[&Field]) -> Tok
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                #atom_defs
+                use #atoms_module_name::*;
+
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }
