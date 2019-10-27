@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Rustler.New do
   Generates boilerplate for a new Rustler project.
 
   Usage:
-  mix rustler.new path
+  mix rustler.new [--module <Module>] [--name <Name>]
   """
 
   @basic [
