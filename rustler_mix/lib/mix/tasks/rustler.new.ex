@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Rustler.New do
   Generates boilerplate for a new Rustler project.
 
   Usage:
-  mix rustler.new path
+  mix rustler.new [--module <Module>] [--name <Name>] [--otp-app <OTP App>]
   """
 
   @basic [
@@ -26,32 +26,49 @@ defmodule Mix.Tasks.Rustler.New do
     end
   end
 
-  @switches []
+  @switches [:module, :name, :otp_app]
 
   def run(argv) do
     {opts, _argv, _} = OptionParser.parse(argv, switches: @switches)
 
     module =
-      prompt(
-        "This is the name of the Elixir module the NIF module will be registered to.\nModule name"
-      )
+      case opts[:module] do
+        nil ->
+          prompt(
+            "This is the name of the Elixir module the NIF module will be registered to.\n" <>
+              "Module name"
+          )
+        module -> module
+      end
 
     name =
-      prompt_default(
-        "This is the name used for the generated Rust crate. The default is most likely fine.\nLibrary name",
-        format_module_name_as_name(module)
-      )
+      case opts[:name] do
+        nil ->
+          prompt_default(
+            "This is the name used for the generated Rust crate. The default is most likely fine.\n" <>
+              "Library name",
+            format_module_name_as_name(module)
+          )
+        name -> name
+      end
+
+    otp_app =
+      case opts[:otp_app] do
+        nil -> Mix.Project.config() |> Keyword.get(:app)
+        otp_app -> otp_app
+      end
 
     check_module_name_validity!(module)
 
     path = Path.join([File.cwd!(), "native/", name])
-    new(path, module, name, opts)
+    new(otp_app, path, module, name, opts)
   end
 
-  def new(path, module, name, _opts) do
+  def new(otp_app, path, module, name, _opts) do
     module_elixir = "Elixir." <> module
 
     binding = [
+      otp_app: otp_app,
       project_name: module_elixir,
       native_module: module_elixir,
       module: module,

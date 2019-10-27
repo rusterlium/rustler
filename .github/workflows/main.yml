@@ -108,6 +108,7 @@ jobs:
         run: |
           mix deps.get
           mix test
+          ./test.sh
 
       - name: Test rustler_tests
         working-directory: rustler_tests

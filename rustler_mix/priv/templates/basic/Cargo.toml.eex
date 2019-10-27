@@ -11,4 +11,3 @@ crate-type = ["dylib"]
 
 [dependencies]
 rustler = "<%= rustler_version %>"
-lazy_static = "1.0"
