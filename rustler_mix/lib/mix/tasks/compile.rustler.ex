@@ -1,4 +1,17 @@
 defmodule Mix.Tasks.Compile.Rustler do
+  @moduledoc """
+  Compiles Erlang NIFs written in Rust by calling into `cargo`.
+
+  This task extracts the configuration for Rustler crates from `mix.exs`
+  and spawns a `cargo` process to do the actual compilation.
+
+  This task is usually used by configuring the compilers in `mix.exs`. In
+  `project/0`, add `compilers: [:rustler] ++ Mix.compilers(),`. Then, `mix compile`
+  will automatically pick up `mix compile.rustler`.
+  """
+
+  @shortdoc "Compiles Erlang NIFs written in Rust by calling into `cargo`"
+
   use Mix.Task
   require Logger
 
