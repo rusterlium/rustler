@@ -38,7 +38,9 @@ defmodule Mix.Tasks.Rustler.New do
             "This is the name of the Elixir module the NIF module will be registered to.\n" <>
               "Module name"
           )
-        module -> module
+
+        module ->
+          module
       end
 
     name =
@@ -49,7 +51,9 @@ defmodule Mix.Tasks.Rustler.New do
               "Library name",
             format_module_name_as_name(module)
           )
-        name -> name
+
+        name ->
+          name
       end
 
     otp_app =
