@@ -15,7 +15,7 @@ defmodule Rustler.Mixfile do
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md"],
+        extras: ["README.md", "../CHANGELOG.md"],
         source_url_pattern:
           "https://github.com/rusterlium/rustler/blob/master/rustler_mix/%{path}#L%{line}"
       ],
