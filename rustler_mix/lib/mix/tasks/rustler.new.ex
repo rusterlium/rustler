@@ -7,7 +7,10 @@ defmodule Mix.Tasks.Rustler.New do
   Generates boilerplate for a new Rustler project.
 
   Usage:
+
+  ```
   mix rustler.new [--module <Module>] [--name <Name>] [--otp-app <OTP App>]
+  ```
   """
 
   @basic [
