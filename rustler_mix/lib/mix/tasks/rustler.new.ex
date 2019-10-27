@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Rustler.New do
   for {format, source, _} <- @basic do
     unless format == :keep do
       @external_resource Path.join(root, source)
-      def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
+      defp render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
     end
   end
 
@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Rustler.New do
     new(otp_app, path, module, name, opts)
   end
 
-  def new(otp_app, path, module, name, _opts) do
+  defp new(otp_app, path, module, name, _opts) do
     module_elixir = "Elixir." <> module
 
     binding = [
@@ -115,7 +115,7 @@ defmodule Mix.Tasks.Rustler.New do
     end
   end
 
-  def prompt_default(message, default) do
+  defp prompt_default(message, default) do
     response = prompt([message, :white, " (", default, ")"])
 
     case response do
@@ -124,7 +124,7 @@ defmodule Mix.Tasks.Rustler.New do
     end
   end
 
-  def prompt(message) do
+  defp prompt(message) do
     Mix.Shell.IO.print_app()
     resp = IO.gets(IO.ANSI.format([message, :white, " > "]))
     ?\n = :binary.last(resp)

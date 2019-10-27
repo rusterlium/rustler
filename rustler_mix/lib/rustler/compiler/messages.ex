@@ -1,4 +1,6 @@
 defmodule Rustler.Compiler.Messages do
+  @moduledoc false
+
   def message(:rustup_not_installed) do
     """
     Rustup could not be found on your machine.
