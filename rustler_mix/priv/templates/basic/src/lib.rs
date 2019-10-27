@@ -2,10 +2,10 @@ use rustler::{Encoder, Env, Error, Term};
 
 mod atoms {
     rustler::atoms! {
-        atom ok;
-        //atom error;
-        //atom __true__ = "true";
-        //atom __false__ = "false";
+        ok,
+        // error,
+        // __true__ = "true",
+        // __false__ = "false"
     }
 }
 
