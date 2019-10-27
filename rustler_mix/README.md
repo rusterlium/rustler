@@ -1,20 +1,36 @@
-# Mix Compiler Basics
+# Rustler
 
-The mix compiler takes care of compiling your NIFs along with your project, in addition to providing boilerplate generators.
+This is the Mix package for [rustler](https://github.com/rusterlium/Rustler), a library to write Erlang NIFs in
+safe Rust code. Here, we provide the basic functionality to use Rustler from Elixir:
 
-Setting up a new Rust NIF in your project is fairly easy:
+* A task to generate a new crate to write NIFs (`mix help rustler.new`)
+* A task to compile NIFs written in Rust (`mix help compile.rustler`)
 
-1. Add the `:rustler` dependency to your applications `mix.exs`.
-2. Run `mix deps.get` to fetch the dependency.
-3. Run `mix rustler.new` and follow the instructions to generate the boilerplate for your NIF.
-4. Enable the `:rustler` mix compiler by adding `compilers: [:rustler] ++ Mix.compilers(),` to the `project` section of your `mix.exs`.
-5. Add a configuration entry to the `rustler_crates` section of your `mix.exs`. [See below](#crate-configuration).
-6. Load the NIF in your program. [See below](#loading-the-nif).
+See below for information on how to install this, which options are exposed through the configuration, and how to
+load a NIF.
+
+## Installation
+
+This package is available on [`hex.pm`](https://hex.pm/packages/rustler). To install it, add it to your dependencies:
+
+```elixir
+def deps do
+  [{:rustler, "~> 0.21.0"}]
+end
+```
+
+Then,
+
+1. Run `mix deps.get` to fetch the dependency.
+2. Run `mix rustler.new` and follow the instructions to generate the boilerplate for your NIF.
+3. Enable the `:rustler` mix compiler by adding `compilers: [:rustler] ++ Mix.compilers(),` to the `project` section of your `mix.exs`.
+4. Add a configuration entry to the `rustler_crates` section of your `mix.exs`. [See below](#crate-configuration).
+5. Load the NIF in your program. [See below](#loading-the-nif).
 
 ## Crate configuration
 
 The `rustler_crates` configuration is a keyword list mapping the crate name (an atom) to the NIF configuration (another keyword list).
-The nif configuration may contain the following entries:
+The NIF configuration may contain the following entries:
 
 - `path` - The path to the crate directory relative to the project root
   (default: `native/<crate-name>`)
@@ -79,3 +95,5 @@ end
 
 Note that `:crate` is the name in the `[lib]` section of your `Cargo.toml`. The
 `:crate` option is optional if your crate and `otp_app` use the same name.
+
+See the `Rustler` module for more information.
