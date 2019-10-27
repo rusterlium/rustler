@@ -26,21 +26,31 @@ defmodule Mix.Tasks.Rustler.New do
     end
   end
 
-  @switches []
+  @switches [:module, :name]
 
   def run(argv) do
     {opts, _argv, _} = OptionParser.parse(argv, switches: @switches)
 
     module =
-      prompt(
-        "This is the name of the Elixir module the NIF module will be registered to.\nModule name"
-      )
+      case opts[:module] do
+        nil ->
+          prompt(
+            "This is the name of the Elixir module the NIF module will be registered to.\n" <>
+              "Module name"
+          )
+        module -> module
+      end
 
     name =
-      prompt_default(
-        "This is the name used for the generated Rust crate. The default is most likely fine.\nLibrary name",
-        format_module_name_as_name(module)
-      )
+      case opts[:name] do
+        nil ->
+          prompt_default(
+            "This is the name used for the generated Rust crate. The default is most likely fine.\n" <>
+              "Library name",
+            format_module_name_as_name(module)
+          )
+        name -> name
+      end
 
     check_module_name_validity!(module)
 
