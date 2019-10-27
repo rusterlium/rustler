@@ -50,6 +50,27 @@ jobs:
         working-directory: rustler_tests
         run: mix format --check-formatted
 
+  rustler_mix_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install Rust stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Erlang/Elixir
+        uses: actions/setup-elixir@v1.0.0
+        with:
+          otp-version: 21.x
+          elixir-version: 1.6
+
+      - name: Test rustler_mix
+        working-directory: rustler_mix
+        run: ./test.sh
+
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}}
     runs-on: ubuntu-latest
@@ -108,7 +129,6 @@ jobs:
         run: |
           mix deps.get
           mix test
-          ./test.sh
 
       - name: Test rustler_tests
         working-directory: rustler_tests
