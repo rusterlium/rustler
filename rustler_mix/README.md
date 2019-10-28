@@ -1,6 +1,6 @@
 # Rustler
 
-This is the Mix package for [rustler](https://github.com/rusterlium/Rustler), a library to write Erlang NIFs in
+This is the Mix package for [rustler](https://github.com/rusterlium/rustler), a library to write Erlang NIFs in
 safe Rust code. Here, we provide the basic functionality to use Rustler from Elixir:
 
 * A task to generate a new crate to write NIFs (`mix help rustler.new`)
