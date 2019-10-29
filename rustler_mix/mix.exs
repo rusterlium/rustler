@@ -4,8 +4,7 @@ defmodule Rustler.Mixfile do
   def project do
     [
       app: :rustler,
-      # rustler_mix version
-      version: "0.21.0",
+      version: rustler_version(),
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -23,6 +22,8 @@ defmodule Rustler.Mixfile do
       description: description()
     ]
   end
+
+  def rustler_version, do: "0.21.0"
 
   def application do
     [applications: [:logger]]
