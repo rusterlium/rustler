@@ -1,4 +1,6 @@
 defmodule Rustler.Compiler.Rustup do
+  @moduledoc false
+
   def rustup_binary, do: System.get_env("RUSTUP_BINARY") || "rustup"
 
   def version do

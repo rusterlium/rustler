@@ -1,4 +1,17 @@
 defmodule Mix.Tasks.Compile.Rustler do
+  @moduledoc """
+  Compiles Erlang NIFs written in Rust by calling into `cargo`.
+
+  This task extracts the configuration for Rustler crates from `mix.exs`
+  and spawns a `cargo` process to do the actual compilation.
+
+  This task is usually used by configuring the compilers in `mix.exs`. In
+  `project/0`, add `compilers: [:rustler] ++ Mix.compilers(),`. Then, `mix compile`
+  will automatically pick up `mix compile.rustler`.
+  """
+
+  @shortdoc "Compiles Erlang NIFs written in Rust by calling into `cargo`"
+
   use Mix.Task
   require Logger
 
@@ -25,7 +38,7 @@ defmodule Mix.Tasks.Compile.Rustler do
 
   defp priv_dir, do: "priv/native"
 
-  def compile_crate({name, config}) do
+  defp compile_crate({name, config}) do
     crate_path = Keyword.get(config, :path, "native/#{name}")
     build_mode = Keyword.get(config, :mode, :release)
 
@@ -160,7 +173,7 @@ defmodule Mix.Tasks.Compile.Rustler do
     end
   end
 
-  def make_file_names(base_name, :lib) do
+  defp make_file_names(base_name, :lib) do
     case :os.type() do
       {:win32, _} -> {"#{base_name}.dll", "lib#{base_name}.dll"}
       {:unix, :darwin} -> {"lib#{base_name}.dylib", "lib#{base_name}.so"}
@@ -168,19 +181,19 @@ defmodule Mix.Tasks.Compile.Rustler do
     end
   end
 
-  def make_file_names(base_name, :bin) do
+  defp make_file_names(base_name, :bin) do
     case :os.type() do
       {:win32, _} -> {"#{base_name}.exe", "#{base_name}.exe"}
       {:unix, _} -> {base_name, base_name}
     end
   end
 
-  def throw_error(error_descr) do
+  defp throw_error(error_descr) do
     Mix.shell().error(Messages.message(error_descr))
     raise "Compilation error"
   end
 
-  def check_crate_env(crate) do
+  defp check_crate_env(crate) do
     unless File.dir?(crate) do
       throw_error({:nonexistent_crate_directory, crate})
     end
