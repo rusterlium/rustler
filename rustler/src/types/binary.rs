@@ -2,6 +2,7 @@ use crate::wrapper::binary::{alloc, realloc, ErlNifBinary};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::borrow::{Borrow, BorrowMut};
+use std::convert::TryFrom;
 use std::io::Write;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
@@ -11,6 +12,19 @@ use std::ops::{Deref, DerefMut};
 pub struct OwnedBinary {
     inner: ErlNifBinary,
     release: bool,
+}
+
+impl TryFrom<&[u8]> for OwnedBinary {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let mut binary = OwnedBinary::new(value.len()).ok_or(Error::RaiseAtom("alloc_failed"))?;
+        binary
+            .as_mut_slice()
+            .write_all(value)
+            .or(Err(Error::RaiseAtom("io_error")))?;
+        Ok(binary)
+    }
 }
 
 impl<'a> OwnedBinary {
