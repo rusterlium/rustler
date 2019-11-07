@@ -63,7 +63,7 @@ rustler::init!(
         test_dirty::dirty_io,
         test_range::sum_range,
     ],
-    Some(load)
+    load = load
 );
 
 fn load(env: rustler::Env, _: rustler::Term) -> bool {

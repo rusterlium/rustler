@@ -7,38 +7,57 @@ use syn::{Expr, Ident, Result, Token};
 
 #[derive(Debug)]
 pub struct InitMacroInput {
-    module: syn::Lit,
+    name: syn::Lit,
     funcs: syn::ExprArray,
-    on_load: Option<TokenStream>,
+    load: TokenStream,
 }
 
 impl Parse for InitMacroInput {
     fn parse(input: ParseStream) -> Result<Self> {
-        let module = syn::Lit::parse(input)?;
+        let name = syn::Lit::parse(input)?;
         let _comma = <syn::Token![,]>::parse(input)?;
         let funcs = syn::ExprArray::parse(input)?;
-        let on_load = if input.peek(Token![,]) {
-            let _comma = <Token![,]>::parse(input)?;
-            Some(TokenStream::parse(input)?)
-        } else {
-            let none = Ident::new("None", Span::call_site());
-            Some(quote!(#none))
-        };
+        let options = parse_expr_assigns(input);
+        let load = extract_option(options, "load");
 
-        Ok(InitMacroInput {
-            module,
-            funcs,
-            on_load,
-        })
+        Ok(InitMacroInput { name, funcs, load })
     }
+}
+
+fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
+    let mut vec = Vec::new();
+
+    while let Ok(_) = <Token![,]>::parse(input) {
+        match syn::ExprAssign::parse(input) {
+            Ok(expr) => vec.push(expr),
+            Err(err) => panic!("{} (i.e. `load = load`)", err),
+        }
+    }
+    vec
+}
+
+fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
+    for syn::ExprAssign { left, right, .. } in args.into_iter() {
+        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
+            if let Some(ident) = path.get_ident() {
+                if *ident == name {
+                    let value = *right.clone();
+                    return quote!(Some(#value));
+                }
+            }
+        }
+    }
+
+    let none = Ident::new("None", Span::call_site());
+    quote!(#none)
 }
 
 impl Into<proc_macro2::TokenStream> for InitMacroInput {
     fn into(self) -> proc_macro2::TokenStream {
-        let name = self.module;
+        let name = self.name;
         let num_of_funcs = self.funcs.elems.len();
         let funcs = nif_funcs(self.funcs.elems);
-        let on_load = self.on_load;
+        let load = self.load;
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
@@ -58,7 +77,7 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
                             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
-                            rustler::codegen_runtime::handle_nif_init_call(#on_load, env, load_info)
+                            rustler::codegen_runtime::handle_nif_init_call(#load, env, load_info)
                         }
                     }
                     Some(nif_load)
