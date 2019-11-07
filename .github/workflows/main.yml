@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - id: component
-        uses: actions-rs/components-nightly@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          component: clippy
-      - run: rustup component add clippy
+            toolchain: nightly
+            components: clippy
+            override: true
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -23,12 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - id: component
-        uses: actions-rs/components-nightly@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          component: rustfmt
-      - name: Install rustfmt
-        run: rustup component add rustfmt
+            toolchain: nightly
+            components: rustfmt
+            override: true
 
       - name: Install Erlang/Elixir
         uses: actions/setup-elixir@v1.0.0
