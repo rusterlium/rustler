@@ -1,18 +1,16 @@
-use rustler::types::list::ListIterator;
-use rustler::{Encoder, Env, Error, NifResult, Term};
+use rustler::{Error, ListIterator, NifResult};
 
-pub fn sum_list<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let iter: ListIterator = args[0].decode()?;
-
+#[rustler::nif]
+pub fn sum_list(iter: ListIterator) -> NifResult<i64> {
     let res: Result<Vec<i64>, Error> = iter.map(|x| x.decode::<i64>()).collect();
 
     match res {
-        Ok(result) => Ok(result.iter().sum::<i64>().encode(env)),
+        Ok(result) => Ok(result.iter().sum::<i64>()),
         Err(err) => Err(err),
     }
 }
 
-pub fn make_list<'a>(env: Env<'a>, _args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    let list = vec![1, 2, 3];
-    Ok(list.encode(env))
+#[rustler::nif]
+pub fn make_list() -> Vec<usize> {
+    vec![1, 2, 3]
 }

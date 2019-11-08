@@ -30,7 +30,7 @@ cd $tmp
 mix new test_rustler_mix
 cd test_rustler_mix
 
-cat >mix.exs <<_
+cat >mix.exs <<EOF
 defmodule TestRustlerMix.MixProject do
   use Mix.Project
 
@@ -48,7 +48,7 @@ defmodule TestRustlerMix.MixProject do
 
   defp deps, do: [ {:rustler, path: "$rustler_mix"} ]
 end
-_
+EOF
 
 mix deps.get
 mix deps.compile
@@ -57,7 +57,7 @@ mix rustler.new --module RustlerMixTest --name rustler_mix_test
 
 sed -i "s|^rustler.*$|rustler = { path = \"$rustler\" }|" native/rustler_mix_test/Cargo.toml
 
-cat >mix.exs <<_
+cat >mix.exs <<EOF
 defmodule TestRustlerMix.MixProject do
   use Mix.Project
 
@@ -79,7 +79,7 @@ defmodule TestRustlerMix.MixProject do
 
   defp rustler_crates, do: [rustler_mix_test: []]
 end
-_
+EOF
 
 mix compile
 
@@ -88,28 +88,28 @@ mix compile
 delete=1
 cat native/rustler_mix_test/README.md | while read line; do
     case "$line" in
-	'```elixir')
-	    delete=0
-	    ;;
-	'```'*)
-	    delete=1
-	    ;;
-	*)
-	    if [ "$delete" -eq 0 ]; then
-		echo "$line"
-	    fi
+      '```elixir')
+        delete=0
+        ;;
+      '```'*)
+        delete=1
+        ;;
+      *)
+        if [ "$delete" -eq 0 ]; then
+          echo "$line"
+        fi
     esac
 done > lib/rustler_mix_test.ex
 
-cat >test/rustler_mix_test_test.exs <<_
+cat >test/rustler_mix_test_test.exs <<EOF
 defmodule RustlerMixTestTest do
   use ExUnit.Case
 
   test "can use generated nif" do
-      assert RustlerMixTest.add(1, 2) == {:ok, 3}
+      assert RustlerMixTest.add(1, 2) == 3
   end
 end
-_
+EOF
 
 mix test
 

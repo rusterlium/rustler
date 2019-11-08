@@ -6,6 +6,7 @@ pub enum Return<'a> {
     Term(Term<'a>),
     Error(Error),
 }
+
 unsafe impl<'b> NifReturnable for Return<'b> {
     unsafe fn as_returned(self, env: Env) -> NifReturned {
         match self {

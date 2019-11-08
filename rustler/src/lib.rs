@@ -25,7 +25,8 @@
 #[macro_use(enif_snprintf)]
 extern crate rustler_sys;
 
-mod wrapper;
+#[doc(hidden)]
+pub mod wrapper;
 
 #[doc(hidden)]
 pub mod codegen_runtime;
@@ -62,7 +63,13 @@ pub use crate::error::Error;
 pub mod r#return;
 pub use crate::r#return::Return;
 
+#[doc(hidden)]
+mod nif;
+pub use nif::Nif;
+
 pub type NifResult<T> = Result<T, Error>;
 
 #[cfg(feature = "derive")]
-pub use rustler_codegen::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
+pub use rustler_codegen::{
+    init, nif, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum,
+};

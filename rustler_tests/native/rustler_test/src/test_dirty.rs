@@ -1,25 +1,24 @@
-use rustler::{Atom, Env, Term};
-
-use std::time;
+use rustler::Atom;
+use std::time::Duration;
 
 mod atoms {
-    rustler::atoms! {
-        ok,
-    }
+    rustler::atoms! { ok }
 }
 
 // TODO: Make these realistic
 
-pub fn dirty_cpu<'a>(_env: Env<'a>, _: &[Term<'a>]) -> Atom {
-    let duration = time::Duration::from_millis(100);
-    ::std::thread::sleep(duration);
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn dirty_cpu() -> Atom {
+    let duration = Duration::from_millis(100);
+    std::thread::sleep(duration);
 
     atoms::ok()
 }
 
-pub fn dirty_io<'a>(_env: Env<'a>, _: &[Term<'a>]) -> Atom {
-    let duration = time::Duration::from_millis(100);
-    ::std::thread::sleep(duration);
+#[rustler::nif(schedule = "DirtyIo")]
+pub fn dirty_io() -> Atom {
+    let duration = Duration::from_millis(100);
+    std::thread::sleep(duration);
 
     atoms::ok()
 }
