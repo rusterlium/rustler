@@ -3,6 +3,7 @@ mod test_binary;
 mod test_codegen;
 mod test_dirty;
 mod test_env;
+mod test_error;
 mod test_list;
 mod test_map;
 mod test_primitives;
@@ -62,6 +63,12 @@ rustler::init!(
         test_dirty::dirty_cpu,
         test_dirty::dirty_io,
         test_range::sum_range,
+        test_error::bad_arg_error,
+        test_error::atom_str_error,
+        test_error::raise_atom_error,
+        test_error::raise_term_with_string_error,
+        test_error::raise_term_with_atom_error,
+        test_error::term_with_tuple_error,
     ],
     load = load
 );
