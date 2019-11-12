@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support `CARGO_CFG_TARGET_POINTER_WIDTH`, enabling to compile rustler_sys for 32-bit systems
+- Simple `Debug` impl for `rustler::Error`
+- Support newtype and tuple structs for `NifTuple` and `NifRecord`
+- `rustler::error::Term` encoding an arbitrary boxed encoder, returning `{:error, term}`
+
+### Fixed
+
+* Compilation time of generated decoders has been reduced significantly.
+
 ### Changes
 
 - Renamed `Pid` to `LocalPid` to clarify that it can't point to a remote process
@@ -18,26 +29,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `resource_struct_init!` is now `rustler::resource!`
 - New `rustler::atoms!` macro removed the `atom` prefix from the name:
 
-```rs
+```rust
+//
 // Before
-
+//
 rustler::rustler_atoms! {
     atom ok;
     atom error;
 }
 
+//
 // After
-
+//
 rustler::atoms! {
     ok,
     error,
 }
 ```
 
-### Fixed
+- NIFs can be derived from regular functions, if the arguments implement `Decoder` and the return type implements `Encoder`:
 
-* Compilation time of generated decoders has been reduced significantly.
+```rust
+//
+// Before
+//
+fn add<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
+    let num1: i64 = args[0].decode()?;
+    let num2: i64 = args[1].decode()?;
 
+    Ok((atoms::ok(), num1 + num2).encode(env))
+}
+
+//
+// After
+//
+#[rustler::nif]
+fn add(a: i64, b: i64) -> i64 {
+  a + b
+}
+```
+
+- NIF functions can be initialized with a simplified syntax:
+
+```rust
+//
+// Before
+//
+rustler::rustler_export_nifs! {
+    "Elixir.Math",
+    [
+        ("add", 2, add)
+    ],
+    None
+}
+
+//
+// After
+//
+rustler::init!("Elixir.Math", [add]);
+```
 
 ## [0.21.0] - 2019-09-07
 
