@@ -7,6 +7,9 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
     let sig = &fun.sig;
     let name = &sig.ident;
     let inputs = &sig.inputs;
+
+    validate_attributes(args.clone());
+
     let flags = schedule_flag(args.to_owned());
     let function = fun.to_owned().into_token_stream();
     let arity = arity(inputs.clone());
@@ -202,4 +205,26 @@ fn arity(inputs: Punctuated<syn::FnArg, Comma>) -> u32 {
     }
 
     arity
+}
+
+fn validate_attributes(args: syn::AttributeArgs) {
+    use syn::{Meta, MetaNameValue, NestedMeta};
+    let known_attrs = ["schedule", "name"];
+
+    for arg in args.iter() {
+        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, .. })) = arg {
+            if known_attrs.iter().all(|known| !path.is_ident(known)) {
+                match path.get_ident() {
+                    Some(path) => panic!(
+                        "Unknown attribute '{}'. Allowed attributes: {:?}",
+                        path, known_attrs
+                    ),
+                    None => panic!(
+                        "Cannot parse attribute. Allowed attributes: {:?}",
+                        known_attrs
+                    ),
+                }
+            }
+        }
+    }
 }
