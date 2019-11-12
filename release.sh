@@ -7,6 +7,7 @@
 # ## Environment Variables
 #
 # * DRYRUN: Package release, but do not publish
+# * DONTREVERT: Do not revert on error
 #
 set -e
 
@@ -19,8 +20,6 @@ if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 TAG="rustler-$VERSION"
-
-# FIXME get git version to revert to
 
 # Check version unpublished
 #CRATES_RET=`curl "https://crates.io/api/v1/crates/rustler/$VERSION/dependencies"`
@@ -51,6 +50,16 @@ git commit -m "(release) $VERSION" rustler/Cargo.toml rustler_codegen/Cargo.toml
 echo "Tagging version.."
 git tag "$TAG"
 
+cleanup() {
+    if [[ -z $DONTREVERT ]]; then
+	echo "Reverting changes.."
+	git tag --delete "$TAG"
+	git reset --hard "$REVISION"
+    fi
+}
+
+trap cleanup INT EXIT
+
 # Verify that everything is OK by packaging/compiling
 pushd rustler
 cargo package
@@ -74,7 +83,14 @@ echo
 read -p "Everything OK? [yN] " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
-    exit 1
+    # At this point, we cannot reliably revert on errors anymore, as we might
+    # have published below already.
+
+    cannot_revert() {
+	echo "Errors detected, but cannot revert."
+    }
+
+    trap cannot_revert INT EXIT
 
     # Update and publish
     pushd rustler_mix
@@ -89,5 +105,7 @@ if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
 
     git push
     git push origin "$TAG"
+
+    trap "echo done" EXIT
 
 fi
