@@ -46,6 +46,26 @@ rustler::atoms! {
 }
 ```
 
+- NIF functions can be initialized with a simplified syntax:
+
+```rust
+//
+// Before
+//
+rustler::rustler_export_nifs! {
+    "Elixir.Math",
+    [
+        ("add", 2, add)
+    ],
+    None
+}
+
+//
+// After
+//
+rustler::init!("Elixir.Math", [add]);
+```
+
 - NIFs can be derived from regular functions, if the arguments implement `Decoder` and the return type implements `Encoder`:
 
 ```rust
@@ -68,24 +88,22 @@ fn add(a: i64, b: i64) -> i64 {
 }
 ```
 
-- NIF functions can be initialized with a simplified syntax:
+- `rustler::nif` exposes more options to configure a NIF were the NIF is defined:
 
 ```rust
-//
-// Before
-//
-rustler::rustler_export_nifs! {
-    "Elixir.Math",
-    [
-        ("add", 2, add)
-    ],
-    None
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn dirty_cpu() -> Atom {
+    let duration = Duration::from_millis(100);
+    std::thread::sleep(duration);
+
+    atoms::ok()
 }
 
-//
-// After
-//
-rustler::init!("Elixir.Math", [add]);
+#[rustler::nif(name = "my_add")]
+fn add(a: i64, b: i64) -> i64 {
+  a + b
+}
 ```
 
 ## [0.21.0] - 2019-09-07
