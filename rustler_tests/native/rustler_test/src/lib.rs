@@ -6,12 +6,12 @@ mod test_env;
 mod test_error;
 mod test_list;
 mod test_map;
+mod test_nif_attrs;
 mod test_primitives;
 mod test_range;
 mod test_resource;
 mod test_term;
 mod test_thread;
-mod test_nif_attrs;
 
 rustler::init!(
     "Elixir.RustlerTest",
