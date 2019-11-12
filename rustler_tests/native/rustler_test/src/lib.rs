@@ -11,6 +11,7 @@ mod test_range;
 mod test_resource;
 mod test_term;
 mod test_thread;
+mod test_nif_attrs;
 
 rustler::init!(
     "Elixir.RustlerTest",
@@ -69,6 +70,7 @@ rustler::init!(
         test_error::raise_term_with_string_error,
         test_error::raise_term_with_atom_error,
         test_error::term_with_tuple_error,
+        test_nif_attrs::can_rename,
     ],
     load = load
 );

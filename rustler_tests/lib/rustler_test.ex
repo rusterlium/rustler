@@ -77,4 +77,6 @@ defmodule RustlerTest do
   def raise_term_with_string_error(), do: err()
   def raise_term_with_atom_error(), do: err()
   def term_with_tuple_error(), do: err()
+
+  def nif_attrs_can_rename(), do: err()
 end
