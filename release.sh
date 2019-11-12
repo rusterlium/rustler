@@ -9,6 +9,8 @@ if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     exit -1
 fi
 
+TAG="rustler-$VERSION"
+
 # Check version unpublished
 #CRATES_RET=`curl "https://crates.io/api/v1/crates/rustler/$VERSION/dependencies"`
 #if ! [[ $CRATES_RET =~ "does not have a version" ]]; then
@@ -37,6 +39,7 @@ git status
 echo
 echo "This script will run:"
 echo "                $ git commit -m \"(release) $VERSION\""
+echo "		      $ git tag \"$TAG\""
 echo "rustler_mix     $ mix hex.publish"
 echo "rustler         $ cargo publish"
 echo "rustler_codegen $ cargo publish"
@@ -47,8 +50,9 @@ read -p "Everything OK? [yN] " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 
-    # Commit
+    # Commit and tag
     git commit -m "(release) $VERSION"
+    git tag "$TAG"
 
     # Update and publish
     pushd rustler_mix
@@ -62,5 +66,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     popd
 
     git push
+    git push origin "$TAG"
 
 fi
