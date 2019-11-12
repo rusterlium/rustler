@@ -1,57 +1,41 @@
-defmodule Mix.Tasks.Compile.Rustler do
-  @moduledoc """
-  Compiles Erlang NIFs written in Rust by calling into `cargo`.
-
-  This task extracts the configuration for Rustler crates from `mix.exs`
-  and spawns a `cargo` process to do the actual compilation.
-
-  This task is usually used by configuring the compilers in `mix.exs`. In
-  `project/0`, add `compilers: [:rustler] ++ Mix.compilers(),`. Then, `mix compile`
-  will automatically pick up `mix compile.rustler`.
-  """
-
-  @shortdoc "Compiles Erlang NIFs written in Rust by calling into `cargo`"
-
-  use Mix.Task
-  require Logger
+defmodule Rustler.Compiler do
+  @moduledoc false
 
   alias Rustler.Compiler.{Messages, Rustup}
 
-  @recursive true
+  @doc false
+  def compile_crate(module, opts) do
+    otp_app = Keyword.fetch!(opts, :otp_app)
+    config = Application.get_env(otp_app, module, [])
 
-  def run(_args) do
-    config = Mix.Project.config()
-    crates = Keyword.get(config, :rustler_crates) || raise_missing_crates()
-
-    File.mkdir_p!(priv_dir())
-
-    Enum.map(crates, &compile_crate/1)
-
-    # Workaround for a mix problem. We should REALLY get this fixed properly.
-    _ =
-      symlink_or_copy(
-        config,
-        Path.expand("priv"),
-        Path.join(Mix.Project.app_path(config), "priv")
-      )
-  end
-
-  defp priv_dir, do: "priv/native"
-
-  defp compile_crate({name, config}) do
-    crate_path = Keyword.get(config, :path, "native/#{name}")
-    build_mode = Keyword.get(config, :mode, :release)
-
-    Mix.shell().info("Compiling NIF crate #{inspect(name)} (#{crate_path})...")
-
+    crate = to_string(config[:crate] || opts[:crate] || otp_app)
+    load_data = config[:load_data] || opts[:load_data] || 0
+    crate_path = Keyword.get(config, :path, "native/#{crate}")
     crate_full_path = Path.expand(crate_path, File.cwd!())
+    build_mode = config[:mode] || opts[:mode] || build_mode(Mix.env())
+
+    external_resources =
+      "#{crate_full_path}/**/*"
+      |> Path.wildcard()
+      |> Enum.reject(fn path ->
+        String.starts_with?(path, "#{crate_full_path}/target/")
+      end)
 
     target_dir =
       Keyword.get(
         config,
         :target_dir,
-        Path.join([Mix.Project.build_path(), "rustler_crates", Atom.to_string(name)])
+        Path.join([Mix.Project.build_path(), "lib", "#{otp_app}", "native", "#{crate}"])
       )
+
+    priv_dir =
+      otp_app
+      |> :code.priv_dir()
+      |> to_string()
+
+    File.mkdir_p!(priv_dir())
+
+    lib_path = String.to_charlist("#{priv_dir}/native/lib#{crate}")
 
     cargo_data = check_crate_env(crate_full_path)
 
@@ -67,16 +51,19 @@ defmodule Mix.Tasks.Compile.Rustler do
           {name, :lib}
       end
 
+    Mix.shell().info("Compiling NIF crate #{crate} (#{crate_path})...")
+
     compile_command =
       make_base_command(Keyword.get(config, :cargo, :system))
       |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
       |> make_features_flag(Keyword.get(config, :features, []))
+      |> make_target_flag(Keyword.get(config, :target, nil))
       |> make_build_mode_flag(build_mode)
       |> make_platform_hacks(crate_full_path, output_type, :os.type())
 
     [cmd_bin | args] = compile_command
 
-    compile_return =
+    compile_result =
       System.cmd(cmd_bin, args,
         cd: crate_full_path,
         stderr_to_stdout: true,
@@ -84,8 +71,8 @@ defmodule Mix.Tasks.Compile.Rustler do
         into: IO.stream(:stdio, :line)
       )
 
-    case compile_return do
-      {_, 0} -> nil
+    case compile_result do
+      {_, 0} -> :ok
       {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
     end
 
@@ -99,6 +86,8 @@ defmodule Mix.Tasks.Compile.Rustler do
     # not write into the existing file.
     File.rm(destination_lib)
     File.cp!(compiled_lib, destination_lib)
+
+    {external_resources, lib_path, load_data}
   end
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
@@ -162,6 +151,9 @@ defmodule Mix.Tasks.Compile.Rustler do
   defp make_features_flag(args, []), do: args ++ []
   defp make_features_flag(args, flags), do: args ++ ["--features", Enum.join(flags, ",")]
 
+  defp make_target_flag(args, target) when is_binary(target), do: args ++ ["--target=#{target}"]
+  defp make_target_flag(args, _), do: args ++ []
+
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args ++ []
 
@@ -207,23 +199,8 @@ defmodule Mix.Tasks.Compile.Rustler do
     end
   end
 
-  defp raise_missing_crates do
-    Mix.raise("""
-    Missing required :rustler_crates option in mix.exs.
-    """)
-  end
+  defp build_mode(:prod), do: :release
+  defp build_mode(_), do: :debug
 
-  # https://github.com/elixir-lang/elixir/blob/b13404e913fff70e080c08c2da3dbd5c41793b54/lib/mix/lib/mix/project.ex#L553-L562
-  defp symlink_or_copy(config, source, target) do
-    if config[:build_embedded] do
-      if File.exists?(source) do
-        File.rm_rf!(target)
-        File.cp_r!(source, target)
-      end
-
-      :ok
-    else
-      Mix.Utils.symlink_or_copy(source, target)
-    end
-  end
+  defp priv_dir, do: "priv/native"
 end

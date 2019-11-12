@@ -29,6 +29,7 @@ cd $tmp
 
 mix new test_rustler_mix
 cd test_rustler_mix
+mkdir -p priv/native
 
 cat >mix.exs <<EOF
 defmodule TestRustlerMix.MixProject do
@@ -56,30 +57,6 @@ mix deps.compile
 mix rustler.new --module RustlerMixTest --name rustler_mix_test
 
 sed -i "s|^rustler.*$|rustler = { path = \"$rustler\" }|" native/rustler_mix_test/Cargo.toml
-
-cat >mix.exs <<EOF
-defmodule TestRustlerMix.MixProject do
-  use Mix.Project
-
-  def project do
-    [
-      app: :test_rustler_mix,
-      version: "0.1.0",
-      elixir: "~> 1.6",
-      start_permanent: Mix.env() == :prod,
-      deps: deps(),
-      compilers: [:rustler] ++ Mix.compilers(),
-      rustler_crates: rustler_crates()
-    ]
-  end
-
-  def application, do: [ ]
-
-  defp deps, do: [ {:rustler, path: "$rustler_mix"} ]
-
-  defp rustler_crates, do: [rustler_mix_test: []]
-end
-EOF
 
 mix compile
 

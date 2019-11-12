@@ -28,24 +28,40 @@ defmodule Rustler do
   Either of the above options can be passed directly into the `use` macro like so:
 
       defmodule MyNIF do
-        use Rustler, otp_app: :my_nif, crate: :some_other_crate, load_data: :something
+        use Rustler,
+          otp_app: :my_nif,
+          crate: :some_other_crate,
+          load_data: :something
       end
 
   """
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      @on_load :__init__
+      {external_resources, lib_path, load_data} = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
-      @rustler_opts opts
+      for resource <- external_resources do
+        @external_resource resource
+      end
 
-      def __init__ do
+      @lib_path lib_path
+      @load_data load_data
+
+      @before_compile Rustler
+    end
+  end
+
+  defmacro __before_compile__(_env) do
+    quote do
+      @on_load :rustler_init
+
+      @doc false
+      def rustler_init do
         # Remove any old modules that may be loaded so we don't get
         # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
 
-        {so_path, load_data} = Rustler.compile_config(__MODULE__, @rustler_opts)
-        :erlang.load_nif(so_path, load_data)
+        :erlang.load_nif(@lib_path, @load_data)
       end
     end
   end
@@ -68,21 +84,4 @@ defmodule Rustler do
       '2.14',
       '2.15'
     ]
-
-  @doc """
-  Retrieves the compile time configuration.
-  """
-  def compile_config(mod, opts) do
-    otp_app = Keyword.fetch!(opts, :otp_app)
-    config = Application.get_env(otp_app, mod, [])
-
-    crate = to_string(opts[:crate] || config[:crate] || otp_app)
-    crate = if String.starts_with?(crate, "lib"), do: crate, else: "lib" <> crate
-
-    priv_dir = otp_app |> :code.priv_dir() |> to_string()
-    load_data = opts[:load_data] || config[:load_data] || 0
-    so_path = String.to_charlist("#{priv_dir}/native/#{crate}")
-
-    {so_path, load_data}
-  end
 end

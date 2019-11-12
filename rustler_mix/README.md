@@ -3,8 +3,7 @@
 This is the Mix package for [rustler](https://github.com/rusterlium/rustler), a library to write Erlang NIFs in
 safe Rust code. Here, we provide the basic functionality to use Rustler from Elixir:
 
-* A task to generate a new crate to write NIFs (`mix help rustler.new`)
-* A task to compile NIFs written in Rust (`mix help compile.rustler`)
+- A task to generate a new crate to write NIFs (`mix help rustler.new`)
 
 See below for information on how to install this, which options are exposed through the configuration, and how to
 load a NIF.
@@ -22,10 +21,8 @@ end
 Then,
 
 1. Run `mix deps.get` to fetch the dependency.
-2. Run `mix rustler.new` and follow the instructions to generate the boilerplate for your NIF.
-3. Enable the `:rustler` mix compiler by adding `compilers: [:rustler] ++ Mix.compilers(),` to the `project` section of your `mix.exs`.
-4. Add a configuration entry to the `rustler_crates` section of your `mix.exs`. [See below](#crate-configuration).
-5. Load the NIF in your program. [See below](#loading-the-nif).
+1. Run `mix rustler.new` and follow the instructions to generate the boilerplate for your NIF.
+1. Load the NIF in your program. [See below](#loading-the-nif).
 
 ## Crate configuration
 
@@ -40,40 +37,12 @@ The NIF configuration may contain the following entries:
   - `{:bin, "path"}` - Use `path` as the cargo command. This is not portable, and you should not normally use this.
 - `default_features` (true default) - Boolean indicating if you want the NIF built with or without default cargo features.
 - `features` ([] default) - List of binaries indicating what cargo features you want enabled when building.
-- `mode` (:release default) - Indicates what cargo build flavor you want.
+- `target` (nil default) - Specify which build target to compile for. See .
+- `mode` - Indicates what cargo build flavor to compile with. The default
+  depends on the `Mix.env()`. When `:prod` the crate will be compiled in
+  `release` mode. Otherwise it will be compiled in `debug` mode.
   - `:release` - Optimized build, normally a LOT faster than debug.
   - `:debug` - Unoptimized debug build with debug assertions and more.
-
-When you are done, the project section might look something like this:
-
-```elixir
-def project do
-  [app: :my_app,
-   version: "0.1.0",
-   compilers: [:rustler] ++ Mix.compilers(),
-   rustler_crates: [my_crate: []],
-   deps: deps()]
-end
-```
-
-### Conditionally setting the mode
-
-The `rustc` mode defaults to `release`, but if you wish to compile your crate
-in `debug` mode for `dev`/`test` but want `release` mode for `prod`:
-
-```elixir
-def project do
-  [app: :my_app,
-   version: "0.1.0",
-   compilers: [:rustler] ++ Mix.compilers(),
-   rustler_crates: [
-     my_crate: [
-       mode: (if Mix.env() == :prod, do: :release, else: :debug)
-     ]
-   ],
-   deps: deps()]
-end
-```
 
 ## Loading the NIF
 
