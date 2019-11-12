@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support `CARGO_CFG_TARGET_POINTER_WIDTH`, enabling to compile rustler_sys for 32-bit systems
 - Simple `Debug` impl for `rustler::Error`
 - Support newtype and tuple structs for `NifTuple` and `NifRecord`
-- `rustler::error::Term` encoding an arbitrary boxed encoder, returning `{:error, term}`
+- `rustler::Error::Term` encoding an arbitrary boxed encoder, returning `{:error, term}`
 
 ### Fixed
 
