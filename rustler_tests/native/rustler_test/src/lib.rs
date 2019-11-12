@@ -6,6 +6,7 @@ mod test_env;
 mod test_error;
 mod test_list;
 mod test_map;
+mod test_nif_attrs;
 mod test_primitives;
 mod test_range;
 mod test_resource;
@@ -69,6 +70,7 @@ rustler::init!(
         test_error::raise_term_with_string_error,
         test_error::raise_term_with_atom_error,
         test_error::term_with_tuple_error,
+        test_nif_attrs::can_rename,
     ],
     load = load
 );
