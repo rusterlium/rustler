@@ -26,7 +26,7 @@ impl Parse for InitMacroInput {
 
         for (key, _) in options.iter() {
             if !allowed.contains(&key.as_str()) {
-                panic!("Option {} is not supported on init!()")
+                panic!("Option {} is not supported on init!()", key)
             }
         }
 
@@ -51,7 +51,9 @@ fn parse_options(input: ParseStream) -> HashMap<String, syn::Expr> {
 
     while let Ok(_) = <Token![,]>::parse(input) {
         // Break for empty input to allow for trailing comma
-        if input.is_empty() { break }
+        if input.is_empty() {
+            break;
+        }
 
         match syn::ExprAssign::parse(input) {
             Ok(syn::ExprAssign { left, right, .. }) => {
@@ -67,22 +69,6 @@ fn parse_options(input: ParseStream) -> HashMap<String, syn::Expr> {
 
     result
 }
-
-/* fn extract_options(args: &Vec<syn::ExprAssign>, name: &str) -> HashMap<&str, TokenStream> {
-    for syn::ExprAssign { left, right, .. } in args.into_iter() {
-        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
-            if let Some(ident) = path.get_ident() {
-                if *ident == name {
-                    let value = *right.clone();
-                    return quote!(Some(#value));
-                }
-            }
-        }
-    }
-
-    let none = Ident::new("None", Span::call_site());
-    quote!(#none)
-}*/
 
 impl Into<proc_macro2::TokenStream> for InitMacroInput {
     fn into(self) -> proc_macro2::TokenStream {

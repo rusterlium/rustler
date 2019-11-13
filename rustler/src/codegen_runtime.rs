@@ -104,7 +104,7 @@ pub unsafe fn handle_nif_init_call(
         match catch_unwind(|| inner(env, term)) {
             Ok(true) => 0,
             Ok(false) => 1,
-            _ => 1
+            _ => 1,
         }
     } else {
         0
@@ -125,17 +125,14 @@ pub unsafe fn handle_nif_upgrade_call(
     match catch_unwind(|| function(env, term)) {
         Ok(true) => 0,
         Ok(false) => 1,
-        _ => 1
+        _ => 1,
     }
 }
 
 /// # Unsafe
 ///
 /// This takes arguments, including raw pointers, that must be correct.
-pub unsafe fn handle_nif_unload_call(
-    function: for<'a> fn(Env<'a>),
-    r_env: NIF_ENV
-) {
+pub unsafe fn handle_nif_unload_call(function: for<'a> fn(Env<'a>), r_env: NIF_ENV) {
     let env = Env::new(&(), r_env);
     let _res = catch_unwind(|| function(env));
 }

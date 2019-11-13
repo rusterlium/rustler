@@ -82,10 +82,8 @@ fn load(env: rustler::Env, _: rustler::Term) -> bool {
     true
 }
 
-fn upgrade(env: rustler::Env, _: rustler::Term) -> bool {
+fn upgrade(_env: rustler::Env, _: rustler::Term) -> bool {
     false
 }
 
-fn unload(env: rustler::Env) {
-
-}
+fn unload(_env: rustler::Env) {}
