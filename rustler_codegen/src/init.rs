@@ -1,15 +1,18 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
+use std::collections::HashMap;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::{Expr, Ident, Result, Token};
+use syn::{Expr, Result, Token};
 
 #[derive(Debug)]
 pub struct InitMacroInput {
     name: syn::Lit,
     funcs: syn::ExprArray,
-    load: TokenStream,
+    load: Option<syn::Expr>,
+    unload: Option<syn::Expr>,
+    upgrade: Option<syn::Expr>,
 }
 
 impl Parse for InitMacroInput {
@@ -17,26 +20,52 @@ impl Parse for InitMacroInput {
         let name = syn::Lit::parse(input)?;
         let _comma = <syn::Token![,]>::parse(input)?;
         let funcs = syn::ExprArray::parse(input)?;
-        let options = parse_expr_assigns(input);
-        let load = extract_option(options, "load");
+        let options = parse_options(input);
 
-        Ok(InitMacroInput { name, funcs, load })
+        let allowed = ["load", "unload", "upgrade"];
+
+        for (key, _) in options.iter() {
+            if !allowed.contains(&key.as_str()) {
+                panic!("Option {} is not supported on init!()")
+            }
+        }
+
+        let get = |key| options.get(key).map(Clone::clone);
+
+        let load = get("load");
+        let unload = get("unload");
+        let upgrade = get("upgrade");
+
+        Ok(InitMacroInput {
+            name,
+            funcs,
+            load,
+            unload,
+            upgrade,
+        })
     }
 }
 
-fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
-    let mut vec = Vec::new();
+fn parse_options(input: ParseStream) -> HashMap<String, syn::Expr> {
+    let mut result = HashMap::new();
 
     while let Ok(_) = <Token![,]>::parse(input) {
         match syn::ExprAssign::parse(input) {
-            Ok(expr) => vec.push(expr),
+            Ok(syn::ExprAssign { left, right, .. }) => {
+                if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
+                    if let Some(ident) = path.get_ident() {
+                        result.insert(ident.to_string(), *right.clone());
+                    }
+                }
+            }
             Err(err) => panic!("{} (i.e. `load = load`)", err),
         }
     }
-    vec
+
+    result
 }
 
-fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
+/* fn extract_options(args: &Vec<syn::ExprAssign>, name: &str) -> HashMap<&str, TokenStream> {
     for syn::ExprAssign { left, right, .. } in args.into_iter() {
         if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
             if let Some(ident) = path.get_ident() {
@@ -50,7 +79,7 @@ fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
 
     let none = Ident::new("None", Span::call_site());
     quote!(#none)
-}
+}*/
 
 impl Into<proc_macro2::TokenStream> for InitMacroInput {
     fn into(self) -> proc_macro2::TokenStream {
@@ -77,7 +106,7 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
                             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
-                            rustler::codegen_runtime::handle_nif_init_call(#load, env, load_info)
+                            rustler::codegen_runtime::handle_nif_init_call(Some(#load), env, load_info)
                         }
                     }
                     Some(nif_load)
