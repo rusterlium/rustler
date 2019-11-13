@@ -7,7 +7,7 @@
 # ## Environment Variables
 #
 # * DRYRUN: Check release, but do not publish
-# * DONTREVERT: Do not revert on error
+# * DONTREVERT: Do not revert on error or DRYRUN
 #
 set -e
 
