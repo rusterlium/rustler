@@ -72,10 +72,20 @@ rustler::init!(
         test_error::term_with_tuple_error,
         test_nif_attrs::can_rename,
     ],
-    load = load
+    load = load,
+    upgrade = upgrade,
+    unload = unload
 );
 
 fn load(env: rustler::Env, _: rustler::Term) -> bool {
     test_resource::on_load(env);
     true
+}
+
+fn upgrade(env: rustler::Env, _: rustler::Term) -> bool {
+    false
+}
+
+fn unload(env: rustler::Env) {
+
 }

@@ -88,6 +88,49 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
         let funcs = nif_funcs(self.funcs.elems);
         let load = self.load;
 
+        let nif_load_def = quote! {
+            unsafe extern "C" fn nif_load(
+                env: rustler::codegen_runtime::NIF_ENV,
+                _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                load_info: rustler::codegen_runtime::NIF_TERM
+            ) -> rustler::codegen_runtime::c_int {
+                rustler::codegen_runtime::handle_nif_init_call(Some(#load), env, load_info)
+            }
+            Some(nif_load)
+        };
+
+        let nif_upgrade_def = if let Some(upgrade) = self.upgrade {
+            quote! {
+                unsafe extern "C" fn nif_upgrade(
+                    env: rustler::codegen_runtime::NIF_ENV,
+                    _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    _old_priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    load_info: rustler::codegen_runtime::NIF_TERM,
+                 ) -> rustler::codegen_runtime::c_int {
+                    rustler::codegen_runtime::handle_nif_upgrade_call(#upgrade, env, load_info)
+                };
+
+                Some(nif_upgrade)
+            }
+        } else {
+            quote!(None)
+        };
+
+        let nif_unload_def = if let Some(unload) = self.unload {
+            quote! {
+                unsafe extern "C" fn nif_unload(
+                    env: rustler::codegen_runtime::NIF_ENV,
+                    _priv_data: *mut rustler::codegen_runtime::c_void,
+                 ) {
+                    rustler::codegen_runtime::handle_nif_unload_call(#unload, env)
+                };
+
+                Some(nif_unload)
+            }
+        } else {
+            quote!(None)
+        };
+
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
             use rustler::Nif;
@@ -98,22 +141,10 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
                 name: concat!(#name, "\0").as_ptr() as *const u8,
                 num_of_funcs: #num_of_funcs as rustler::codegen_runtime::c_int,
                 funcs: [#funcs].as_ptr(),
-                load: {
-                    extern "C" fn nif_load(
-                        env: rustler::codegen_runtime::NIF_ENV,
-                        _priv_data: *mut *mut rustler::codegen_runtime::c_void,
-                        load_info: rustler::codegen_runtime::NIF_TERM
-                    ) -> rustler::codegen_runtime::c_int {
-                        unsafe {
-                            // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
-                            rustler::codegen_runtime::handle_nif_init_call(Some(#load), env, load_info)
-                        }
-                    }
-                    Some(nif_load)
-                },
+                load: { #nif_load_def },
                 reload: None,
-                upgrade: None,
-                unload: None,
+                upgrade: { #nif_upgrade_def },
+                unload: { #nif_unload_def },
                 vm_variant: b"beam.vanilla\0".as_ptr(),
                 options: 0,
                 sizeof_ErlNifResourceTypeInit: rustler::codegen_runtime::get_nif_resource_type_init_size(),

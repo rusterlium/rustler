@@ -2,6 +2,7 @@
 
 use std::ffi::CString;
 use std::fmt;
+use std::panic::catch_unwind;
 
 use crate::{Env, Term};
 
@@ -100,14 +101,43 @@ pub unsafe fn handle_nif_init_call(
     let term = Term::new(env, load_info);
 
     if let Some(inner) = function {
-        if inner(env, term) {
-            0
-        } else {
-            1
+        match catch_unwind(|| inner(env, term)) {
+            Ok(true) => 0,
+            Ok(false) => 1,
+            _ => 1
         }
     } else {
         0
     }
+}
+
+/// # Unsafe
+///
+/// This takes arguments, including raw pointers, that must be correct.
+pub unsafe fn handle_nif_upgrade_call(
+    function: for<'a> fn(Env<'a>, Term<'a>) -> bool,
+    r_env: NIF_ENV,
+    load_info: NIF_TERM,
+) -> c_int {
+    let env = Env::new(&(), r_env);
+    let term = Term::new(env, load_info);
+
+    match catch_unwind(|| function(env, term)) {
+        Ok(true) => 0,
+        Ok(false) => 1,
+        _ => 1
+    }
+}
+
+/// # Unsafe
+///
+/// This takes arguments, including raw pointers, that must be correct.
+pub unsafe fn handle_nif_unload_call(
+    function: for<'a> fn(Env<'a>),
+    r_env: NIF_ENV
+) {
+    let env = Env::new(&(), r_env);
+    let _res = catch_unwind(|| function(env));
 }
 
 pub fn handle_nif_result<T>(
