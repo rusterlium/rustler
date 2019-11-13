@@ -6,7 +6,7 @@
 #
 # ## Environment Variables
 #
-# * DRYRUN: Package release, but do not publish
+# * DRYRUN: Check release, but do not publish
 # * DONTREVERT: Do not revert on error
 #
 set -e
@@ -45,7 +45,8 @@ sed -i "s/def rustler_version, do: \"[^\"]*\"$/def rustler_version, do: \"$VERSI
 sed -i "s/{:rustler, \".*\"}/{:rustler, \"~> $VERSION\"}/" rustler_mix/README.md
 
 echo "Committing version.."
-git commit -m "(release) $VERSION" rustler/Cargo.toml rustler_codegen/Cargo.toml rustler_mix/mix.exs rustler_mix/lib/rustler.ex rustler_mix/README.md
+git commit -m "(release) $VERSION" \
+    rustler/Cargo.toml rustler_codegen/Cargo.toml rustler_mix/mix.exs rustler_mix/lib/rustler.ex rustler_mix/README.md
 
 echo "Tagging version.."
 git tag "$TAG"
@@ -60,23 +61,19 @@ cleanup() {
 
 trap cleanup INT EXIT
 
-# Verify that everything is OK by packaging/compiling
-pushd rustler
-cargo package
-popd
-pushd rustler_codegen
-cargo package
-popd
+# Verify that everything is OK by compiling
+
+cargo build
 pushd rustler_mix
+mix deps.get
 mix compile
 popd
-git status
 
 echo
 echo "This script will run:"
 echo "rustler_mix     $ mix hex.publish"
-echo "rustler         $ cargo publish"
 echo "rustler_codegen $ cargo publish"
+echo "rustler         $ cargo publish"
 echo "                $ git push"
 echo
 
@@ -93,19 +90,18 @@ if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
     trap cannot_revert INT EXIT
 
     # Update and publish
-    pushd rustler_mix
-    mix hex.publish
+    pushd rustler_codegen
+    cargo publish
     popd
     pushd rustler
     cargo publish
     popd
-    pushd rustler_codegen
-    cargo publish
+    pushd rustler_mix
+    mix hex.publish
     popd
 
     git push
     git push origin "$TAG"
 
     trap "echo done" EXIT
-
 fi
