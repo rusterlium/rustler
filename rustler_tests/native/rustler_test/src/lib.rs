@@ -74,7 +74,7 @@ rustler::init!(
     ],
     load = load,
     upgrade = upgrade,
-    unload = unload
+    unload = unload,
 );
 
 fn load(env: rustler::Env, _: rustler::Term) -> bool {

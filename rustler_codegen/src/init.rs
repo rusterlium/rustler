@@ -50,6 +50,9 @@ fn parse_options(input: ParseStream) -> HashMap<String, syn::Expr> {
     let mut result = HashMap::new();
 
     while let Ok(_) = <Token![,]>::parse(input) {
+        // Break for empty input to allow for trailing comma
+        if input.is_empty() { break }
+
         match syn::ExprAssign::parse(input) {
             Ok(syn::ExprAssign { left, right, .. }) => {
                 if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
