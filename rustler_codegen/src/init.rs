@@ -75,7 +75,12 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
         let name = self.name;
         let num_of_funcs = self.funcs.elems.len();
         let funcs = nif_funcs(self.funcs.elems);
-        let load = self.load;
+
+        let load = if let Some(load) = self.load {
+            quote!(Some(#load))
+        } else {
+            quote!(None)
+        };
 
         let nif_load_def = quote! {
             unsafe extern "C" fn nif_load(
@@ -83,7 +88,7 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
                 _priv_data: *mut *mut rustler::codegen_runtime::c_void,
                 load_info: rustler::codegen_runtime::NIF_TERM
             ) -> rustler::codegen_runtime::c_int {
-                rustler::codegen_runtime::handle_nif_init_call(Some(#load), env, load_info)
+                rustler::codegen_runtime::handle_nif_init_call(#load, env, load_info)
             }
             Some(nif_load)
         };
