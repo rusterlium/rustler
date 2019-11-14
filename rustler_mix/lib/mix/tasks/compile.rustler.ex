@@ -117,11 +117,47 @@ defmodule Mix.Tasks.Compile.Rustler do
   end
 
   defp make_platform_hacks(args, crate_path, :lib, {:unix, :darwin}) do
-    path = Path.join([crate_path, ".cargo", "config"])
+    cargo_metadata =
+      case System.cmd("cargo", ["metadata", "--format-version", "1"], cd: crate_path) do
+        {cargo_metadata, 0} ->
+          cargo_metadata
 
-    if File.exists?(path) do
+        _ ->
+          raise "Failed to run 'cargo metadata --format-version 1'"
+      end
+
+    workspace_root =
+      case Regex.run(~r/"workspace_root":"(.*)"/, cargo_metadata, capture: :all_but_first) do
+        [path] ->
+          path
+
+        nil ->
+          raise "Could not find workspace_root in cargo metadata"
+      end
+
+    if !String.starts_with?(crate_path, workspace_root) do
+      raise "Expected crate_path (#{crate_path} to be within workspace_root (#{workspace_root})."
+    end
+
+    # We try to find a .cargo config up to the workspace root. The method here tries to follow
+    # the mechanism cargo uses to find configuration files. For more information, refer to the
+    # cargo documentation: https://doc.rust-lang.org/cargo/reference/config.html
+    cargo_config_exists? =
+      crate_path
+      |> Stream.iterate(&Path.dirname(&1))
+      |> Enum.take_while(fn p -> p != Path.dirname(workspace_root) end)
+      |> Enum.any?(fn p ->
+        file = Path.join([p, ".cargo", "config"])
+
+        File.exists?(file) &&
+          File.read!(file) =~ "target.x86_64-apple-darwin"
+      end)
+
+    if cargo_config_exists? do
       args
     else
+      path = Path.join([crate_path, ".cargo", "config"])
+
       IO.write([
         "\n",
         IO.ANSI.yellow(),
