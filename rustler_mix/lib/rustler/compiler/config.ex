@@ -37,7 +37,7 @@ defmodule Rustler.Compiler.Config do
     features = Keyword.get(config, :features, [])
     mode = config[:mode] || opts[:mode] || build_mode(Mix.env())
     load_data = config[:load_data] || opts[:load_data] || 0
-    load_from = {(config[:load_from] || otp_app), "priv/native/lib#{crate}"}
+    load_from = {config[:load_from] || otp_app, "priv/native/lib#{crate}"}
     path = config[:path] || "native/#{crate}"
     target = config[:target]
     external_resources = external_resources(path)
@@ -58,7 +58,7 @@ defmodule Rustler.Compiler.Config do
       path: path,
       skip_compilation?: skip_compilation?,
       target: target,
-      target_dir: target_dir 
+      target_dir: target_dir
     }
   end
 

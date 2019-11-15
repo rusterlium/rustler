@@ -113,6 +113,7 @@ defmodule Rustler.Compiler do
   defp handle_artifacts(path, config) do
     toml = toml_data(path)
     names = get_name(toml, :lib) ++ get_name(toml, :bin)
+
     Enum.each(names, fn {name, type} ->
       {src_file, dst_file} = make_file_names(name, type)
       compiled_lib = Path.join([config.target_dir, Atom.to_string(config.mode), src_file])
@@ -131,7 +132,7 @@ defmodule Rustler.Compiler do
     case toml[to_string(section)] do
       nil -> []
       values when is_map(values) -> [{values["name"], section}]
-      values when is_list(values) -> Enum.map(values, & {&1["name"], section})
+      values when is_list(values) -> Enum.map(values, &{&1["name"], section})
     end
   end
 
