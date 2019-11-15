@@ -7,24 +7,11 @@ defmodule Rustler.Compiler do
   def compile_crate(module, opts) do
     otp_app = Keyword.fetch!(opts, :otp_app)
     config = Config.from(otp_app, module, opts)
+
     unless config.skip_compilation? do
       crate_full_path = Path.expand(config.path, File.cwd!())
 
       File.mkdir_p!(priv_dir())
-
-      toml = toml_data(crate_full_path)
-
-      {output_name, output_type} =
-        case get_name(toml, "lib") do
-          nil ->
-            case get_name(toml, "bin") do
-              nil -> throw_error({:cargo_no_name, config.path})
-              name -> {name, :bin}
-            end
-
-          name ->
-            {name, :lib}
-        end
 
       Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
 
@@ -34,7 +21,7 @@ defmodule Rustler.Compiler do
         |> make_features_flag(config.features)
         |> make_target_flag(config.target)
         |> make_build_mode_flag(config.mode)
-        |> make_platform_hacks(crate_full_path, output_type, :os.type())
+        |> make_platform_hacks(crate_full_path, :os.type())
 
       compile_result =
         System.cmd(cmd, args,
@@ -49,16 +36,7 @@ defmodule Rustler.Compiler do
         {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
       end
 
-      {src_file, dst_file} = make_file_names(output_name, output_type)
-      compiled_lib = Path.join([config.target_dir, Atom.to_string(config.mode), src_file])
-      destination_lib = Path.join(priv_dir(), dst_file)
-
-      # If the file exists already, we delete it first. This is to ensure that another
-      # process, which might have the library dynamically linked in, does not generate
-      # a segfault. By deleting it first, we ensure that the copy operation below does
-      # not write into the existing file.
-      File.rm(destination_lib)
-      File.cp!(compiled_lib, destination_lib)
+      handle_artifacts(crate_full_path, config)
     end
 
     config
@@ -79,7 +57,7 @@ defmodule Rustler.Compiler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp make_platform_hacks(args, crate_path, :lib, {:unix, :darwin}) do
+  defp make_platform_hacks(args, crate_path, {:unix, :darwin}) do
     root = Path.join([".cargo", "config"])
     path = Path.join([crate_path, ".cargo", "config"])
 
@@ -118,7 +96,7 @@ defmodule Rustler.Compiler do
     end
   end
 
-  defp make_platform_hacks(args, _, _, _), do: args
+  defp make_platform_hacks(args, _, _), do: args
 
   defp make_no_default_features_flag(args, true), do: args
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
@@ -132,11 +110,28 @@ defmodule Rustler.Compiler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args
 
+  defp handle_artifacts(path, config) do
+    toml = toml_data(path)
+    names = get_name(toml, :lib) ++ get_name(toml, :bin)
+    Enum.each(names, fn {name, type} ->
+      {src_file, dst_file} = make_file_names(name, type)
+      compiled_lib = Path.join([config.target_dir, Atom.to_string(config.mode), src_file])
+      destination_lib = Path.join(priv_dir(), dst_file)
+
+      # If the file exists already, we delete it first. This is to ensure that another
+      # process, which might have the library dynamically linked in, does not generate
+      # a segfault. By deleting it first, we ensure that the copy operation below does
+      # not write into the existing file.
+      File.rm(destination_lib)
+      File.cp!(compiled_lib, destination_lib)
+    end)
+  end
+
   defp get_name(toml, section) do
-    case toml[section] do
-      nil -> nil
-      values when is_map(values) -> values["name"]
-      values when is_list(values) -> Enum.find_value(values, & &1["name"])
+    case toml[to_string(section)] do
+      nil -> []
+      values when is_map(values) -> [{values["name"], section}]
+      values when is_list(values) -> Enum.map(values, & {&1["name"], section})
     end
   end
 
