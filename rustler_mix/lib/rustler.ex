@@ -38,16 +38,19 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
+      lib? = Keyword.get(opts, :lib, true)
       config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
       for resource <- config.external_resources do
         @external_resource resource
       end
 
-      @load_from config.load_from
-      @load_data config.load_data
+      if lib? do
+        @load_from config.load_from
+        @load_data config.load_data
 
-      @before_compile Rustler
+        @before_compile Rustler
+      end
     end
   end
 
