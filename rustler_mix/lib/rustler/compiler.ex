@@ -1,93 +1,67 @@
 defmodule Rustler.Compiler do
   @moduledoc false
 
-  alias Rustler.Compiler.{Messages, Rustup}
+  alias Rustler.Compiler.{Config, Messages, Rustup}
 
   @doc false
   def compile_crate(module, opts) do
     otp_app = Keyword.fetch!(opts, :otp_app)
-    config = Application.get_env(otp_app, module, [])
+    config = Config.from(otp_app, module, opts)
+    unless config.skip_compilation? do
+      crate_full_path = Path.expand(config.path, File.cwd!())
 
-    crate = to_string(config[:crate] || opts[:crate] || otp_app)
-    load_data = config[:load_data] || opts[:load_data] || 0
-    crate_path = Keyword.get(config, :path, "native/#{crate}")
-    crate_full_path = Path.expand(crate_path, File.cwd!())
-    build_mode = config[:mode] || opts[:mode] || build_mode(Mix.env())
+      File.mkdir_p!(priv_dir())
 
-    external_resources =
-      "#{crate_full_path}/**/*"
-      |> Path.wildcard()
-      |> Enum.reject(fn path ->
-        String.starts_with?(path, "#{crate_full_path}/target/")
-      end)
+      toml = toml_data(crate_full_path)
 
-    target_dir =
-      Keyword.get(
-        config,
-        :target_dir,
-        Path.join([Mix.Project.build_path(), "lib", "#{otp_app}", "native", "#{crate}"])
-      )
+      {output_name, output_type} =
+        case get_name(toml, "lib") do
+          nil ->
+            case get_name(toml, "bin") do
+              nil -> throw_error({:cargo_no_name, config.path})
+              name -> {name, :bin}
+            end
 
-    priv_dir =
-      otp_app
-      |> :code.priv_dir()
-      |> to_string()
+          name ->
+            {name, :lib}
+        end
 
-    File.mkdir_p!(priv_dir())
+      Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
 
-    lib_path = String.to_charlist("#{priv_dir}/native/lib#{crate}")
+      [cmd | args] =
+        make_base_command(config.cargo)
+        |> make_no_default_features_flag(config.default_features)
+        |> make_features_flag(config.features)
+        |> make_target_flag(config.target)
+        |> make_build_mode_flag(config.mode)
+        |> make_platform_hacks(crate_full_path, output_type, :os.type())
 
-    cargo_data = check_crate_env(crate_full_path)
+      compile_result =
+        System.cmd(cmd, args,
+          cd: crate_full_path,
+          stderr_to_stdout: true,
+          env: [{"CARGO_TARGET_DIR", config.target_dir} | config.env],
+          into: IO.stream(:stdio, :line)
+        )
 
-    {output_name, output_type} =
-      case get_name(cargo_data, "lib") do
-        nil ->
-          case get_name(cargo_data, "bin") do
-            nil -> throw_error({:cargo_no_name, crate_path})
-            name -> {name, :bin}
-          end
-
-        name ->
-          {name, :lib}
+      case compile_result do
+        {_, 0} -> :ok
+        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
       end
 
-    Mix.shell().info("Compiling NIF crate #{crate} (#{crate_path})...")
+      {src_file, dst_file} = make_file_names(output_name, output_type)
+      compiled_lib = Path.join([config.target_dir, Atom.to_string(config.mode), src_file])
+      destination_lib = Path.join(priv_dir(), dst_file)
 
-    compile_command =
-      make_base_command(Keyword.get(config, :cargo, :system))
-      |> make_no_default_features_flag(Keyword.get(config, :default_features, true))
-      |> make_features_flag(Keyword.get(config, :features, []))
-      |> make_target_flag(Keyword.get(config, :target, nil))
-      |> make_build_mode_flag(build_mode)
-      |> make_platform_hacks(crate_full_path, output_type, :os.type())
-
-    [cmd_bin | args] = compile_command
-
-    compile_result =
-      System.cmd(cmd_bin, args,
-        cd: crate_full_path,
-        stderr_to_stdout: true,
-        env: [{"CARGO_TARGET_DIR", target_dir} | Keyword.get(config, :env, [])],
-        into: IO.stream(:stdio, :line)
-      )
-
-    case compile_result do
-      {_, 0} -> :ok
-      {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
+      # If the file exists already, we delete it first. This is to ensure that another
+      # process, which might have the library dynamically linked in, does not generate
+      # a segfault. By deleting it first, we ensure that the copy operation below does
+      # not write into the existing file.
+      File.rm(destination_lib)
+      File.cp!(compiled_lib, destination_lib)
     end
 
-    {src_file, dst_file} = make_file_names(output_name, output_type)
-    compiled_lib = Path.join([target_dir, Atom.to_string(build_mode), src_file])
-    destination_lib = Path.join(priv_dir(), dst_file)
-
-    # If the file exists already, we delete it first. This is to ensure that another
-    # process, which might have the library dynamically linked in, does not generate
-    # a segfault. By deleting it first, we ensure that the copy operation below does
-    # not write into the existing file.
-    File.rm(destination_lib)
-    File.cp!(compiled_lib, destination_lib)
-
-    {external_resources, lib_path, load_data}
+    config
   end
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
@@ -106,9 +80,10 @@ defmodule Rustler.Compiler do
   end
 
   defp make_platform_hacks(args, crate_path, :lib, {:unix, :darwin}) do
+    root = Path.join([".cargo", "config"])
     path = Path.join([crate_path, ".cargo", "config"])
 
-    if File.exists?(path) do
+    if File.exists?(root) || File.exists?(path) do
       args
     else
       IO.write([
@@ -145,20 +120,20 @@ defmodule Rustler.Compiler do
 
   defp make_platform_hacks(args, _, _, _), do: args
 
-  defp make_no_default_features_flag(args, true), do: args ++ []
+  defp make_no_default_features_flag(args, true), do: args
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
 
-  defp make_features_flag(args, []), do: args ++ []
+  defp make_features_flag(args, []), do: args
   defp make_features_flag(args, flags), do: args ++ ["--features", Enum.join(flags, ",")]
 
   defp make_target_flag(args, target) when is_binary(target), do: args ++ ["--target=#{target}"]
-  defp make_target_flag(args, _), do: args ++ []
+  defp make_target_flag(args, _), do: args
 
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
-  defp make_build_mode_flag(args, :debug), do: args ++ []
+  defp make_build_mode_flag(args, :debug), do: args
 
-  defp get_name(cargo_data, section) do
-    case cargo_data[section] do
+  defp get_name(toml, section) do
+    case toml[section] do
       nil -> nil
       values when is_map(values) -> values["name"]
       values when is_list(values) -> Enum.find_value(values, & &1["name"])
@@ -185,22 +160,19 @@ defmodule Rustler.Compiler do
     raise "Compilation error"
   end
 
-  defp check_crate_env(crate) do
-    unless File.dir?(crate) do
-      throw_error({:nonexistent_crate_directory, crate})
+  defp toml_data(path) do
+    unless File.dir?(path) do
+      throw_error({:nonexistent_crate_directory, path})
     end
 
-    case File.read("#{crate}/Cargo.toml") do
+    case File.read("#{path}/Cargo.toml") do
       {:error, :enoent} ->
-        throw_error({:cargo_toml_not_found, crate})
+        throw_error({:cargo_toml_not_found, path})
 
       {:ok, text} ->
         Toml.decode!(text)
     end
   end
-
-  defp build_mode(:prod), do: :release
-  defp build_mode(_), do: :debug
 
   defp priv_dir, do: "priv/native"
 end

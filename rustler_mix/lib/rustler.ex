@@ -38,14 +38,14 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      {external_resources, lib_path, load_data} = Rustler.Compiler.compile_crate(__MODULE__, opts)
+      config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
-      for resource <- external_resources do
+      for resource <- config.external_resources do
         @external_resource resource
       end
 
-      @lib_path lib_path
-      @load_data load_data
+      @load_from config.load_from
+      @load_data config.load_data
 
       @before_compile Rustler
     end
@@ -61,7 +61,14 @@ defmodule Rustler do
         # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
 
-        :erlang.load_nif(@lib_path, @load_data)
+        {otp_app, path} = @load_from
+
+        load_path =
+          otp_app
+          |> Application.app_dir(path)
+          |> to_charlist()
+
+        :erlang.load_nif(load_path, @load_data)
       end
     end
   end

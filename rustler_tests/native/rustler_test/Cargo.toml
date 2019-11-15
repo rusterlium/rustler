@@ -9,6 +9,10 @@ name = "rustler_test"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 
+[[bin]]
+name = "hello_rust"
+path = "src/main.rs"
+
 [dependencies]
 lazy_static = "1.4"
 rustler = { path = "../../../rustler" }
