@@ -27,12 +27,16 @@ fn try_gen_api(dst: &Path, pointer_size: usize) -> bool {
 }
 
 fn main() {
-    // get size of C pointer
-    let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
-        Ok(ref val) if val == "32" => 4,
-        Ok(ref val) if val == "64" => 8,
-        Ok(ref val) => panic!("Unsupported target pointer width: {}", val),
-        Err(err) => panic!(
+    // get size of C long
+    let target_pointer_width = env::var("CARGO_CFG_TARGET_POINTER_WIDTH");
+    let target_os = env::var("CARGO_CFG_TARGET_OS");
+
+    let long_width = match (target_pointer_width, target_os) {
+        (_, Ok(ref os)) if os == "windows" => 4,
+        (Ok(ref val), _) if val == "32" => 4,
+        (Ok(ref val), _) if val == "64" => 8,
+        (Ok(ref val), _) => panic!("Unsupported target pointer width: {}", val),
+        (Err(err), _) => panic!(
             "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
             err
         ),
@@ -45,11 +49,10 @@ fn main() {
 
     let dst = Path::new(&out_dir).join(SNIPPET_NAME);
 
-    if !try_gen_api(&dst, target_pointer_width) {
+    if !try_gen_api(&dst, long_width) {
         eprintln!("Failed to generate API from local installation, falling back to precompiled");
 
-        let source =
-            Path::new(&"precompiled").join(format!("nif_api.{}.snippet", target_pointer_width));
+        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", long_width));
 
         fs::copy(&source, &dst).unwrap();
     }
