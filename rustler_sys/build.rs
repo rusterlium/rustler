@@ -28,7 +28,10 @@ fn try_gen_api(dst: &Path, pointer_size: usize) -> bool {
 
 fn main() {
     // get size of C long
-    let long_width = match (env::var("CARGO_CFG_TARGET_POINTER_WIDTH"), env::var("CARGO_CFG_TARGET_OS")) {
+    let target_pointer_width = env::var("CARGO_CFG_TARGET_POINTER_WIDTH");
+    let target_os = env::var("CARGO_CFG_TARGET_OS");
+
+    let long_width = match (target_pointer_width, target_os) {
         (_, Ok(ref os)) if os == "windows" => 4,
         (Ok(ref val), _) if val == "32" => 4,
         (Ok(ref val), _) if val == "64" => 8,
@@ -49,8 +52,7 @@ fn main() {
     if !try_gen_api(&dst, long_width) {
         eprintln!("Failed to generate API from local installation, falling back to precompiled");
 
-        let source =
-            Path::new(&"precompiled").join(format!("nif_api.{}.snippet", long_width));
+        let source = Path::new(&"precompiled").join(format!("nif_api.{}.snippet", long_width));
 
         fs::copy(&source, &dst).unwrap();
     }
