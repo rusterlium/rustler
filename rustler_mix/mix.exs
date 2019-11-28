@@ -31,7 +31,7 @@ defmodule Rustler.Mixfile do
 
   defp deps do
     [
-      {:toml, "~> 0.5.2"},
+      {:toml, "~> 0.5.2", runtime: false},
       {:ex_doc, "~> 0.19", only: :dev}
     ]
   end
