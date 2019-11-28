@@ -13,8 +13,12 @@ defmodule RustlerTest.BinaryTest do
     assert_raise ArgumentError, fn -> RustlerTest.parse_integer("999999999999999999999") end
   end
 
-  test "OwnedNifBinary creation" do
+  test "binary creation" do
     assert RustlerTest.binary_new() == <<1, 2, 3, 4>>
+  end
+
+  test "owned binary creation" do
+    assert RustlerTest.owned_binary_new() == <<1, 2, 3, 4>>
   end
 
   test "unowned binary to owned" do

@@ -3,7 +3,7 @@
 use std::ffi::CString;
 use std::fmt;
 
-use crate::{Env, Term};
+use crate::{Encoder, Env, OwnedBinary, Term};
 
 // Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
@@ -30,13 +30,19 @@ where
 
 unsafe impl<T> NifReturnable for Result<T, crate::error::Error>
 where
-    T: crate::Encoder,
+    T: NifReturnable,
 {
     unsafe fn as_returned(self, env: Env) -> NifReturned {
         match self {
-            Ok(inner) => NifReturned::Term(inner.encode(env).as_c_arg()),
+            Ok(inner) => inner.as_returned(env),
             Err(inner) => inner.as_returned(env),
         }
+    }
+}
+
+unsafe impl NifReturnable for OwnedBinary {
+    unsafe fn as_returned(self, env: Env) -> NifReturned {
+        NifReturned::Term(self.release(env).encode(env).as_c_arg())
     }
 }
 
