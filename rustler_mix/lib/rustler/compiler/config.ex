@@ -1,8 +1,10 @@
 defmodule Rustler.Compiler.Config do
+  @moduledoc false
+
   @type rust_version :: :stable | :beta | :nightly | binary()
   @type cargo :: :system | {:rustup, rust_version()} | {:bin, Path.t()}
   @type crate :: atom()
-  @type default_features :: [binary()]
+  @type default_features :: boolean()
   @type env :: [{binary(), binary()}]
   @type features :: [binary()]
   @type mode :: :debug | :release
@@ -37,7 +39,13 @@ defmodule Rustler.Compiler.Config do
     features = Keyword.get(config, :features, [])
     mode = config[:mode] || opts[:mode] || build_mode(Mix.env())
     load_data = config[:load_data] || opts[:load_data] || 0
-    load_from = {config[:load_from] || otp_app, "priv/native/lib#{crate}"}
+
+    load_from =
+      case config[:load_from] do
+        {_, _} -> config[:load_from]
+        _ -> {otp_app, "priv/native/lib#{crate}"}
+      end
+
     path = config[:path] || "native/#{crate}"
     target = config[:target]
     external_resources = external_resources(path)

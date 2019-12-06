@@ -14,7 +14,7 @@ This package is available on [`hex.pm`](https://hex.pm/packages/rustler). To ins
 
 ```elixir
 def deps do
-  [{:rustler, "~> 0.21.0"}]
+  [{:rustler, "~> 0.21.0", runtime: false}]
 end
 ```
 
@@ -54,7 +54,9 @@ loaded.
 
 ```elixir
 defmodule MyProject.MyModule do
-  use Rustler, otp_app: :my_app, crate: :my_crate
+  use Rustler,
+    otp_app: :my_app,
+    crate: :my_crate
 
   # When loading a NIF module, dummy clauses for all NIF function are required.
   # NIF dummies usually just error out when called when the NIF is not loaded, as that should never normally happen.

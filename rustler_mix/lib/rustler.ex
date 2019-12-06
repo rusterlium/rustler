@@ -18,14 +18,51 @@ defmodule Rustler do
 
   Configuration options:
 
+    * `:cargo` - Specify how to envoke the rust compiler. Options are:
+        - `:system` (default) - use `cargo` from the system (must by in `$PATH`)
+        - `{:rustup, <version>}` - use `rustup` to specify which channel to use.
+          Available options include: `:stable`, `:beta`, `:nightly`, or a string
+          which specifies a specific version (i.e. `"1.39.0"`).
+        - `{:bin, "/path/to/binary"}` - provide a specific path to `cargo`.
+
     * `:crate` - the name of the Rust crate (as an atom), if different from your
       `otp_app` value. If you have more than one crate in your project, you will
       need to be explicit about which crate you intend to use.
 
+    * `:default_features` - a boolean to specify whether the crate's default features
+      should be used.
+
+    * `:env` - Specify a list of environment variables when envoking the compiler.
+
+    * `:feature` - a list of features to enable when compiling the crate.
+
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)
 
-  Either of the above options can be passed directly into the `use` macro like so:
+    * `:load_from` - This option allows control over where the final artifact should be
+      loaded from at runtime. By default the compiled artifact is loaded from the
+      owning `:otp_app`'s `priv/native` directory. This option comes in handy in
+      combination with the `:skip_compilation?` option in order to load pre-compiled
+      artifacts. To override the default behaviour specify a tuple:
+      `{:my_app, "priv/native/<artifact>"}`. Due to the way `:erlang.load_nif/2`
+      works, the artifact should not include the file extension (i.e. `.so`, `.dll`).
+
+    * `:mode` - Specify which mode to compile the crate with. If you do not specify
+      this option, a default will be provide based on the `Mix.env()`:
+      - When `Mix.env()` is `:dev` or `:test`, the crate will be compiled in `:debug` mode.
+      - When `Mix.env()` is `:prod` or `:bench`, the crate will be compiled in `:release` mode.
+
+    * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
+      root of the project. Use this option to override this.
+
+    * `:skip_compilation?` - This option skips envoking the rust compiler. Specify this option
+      in combination with `:load_from` to load a pre-compiled artifact.
+
+    * `:target` - Specify a compile [target] triple.
+
+    * `:target_dir`: Override the compiler output directory.
+
+  Any of the above options can be passed directly into the `use` macro like so:
 
       defmodule MyNIF do
         use Rustler,
@@ -34,6 +71,7 @@ defmodule Rustler do
           load_data: :something
       end
 
+  [target]: https://forge.rust-lang.org/release/platform-support.html
   """
 
   defmacro __using__(opts) do
