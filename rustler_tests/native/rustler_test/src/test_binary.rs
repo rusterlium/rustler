@@ -22,6 +22,13 @@ pub fn binary_new(env: Env) -> Binary {
 }
 
 #[rustler::nif]
+pub fn owned_binary_new() -> OwnedBinary {
+    let mut binary = OwnedBinary::new(4).unwrap();
+    binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
+    binary
+}
+
+#[rustler::nif]
 pub fn unowned_to_owned<'a>(env: Env<'a>, binary: Binary<'a>) -> NifResult<Binary<'a>> {
     let mut copied = binary.to_owned().unwrap();
     copied.as_mut_slice()[0] = 1;
