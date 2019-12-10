@@ -2,6 +2,7 @@ use crate::wrapper::binary::{alloc, realloc, ErlNifBinary};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::borrow::{Borrow, BorrowMut};
+#[cfg(feature = "unstable")]
 use std::convert::TryFrom;
 use std::io::Write;
 use std::mem::MaybeUninit;
@@ -14,6 +15,7 @@ pub struct OwnedBinary {
     release: bool,
 }
 
+#[cfg(feature = "unstable")]
 impl TryFrom<&[u8]> for OwnedBinary {
     type Error = Error;
 

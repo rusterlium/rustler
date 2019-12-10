@@ -10,6 +10,7 @@ edition = "2018"
 [features]
 default = ["derive"]
 derive = ["rustler_codegen"]
+unstable = []
 alternative_nif_init_name = []
 
 [dependencies]
