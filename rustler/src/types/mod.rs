@@ -14,7 +14,7 @@ pub use crate::types::list::ListIterator;
 
 #[doc(hidden)]
 pub mod map;
-pub use crate::types::map::MapIterator;
+pub use self::map::MapIterator;
 
 #[doc(hidden)]
 pub mod primitive;
@@ -23,8 +23,8 @@ pub mod string;
 pub mod tuple;
 
 #[doc(hidden)]
-pub mod pid;
-pub use crate::types::pid::Pid;
+pub mod local_pid;
+pub use self::local_pid::LocalPid;
 
 pub mod truthy;
 
