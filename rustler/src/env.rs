@@ -178,11 +178,11 @@ impl OwnedEnv {
 
         let message = self.run(|env| closure(env).as_c_arg());
 
-        let c_env = *self.env;
-        self.env = Arc::new(c_env); // invalidate SavedTerms
         unsafe {
-            rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), c_env, message);
+            rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), *self.env, message);
         }
+
+        self.clear();
     }
 
     /// Free all terms in this environment and clear it for reuse.
