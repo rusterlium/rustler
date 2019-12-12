@@ -40,7 +40,7 @@ mod term;
 
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ListIterator, MapIterator, OwnedBinary, LocalPid,
+    Atom, Binary, Decoder, Encoder, ListIterator, LocalPid, MapIterator, OwnedBinary,
 };
 pub mod resource;
 pub use crate::resource::ResourceArc;
