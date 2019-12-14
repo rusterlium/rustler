@@ -26,12 +26,12 @@ pub mod tuple;
 pub mod local_pid;
 pub use self::local_pid::LocalPid;
 
-#[deprecated(since = "0.22", note = "Please use local_pid instead")]
+#[deprecated(since = "0.22.0", note = "Please use local_pid instead")]
 pub mod pid {
-    #[deprecated(since = "0.22", note = "Please use LocalPid instead")]
+    #[deprecated(since = "0.22.0", note = "Please use LocalPid instead")]
     pub use super::LocalPid as Pid;
 }
-#[deprecated(since = "0.22", note = "Please use LocalPid instead")]
+#[deprecated(since = "0.22.0", note = "Please use LocalPid instead")]
 pub use self::LocalPid as Pid;
 
 pub mod truthy;
