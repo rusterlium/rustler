@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* Compilation time of generated decoders has been reduced significantly.
+- Compilation time of generated decoders has been reduced significantly.
+- Fixed a segfault caused by `OwnedEnv::send_and_clear`
 
 ### Changes
 
