@@ -19,7 +19,6 @@ rustler_sys = { path = "../rustler_sys", version = "~2.0" }
 
 [build-dependencies]
 lazy_static = "1.4"
-which = "3"
 
 [package.metadata.release]
 
