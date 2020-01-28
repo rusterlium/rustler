@@ -55,6 +55,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
+    let struct_name_str = struct_name.to_string();
 
     let field_defs: Vec<TokenStream> = fields
         .iter()
@@ -62,16 +63,8 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             let ident = field.ident.as_ref().unwrap();
             let ident_str = ident.to_string();
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-            let error_message = format!(
-                "Could not decode field :{} on %{}{{}}",
-                ident.to_string(),
-                struct_name.to_string()
-            );
             quote! {
-                #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
-                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
-                    Ok(value) => value
-                }
+                #ident: try_decode_field(env, term, #atom_fun())?
             }
         })
         .collect();
@@ -82,6 +75,24 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 use #atoms_module_name::*;
 
                 let env = term.get_env();
+
+                fn try_decode_field<'a, T>(
+                    env: rustler::Env<'a>,
+                    term: rustler::Term<'a>,
+                    field: rustler::Atom,
+                    ) -> Result<T, rustler::Error>
+                    where
+                        T: rustler::Decoder<'a>,
+                    {
+                        use rustler::Encoder;
+                        match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
+                            Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                            "Could not decode field :{:?} on %{}{{}}",
+                                            field, #struct_name_str
+                            )))),
+                            Ok(value) => Ok(value),
+                        }
+                    };
 
                 let module: ::rustler::types::atom::Atom = term.map_get(atom_struct().to_term(env))?.decode()?;
                 if module != atom_module() {
