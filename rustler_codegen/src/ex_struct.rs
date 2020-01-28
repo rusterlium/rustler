@@ -80,6 +80,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 use #atoms_module_name::*;
+                use ::rustler::Encoder;
 
                 let env = term.get_env();
 
