@@ -5,9 +5,6 @@ use std::process::Command;
 extern crate lazy_static;
 use lazy_static::lazy_static;
 
-extern crate which;
-use which::which;
-
 lazy_static! {
     // keep this sorted by version number
     static ref NIF_VERSION: Vec<&'static str> = vec![
@@ -24,14 +21,13 @@ fn main() {
 }
 
 fn get_version_from_erl() -> Option<String> {
-    let erl = which("erl").ok()?;
     let args = vec![
         "-noshell",
         "-eval",
         r#"io:format("~s~n", [erlang:system_info(nif_version)]), init:stop()."#,
     ];
 
-    let version = Command::new(erl).args(&args).output().ok()?.stdout;
+    let version = Command::new("erl").args(&args).output().ok()?.stdout;
 
     let version = String::from_utf8(version).ok()?;
 
