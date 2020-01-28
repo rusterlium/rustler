@@ -1,13 +1,13 @@
 use rustler::env::{OwnedEnv, SavedTerm};
 use rustler::types::atom;
 use rustler::types::list::ListIterator;
-use rustler::types::pid::Pid;
+use rustler::types::LocalPid;
 use rustler::{Atom, Encoder, Env, NifResult, Term};
 use std::thread;
 
 // Send a message to several PIDs.
 #[rustler::nif]
-pub fn send_all<'a>(env: Env<'a>, pids: Vec<Pid>, msg: Term<'a>) -> Term<'a> {
+pub fn send_all<'a>(env: Env<'a>, pids: Vec<LocalPid>, msg: Term<'a>) -> Term<'a> {
     for pid in pids {
         env.send(&pid, msg);
     }

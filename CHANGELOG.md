@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changes
 
+- Renamed `Pid` to `LocalPid` to clarify that it can't point to a remote process
 - Dependencies have been updated.
 - Derive macros have been refactored.
 - Macros have been renamed and old ones have been deprecated:
