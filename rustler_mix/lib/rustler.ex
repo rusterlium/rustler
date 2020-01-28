@@ -16,7 +16,7 @@ defmodule Rustler do
         crate: :my_nif,
         load_data: [1, 2, 3]
 
-  Configuration options:
+  ## Configuration options
 
     * `:cargo` - Specify how to envoke the rust compiler. Options are:
         - `:system` (default) - use `cargo` from the system (must by in `$PATH`)
@@ -34,7 +34,7 @@ defmodule Rustler do
 
     * `:env` - Specify a list of environment variables when envoking the compiler.
 
-    * `:feature` - a list of features to enable when compiling the crate.
+    * `:features` - a list of features to enable when compiling the crate.
 
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)

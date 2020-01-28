@@ -26,23 +26,10 @@ Then,
 
 ## Crate configuration
 
-The `rustler_crates` configuration is a keyword list mapping the crate name (an atom) to the NIF configuration (another keyword list).
-The NIF configuration may contain the following entries:
+The Rust crate compilation can be controlled via Mix compile-time configuration in `config/config.exs`.
+See [configuration options](https://hexdocs.pm/rustler/Rustler.html#module-configuration-options) for more
+details.
 
-- `path` - The path to the crate directory relative to the project root
-  (default: `native/<crate-name>`)
-- `cargo` (:system default) - The rust/cargo version to build the NIF with. May be one of the following:
-  - `:system` - Use the version installed on the system.
-  - `{:rustup, "rust-version"}` - Use `rustup` to compile the NIF with a specific version.
-  - `{:bin, "path"}` - Use `path` as the cargo command. This is not portable, and you should not normally use this.
-- `default_features` (true default) - Boolean indicating if you want the NIF built with or without default cargo features.
-- `features` ([] default) - List of binaries indicating what cargo features you want enabled when building.
-- `target` (nil default) - Specify which build target to compile for. See .
-- `mode` - Indicates what cargo build flavor to compile with. The default
-  depends on the `Mix.env()`. When `:prod` the crate will be compiled in
-  `release` mode. Otherwise it will be compiled in `debug` mode.
-  - `:release` - Optimized build, normally a LOT faster than debug.
-  - `:debug` - Unoptimized debug build with debug assertions and more.
 
 ## Loading the NIF
 
