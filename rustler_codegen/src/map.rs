@@ -51,19 +51,19 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
 
-    let field_defs: Vec<TokenStream> = fields
+    let idents: Vec<_> = fields
         .iter()
-        .map(|field| {
-            let ident = field.ident.as_ref().unwrap();
+        .map(|field| field.ident.as_ref().unwrap())
+        .collect();
+
+    let field_defs: Vec<TokenStream> = idents
+        .iter()
+        .map(|ident| {
             let ident_str = ident.to_string();
 
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
-            let error_message = format!("Could not decode field :{} on %{{}}", ident.to_string());
             quote! {
-                #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
-                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
-                    Ok(value) => value
-                }
+                let #ident = try_decode_field(env, term, #atom_fun())?;
 
             }
         })
@@ -75,7 +75,28 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 use #atoms_module_name::*;
 
                 let env = term.get_env();
-                Ok(#struct_name { #(#field_defs),* })
+
+                fn try_decode_field<'a, T>(
+                    env: rustler::Env<'a>,
+                    term: rustler::Term<'a>,
+                    field: rustler::Atom,
+                    ) -> Result<T, rustler::Error>
+                    where
+                        T: rustler::Decoder<'a>,
+                    {
+                        use rustler::Encoder;
+                        match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
+                            Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                            "Could not decode field :{:?} on %{{}}",
+                                            field
+                            )))),
+                            Ok(value) => Ok(value),
+                        }
+                    };
+
+                #(#field_defs);*
+
+                Ok(#struct_name { #(#idents),* })
             }
         }
     };
