@@ -57,14 +57,18 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
 
-    let field_defs: Vec<TokenStream> = fields
+    let idents: Vec<_> = fields
         .iter()
-        .map(|field| {
-            let ident = field.ident.as_ref().unwrap();
+        .map(|field| field.ident.as_ref().unwrap())
+        .collect();
+
+    let field_defs: Vec<TokenStream> = idents
+        .iter()
+        .map(|ident| {
             let ident_str = ident.to_string();
             let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
             quote! {
-                #ident: try_decode_field(env, term, #atom_fun())?
+                let #ident = try_decode_field(env, term, #atom_fun())?;
             }
         })
         .collect();
@@ -99,7 +103,9 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                     return Err(::rustler::Error::Atom("invalid_struct"));
                 }
 
-                Ok(#struct_name { #(#field_defs),* })
+                #(#field_defs);*
+
+                Ok(#struct_name { #(#idents),* })
             }
         }
     };
