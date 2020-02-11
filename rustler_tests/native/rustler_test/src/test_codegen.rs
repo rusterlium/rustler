@@ -150,7 +150,7 @@ pub mod reserved_keywords {
         Struct(Struct),
         Map(Map),
         Tuple(Tuple),
-        Record(Record)
+        Record(Record),
     }
 
     #[rustler::nif]
