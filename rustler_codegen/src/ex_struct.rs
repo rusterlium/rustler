@@ -60,8 +60,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .iter()
         .map(|field| {
             let ident = field.ident.as_ref().unwrap();
-            let ident_str = ident.to_string();
-            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            let atom_fun = Context::field_to_atom_fun(field);
             let error_message = format!(
                 "Could not decode field :{} on %{}{{}}",
                 ident.to_string(),
@@ -104,8 +103,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .iter()
         .map(|field| {
             let field_ident = field.ident.as_ref().unwrap();
-            let field_ident_str = field_ident.to_string();
-            let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
+            let atom_fun = Context::field_to_atom_fun(field);
             quote! {
                 map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
             }
