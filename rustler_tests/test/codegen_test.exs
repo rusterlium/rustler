@@ -181,8 +181,10 @@ defmodule RustlerTest.CodegenTest do
 
   test "reserved keywords" do
     assert %{override: 1} == RustlerTest.reserved_keywords_type_echo(%{override: 1})
+
     assert %{__struct__: Struct, override: 1} ==
-      RustlerTest.reserved_keywords_type_echo(%{__struct__: Struct, override: 1})
+             RustlerTest.reserved_keywords_type_echo(%{__struct__: Struct, override: 1})
+
     assert {1} == RustlerTest.reserved_keywords_type_echo({1})
     assert {:record, 1} == RustlerTest.reserved_keywords_type_echo({:record, 1})
   end
