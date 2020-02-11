@@ -72,6 +72,7 @@ rustler::init!(
         test_error::raise_term_with_atom_error,
         test_error::term_with_tuple_error,
         test_nif_attrs::can_rename,
+        test_codegen::reserved_keywords::reserved_keywords_type_echo
     ],
     load = load
 );
