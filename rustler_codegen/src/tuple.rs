@@ -1,6 +1,6 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 
-use syn::{self, Field, Ident, Index};
+use syn::{self, Field, Index};
 
 use super::context::Context;
 
@@ -49,10 +49,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
                 index.to_string()
             };
 
-            let variable = Ident::new(
-                &format!("RUSTLER_TUPLE_field_{}", pos_in_struct),
-                Span::call_site(),
-            );
+            let variable = Context::escape_ident(&pos_in_struct, "struct");
 
             let assignment = quote! {
                 let #variable = try_decode_index(&terms, #pos_in_struct, #index)?;

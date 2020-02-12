@@ -61,13 +61,8 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .zip(idents.iter())
         .enumerate()
         .map(|(index, (field, ident))| {
-            let ident_str = ident.to_string();
             let atom_fun = Context::field_to_atom_fun(field);
-
-            let variable = Ident::new(
-                &format!("RUSTLER_map_field_{}_{}", index, ident_str),
-                Span::call_site(),
-            );
+            let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
             let assignment = quote! {
             let #variable = try_decode_field(env, term, #atom_fun())?;

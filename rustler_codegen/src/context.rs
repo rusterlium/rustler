@@ -120,6 +120,20 @@ impl<'a> Context<'a> {
         Ident::new(&format!("atom_{}", ident_str), Span::call_site())
     }
 
+    pub fn escape_ident_with_index(ident_str: &str, index: usize, infix: &str) -> Ident {
+        Ident::new(
+            &format!("RUSTLER_{}_field_{}_{}", infix, index, Self::remove_raw(ident_str)),
+            Span::call_site()
+        )
+    }
+
+    pub fn escape_ident(ident_str: &str, infix: &str) -> Ident {
+        Ident::new(
+            &format!("RUSTLER_{}_field_{}", infix, Self::remove_raw(ident_str)),
+            Span::call_site()
+        )
+    }
+
     fn remove_raw(ident_str: &str) -> &str {
         ident_str
             .split("r#")

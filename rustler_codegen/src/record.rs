@@ -64,10 +64,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             };
             let actual_index = index + 1;
 
-            let variable = Ident::new(
-                &format!("RUSTLER_RECORD_field_{}", pos_in_struct),
-                Span::call_site(),
-            );
+            let variable = Context::escape_ident(&pos_in_struct, "record");
 
             let assignment = quote! {
                 let #variable = try_decode_index(&terms, #pos_in_struct, #actual_index)?;
