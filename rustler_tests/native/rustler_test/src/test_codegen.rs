@@ -1,5 +1,4 @@
 use rustler::types::truthy::Truthy;
-use rustler::Encoder;
 use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
 
 #[derive(NifTuple)]
@@ -121,7 +120,7 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
 }
 
 pub mod reserved_keywords {
-    use rustler::{Encoder, NifMap, NifRecord, NifStruct, NifTuple, NifUntaggedEnum};
+    use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUntaggedEnum};
 
     #[derive(NifMap, Debug)]
     pub struct Map {
