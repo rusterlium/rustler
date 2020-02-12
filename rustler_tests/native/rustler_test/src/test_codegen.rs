@@ -119,3 +119,42 @@ pub struct TupleStructRecord(i64, i64, i64);
 pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRecord {
     tuplestruct
 }
+
+pub mod reserved_keywords {
+    use rustler::{Encoder, NifMap, NifRecord, NifStruct, NifTuple, NifUntaggedEnum};
+
+    #[derive(NifMap, Debug)]
+    pub struct Map {
+        r#override: i32,
+    }
+
+    #[derive(NifStruct, Debug)]
+    #[module = "Struct"]
+    pub struct Struct {
+        r#override: i32,
+    }
+
+    #[derive(NifTuple, Debug)]
+    pub struct Tuple {
+        r#override: i32,
+    }
+
+    #[derive(NifRecord, Debug)]
+    #[tag = "record"]
+    pub struct Record {
+        r#override: i32,
+    }
+
+    #[derive(NifUntaggedEnum)]
+    pub enum ReservedKeywords {
+        Struct(Struct),
+        Map(Map),
+        Tuple(Tuple),
+        Record(Record),
+    }
+
+    #[rustler::nif]
+    pub fn reserved_keywords_type_echo(reserved: ReservedKeywords) -> ReservedKeywords {
+        reserved
+    }
+}
