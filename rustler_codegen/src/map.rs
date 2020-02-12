@@ -56,12 +56,13 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .map(|field| field.ident.as_ref().unwrap())
         .collect();
 
-    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = idents
+    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
         .iter()
+        .zip(idents.iter())
         .enumerate()
-        .map(|(index, ident)| {
+        .map(|(index, (field, ident))| {
             let ident_str = ident.to_string();
-            let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+            let atom_fun = Context::field_to_atom_fun(field);
 
             let variable = Ident::new(
                 &format!("RUSTLER_map_field_{}_{}", index, ident_str),
@@ -121,9 +122,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .iter()
         .map(|field| {
             let field_ident = field.ident.as_ref().unwrap();
-            let field_ident_str = field_ident.to_string();
-
-            let atom_fun = Ident::new(&format!("atom_{}", field_ident_str), Span::call_site());
+            let atom_fun = Context::field_to_atom_fun(field);
 
             quote! {
                 map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();

@@ -98,10 +98,11 @@ impl<'a> Context<'a> {
             struct_fields
                 .iter()
                 .map(|field| {
+                    let atom_fun = Self::field_to_atom_fun(field);
+
                     let ident = field.ident.as_ref().unwrap();
                     let ident_str = ident.to_string();
-
-                    let atom_fun = Ident::new(&format!("atom_{}", ident_str), Span::call_site());
+                    let ident_str = Self::remove_raw(&ident_str);
 
                     quote! {
                         #atom_fun = #ident_str,
@@ -109,6 +110,21 @@ impl<'a> Context<'a> {
                 })
                 .collect()
         })
+    }
+
+    pub fn field_to_atom_fun(field: &Field) -> Ident {
+        let ident = field.ident.as_ref().unwrap();
+        let ident_str = ident.to_string();
+        let ident_str = Self::remove_raw(&ident_str);
+
+        Ident::new(&format!("atom_{}", ident_str), Span::call_site())
+    }
+
+    fn remove_raw(ident_str: &str) -> &str {
+        ident_str
+            .split("r#")
+            .last()
+            .expect("split has always at least one element")
     }
 
     fn encode_decode_attr_set(attrs: &[RustlerAttr]) -> bool {

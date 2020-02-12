@@ -171,6 +171,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
 
+                use ::rustler::Encoder;
                 let arr = #field_list_ast;
                 ::rustler::types::tuple::make_tuple(env, &arr)
             }
