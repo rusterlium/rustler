@@ -2,15 +2,10 @@
 use std::env;
 use std::process::Command;
 
-extern crate lazy_static;
-use lazy_static::lazy_static;
-
-lazy_static! {
-    // keep this sorted by version number
-    static ref NIF_VERSION: Vec<&'static str> = vec![
-        "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15"
-    ];
-}
+// keep this sorted by version number
+const NIF_VERSION: &[&str] = &[
+    "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15",
+];
 
 fn main() {
     let latest_version = NIF_VERSION.last().unwrap().to_string();
