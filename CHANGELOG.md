@@ -34,6 +34,11 @@ rustler::atoms! {
 }
 ```
 
+### Fixed
+
+* Compilation time of generated decoders has been reduced significantly.
+
+
 ## [0.21.0] - 2019-09-07
 
 ### Added

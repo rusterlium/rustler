@@ -52,7 +52,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     let struct_name = ctx.ident;
 
     // Make a decoder for each of the fields in the struct.
-    let field_defs: Vec<TokenStream> = fields
+    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
         .iter()
         .enumerate()
         .map(|(index, field)| {
@@ -62,25 +62,24 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             } else {
                 index.to_string()
             };
-            let error_message = format!(
-                "Could not decode field {} on Record {}",
-                pos_in_struct,
-                struct_name.to_string()
-            );
             let actual_index = index + 1;
-            let decoder = quote! {
-                match ::rustler::Decoder::decode(terms[#actual_index]) {
-                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
-                    Ok(value) => value
+
+            let variable = Context::escape_ident(&pos_in_struct, "record");
+
+            let assignment = quote! {
+                let #variable = try_decode_index(&terms, #pos_in_struct, #actual_index)?;
+            };
+
+            let field_def = match ident {
+                None => quote! { #variable },
+                Some(ident) => {
+                    quote! { #ident: #variable }
                 }
             };
 
-            match ident {
-                None => quote! { #decoder },
-                Some(ident) => quote! { #ident: #decoder },
-            }
+            (assignment, field_def)
         })
-        .collect();
+        .unzip();
 
     let field_num = field_defs.len();
     let struct_name_str = struct_name.to_string();
@@ -88,11 +87,13 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     // The implementation itself
     let construct = if ctx.is_tuple_struct {
         quote! {
-            #struct_name ( #(#field_defs),* )
+            #(#assignments);*
+            Ok(#struct_name ( #(#field_defs),* ))
         }
     } else {
         quote! {
-            #struct_name { #(#field_defs),* }
+            #(#assignments);*
+            Ok(#struct_name { #(#field_defs),* })
         }
     };
     let gen = quote! {
@@ -116,9 +117,18 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                     return Err(::rustler::Error::Atom("invalid_record"));
                 }
 
-                Ok(
-                    #construct
-                )
+                fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> Result<T, rustler::Error>
+                    where
+                        T: rustler::Decoder<'a>,
+                {
+                    match ::rustler::Decoder::decode(terms[index]) {
+                        Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(
+                                    format!("Could not decode field {} on Record {}", pos_in_struct, #struct_name_str)))),
+                        Ok(value) => Ok(value)
+                    }
+                }
+
+                #construct
             }
         }
     };

@@ -51,21 +51,29 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
 
-    let field_defs: Vec<TokenStream> = fields
+    let idents: Vec<_> = fields
         .iter()
-        .map(|field| {
-            let ident = field.ident.as_ref().unwrap();
-
-            let atom_fun = Context::field_to_atom_fun(field);
-            let error_message = format!("Could not decode field :{} on %{{}}", ident.to_string());
-            quote! {
-                #ident: match ::rustler::Decoder::decode(term.map_get(#atom_fun().encode(env))?) {
-                    Err(_) => return Err(::rustler::Error::RaiseTerm(Box::new(#error_message))),
-                    Ok(value) => value,
-                }
-            }
-        })
+        .map(|field| field.ident.as_ref().unwrap())
         .collect();
+
+    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
+        .iter()
+        .zip(idents.iter())
+        .enumerate()
+        .map(|(index, (field, ident))| {
+            let atom_fun = Context::field_to_atom_fun(field);
+            let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
+
+            let assignment = quote! {
+            let #variable = try_decode_field(env, term, #atom_fun())?;
+            };
+
+            let field_def = quote! {
+                #ident: #variable
+            };
+            (assignment, field_def)
+        })
+        .unzip();
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
@@ -73,6 +81,27 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 use #atoms_module_name::*;
 
                 let env = term.get_env();
+
+                fn try_decode_field<'a, T>(
+                    env: rustler::Env<'a>,
+                    term: rustler::Term<'a>,
+                    field: rustler::Atom,
+                    ) -> Result<T, rustler::Error>
+                    where
+                        T: rustler::Decoder<'a>,
+                    {
+                        use rustler::Encoder;
+                        match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
+                            Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                            "Could not decode field :{:?} on %{{}}",
+                                            field
+                            )))),
+                            Ok(value) => Ok(value),
+                        }
+                    };
+
+                #(#assignments);*
+
                 Ok(#struct_name { #(#field_defs),* })
             }
         }
