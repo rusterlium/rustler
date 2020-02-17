@@ -53,7 +53,7 @@ macro_rules! impl_check {
         pub fn $check_fun(self) -> bool {
             unsafe { check::$check_fun(self.get_env().as_c_arg(), self.as_c_arg()) }
         }
-    }
+    };
 }
 
 /// ## Type checks

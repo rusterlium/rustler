@@ -75,6 +75,40 @@ jobs:
         working-directory: rustler_mix
         run: ./test.sh
 
+  test_windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v1
+
+      - name: Install Erlang/Elixir
+        run: choco install elixir
+
+      - name: Install Rust stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Extend PATH
+        run: echo "::add-path::C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin"
+
+      - name: Hex
+        run: mix local.hex --force
+
+      - name: Test rustler_mix
+        working-directory: rustler_mix
+        run: |
+          mix deps.get
+          mix test
+
+      - name: Test rustler_tests
+        working-directory: rustler_tests
+        run: |
+          mix deps.get
+          mix test
+
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}}
     runs-on: ubuntu-latest
