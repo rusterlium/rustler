@@ -13,7 +13,7 @@ defmodule RustlerTest.ThreadTest do
     RustlerTest.threaded_sleep(200)
 
     receive do
-      _ -> raise :timeout_expected
+      _ -> raise "timeout_expected"
     after
       100 ->
         nil
@@ -23,7 +23,7 @@ defmodule RustlerTest.ThreadTest do
       x -> assert x == 200
     after
       1000 ->
-        raise :message_expected
+        raise "message_expected"
     end
   end
 

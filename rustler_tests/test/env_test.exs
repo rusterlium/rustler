@@ -25,7 +25,7 @@ defmodule RustlerTest.EnvTest do
         receive do
           # Collect the pids that the child processes send back.
           {child_pid, {:hello, :world}} -> child_pid
-          _ -> raise :fail
+          _ -> raise "fail"
         end
       end
 
