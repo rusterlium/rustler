@@ -17,6 +17,7 @@ defmodule Rustler.Compiler.Config do
             env: [],
             external_resources: [],
             features: [],
+            lib: true,
             load_data: 0,
             load_from: nil,
             mode: :release,
@@ -32,42 +33,34 @@ defmodule Rustler.Compiler.Config do
   def from(otp_app, module, opts) do
     config = Application.get_env(otp_app, module, [])
 
-    cargo = Keyword.get(config, :cargo, :system)
     crate = config[:crate] || opts[:crate] || otp_app
-    default_features = Keyword.get(config, :default_features, true)
-    env = Keyword.get(config, :env, [])
-    features = Keyword.get(config, :features, [])
-    mode = config[:mode] || opts[:mode] || build_mode(Mix.env())
-    load_data = config[:load_data] || opts[:load_data] || 0
 
-    load_from =
-      case config[:load_from] do
-        {_, _} -> config[:load_from]
-        _ -> {otp_app, "priv/native/lib#{crate}"}
-      end
-
-    path = config[:path] || "native/#{crate}"
-    target = config[:target]
-    external_resources = external_resources(path)
-    target_dir = Keyword.get(config, :target_dir, Application.app_dir(otp_app, "native/#{crate}"))
-    skip_compilation? = Keyword.get(config, :skip_compilation?, false)
-
-    %Config{
-      cargo: cargo,
+    defaults = %Config{
       crate: crate,
-      default_features: default_features,
-      env: env,
-      external_resources: external_resources,
-      features: features,
-      load_data: load_data,
-      load_from: load_from,
-      mode: mode,
+      load_from: {otp_app, "priv/native/lib#{crate}"},
+      mode: build_mode(Mix.env()),
       otp_app: otp_app,
-      path: path,
-      skip_compilation?: skip_compilation?,
-      target: target,
-      target_dir: target_dir
+      path: "native/#{crate}",
+      target_dir: Application.app_dir(otp_app, "native/#{crate}")
     }
+
+    defaults
+    |> Map.from_struct()
+    |> Enum.into([])
+    |> Keyword.merge(opts)
+    |> Keyword.merge(config)
+    |> build()
+  end
+
+  defp build(opts) do
+    resources =
+      opts
+      |> Keyword.get(:path)
+      |> external_resources()
+
+    opts = Keyword.put(opts, :external_resources, resources)
+
+    struct!(Config, opts)
   end
 
   defp external_resources(crate_path) do
