@@ -116,6 +116,8 @@ jobs:
       matrix:
         pair:
           - erlang: 22.x
+            elixir: "1.10.1"
+          - erlang: 22.x
             elixir: 1.9
           - erlang: 22.x
             elixir: 1.8
