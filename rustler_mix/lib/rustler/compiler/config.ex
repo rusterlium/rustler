@@ -3,7 +3,7 @@ defmodule Rustler.Compiler.Config do
 
   @type rust_version :: :stable | :beta | :nightly | binary()
   @type cargo :: :system | {:rustup, rust_version()} | {:bin, Path.t()}
-  @type crate :: atom()
+  @type crate :: binary()
   @type default_features :: boolean()
   @type env :: [{binary(), binary()}]
   @type features :: [binary()]
@@ -35,6 +35,10 @@ defmodule Rustler.Compiler.Config do
 
     crate = config[:crate] || opts[:crate] || otp_app
 
+    # TODO: Remove in 1.0
+    rustler_crates = Mix.Project.config()[:rustler_crates] || []
+    legacy_config = rustler_crates[to_atom(crate)] || []
+
     defaults = %Config{
       crate: crate,
       load_from: {otp_app, "priv/native/lib#{crate}"},
@@ -47,6 +51,7 @@ defmodule Rustler.Compiler.Config do
     defaults
     |> Map.from_struct()
     |> Enum.into([])
+    |> Keyword.merge(legacy_config)
     |> Keyword.merge(opts)
     |> Keyword.merge(config)
     |> build()
@@ -73,4 +78,10 @@ defmodule Rustler.Compiler.Config do
 
   defp build_mode(env) when env in [:prod, :bench], do: :release
   defp build_mode(_), do: :debug
+
+  defp to_atom(name) when is_binary(name),
+    do: String.to_atom(name)
+
+  defp to_atom(name) when is_atom(name),
+    do: name
 end

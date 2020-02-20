@@ -25,9 +25,9 @@ defmodule Rustler do
           which specifies a specific version (i.e. `"1.39.0"`).
         - `{:bin, "/path/to/binary"}` - provide a specific path to `cargo`.
 
-    * `:crate` - the name of the Rust crate (as an atom), if different from your
-      `otp_app` value. If you have more than one crate in your project, you will
-      need to be explicit about which crate you intend to use.
+    * `:crate` - the name of the Rust crate, if different from your `otp_app`
+      value. If you have more than one crate in your project, you will need to
+      be explicit about which crate you intend to use.
 
     * `:default_features` - a boolean to specify whether the crate's default features
       should be used.
@@ -76,14 +76,13 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      lib? = Keyword.get(opts, :lib, true)
       config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
       for resource <- config.external_resources do
         @external_resource resource
       end
 
-      if lib? do
+      if config.lib do
         @load_from config.load_from
         @load_data config.load_data
 
