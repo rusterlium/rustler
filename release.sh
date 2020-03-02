@@ -92,9 +92,9 @@ if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
     trap cannot_revert INT EXIT
 
     # Update and publish
-    pushd rustler_codegen
-    cargo publish
-    popd
+    #pushd rustler_codegen
+    #cargo publish
+    #popd
     pushd rustler
     cargo publish
     popd
@@ -102,8 +102,8 @@ if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
     mix hex.publish
     popd
 
-    git push
-    git push origin "$TAG"
+    #git push
+    #git push origin "$TAG"
 
     trap "echo done" EXIT
 fi
