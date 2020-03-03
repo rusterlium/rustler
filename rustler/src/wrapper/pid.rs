@@ -17,6 +17,14 @@ pub unsafe fn make_pid(env: NIF_ENV, pid: ErlNifPid) -> NIF_TERM {
     rustler_sys::enif_make_pid(env, pid)
 }
 
+///
+/// Look up a local process by its registered name.
+///
+/// # Safety
+///
+/// `env` must only be null if the calling process is a created process. Otherwise,
+/// it must not be null.
+///
 pub unsafe fn whereis(env: NIF_ENV, name: NIF_TERM) -> Option<ErlNifPid> {
     let mut pid = MaybeUninit::uninit();
     if rustler_sys::enif_whereis_pid(env, name, pid.as_mut_ptr()) == 0 {
