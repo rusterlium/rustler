@@ -114,7 +114,7 @@ defmodule Rustler do
   end
 
   @doc false
-  def rustler_version, do: "0.21.0"
+  def rustler_version, do: "0.22.0-rc.0"
 
   @doc """
   Supported NIF API versions.

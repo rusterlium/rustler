@@ -5,7 +5,7 @@ safe Rust code. Here, we provide the basic functionality to use Rustler from Eli
 
 - A task to generate a new crate to write NIFs (`mix help rustler.new`)
 
-See below for information on how to install this, which options are exposed through the configuration, and how to
+See below for information on how to install this, which options are exposed through the configuration, and how t
 load a NIF.
 
 ## Installation
@@ -14,7 +14,7 @@ This package is available on [`hex.pm`](https://hex.pm/packages/rustler). To ins
 
 ```elixir
 def deps do
-  [{:rustler, "~> 0.21.0", runtime: false}]
+  [{:rustler, "~> 0.22.0-rc.0"}]
 end
 ```
 

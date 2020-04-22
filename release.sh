@@ -14,7 +14,9 @@ set -e
 VERSION=$1
 
 # Version format check
-if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+SEMVER_REGEX="^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(\\-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$"
+
+if ! [[ $VERSION =~ $SEMVER_REGEX ]]; then
     echo "Invalid version"
     exit -1
 fi

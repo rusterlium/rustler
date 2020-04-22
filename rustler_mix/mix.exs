@@ -23,7 +23,7 @@ defmodule Rustler.Mixfile do
     ]
   end
 
-  def rustler_version, do: "0.21.0"
+  def rustler_version, do: "0.22.0-rc.0"
 
   def application do
     [applications: [:logger]]
