@@ -8,7 +8,7 @@ defmodule Rustler.Mixfile do
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      name: "Rustler Mix",
+      name: "Rustler",
       source_url: "https://github.com/rustlerium/rustler",
       homepage_url: "https://github.com/rusterlium/rustler",
       deps: deps(),
@@ -32,7 +32,7 @@ defmodule Rustler.Mixfile do
   defp deps do
     [
       {:toml, "~> 0.5.2", runtime: false},
-      {:ex_doc, "~> 0.19", only: :dev}
+      {:ex_doc, "~> 0.21", only: :dev}
     ]
   end
 
