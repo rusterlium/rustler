@@ -239,6 +239,12 @@ impl<'a> Encoder for Binary<'a> {
     }
 }
 
+impl<'a> AsRef<[u8]> for Binary<'a> {
+    fn as_ref(&self) -> &[u8] {
+        &self.as_slice()
+    }
+}
+
 /// ## Binary terms
 impl<'a> Term<'a> {
     pub fn into_binary(self) -> NifResult<Binary<'a>> {
