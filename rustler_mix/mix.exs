@@ -3,7 +3,7 @@ defmodule Rustler.Mixfile do
 
   def project do
     [app: :rustler,
-     version: "0.21.0", # rustler_mix version
+     version: "0.21.1", # rustler_mix version
      elixir: "~> 1.6",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
