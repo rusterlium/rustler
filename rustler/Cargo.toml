@@ -14,7 +14,7 @@ alternative_nif_init_name = []
 
 [dependencies]
 rustler_codegen = { path = "../rustler_codegen", version = "0.21.1", optional = true }
-rustler_sys = { path = "../rustler_sys", version = "~2.0" }
+rustler_sys = { path = "../rustler_sys", version = "~2.1" }
 lazy_static = "1.2"
 
 [build-dependencies]
