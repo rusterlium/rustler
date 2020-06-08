@@ -27,6 +27,9 @@ defmodule RustlerTest.MapTest do
   test "generic maps" do
     map = %{1 => "hello", 2 => "world"}
     assert map == RustlerTest.map_generic(map)
-    assert_raise(ArgumentError, fn -> RustlerTest.map_generic(%{1 => "hello", not_a_number: "world"}) end)
+
+    assert_raise(ArgumentError, fn ->
+      RustlerTest.map_generic(%{1 => "hello", not_a_number: "world"})
+    end)
   end
 end
