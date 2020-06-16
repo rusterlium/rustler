@@ -133,9 +133,11 @@ where
     V: Decoder<'a>,
 {
     fn decode(term: Term<'a>) -> NifResult<Self> {
+        let size = term.map_size()?;
+
         let it = MapIterator::new(term).ok_or_else(|| Error::BadArg)?;
 
-        let mut map = std::collections::HashMap::new();
+        let mut map = std::collections::HashMap::with_capacity(size);
 
         for (k, v) in it {
             let k = k.decode()?;
