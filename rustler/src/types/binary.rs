@@ -123,7 +123,7 @@ impl Drop for OwnedBinary {
 unsafe impl Send for OwnedBinary {}
 
 // Borrowed
-
+#[derive(Copy, Clone)]
 pub struct Binary<'a> {
     inner: ErlNifBinary,
     term: Term<'a>,
