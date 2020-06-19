@@ -147,12 +147,12 @@ pub struct ErlNifResourceTypeInit {
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
 pub type ErlNifSelectFlags = c_int;
 #[allow(clippy::identity_op)]
-pub const ERL_NIF_SELECT_READ: ErlNifSelectFlags = (1 << 0);
-pub const ERL_NIF_SELECT_WRITE: ErlNifSelectFlags = (1 << 1);
-pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = (1 << 2);
-pub const ERL_NIF_SELECT_FAILED: ErlNifSelectFlags = (1 << 3);
-pub const ERL_NIF_SELECT_READ_CANCELLED: ErlNifSelectFlags = (1 << 4);
-pub const ERL_NIF_SELECT_WRITE_CANCELLED: ErlNifSelectFlags = (1 << 5);
+pub const ERL_NIF_SELECT_READ: ErlNifSelectFlags = 1 << 0;
+pub const ERL_NIF_SELECT_WRITE: ErlNifSelectFlags = 1 << 1;
+pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = 1 << 2;
+pub const ERL_NIF_SELECT_FAILED: ErlNifSelectFlags = 1 << 3;
+pub const ERL_NIF_SELECT_READ_CANCELLED: ErlNifSelectFlags = 1 << 4;
+pub const ERL_NIF_SELECT_WRITE_CANCELLED: ErlNifSelectFlags = 1 << 5;
 
 /// See [ErlNifMonitor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMonitor) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
@@ -261,9 +261,9 @@ pub enum ErlNifTimeUnit {
 /// See [ErlNifUniqueInteger](http://erlang.org/doc/man/erl_nif.html#ErlNifUniqueInteger) in the Erlang docs.
 pub type ErlNifUniqueInteger = c_int;
 #[allow(clippy::identity_op)]
-pub const ERL_NIF_UNIQUE_POSITIVE: ErlNifUniqueInteger = (1 << 0);
+pub const ERL_NIF_UNIQUE_POSITIVE: ErlNifUniqueInteger = 1 << 0;
 #[allow(clippy::identity_op)]
-pub const ERL_NIF_UNIQUE_MONOTONIC: ErlNifUniqueInteger = (1 << 1);
+pub const ERL_NIF_UNIQUE_MONOTONIC: ErlNifUniqueInteger = 1 << 1;
 // ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L203
 // FIXME: Should actually be C enum, but repr(C) enums in Rust can't be used as bitfields.
 //        Fix if the right abstraction ever lands in Rust.
