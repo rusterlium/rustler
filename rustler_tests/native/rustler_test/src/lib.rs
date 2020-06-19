@@ -29,6 +29,7 @@ rustler::init!(
         test_map::sum_map_values,
         test_map::map_entries_sorted,
         test_map::map_from_arrays,
+        test_map::map_generic,
         test_resource::resource_make,
         test_resource::resource_set_integer_field,
         test_resource::resource_get_integer_field,

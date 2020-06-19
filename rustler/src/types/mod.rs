@@ -126,3 +126,39 @@ where
         }
     }
 }
+
+impl<'a, K, V> Decoder<'a> for std::collections::HashMap<K, V>
+where
+    K: Decoder<'a> + Eq + std::hash::Hash,
+    V: Decoder<'a>,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let size = term.map_size()?;
+
+        let it = MapIterator::new(term).ok_or_else(|| Error::BadArg)?;
+
+        let mut map = std::collections::HashMap::with_capacity(size);
+
+        for (k, v) in it {
+            let k = k.decode()?;
+            let v = v.decode()?;
+            map.insert(k, v);
+        }
+
+        Ok(map)
+    }
+}
+
+impl<K, V> Encoder for std::collections::HashMap<K, V>
+where
+    K: Encoder + Eq + std::hash::Hash,
+    V: Encoder,
+{
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
+        let (keys, values): (Vec<_>, Vec<_>) = self
+            .iter()
+            .map(|(k, v)| (k.encode(env), v.encode(env)))
+            .unzip();
+        Term::map_from_arrays(env, &keys, &values).unwrap()
+    }
+}

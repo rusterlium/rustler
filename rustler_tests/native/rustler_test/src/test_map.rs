@@ -34,3 +34,10 @@ pub fn map_from_arrays<'a>(
 ) -> NifResult<Term<'a>> {
     Term::map_from_arrays(env, &keys, &values)
 }
+
+#[rustler::nif]
+pub fn map_generic(
+    map: std::collections::HashMap<i64, String>,
+) -> std::collections::HashMap<i64, String> {
+    map
+}
