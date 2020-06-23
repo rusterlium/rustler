@@ -23,6 +23,29 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-targets --all-features -- -D warnings
 
+  clippy-windows:
+    name: Clippy-Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install Erlang/Elixir
+        run: choco install elixir
+      - name: Extend PATH
+        run: echo "::add-path::C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin"
+      - name: Build API
+        working-directory: rustler_sys
+        run: |
+            cargo build
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            components: clippy
+            override: true
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets --all-features -- -D warnings
+
   format:
     name: Format
     runs-on: ubuntu-latest
