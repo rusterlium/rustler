@@ -15,7 +15,7 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
     let arity = arity(inputs.clone());
     let decoded_terms = extract_inputs(inputs.clone());
     let argument_names = create_function_params(inputs.clone());
-    let erl_func_name = extract_attr_value(args.clone(), "name")
+    let erl_func_name = extract_attr_value(args, "name")
         .map(|ref n| syn::Ident::new(n, Span::call_site()))
         .unwrap_or_else(|| name.clone());
 
