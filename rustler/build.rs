@@ -40,6 +40,7 @@ fn activate_versions(version: &str) {
             )
         });
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..=index {
         println!(
             "cargo:rustc-cfg=nif_version_{}",
