@@ -33,10 +33,12 @@ fn activate_versions(version: &str) {
     let index = NIF_VERSION
         .iter()
         .position(|&v| v == version)
-        .expect(&format!(
-            "Erlang version {} not handled, please file a a bug report.",
-            version
-        ));
+        .unwrap_or_else(|| {
+            panic!(
+                "Erlang version {} not handled, please file a a bug report.",
+                version
+            )
+        });
 
     for i in 0..=index {
         println!(
