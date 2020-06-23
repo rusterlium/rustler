@@ -278,7 +278,6 @@ mod initmacro_namespace_tests {
     // use rustler_sys_api::*;
     use crate::rustler_sys_api;
 
-    use std;
     use std::ffi::{CStr, CString};
     use std::ptr;
     use std::slice;
@@ -355,7 +354,7 @@ mod initmacro_namespace_tests {
 #[cfg(test)]
 mod initmacro_tests {
     use crate::rustler_sys_api::*;
-    use std;
+
     use std::ffi::{CStr, CString};
     use std::ptr;
     use std::slice;
