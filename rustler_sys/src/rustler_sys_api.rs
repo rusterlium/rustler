@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+
 #[cfg(windows)]
 use unreachable::UncheckedOptionExt; // unchecked unwrap used in generated Windows code
 

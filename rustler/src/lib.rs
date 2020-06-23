@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+#![allow(clippy::missing_safety_doc)]
 
 //! [Github](https://github.com/rusterlium/rustler)
 //! [Example](https://github.com/hansihe/Rustler_Example)
