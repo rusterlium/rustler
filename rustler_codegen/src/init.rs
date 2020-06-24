@@ -99,13 +99,13 @@ impl Into<proc_macro2::TokenStream> for InitMacroInput {
         quote! {
             #[cfg(unix)]
             #[no_mangle]
-            pub extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
                 #inner
             }
 
             #[cfg(windows)]
             #[no_mangle]
-            pub extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::TWinDynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::TWinDynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
                     rustler::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
                 }
