@@ -33,11 +33,14 @@ fn activate_versions(version: &str) {
     let index = NIF_VERSION
         .iter()
         .position(|&v| v == version)
-        .expect(&format!(
-            "Erlang version {} not handled, please file a a bug report.",
-            version
-        ));
+        .unwrap_or_else(|| {
+            panic!(
+                "Erlang version {} not handled, please file a a bug report.",
+                version
+            )
+        });
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..=index {
         println!(
             "cargo:rustc-cfg=nif_version_{}",

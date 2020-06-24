@@ -27,7 +27,7 @@ impl Parse for InitMacroInput {
 fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
     let mut vec = Vec::new();
 
-    while let Ok(_) = <Token![,]>::parse(input) {
+    while <Token![,]>::parse(input).is_ok() {
         match syn::ExprAssign::parse(input) {
             Ok(expr) => vec.push(expr),
             Err(err) => panic!("{} (i.e. `load = load`)", err),
@@ -41,7 +41,7 @@ fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
         if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
             if let Some(ident) = path.get_ident() {
                 if *ident == name {
-                    let value = *right.clone();
+                    let value = *right;
                     return quote!(Some(#value));
                 }
             }

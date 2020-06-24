@@ -11,7 +11,7 @@ const SNIPPET_NAME: &str = "nif_api.snippet";
 
 fn try_gen_api(dst: &Path, pointer_size: usize) -> bool {
     // use environment escript if available
-    let escript = env::var("ESCRIPT").unwrap_or("escript".to_string());
+    let escript = env::var("ESCRIPT").unwrap_or_else(|_| "escript".to_string());
 
     if let Ok(res) = Command::new(escript)
         .arg("gen_api.erl")
