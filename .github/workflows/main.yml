@@ -138,6 +138,9 @@ jobs:
     strategy:
       matrix:
         pair:
+          - erlang: "23.0.3"
+            elixir: "1.10.3"
+
           - erlang: 22.x
             elixir: "1.10.1"
           - erlang: 22.x
