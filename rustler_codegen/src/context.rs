@@ -1,3 +1,6 @@
+// TODO When we settle for a minimum version of Rust >= 1.42, remove this.
+#![allow(clippy::match_like_matches_macro)]
+
 use proc_macro2::{Span, TokenStream};
 use syn::{Data, Field, Fields, Ident, Lit, Meta, NestedMeta, Variant};
 
