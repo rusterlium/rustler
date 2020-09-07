@@ -8,17 +8,11 @@ use std::ops::{Deref, DerefMut};
 
 // Owned
 
-pub struct OwnedBinary {
-    inner: ErlNifBinary,
-    release: bool,
-}
+pub struct OwnedBinary(ErlNifBinary);
 
 impl<'a> OwnedBinary {
     pub unsafe fn from_raw(inner: ErlNifBinary) -> OwnedBinary {
-        OwnedBinary {
-            inner,
-            release: true,
-        }
+        OwnedBinary(inner)
     }
 
     /// Allocates a new OwnedBinary with size `size`.
@@ -26,10 +20,7 @@ impl<'a> OwnedBinary {
     /// Note that the memory is not initially guaranteed to be any particular value.
     /// If an empty buffer is needed, you should manually zero it.
     pub fn new(size: usize) -> Option<OwnedBinary> {
-        unsafe { alloc(size) }.map(|binary| OwnedBinary {
-            inner: binary,
-            release: true,
-        })
+        unsafe { alloc(size) }.map(OwnedBinary)
     }
 
     /// Copies a given `Binary`.
@@ -53,7 +44,7 @@ impl<'a> OwnedBinary {
     /// Returns false if the buffer cannot be reallocated.
     #[must_use]
     pub fn realloc(&mut self, size: usize) -> bool {
-        unsafe { realloc(&mut self.inner, size) }
+        unsafe { realloc(&mut self.0, size) }
     }
 
     /// Attempts to reallocate the buffer with the new size.
@@ -68,7 +59,7 @@ impl<'a> OwnedBinary {
                 if !(num_written == self.len() || num_written == new.len()) {
                     panic!("Could not copy binary");
                 }
-                ::std::mem::swap(&mut self.inner, &mut new.inner);
+                ::std::mem::swap(&mut self.0, &mut new.0);
             } else {
                 panic!("Could not copy binary");
             }
@@ -76,11 +67,11 @@ impl<'a> OwnedBinary {
     }
 
     pub fn as_slice(&self) -> &'a [u8] {
-        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
+        unsafe { ::std::slice::from_raw_parts(self.0.data, self.0.size) }
     }
 
     pub fn as_mut_slice(&mut self) -> &'a mut [u8] {
-        unsafe { ::std::slice::from_raw_parts_mut(self.inner.data, self.inner.size) }
+        unsafe { ::std::slice::from_raw_parts_mut(self.0.data, self.0.size) }
     }
 
     /// Releases control of the binary to the VM. After this point
@@ -114,9 +105,7 @@ impl DerefMut for OwnedBinary {
 
 impl Drop for OwnedBinary {
     fn drop(&mut self) {
-        if self.release {
-            unsafe { rustler_sys::enif_release_binary(&mut self.inner) };
-        }
+        unsafe { rustler_sys::enif_release_binary(&mut self.0) };
     }
 }
 
@@ -130,20 +119,22 @@ pub struct Binary<'a> {
 }
 
 impl<'a> Binary<'a> {
-    /// Releases a given `OwnedBinary` to the VM.
-    /// After this point the binary will be immutable.
-    pub fn from_owned(mut bin: OwnedBinary, env: Env<'a>) -> Self {
-        bin.release = false;
+    /// Transfers ownership of `bin` to the VM and returns an
+    /// immutable `Binary`.
+    pub fn from_owned(bin: OwnedBinary, env: Env<'a>) -> Self {
+        // We are transferring ownership of `bin`'s data to the
+        // VM. Therefore, we need to prevent `bin`'s destructor being
+        // called at the end of this scope. The least error-prone
+        // solution (compared to `mem::forget()`) is to wrap `bin` in
+        // a `ManuallyDrop` and EXPLICITLY NOT CALL `ManuallyDrop::drop()`.
+        let mut bin = std::mem::ManuallyDrop::new(bin);
         let term = unsafe {
             Term::new(
                 env,
-                rustler_sys::enif_make_binary(env.as_c_arg(), &mut bin.inner),
+                rustler_sys::enif_make_binary(env.as_c_arg(), &mut bin.0),
             )
         };
-        Binary {
-            inner: bin.inner,
-            term,
-        }
+        Binary { inner: bin.0, term }
     }
 
     pub fn to_owned(&self) -> Option<OwnedBinary> {
