@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Field, Index};
+use syn::{self, spanned::Spanned, Field, Index};
 
 use super::context::Context;
 
@@ -51,7 +51,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
 
             let variable = Context::escape_ident(&pos_in_struct, "struct");
 
-            let assignment = quote! {
+            let assignment = quote_spanned! { field.span() =>
                 let #variable = try_decode_index(&terms, #pos_in_struct, #index)?;
             };
 
@@ -120,7 +120,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
                 Some(ident) => quote! { self.#ident },
             };
 
-            quote! { #field_source.encode(env) }
+            quote_spanned! { field.span() => #field_source.encode(env) }
         })
         .collect();
 

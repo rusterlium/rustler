@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 
-use syn::{self, Fields, Variant};
+use syn::{self, spanned::Spanned, Fields, Variant};
 
 use super::context::Context;
 
@@ -15,12 +15,14 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     for variant in variants {
         if let Fields::Unnamed(_) = variant.fields {
             if variant.fields.iter().count() != 1 {
-                panic!("NifUntaggedEnum can only be used with enums that contain all NewType variants.");
+                return quote_spanned! { variant.span() =>
+                    compile_error!("NifUntaggedEnum can only be used with enums that contain all NewType variants.");
+                };
             }
         } else {
-            panic!(
-                "NifUntaggedEnum can only be used with enums that contain all NewType variants."
-            );
+            return quote_spanned! { variant.span() =>
+                compile_error!("NifUntaggedEnum can only be used with enums that contain all NewType variants.");
+            };
         }
     }
 

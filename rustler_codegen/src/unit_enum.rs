@@ -1,7 +1,7 @@
 use proc_macro2::{Span, TokenStream};
 
 use heck::SnakeCase;
-use syn::{self, Fields, Ident, Variant};
+use syn::{self, spanned::Spanned, Fields, Ident, Variant};
 
 use super::context::Context;
 
@@ -16,7 +16,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     for variant in variants {
         if let Fields::Unit = variant.fields {
         } else {
-            panic!("NifUnitEnum can only be used with enums that contain all unit variants.");
+            return quote_spanned! { variant.span() =>
+                compile_error!("NifUnitEnum can only be used with enums containing unit variants.");
+            };
         }
     }
 
