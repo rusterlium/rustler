@@ -135,7 +135,7 @@ where
     fn decode(term: Term<'a>) -> NifResult<Self> {
         let size = term.map_size()?;
 
-        let it = MapIterator::new(term).ok_or_else(|| Error::BadArg)?;
+        let it = MapIterator::new(term).ok_or(Error::BadArg)?;
 
         let mut map = std::collections::HashMap::with_capacity(size);
 
