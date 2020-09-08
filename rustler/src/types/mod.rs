@@ -4,7 +4,6 @@ use crate::{Env, Error, NifResult, Term};
 pub mod atom;
 pub use crate::types::atom::Atom;
 
-#[doc(hidden)]
 pub mod binary;
 pub use crate::types::binary::{Binary, OwnedBinary};
 
