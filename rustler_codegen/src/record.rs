@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 
-use syn::{self, Field, Ident, Index};
+use syn::{self, spanned::Spanned, Field, Ident, Index};
 
 use super::context::Context;
 use super::RustlerAttr;
@@ -66,7 +66,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 
             let variable = Context::escape_ident(&pos_in_struct, "record");
 
-            let assignment = quote! {
+            let assignment = quote_spanned! { field.span() =>
                 let #variable = try_decode_index(&terms, #pos_in_struct, #actual_index)?;
             };
 
@@ -150,7 +150,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 Some(ident) => quote! { self.#ident },
             };
 
-            quote! { #field_source.encode(env) }
+            quote_spanned! { field.span() => #field_source.encode(env) }
         })
         .collect();
 
