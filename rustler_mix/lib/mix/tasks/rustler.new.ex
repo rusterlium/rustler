@@ -17,7 +17,8 @@ defmodule Mix.Tasks.Rustler.New do
     {:eex, "basic/.cargo/config", ".cargo/config"},
     {:eex, "basic/README.md", "README.md"},
     {:eex, "basic/Cargo.toml.eex", "Cargo.toml"},
-    {:eex, "basic/src/lib.rs", "src/lib.rs"}
+    {:eex, "basic/src/lib.rs", "src/lib.rs"},
+    {:text, "basic/.gitignore", ".gitignore"}
   ]
 
   root = Path.join(:code.priv_dir(:rustler), "templates/")
