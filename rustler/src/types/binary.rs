@@ -7,7 +7,7 @@
 //! The _owned_ in `OwnedBinary` refers to the fact that it owns the binary it
 //! wraps. The _owner_ of an `OwnedBinary` is free to modify its contents. Ownership
 //! lasts until it is dropped or consumed by converting it into a regular
-//! `Binary`. An `OwnedBinary` can not be copied or cloned and is thus always moved.
+//! `Binary`. An `OwnedBinary` cannot be copied or cloned and is thus always moved.
 //!
 //! The `Binary` type is an immutable shared-reference to a binary. `Binary`s are
 //! cheap to copy: all copies of a `Binary` point to the original `Binary`'s
