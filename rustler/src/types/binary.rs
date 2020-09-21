@@ -101,7 +101,7 @@ impl<'a> OwnedBinary {
 
     /// Allocates a new `OwnedBinary` with size `size`.
     ///
-    /// Memory is not be initialized. If uninitialized memory is undesirable, set it
+    /// Memory is not initialized. If uninitialized memory is undesirable, set it
     /// manually.
     ///
     /// # Errors
