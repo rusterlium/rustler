@@ -72,8 +72,8 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 ///
 /// Panics if `name` isn't null-terminated.
 #[doc(hidden)]
-pub fn open_struct_resource_type<'a, T: ResourceTypeProvider>(
-    env: Env<'a>,
+pub fn open_struct_resource_type<T: ResourceTypeProvider>(
+    env: Env,
     name: &str,
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {

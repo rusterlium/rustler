@@ -15,7 +15,7 @@ use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 ///
 /// # Errors
 /// `badarg` if `term` is not a tuple.
-pub fn get_tuple<'a>(term: Term<'a>) -> Result<Vec<Term<'a>>, Error> {
+pub fn get_tuple(term: Term) -> Result<Vec<Term>, Error> {
     let env = term.get_env();
     unsafe {
         match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
