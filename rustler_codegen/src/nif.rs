@@ -109,7 +109,7 @@ fn extract_attr_value(args: syn::AttributeArgs, name: &str) -> Option<String> {
 
 fn extract_inputs(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
     let mut tokens = TokenStream::new();
-    let mut idx = 0 as usize;
+    let mut idx: usize = 0;
 
     for item in inputs.iter() {
         if let syn::FnArg::Typed(ref typed) = item {
