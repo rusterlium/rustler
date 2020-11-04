@@ -229,7 +229,7 @@ impl OwnedEnv {
     ///
     /// **Note: There is no way to save terms across `OwnedEnv::send()` or `clear()`.**
     /// If you try, the `.load()` call will panic.
-    pub fn save<'a>(&self, term: Term<'a>) -> SavedTerm {
+    pub fn save(&self, term: Term) -> SavedTerm {
         SavedTerm {
             term: self.run(|env| term.in_env(env).as_c_arg()),
             env_generation: Arc::downgrade(&self.env),

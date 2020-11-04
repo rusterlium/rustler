@@ -280,7 +280,7 @@ pub struct ErlNifPort {
 
 /// See [ErlNifBinaryToTerm](http://erlang.org/doc/man/erl_nif.html#ErlNifBinaryToTerm) in the Erlang docs.
 pub type ErlNifBinaryToTerm = c_int;
-pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x20_000_000;
+pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x2000_0000;
 
 pub const ERL_NIF_THR_UNDEFINED: c_int = 0;
 pub const ERL_NIF_THR_NORMAL_SCHEDULER: c_int = 1;

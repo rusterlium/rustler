@@ -35,7 +35,7 @@ impl Atom {
     ///
     /// # Errors
     /// `Error::BadArg` if `bytes.len() > 255`.
-    pub fn from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<Atom> {
+    pub fn from_bytes(env: Env, bytes: &[u8]) -> NifResult<Atom> {
         if bytes.len() > 255 {
             return Err(Error::BadArg);
         }
@@ -46,7 +46,7 @@ impl Atom {
     ///
     /// # Errors
     /// `Error::BadArg` if `bytes.len() > 255`.
-    pub fn try_from_bytes<'a>(env: Env<'a>, bytes: &[u8]) -> NifResult<Option<Atom>> {
+    pub fn try_from_bytes(env: Env, bytes: &[u8]) -> NifResult<Option<Atom>> {
         if bytes.len() > 255 {
             return Err(Error::BadArg);
         }
@@ -63,7 +63,7 @@ impl Atom {
     /// # Errors
     /// `Error::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
     /// long. The maximum length is 255 characters.
-    pub fn from_str<'a>(env: Env<'a>, string: &str) -> NifResult<Atom> {
+    pub fn from_str(env: Env, string: &str) -> NifResult<Atom> {
         if string.is_ascii() {
             // Fast path.
             Atom::from_bytes(env, string.as_bytes())
