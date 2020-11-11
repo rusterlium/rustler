@@ -28,6 +28,12 @@ rustler_sys = { path = "../rustler_sys", version = "~2.4.2" }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
 
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+
 [package.metadata.release]
 
 [[package.metadata.release.pre-release-replacements]]
