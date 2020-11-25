@@ -31,7 +31,7 @@ jobs:
       - name: Install Erlang/Elixir
         run: choco install elixir
       - name: Extend PATH
-        run: echo "::add-path::C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin"
+        run: echo "C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Build API
         working-directory: rustler_sys
         run: |
@@ -115,7 +115,7 @@ jobs:
           override: true
 
       - name: Extend PATH
-        run: echo "::add-path::C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin"
+        run: echo "C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Hex
         run: mix local.hex --force
