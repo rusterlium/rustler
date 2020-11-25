@@ -172,8 +172,6 @@ jobs:
 
         rust:
           - stable
-          - beta
-          - nightly
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
