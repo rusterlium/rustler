@@ -6,6 +6,8 @@ on:
     tags: ["*"]
   pull_request:
     branches: ["*"]
+  schedule:
+    - cron: '0 0 * * 3'
 
 jobs:
   clippy:
