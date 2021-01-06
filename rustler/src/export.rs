@@ -96,7 +96,7 @@ macro_rules! rustler_export_nifs {
             .collect::<Vec<Term>>();
 
         let result: ::std::thread::Result<_> = ::std::panic::catch_unwind(move || {
-            $crate::codegen_runtime::NifReturnable::as_returned($fun(env, &terms), env)
+            $crate::codegen_runtime::NifReturnable::into_returned($fun(env, &terms), env)
         });
 
         match result {

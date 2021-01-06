@@ -20,7 +20,7 @@ pub enum Error {
 }
 
 unsafe impl NifReturnable for crate::error::Error {
-    unsafe fn as_returned(self, env: Env) -> NifReturned {
+    unsafe fn into_returned(self, env: Env) -> NifReturned {
         match self {
             Error::BadArg => NifReturned::BadArg,
             Error::Atom(atom_str) => {
