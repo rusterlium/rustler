@@ -6,7 +6,6 @@ fn test1() {
     use rustler_sys::*;
     use std::collections::HashMap;
     use std::env;
-    use std::iter::FromIterator;
     use std::mem::size_of;
     use std::path::Path;
     use std::process::Command;
@@ -61,12 +60,11 @@ fn test1() {
     let output: &str = std::str::from_utf8(&stdout).unwrap();
 
     // Parse C program output into hashmap of (&str, u32)
-    let sizemap = HashMap::<&str, usize>::from_iter(
-        output
-            .lines()
-            .map(|ln| ln.split(' '))
-            .map(|mut it| (it.next().unwrap(), it.next().unwrap().parse().unwrap())),
-    );
+    let sizemap: HashMap<&str, usize> = output
+        .lines()
+        .map(|ln| ln.split(' '))
+        .map(|mut it| (it.next().unwrap(), it.next().unwrap().parse().unwrap()))
+        .collect();
 
     /* types to check are:
 

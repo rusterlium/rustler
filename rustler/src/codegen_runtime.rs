@@ -16,14 +16,14 @@ pub use crate::wrapper::{
 pub use rustler_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
 
 pub unsafe trait NifReturnable {
-    unsafe fn as_returned(self, env: Env) -> NifReturned;
+    unsafe fn into_returned(self, env: Env) -> NifReturned;
 }
 
 unsafe impl<T> NifReturnable for T
 where
     T: crate::Encoder,
 {
-    unsafe fn as_returned(self, env: Env) -> NifReturned {
+    unsafe fn into_returned(self, env: Env) -> NifReturned {
         NifReturned::Term(self.encode(env).as_c_arg())
     }
 }
@@ -32,16 +32,16 @@ unsafe impl<T> NifReturnable for Result<T, crate::error::Error>
 where
     T: NifReturnable,
 {
-    unsafe fn as_returned(self, env: Env) -> NifReturned {
+    unsafe fn into_returned(self, env: Env) -> NifReturned {
         match self {
-            Ok(inner) => inner.as_returned(env),
-            Err(inner) => inner.as_returned(env),
+            Ok(inner) => inner.into_returned(env),
+            Err(inner) => inner.into_returned(env),
         }
     }
 }
 
 unsafe impl NifReturnable for OwnedBinary {
-    unsafe fn as_returned(self, env: Env) -> NifReturned {
+    unsafe fn into_returned(self, env: Env) -> NifReturned {
         NifReturned::Term(self.release(env).encode(env).as_c_arg())
     }
 }
@@ -126,8 +126,8 @@ where
     unsafe {
         match result {
             Ok(res) => match res {
-                Ok(res) => NifReturnable::as_returned(res, env),
-                Err(err) => NifReturnable::as_returned(err, env),
+                Ok(res) => NifReturnable::into_returned(res, env),
+                Err(err) => NifReturnable::into_returned(err, env),
             },
             Err(err) => match err.downcast::<NifReturned>() {
                 Ok(ty) => NifReturned::Term(ty.apply(env)),

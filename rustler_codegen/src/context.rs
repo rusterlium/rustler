@@ -164,7 +164,7 @@ impl<'a> Context<'a> {
             .filter_map(|segment| {
                 let meta = attr.parse_meta().expect("can parse meta");
                 match segment.ident.to_string().as_ref() {
-                    "rustler" => Context::parse_rustler(&meta),
+                    "rustler" => Some(Context::parse_rustler(&meta)),
                     "tag" => Context::try_parse_tag(&meta),
                     "module" => Context::try_parse_module(&meta),
                     _ => None,
@@ -174,27 +174,24 @@ impl<'a> Context<'a> {
             .collect()
     }
 
-    fn parse_rustler(meta: &Meta) -> Option<Vec<RustlerAttr>> {
+    fn parse_rustler(meta: &Meta) -> Vec<RustlerAttr> {
         if let Meta::List(ref list) = meta {
-            return Some(
-                list.nested
-                    .iter()
-                    .map(Context::parse_nested_rustler)
-                    .collect(),
-            );
+            return list
+                .nested
+                .iter()
+                .map(Context::parse_nested_rustler)
+                .collect();
         }
 
         panic!("Expected encode and/or decode in rustler attribute");
     }
 
     fn parse_nested_rustler(nested: &NestedMeta) -> RustlerAttr {
-        if let NestedMeta::Meta(ref meta) = nested {
-            if let Meta::Path(ref path) = meta {
-                match path.segments[0].ident.to_string().as_ref() {
-                    "encode" => return RustlerAttr::Encode,
-                    "decode" => return RustlerAttr::Decode,
-                    other => panic!("Unexpected literal {}", other),
-                }
+        if let NestedMeta::Meta(Meta::Path(ref path)) = nested {
+            match path.segments[0].ident.to_string().as_ref() {
+                "encode" => return RustlerAttr::Encode,
+                "decode" => return RustlerAttr::Decode,
+                other => panic!("Unexpected literal {}", other),
             }
         }
 

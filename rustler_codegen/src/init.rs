@@ -52,12 +52,12 @@ fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
     quote!(#none)
 }
 
-impl Into<proc_macro2::TokenStream> for InitMacroInput {
-    fn into(self) -> proc_macro2::TokenStream {
-        let name = self.name;
-        let num_of_funcs = self.funcs.elems.len();
-        let funcs = nif_funcs(self.funcs.elems);
-        let load = self.load;
+impl From<InitMacroInput> for proc_macro2::TokenStream {
+    fn from(input: InitMacroInput) -> Self {
+        let name = input.name;
+        let num_of_funcs = input.funcs.elems.len();
+        let funcs = nif_funcs(input.funcs.elems);
+        let load = input.load;
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
