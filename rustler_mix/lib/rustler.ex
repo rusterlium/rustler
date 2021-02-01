@@ -21,7 +21,8 @@ defmodule Rustler do
   ## Configuration options
 
     * `:cargo` - Specify how to envoke the rust compiler. Options are:
-        - `:system` (default) - use `cargo` from the system (must by in `$PATH`)
+        - `:system` (default) - use `cargo` from the system (must be in `$PATH`)
+        - `{:system, <channel>}` - use `cargo` from the system with the given channel
         - `{:rustup, <version>}` - use `rustup` to specify which channel to use.
           Available options include: `:stable`, `:beta`, `:nightly`, or a string
           which specifies a specific version (i.e. `"1.39.0"`).
