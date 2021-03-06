@@ -60,7 +60,6 @@ impl<'a> Decoder<'a> for bool {
     }
 }
 
-
 impl Encoder for f32 {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         #[allow(clippy::cast_lossless)]
@@ -86,8 +85,7 @@ impl<'a> Decoder<'a> for f32 {
         // Values bigger then f32 are coerced as infinity
         if res.is_finite() {
             Ok(res)
-        }
-        else {
+        } else {
             Err(Error::BadArg)
         }
     }
