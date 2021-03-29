@@ -62,27 +62,14 @@ impl<'a> Decoder<'a> for bool {
 
 impl Encoder for f32 {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        #[allow(clippy::cast_lossless)]
-        unsafe {
-            Term::new(
-                env,
-                rustler_sys::enif_make_double(env.as_c_arg(), *self as f64),
-            )
-        }
+        f64::from(*self).encode(env)
     }
 }
 impl<'a> Decoder<'a> for f32 {
     fn decode(term: Term) -> NifResult<f32> {
-        #![allow(unused_unsafe)]
-        let mut res: f64 = Default::default();
-        if unsafe {
-            rustler_sys::enif_get_double(term.get_env().as_c_arg(), term.as_c_arg(), &mut res)
-        } == 0
-        {
-            return Err(Error::BadArg);
-        }
+        let res: f64 = term.decode()?;
         let res = res as f32;
-        // Values bigger then f32 are coerced as infinity
+        // Values bigger than f32 are coerced as infinity
         if res.is_finite() {
             Ok(res)
         } else {
