@@ -42,7 +42,6 @@ impl_number_transcoder!(i8, i32, enif_make_int, enif_get_int);
 impl_number_transcoder!(u8, u32, enif_make_uint, enif_get_uint);
 impl_number_transcoder!(i16, i32, enif_make_int, enif_get_int);
 impl_number_transcoder!(u16, u32, enif_make_uint, enif_get_uint);
-impl_number_transcoder!(f32, f64, enif_make_double, enif_get_double);
 impl_number_transcoder!(usize, u64, enif_make_uint64, enif_get_uint64);
 impl_number_transcoder!(isize, i64, enif_make_int64, enif_get_int64);
 
@@ -58,5 +57,23 @@ impl Encoder for bool {
 impl<'a> Decoder<'a> for bool {
     fn decode(term: Term<'a>) -> NifResult<bool> {
         atom::decode_bool(term)
+    }
+}
+
+impl Encoder for f32 {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
+        f64::from(*self).encode(env)
+    }
+}
+impl<'a> Decoder<'a> for f32 {
+    fn decode(term: Term) -> NifResult<f32> {
+        let res: f64 = term.decode()?;
+        let res = res as f32;
+        // Values bigger than f32 are coerced as infinity
+        if res.is_finite() {
+            Ok(res)
+        } else {
+            Err(Error::BadArg)
+        }
     }
 }
