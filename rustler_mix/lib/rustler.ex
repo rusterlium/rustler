@@ -4,7 +4,9 @@ defmodule Rustler do
 
   When used, Rustler expects the `:otp_app` as option.
   The `:otp_app` should point to the OTP application that
-  the dynamic library can be loaded from. For example:
+  the dynamic library can be loaded from.
+
+  For example:
 
       defmodule MyNIF do
         use Rustler, otp_app: :my_nif
@@ -98,7 +100,7 @@ defmodule Rustler do
       @doc false
       def rustler_init do
         # Remove any old modules that may be loaded so we don't get
-        # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
+        # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
 
         {otp_app, path} = @load_from
