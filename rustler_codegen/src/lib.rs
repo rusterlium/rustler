@@ -38,7 +38,7 @@ enum RustlerAttr {
 /// }
 ///
 /// #[rustler::nif]
-/// fn add(a: i64, b: i64) -> i64 {
+/// fn sub(a: i64, b: i64) -> i64 {
 ///     a - b
 /// }
 ///
