@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Rustler.New do
   use Mix.Task
   import Mix.Generator
 
-  @shortdoc "Creates a new Rustler project"
+  @shortdoc "Creates a new Rustler project."
   @moduledoc """
   Generates boilerplate for a new Rustler project.
 

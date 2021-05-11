@@ -1,34 +1,51 @@
 # Rustler
 
-This is the Mix package for [rustler](https://github.com/rusterlium/rustler), a library to write Erlang NIFs in
-safe Rust code. Here, we provide the basic functionality to use Rustler from Elixir:
+[![Module Version](https://img.shields.io/hexpm/v/rustler.svg)](https://hex.pm/packages/rustler)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/rustler/)
+[![Total Download](https://img.shields.io/hexpm/dt/rustler.svg)](https://hex.pm/packages/rustler)
+[![License](https://img.shields.io/hexpm/l/rustler.svg)](https://github.com/rusterlium/rustler/blob/master/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/rusterlium/rustler.svg)](https://github.com/rusterlium/rustler/commits/master)
 
-- A task to generate a new crate to write NIFs (`mix help rustler.new`)
-
-See below for information on how to install this, which options are exposed through the configuration, and how t
-load a NIF.
+The Mix package for [rustler](https://github.com/rusterlium/rustler), a library to write Erlang Native Implemented Functions (NIFs) in [Rust](https://www.rust-lang.org/) programming language.
 
 ## Installation
 
-This package is available on [`hex.pm`](https://hex.pm/packages/rustler). To install it, add it to your dependencies:
+This package is available on [Hex.pm](https://hex.pm/packages/rustler). To install it, add `:rustler` to your dependencies:
 
 ```elixir
 def deps do
-  [{:rustler, "~> 0.22.0-rc.0"}]
+  [
+    {:rustler, "~> 0.22.0-rc.0"}
+  ]
 end
 ```
 
-Then,
+## Usage
 
-1. Run `mix deps.get` to fetch the dependency.
-1. Run `mix rustler.new` and follow the instructions to generate the boilerplate for your NIF.
-1. Load the NIF in your program. [See below](#loading-the-nif).
+1.  Fetch all necessary dependencies:
+
+    ```
+    $ mix deps.get
+    ```
+2.  Check your installation by showing help from the installed Mix task:
+
+    ```
+    $ mix help rustler.new
+    ```
+
+3.  Generate the boilerplate for a new Rustler project. Follow the instructions
+    to configure your project:
+
+    ```
+    $ mix rustler.new
+    ```
+
+4.  [Load the NIF in your program.](#loading-the-nif).
 
 ## Crate configuration
 
 The Rust crate compilation can be controlled via Mix compile-time configuration in `config/config.exs`.
-See [configuration options](https://hexdocs.pm/rustler/Rustler.html#module-configuration-options) for more
-details.
+See [configuration options](https://hexdocs.pm/rustler/Rustler.html#module-configuration-options) for more details.
 
 
 ## Loading the NIF
@@ -55,3 +72,16 @@ Note that `:crate` is the name in the `[lib]` section of your `Cargo.toml`. The
 `:crate` option is optional if your crate and `otp_app` use the same name.
 
 See the `Rustler` module for more information.
+
+## Copyright and License
+
+Licensed under either of
+
+- Apache License, Version 2.0, ([LICENSE-APACHE](../LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](../LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.

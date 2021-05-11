@@ -1,29 +1,22 @@
 defmodule Rustler.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/rusterlium/rustler"
+  @version "0.22.0-rc.0"
+
   def project do
     [
       app: :rustler,
-      version: rustler_version(),
+      name: "Rustler",
+      version: @version,
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      name: "Rustler",
-      source_url: "https://github.com/rustlerium/rustler",
-      homepage_url: "https://github.com/rusterlium/rustler",
       deps: deps(),
-      docs: [
-        main: "readme",
-        extras: ["README.md", "../CHANGELOG.md"],
-        source_url_pattern:
-          "https://github.com/rusterlium/rustler/blob/rustler-#{rustler_version()}/rustler_mix/%{path}#L%{line}"
-      ],
       package: package(),
-      description: description()
+      docs: docs()
     ]
   end
-
-  def rustler_version, do: "0.22.0-rc.0"
 
   def application do
     [extra_applications: [:logger, :eex]]
@@ -32,22 +25,36 @@ defmodule Rustler.Mixfile do
   defp deps do
     [
       {:toml, "~> 0.5.2", runtime: false},
-      {:ex_doc, "~> 0.21", only: :dev}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
-  end
-
-  defp description do
-    """
-    Mix compiler and runtime helpers for Rustler.
-    """
   end
 
   defp package do
     [
+      description: "Mix compiler and runtime helpers for Rustler.",
       files: ["lib", "priv", "mix.exs", "README.md"],
       maintainers: ["hansihe"],
       licenses: ["MIT", "Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/rusterlium/rustler"}
+      links: %{
+        "Changelog" => "https://hexdocs.pm/rustler/changelog.html",
+        "GitHub" => @source_url
+      }
+    ]
+  end
+
+  defp docs do
+    [
+      extras: [
+        "../CHANGELOG.md",
+        {:"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
+        {:"../LICENSE-MIT", [title: "License (MIT)"]},
+        "README.md"
+      ],
+      main: "readme",
+      homepage_url: @source_url,
+      source_url: @source_url,
+      source_url_pattern: "#{@source_url}/blob/rustler-#{@version}/rustler_mix/%{path}#L%{line}",
+      formatters: ["html"]
     ]
   end
 end
