@@ -36,6 +36,9 @@ version_opts("2.14") -> [{major,2}, {minor,14}, exception, getenv, time,   % erl
 version_opts("2.15") -> [{major,2}, {minor,15}, exception, getenv, time,   % erlang 22.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
                         nif_2_14, nif_2_15];
+version_opts("2.16") -> [{major,2}, {minor,16}, exception, getenv, time,   % erlang 24.0
+                        dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
+                        nif_2_14, nif_2_15, nif_2_16];
 version_opts(Ver) ->
     io:format(
         "This OTP release uses the unsupported Erlang NIF version ~p.\n\n"
@@ -362,6 +365,13 @@ api_list(Opts) -> [
             {"c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid"},
             {"", "enif_set_pid_undefined", "pid: *mut ErlNifPid"},
             {"ERL_NIF_TERM", "enif_make_monitor_term", "env: *mut ErlNifEnv, mon: *const ErlNifMonitor"}
+        ];
+        false -> []
+    end ++
+    case proplists:get_bool(nif_2_16, Opts) of
+        true -> [
+            {"*const ErlNifResourceType", "enif_init_resource_type", "env: *mut ErlNifEnv, name_str: *const c_uchar, init: *const ErlNifResourceTypeInit, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags"},
+            {"c_int", "enif_dynamic_resource_call", "env: *mut ErlNifEnv, module: ERL_NIF_TERM, name: ERL_NIF_TERM, rsrc: ERL_NIF_TERM, call_data: *const c_void"}
         ];
         false -> []
     end.

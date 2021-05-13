@@ -138,6 +138,10 @@ pub type ErlNifResourceDown = unsafe extern "C" fn(
     mon: *const ErlNifMonitor,
 ) -> ();
 
+/// See [ErlNifResourceDynCall](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceDynCall) in the Erlang Docs.
+pub type ErlNifResourceDynCall =
+    unsafe extern "C" fn(env: *mut ErlNifEnv, obj: *mut c_void, call_data: *const c_void) -> ();
+
 /// See [ErlNifResourceTypeInit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceTypeInit) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
@@ -145,6 +149,8 @@ pub struct ErlNifResourceTypeInit {
     dtor: *const ErlNifResourceDtor,
     stop: *const ErlNifResourceStop, // at ERL_NIF_SELECT_STOP event
     down: *const ErlNifResourceDown, // enif_monitor_process
+    members: c_int,
+    dyncall: *const ErlNifResourceDynCall,
 }
 
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
@@ -156,6 +162,8 @@ pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = 1 << 2;
 pub const ERL_NIF_SELECT_FAILED: ErlNifSelectFlags = 1 << 3;
 pub const ERL_NIF_SELECT_READ_CANCELLED: ErlNifSelectFlags = 1 << 4;
 pub const ERL_NIF_SELECT_WRITE_CANCELLED: ErlNifSelectFlags = 1 << 5;
+pub const ERL_NIF_SELECT_ERROR_CANCELLED: ErlNifSelectFlags = 1 << 6;
+pub const ERL_NIF_SELECT_NOTSUP: ErlNifSelectFlags = 1 << 7;
 
 /// See [ErlNifMonitor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMonitor) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
