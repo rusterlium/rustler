@@ -140,8 +140,11 @@ jobs:
     strategy:
       matrix:
         pair:
-          - erlang: "23.1"
-            elixir: "1.11.1"
+          - erlang: "24.0"
+            elixir: "1.11.4"
+          - erlang: "23.3"
+            elixir: "1.11.4"
+
           - erlang: "23.0.3"
             elixir: "1.10.3"
 
