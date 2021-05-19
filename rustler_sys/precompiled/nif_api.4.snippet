@@ -1,6 +1,6 @@
 pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;
 pub const NIF_MAJOR_VERSION: c_int = 2;
-pub const NIF_MINOR_VERSION: c_int = 15;
+pub const NIF_MINOR_VERSION: c_int = 16;
 
 extern "C" {
 /// See [enif_priv_data](http://www.erlang.org/doc/man/erl_nif.html#enif_priv_data) in the Erlang docs.
@@ -245,6 +245,10 @@ pub fn enif_is_pid_undefined(pid: *const ErlNifPid) -> c_int;
 pub fn enif_set_pid_undefined(pid: *mut ErlNifPid);
 /// See [enif_make_monitor_term](http://www.erlang.org/doc/man/erl_nif.html#enif_make_monitor_term) in the Erlang docs.
 pub fn enif_make_monitor_term(env: *mut ErlNifEnv, mon: *const ErlNifMonitor) -> ERL_NIF_TERM;
+/// See [enif_init_resource_type](http://www.erlang.org/doc/man/erl_nif.html#enif_init_resource_type) in the Erlang docs.
+pub fn enif_init_resource_type(env: *mut ErlNifEnv, name_str: *const c_uchar, init: *const ErlNifResourceTypeInit, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags) -> *const ErlNifResourceType;
+/// See [enif_dynamic_resource_call](http://www.erlang.org/doc/man/erl_nif.html#enif_dynamic_resource_call) in the Erlang docs.
+pub fn enif_dynamic_resource_call(env: *mut ErlNifEnv, module: ERL_NIF_TERM, name: ERL_NIF_TERM, rsrc: ERL_NIF_TERM, call_data: *const c_void) -> c_int;
 }
 
 extern "C" {
