@@ -20,7 +20,7 @@ name = "rustler_sys"
 # When depending on this crate, you should ALWAYS
 # use a tilde requirements with AT LEAST `~MAJOR.MINOR`.
 # Example: "~2.0"
-version = "2.1.0"
+version = "2.1.1"
 
 authors = ["Daniel Goertzen <daniel.goertzen@gmail.com>"]
 description = "Create Erlang NIF modules in Rust using the C NIF API."
