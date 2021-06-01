@@ -37,7 +37,9 @@ defmodule Rustler.Compiler do
       end
 
       handle_artifacts(crate_full_path, config)
-      workaround_mix_priv_dir(config.__project_config__)
+      # See #326: Ensure that the libraries are copied into the correct subdirectory
+      # in `_build`.
+      Mix.Project.build_structure()
     end
 
     config
@@ -127,31 +129,6 @@ defmodule Rustler.Compiler do
       File.rm(destination_lib)
       File.cp!(compiled_lib, destination_lib)
     end)
-  end
-
-  # Workaround for a mix problem. We should REALLY get this fixed properly. Originally introduced
-  # with d053522fe8b08bdacacb64592b22536e23ff3853.
-  defp workaround_mix_priv_dir(project_config) do
-    _ =
-      symlink_or_copy(
-        project_config,
-        Path.expand("priv"),
-        Path.join(Mix.Project.app_path(project_config), "priv")
-      )
-  end
-
-  # https://github.com/elixir-lang/elixir/blob/b13404e913fff70e080c08c2da3dbd5c41793b54/lib/mix/lib/mix/project.ex#L553-L562
-  defp symlink_or_copy(config, source, target) do
-    if config[:build_embedded] do
-      if File.exists?(source) do
-        File.rm_rf!(target)
-        File.cp_r!(source, target)
-      end
-
-      :ok
-    else
-      Mix.Utils.symlink_or_copy(source, target)
-    end
   end
 
   defp get_name(toml, section) do
