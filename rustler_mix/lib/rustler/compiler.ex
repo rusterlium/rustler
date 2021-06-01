@@ -37,6 +37,9 @@ defmodule Rustler.Compiler do
       end
 
       handle_artifacts(crate_full_path, config)
+      # See #326: Ensure that the libraries are copied into the correct subdirectory
+      # in `_build`.
+      Mix.Project.build_structure()
     end
 
     config
