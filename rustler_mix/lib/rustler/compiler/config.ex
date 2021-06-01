@@ -26,7 +26,8 @@ defmodule Rustler.Compiler.Config do
             priv_dir: "",
             skip_compilation?: false,
             target: nil,
-            target_dir: ""
+            target_dir: "",
+            __project_config__: nil
 
   alias Rustler.Compiler.Config
 
@@ -54,6 +55,7 @@ defmodule Rustler.Compiler.Config do
     |> Keyword.merge(legacy_config)
     |> Keyword.merge(opts)
     |> Keyword.merge(config)
+    |> Keyword.merge(__project_config__: Mix.Project.config())
     |> build()
   end
 

@@ -37,7 +37,7 @@ defmodule Rustler.Compiler do
       end
 
       handle_artifacts(crate_full_path, config)
-      workaround_mix_priv_dir(config)
+      workaround_mix_priv_dir(config.__project_config__)
     end
 
     config
@@ -131,12 +131,12 @@ defmodule Rustler.Compiler do
 
   # Workaround for a mix problem. We should REALLY get this fixed properly. Originally introduced
   # with d053522fe8b08bdacacb64592b22536e23ff3853.
-  defp workaround_mix_priv_dir(config) do
+  defp workaround_mix_priv_dir(project_config) do
     _ =
       symlink_or_copy(
-        config,
+        project_config,
         Path.expand("priv"),
-        Path.join(Mix.Project.app_path(config), "priv")
+        Path.join(Mix.Project.app_path(project_config), "priv")
       )
   end
 
