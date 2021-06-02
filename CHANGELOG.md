@@ -107,6 +107,16 @@ fn add(a: i64, b: i64) -> i64 {
 }
 ```
 
+### Deprecations
+
+* The rustler compiler has been deprecated and will be removed with v1.0. NIFs
+  are no longer defined in `mix.exs`, but are configured with `use Rustler`.
+  See the documentation for the `Rustler` module. To migrate to the new
+  configuration:
+    * Drop `:rustler` from the `:compilers` key in your `mix.exs` `project/0` function
+    * Drop `:rustler_crates` from `project/0` and move the configurations into the `use Rustler`
+      of your NIF module.
+
 ## [0.21.0] - 2019-09-07
 
 ### Added
