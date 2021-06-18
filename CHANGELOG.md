@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 rustler::rustler_atoms! {
     atom ok;
     atom error;
+    atom renamed_atom = "Renamed";
 }
 
 //
@@ -45,6 +46,7 @@ rustler::rustler_atoms! {
 rustler::atoms! {
     ok,
     error,
+    renamed_atom = "Renamed",
 }
 ```
 
