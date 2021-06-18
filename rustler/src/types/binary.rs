@@ -242,6 +242,7 @@ impl<'a> Binary<'a> {
     /// # Errors
     ///
     /// If allocation fails, an error will be returned.
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_owned(&self) -> Option<OwnedBinary> {
         OwnedBinary::from_unowned(self)
     }
@@ -293,6 +294,7 @@ impl<'a> Binary<'a> {
     }
 
     /// Returns an Erlang term representation of `self`.
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_term<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.term.in_env(env)
     }
