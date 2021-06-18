@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simple `Debug` impl for `rustler::Error`
 - Support newtype and tuple structs for `NifTuple` and `NifRecord`
 - `rustler::Error::Term` encoding an arbitrary boxed encoder, returning `{:error, term}`
+- Generic encoder/decoder for `HashMap<T, U>`, where `T: Decoder` and `U: Decoder`
 
 ### Fixed
 
