@@ -9,6 +9,8 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [Unreleased]
 
+## [0.22.0] - 2021-06-22
+
 ### Added
 
 - Simple `Debug` impl for `rustler::Error`
