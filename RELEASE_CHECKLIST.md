@@ -1,3 +1,3 @@
-1. Bump rustler, rustler_codegen, rustler_mix (including lib/rustler.ex), installer template version numbers
-2. Publish crates, rustler_mix, installer
-3. Update documentation
+1. Update documentation (`CHANGELOG.md`, `UPGRADE.md`)
+2. Bump version with `prepare_release.sh`
+3. Publish crates and `rustler_mix`
