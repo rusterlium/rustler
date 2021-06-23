@@ -2,12 +2,7 @@
 #
 # Release a new rustler version.
 #
-# Usage: ./release.sh 1.2.3
-#
-# ## Environment Variables
-#
-# * DRYRUN: Check release, but do not publish
-# * DONTREVERT: Do not revert on error or DRYRUN
+# Usage: ./prepare_release.sh 1.2.3
 #
 set -e
 
@@ -72,39 +67,18 @@ mix deps.get
 mix compile
 popd
 
-echo
-echo "This script will run:"
-echo "rustler_mix     $ mix hex.publish"
-echo "rustler_codegen $ cargo publish"
-echo "rustler         $ cargo publish"
-echo "                $ git push"
-echo
-
 read -p "Everything OK? [yN] " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]] && [[ -z $DRYRUN ]]; then
-    # At this point, we cannot reliably revert on errors anymore, as we might
-    # have published below already.
 
-    cannot_revert() {
-	echo "Errors detected, but cannot revert."
-    }
+trap "" EXIT
 
-    trap cannot_revert INT EXIT
+cat <<_
 
-    # Update and publish
-    pushd rustler_codegen
-    cargo publish
-    popd
-    pushd rustler
-    cargo publish
-    popd
-    pushd rustler_mix
-    mix hex.publish
-    popd
+To release, run the following manually:
 
-    git push
-    git push origin "$TAG"
+cd rustler_codegen; cargo publish
+cd rustler; cargo publish
+cd rustler_mix; mix hex.publish
 
-    trap "echo done" EXIT
-fi
+git push
+git push origin "$TAG"
+_
