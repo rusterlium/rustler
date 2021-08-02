@@ -27,13 +27,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     }
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &variants)
+        gen_decoder(&ctx, variants)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &variants)
+        gen_encoder(&ctx, variants)
     } else {
         quote! {}
     };
