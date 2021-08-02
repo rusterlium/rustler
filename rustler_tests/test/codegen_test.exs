@@ -119,6 +119,10 @@ defmodule RustlerTest.CodegenTest do
     assert false == RustlerTest.untagged_enum_with_truthy(nil)
   end
 
+  test "untagged enum for issue 370" do
+    assert [1, 2, 3] == RustlerTest.untagged_enum_for_issue_370([1, 2, 3])
+  end
+
   test "newtype tuple" do
     assert {1} == RustlerTest.newtype_echo({1})
 
