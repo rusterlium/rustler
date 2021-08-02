@@ -209,7 +209,7 @@ macro_rules! make_func_entry {
     };
 
     (($name:expr, $arity:expr, $function:expr)) => {
-        make_func_entry!(($name, $arity, $function, 0));
+        make_func_entry!(($name, $arity, $function, 0))
     };
 }
 
