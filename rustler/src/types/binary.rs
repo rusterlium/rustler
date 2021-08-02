@@ -118,7 +118,7 @@ impl<'a> OwnedBinary {
     /// If allocation fails, `None` is returned.
     pub fn from_unowned(src: &Binary) -> Option<OwnedBinary> {
         OwnedBinary::new(src.len()).map(|mut b| {
-            b.as_mut_slice().copy_from_slice(&src);
+            b.as_mut_slice().copy_from_slice(src);
             b
         })
     }

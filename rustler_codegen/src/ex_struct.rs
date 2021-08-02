@@ -29,13 +29,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let atoms_module_name = ctx.atoms_module_name(Span::call_site());
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &struct_fields, &atoms_module_name)
+        gen_decoder(&ctx, struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &struct_fields, &atoms_module_name)
+        gen_encoder(&ctx, struct_fields, &atoms_module_name)
     } else {
         quote! {}
     };

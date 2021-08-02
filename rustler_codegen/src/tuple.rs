@@ -13,13 +13,13 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .expect("NifTuple can only be used with structs");
 
     let decoder = if ctx.decode() {
-        gen_decoder(&ctx, &struct_fields)
+        gen_decoder(&ctx, struct_fields)
     } else {
         quote! {}
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, &struct_fields)
+        gen_encoder(&ctx, struct_fields)
     } else {
         quote! {}
     };
