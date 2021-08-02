@@ -9,6 +9,10 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix codegen problem for untagged enums (#370)
+
 ## [0.22.0] - 2021-06-22
 
 ### Added
