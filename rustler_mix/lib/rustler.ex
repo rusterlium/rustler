@@ -22,10 +22,11 @@ defmodule Rustler do
 
     * `:cargo` - Specify how to envoke the rust compiler. Options are:
         - `:system` (default) - use `cargo` from the system (must be in `$PATH`)
-        - `{:system, <channel>}` - use `cargo` from the system with the given channel
+        - `{:system, <channel>}` - use `cargo` from the system with the given channel.
+          Specified as a string, passed directly to `cargo` (e.g. "+nightly").
         - `{:rustup, <version>}` - use `rustup` to specify which channel to use.
           Available options include: `:stable`, `:beta`, `:nightly`, or a string
-          which specifies a specific version (i.e. `"1.39.0"`).
+          which specifies a specific version (e.g. `"1.39.0"`).
         - `{:bin, "/path/to/binary"}` - provide a specific path to `cargo`.
 
     * `:crate` - the name of the Rust crate, if different from your `otp_app`
