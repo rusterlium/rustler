@@ -59,6 +59,7 @@ rustler::init!(
         test_codegen::unit_enum_echo,
         test_codegen::untagged_enum_echo,
         test_codegen::untagged_enum_with_truthy,
+        test_codegen::untagged_enum_for_issue_370,
         test_codegen::newtype_echo,
         test_codegen::tuplestruct_echo,
         test_codegen::newtype_record_echo,

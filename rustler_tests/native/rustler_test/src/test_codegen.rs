@@ -85,6 +85,18 @@ pub fn untagged_enum_with_truthy(untagged_enum: UntaggedEnumWithTruthy) -> Untag
     untagged_enum
 }
 
+#[derive(NifUntaggedEnum)]
+pub enum UntaggedEnumForIssue370 {
+    Vec(Vec<i64>),
+}
+
+#[rustler::nif]
+pub fn untagged_enum_for_issue_370(
+    untagged_enum: UntaggedEnumForIssue370,
+) -> UntaggedEnumForIssue370 {
+    untagged_enum
+}
+
 #[derive(NifTuple)]
 pub struct Newtype(i64);
 
