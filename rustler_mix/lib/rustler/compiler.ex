@@ -46,6 +46,7 @@ defmodule Rustler.Compiler do
   end
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
+  defp make_base_command({:system, channel}), do: ["cargo", channel, "rustc"]
   defp make_base_command({:bin, path}), do: [path, "rustc"]
 
   defp make_base_command({:rustup, version}) do
