@@ -42,7 +42,7 @@ version_opts("2.16") -> [{major,2}, {minor,16}, exception, getenv, time,   % erl
 version_opts(Ver) ->
     io:format(
         "This OTP release uses the unsupported Erlang NIF version ~p.\n\n"
-        "Please report at https://github.com/rustlerium/rustler.\n",
+        "Please report at https://github.com/rusterlium/rustler.\n",
         [Ver]
     ),
     halt(1).
