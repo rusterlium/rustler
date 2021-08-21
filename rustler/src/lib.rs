@@ -42,7 +42,7 @@ pub use crate::types::{
     OwnedBinary,
 };
 pub mod resource;
-pub use crate::resource::ResourceArc;
+pub use crate::resource::{ResourceArc, ResourceArcMonitor, Monitor, MonitorResource};
 
 #[doc(hidden)]
 pub mod dynamic;

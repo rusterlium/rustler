@@ -4,10 +4,12 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, mem::MaybeUninit};
 use std::mem;
 use std::ops::Deref;
 use std::ptr;
+
+use rustler_sys::{ErlNifMonitor, ErlNifPid, ErlNifResourceDown};
 
 use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
 use crate::wrapper::{
@@ -38,6 +40,21 @@ pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static ResourceType<Self>;
 }
 
+#[derive(Clone)]
+pub struct Monitor {
+    inner: ErlNifMonitor,
+}
+
+impl PartialEq for Monitor {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { rustler_sys::enif_compare_monitors(&self.inner, &other.inner) == 0 }
+    }
+}
+
+pub trait MonitorResource: ResourceTypeProvider {
+    fn down(resource: ResourceArc<Self>, pid: LocalPid, mon: Monitor);
+}
+
 impl<T> Encoder for ResourceArc<T>
 where
     T: ResourceTypeProvider,
@@ -65,6 +82,24 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
     }
 }
 
+pub extern "C" fn resource_down<T: MonitorResource>(
+    _env: NIF_ENV,
+    handle: MUTABLE_NIF_RESOURCE_HANDLE,
+    pid: *const ErlNifPid,
+    mon: *const ErlNifMonitor
+) {
+    unsafe {
+        let pid = LocalPid::new((&*pid).clone());
+        let mon = Monitor { inner: (&*mon).clone() };
+        crate::wrapper::resource::keep_resource(handle);
+        let resource = ResourceArc {
+            inner: align_alloced_mem_for_struct::<T>(handle) as *mut T,
+            raw: handle
+        };
+        T::down(resource, pid, mon);
+    }
+}
+
 /// This is the function that gets called from resource! in on_load to create a new
 /// resource type.
 ///
@@ -75,6 +110,7 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 pub fn open_struct_resource_type<T: ResourceTypeProvider>(
     env: Env,
     name: &str,
+    down: Option<ErlNifResourceDown>,
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
@@ -82,6 +118,7 @@ pub fn open_struct_resource_type<T: ResourceTypeProvider>(
             env.as_c_arg(),
             name.as_bytes(),
             Some(resource_destructor::<T>),
+            down,
             flags,
         )
     };
@@ -261,6 +298,50 @@ where
     }
 }
 
+pub trait ResourceArcMonitor {
+    fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor>;
+    fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool;
+}
+
+impl<T: MonitorResource> ResourceArcMonitor for ResourceArc<T> {
+    fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor> {
+        let env = maybe_env(caller_env);
+        let mut mon = MaybeUninit::uninit();
+        let res = unsafe { rustler_sys::enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0 };
+        if res {
+            Some(Monitor {
+                inner: unsafe { mon.assume_init() }
+            })
+        } else {
+            None
+        }
+    }
+
+    fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool {
+        let env = maybe_env(caller_env);
+        unsafe { rustler_sys::enif_demonitor_process(env, self.raw, &mon.inner) == 0 }
+    }
+}
+
+fn maybe_env(caller_env: Option<&Env>) -> NIF_ENV {
+    let thread_type = unsafe { rustler_sys::enif_thread_type() };
+    if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
+        assert!(caller_env.is_none());
+        ptr::null_mut()
+    } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
+        || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
+        || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
+    {
+        let caller_env = caller_env.unwrap();
+        // Panic if `caller_env` is not the environment of the calling process.
+        caller_env.pid();
+
+        caller_env.as_c_arg()
+    } else {
+        panic!("Unrecognized calling thread type");
+    }
+}
+
 #[macro_export]
 #[deprecated(since = "0.22.0", note = "Please use `resource!` instead.")]
 macro_rules! resource_struct_init {
@@ -272,6 +353,9 @@ macro_rules! resource_struct_init {
 #[macro_export]
 macro_rules! resource {
     ($struct_name:ty, $env: ident) => {
+        $crate::resource!($struct_name, $env, None)
+    };
+    ($struct_name:ty, $env: ident, $down: expr) => {
         {
             static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
 
@@ -279,6 +363,7 @@ macro_rules! resource {
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
                     concat!(stringify!($struct_name), "\x00"),
+                    $down,
                     $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,
@@ -296,5 +381,12 @@ macro_rules! resource {
                 }
             }
         }
+    }
+}
+
+#[macro_export]
+macro_rules! monitor_resource {
+    ($struct_name:ty, $env: ident) => {
+        $crate::resource!($struct_name, $env, Some($crate::resource::resource_down::<$struct_name>))
     }
 }

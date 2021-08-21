@@ -1,5 +1,5 @@
-use rustler::{Binary, Env, ResourceArc};
-use std::sync::RwLock;
+use rustler::{Binary, Env, ResourceArc, ResourceArcMonitor, Monitor, MonitorResource, LocalPid};
+use std::sync::{RwLock, Mutex};
 
 pub struct TestResource {
     test_field: RwLock<i32>,
@@ -17,10 +17,28 @@ pub struct WithBinaries {
     b: Vec<u8>,
 }
 
+struct TestMonitorResourceInner {
+    mon: Option<Monitor>,
+    down_called: bool
+}
+
+pub struct TestMonitorResource {
+    inner: Mutex<TestMonitorResourceInner>
+}
+
+impl MonitorResource for TestMonitorResource {
+    fn down(resource: ResourceArc<TestMonitorResource>, _pid: LocalPid, mon: Monitor) {
+        let mut inner = resource.inner.lock().unwrap();
+        assert!(Some(mon) == inner.mon);
+        inner.down_called = true;
+    }
+}
+
 pub fn on_load(env: Env) -> bool {
     rustler::resource!(TestResource, env);
     rustler::resource!(ImmutableResource, env);
     rustler::resource!(WithBinaries, env);
+    rustler::monitor_resource!(TestMonitorResource, env);
     true
 }
 
@@ -85,6 +103,15 @@ pub fn resource_make_with_binaries() -> ResourceArc<WithBinaries> {
     })
 }
 
+pub fn monitor_resource_make() -> ResourceArc<TestMonitorResource> {
+    ResourceArc::new(TestMonitorResource {
+        inner: Mutex::new(TestMonitorResourceInner {
+            mon: None,
+            down_called: false
+        })
+    })
+}
+
 #[rustler::nif]
 pub fn resource_make_binaries(
     env: Env,
@@ -107,4 +134,23 @@ pub fn resource_make_binaries(
 #[rustler::nif]
 pub fn resource_make_binary_from_vec(env: Env, resource: ResourceArc<WithBinaries>) -> Binary {
     resource.make_binary(env, |w| &w.b)
+}
+
+#[rustler::nif]
+pub fn monitor_resource_monitor(env: Env, resource: ResourceArc<TestMonitorResource>, pid: LocalPid) {
+    let mut inner = resource.inner.lock().unwrap();
+    inner.mon = resource.monitor(Some(&env), &pid);
+    assert!(inner.mon.is_some());
+    inner.down_called = false;
+}
+
+#[rustler::nif]
+pub fn monitor_resource_down_called(resource: ResourceArc<TestMonitorResource>) -> bool {
+    resource.inner.lock().unwrap().down_called
+}
+
+#[rustler::nif]
+pub fn monitor_resource_demonitor(env: Env, resource: ResourceArc<TestMonitorResource>) -> bool {
+    let inner = resource.inner.lock().unwrap();
+    resource.demonitor(Some(&env), inner.mon.as_ref().unwrap())
 }

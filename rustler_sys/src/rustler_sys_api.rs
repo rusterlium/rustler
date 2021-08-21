@@ -146,11 +146,11 @@ pub type ErlNifResourceDynCall =
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifResourceTypeInit {
-    dtor: *const ErlNifResourceDtor,
-    stop: *const ErlNifResourceStop, // at ERL_NIF_SELECT_STOP event
-    down: *const ErlNifResourceDown, // enif_monitor_process
-    members: c_int,
-    dyncall: *const ErlNifResourceDynCall,
+    pub dtor: Option<ErlNifResourceDtor>,
+    pub stop: Option<ErlNifResourceStop>, // at ERL_NIF_SELECT_STOP event
+    pub down: Option<ErlNifResourceDown>, // enif_monitor_process
+    pub members: c_int,
+    pub dyncall: Option<ErlNifResourceDynCall>,
 }
 
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
