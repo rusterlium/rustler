@@ -1,8 +1,9 @@
 //! Safe wrappers around Erlang binaries.
 //!
-//! Rustler provides two binary types: [`Binary`] and [`OwnedBinary`].  Both
-//! represent a contiguous region `u8`s, and they both use the Erlang allocator. The
-//! primary difference between the two is their ownership semantics.
+//! Rustler provides three binary types: [`Binary`], [`NewBinary`] and
+//! [`OwnedBinary`]. All represent a contiguous region `u8`s, and they all use
+//! the Erlang allocator. The primary difference between them is their ownership
+//! semantics.
 //!
 //! The _owned_ in `OwnedBinary` refers to the fact that it owns the binary it
 //! wraps. The _owner_ of an `OwnedBinary` is free to modify its contents. Ownership
@@ -13,6 +14,12 @@
 //! cheap to copy: all copies of a `Binary` point to the original `Binary`'s
 //! data. Additionally, a `Binary`'s lifetime is tied to that of the NIF's [`Env`],
 //! preventing outstanding references to the data after a NIF returns.
+//!
+//! `NewBinary` is a way of creating a `Binary` without going via `OwnedBinary`.
+//! This can improve performance, since `NewBinary`s can be allocated on the
+//! heap if they are small. Unlike `OwnedBinary`, `NewBinary`s lifetime is tied
+//! to that of the NIF's [`Env`]. `NewBinary` must be converted to a `Binary`
+//! or directly to a `Term` before it can be passed to Erlang.
 //!
 //! # Examples
 //!
@@ -79,7 +86,7 @@
 //! [`OwnedBinary`]: struct.OwnedBinary.html
 
 use crate::{
-    wrapper::binary::{alloc, realloc, ErlNifBinary},
+    wrapper::binary::{alloc, new_binary, realloc, ErlNifBinary},
     Decoder, Encoder, Env, Error, NifResult, Term,
 };
 use std::{
@@ -392,5 +399,57 @@ impl PartialEq<OwnedBinary> for Binary<'_> {
 impl<'a> Term<'a> {
     pub fn into_binary(self) -> NifResult<Binary<'a>> {
         Binary::from_term(self)
+    }
+}
+
+/// An newly-created, mutable Erlang binary.
+///
+/// See [module-level doc](index.html) for more information.
+pub struct NewBinary<'a> {
+    buf: *mut u8,
+    size: usize,
+    // safety: we must not expose `term` until it is no longer possible to get a
+    // &mut ref to `buf`.
+    term: Term<'a>,
+}
+
+impl<'a> NewBinary<'a> {
+    /// Allocates a new `NewBinary`
+    pub fn new(env: Env<'a>, size: usize) -> Self {
+        let (buf, term) = unsafe { new_binary(env, size) };
+        NewBinary { buf, term, size }
+    }
+    /// Extracts a slice containing the entire binary.
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { ::std::slice::from_raw_parts(self.buf, self.size) }
+    }
+
+    /// Extracts a mutable slice of the entire binary.
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe { ::std::slice::from_raw_parts_mut(self.buf, self.size) }
+    }
+}
+
+impl<'a> From<NewBinary<'a>> for Binary<'a> {
+    fn from(new_binary: NewBinary<'a>) -> Self {
+        Binary::from_term(new_binary.term).unwrap()
+    }
+}
+
+impl<'a> From<NewBinary<'a>> for Term<'a> {
+    fn from(new_binary: NewBinary<'a>) -> Self {
+        new_binary.term
+    }
+}
+
+impl<'a> Deref for NewBinary<'a> {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+impl<'a> DerefMut for NewBinary<'a> {
+    fn deref_mut(&mut self) -> &mut [u8] {
+        self.as_mut_slice()
     }
 }

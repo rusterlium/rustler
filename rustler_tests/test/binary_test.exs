@@ -21,6 +21,10 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.owned_binary_new() == <<1, 2, 3, 4>>
   end
 
+  test "new binary creation" do
+    assert RustlerTest.new_binary_new() == <<1, 2, 3, 4>>
+  end
+
   test "unowned binary to owned" do
     assert RustlerTest.unowned_to_owned("test") == <<1, "est">>
     assert RustlerTest.unowned_to_owned("whatisgoingon") == <<1, "hatisgoingon">>

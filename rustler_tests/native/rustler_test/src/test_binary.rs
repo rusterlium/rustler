@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use rustler::types::binary::{Binary, OwnedBinary};
+use rustler::types::binary::{Binary, NewBinary, OwnedBinary};
 use rustler::{Env, Error, NifResult, Term};
 
 #[rustler::nif]
@@ -26,6 +26,13 @@ pub fn owned_binary_new() -> OwnedBinary {
     let mut binary = OwnedBinary::new(4).unwrap();
     binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     binary
+}
+
+#[rustler::nif]
+pub fn new_binary_new(env: Env) -> Binary {
+    let mut binary = NewBinary::new(env, 4);
+    binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
+    binary.into()
 }
 
 #[rustler::nif]
