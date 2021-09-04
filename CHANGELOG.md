@@ -11,6 +11,8 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ### Fixed
 
+- [Breaking change] codegen-generated decoders always raise an error instead of
+  causing the calling NIF to return an atom in some cases
 - Fix codegen problem for untagged enums (#370)
 
 ## [0.22.0] - 2021-06-22

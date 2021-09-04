@@ -93,7 +93,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                 #(#variant_defs)*
 
-                Err(::rustler::Error::Atom("invalid_variant"))
+                Err(::rustler::Error::RaiseAtom("invalid_variant"))
             }
         }
     };
