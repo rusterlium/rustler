@@ -101,7 +101,13 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_derive(NifStruct, attributes(module, rustler))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
-    ex_struct::transcoder_decorator(&ast).into()
+    ex_struct::transcoder_decorator(&ast, false).into()
+}
+
+#[proc_macro_derive(NifException, attributes(module, rustler))]
+pub fn nif_exception(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    ex_struct::transcoder_decorator(&ast, true).into()
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifMap` so that the

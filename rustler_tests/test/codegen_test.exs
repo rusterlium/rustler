@@ -2,6 +2,10 @@ defmodule AddStruct do
   defstruct lhs: 0, rhs: 0
 end
 
+defmodule AddException do
+  defexception message: ""
+end
+
 defmodule AddRecord do
   import Record
   defrecord :record, lhs: 1, rhs: 2
@@ -64,6 +68,24 @@ defmodule RustlerTest.CodegenTest do
                    "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"",
                    fn ->
                      RustlerTest.struct_echo(value)
+                   end
+    end
+  end
+
+  describe "exception" do
+    test "transcoder" do
+      value = %AddException{message: "testing"}
+      assert value == RustlerTest.exception_echo(value)
+      assert :invalid_struct == RustlerTest.exception_echo(DateTime.utc_now())
+    end
+
+    test "with invalid struct" do
+      value = %AddException{message: 'this is a charlist'}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :message on %AddException{}\"",
+                   fn ->
+                     RustlerTest.exception_echo(value)
                    end
     end
   end

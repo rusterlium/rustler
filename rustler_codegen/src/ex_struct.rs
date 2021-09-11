@@ -5,7 +5,7 @@ use syn::{self, spanned::Spanned, Field, Ident};
 use super::context::Context;
 use super::RustlerAttr;
 
-pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
+pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
     let elixir_module = get_module(&ctx);
@@ -18,11 +18,22 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     // Unwrap is ok here, as we already determined that struct_fields is not None
     let field_atoms = ctx.field_atoms().unwrap();
 
-    let atom_defs = quote! {
-        rustler::atoms! {
-            atom_struct = "__struct__",
-            atom_module = #elixir_module,
-            #(#field_atoms)*
+    let atom_defs = if add_exception {
+        quote! {
+            rustler::atoms! {
+                atom_struct = "__struct__",
+                atom_exception = "__exception__",
+                atom_module = #elixir_module,
+                #(#field_atoms)*
+            }
+        }
+    } else {
+        quote! {
+            rustler::atoms! {
+                atom_struct = "__struct__",
+                atom_module = #elixir_module,
+                #(#field_atoms)*
+            }
         }
     };
 
@@ -35,7 +46,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, struct_fields, &atoms_module_name)
+        gen_encoder(&ctx, struct_fields, &atoms_module_name, add_exception)
     } else {
         quote! {}
     };
@@ -123,7 +134,12 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     gen
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_encoder(
+    ctx: &Context,
+    fields: &[&Field],
+    atoms_module_name: &Ident,
+    add_exception: bool,
+) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
     let field_defs: Vec<TokenStream> = fields
@@ -137,12 +153,21 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         })
         .collect();
 
+    let exception_field = if add_exception {
+        quote! {
+            map = map.map_put(atom_exception().encode(env), true.encode(env)).unwrap();
+        }
+    } else {
+        quote! {}
+    };
+
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);
                 map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).unwrap();
+                #exception_field
                 #(#field_defs)*
                 map
             }
