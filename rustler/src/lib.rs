@@ -21,7 +21,7 @@
 //! automatic NIF compiler for Mix, and utilities for loading the compiled NIF.
 //!
 //! For more information about this, see [the documentation for
-//! rustler_mix](https://hexdocs.pm/rustler/basics.html).
+//! rustler](https://hexdocs.pm/rustler).
 
 #[macro_use(enif_snprintf)]
 extern crate rustler_sys;
