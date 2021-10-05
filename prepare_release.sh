@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Release a new rustler version.
+# Prepare releasing a new rustler version.
 #
 # Usage: ./prepare_release.sh 1.2.3
 #
