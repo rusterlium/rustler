@@ -116,14 +116,14 @@ defmodule Rustler.Compiler.Config do
 
     paths = Enum.map(local_deps, & &1["path"]) ++ paths_acc
 
-    as_packages = Enum.map(local_deps, &get_spec(packages, &1["name"]))
+    as_specs = Enum.map(local_deps, &get_spec(packages, &1["name"]))
 
     visited =
       local_deps
       |> MapSet.new(& &1["name"])
       |> MapSet.union(visited)
 
-    gather_local_crates(packages, as_packages ++ rest, paths, visited)
+    gather_local_crates(packages, as_specs ++ rest, paths, visited)
   end
 
   defp get_spec(packages, name) do
