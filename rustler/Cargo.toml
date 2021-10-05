@@ -5,6 +5,7 @@ repository = "https://github.com/rusterlium/rustler"
 version = "0.22.1" # rustler version
 authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
+readme = "../README.md"
 edition = "2018"
 
 [features]
