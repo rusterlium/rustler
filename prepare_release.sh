@@ -75,9 +75,9 @@ cat <<_
 
 To release, run the following manually:
 
-cd rustler_codegen; cargo publish
-cd rustler; cargo publish
-cd rustler_mix; mix hex.publish
+cd rustler_codegen; cargo publish; cd -
+cd rustler; cargo publish; cd -
+cd rustler_mix; mix hex.publish; cd -
 
 git push
 git push origin "$TAG"
