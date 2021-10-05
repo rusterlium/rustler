@@ -12,6 +12,7 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 ### Fixed
 
 - Fix codegen problem for untagged enums (#370)
+- Fix handling local dependencies with `@external_resources` (#381)
 
 ## [0.22.0] - 2021-06-22
 
