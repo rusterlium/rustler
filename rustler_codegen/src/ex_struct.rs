@@ -8,32 +8,32 @@ use super::RustlerAttr;
 pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let elixir_module = get_module(&ctx);
+    let elixir_module = get_module(&ctx, add_exception);
+    let expect_message = if add_exception {
+        "NifException can only be used with structs"
+    } else {
+        "NifStruct can only be used with structs"
+    };
 
-    let struct_fields = ctx
-        .struct_fields
-        .as_ref()
-        .expect("NifStruct can only be used with structs");
+    let struct_fields = ctx.struct_fields.as_ref().expect(expect_message);
 
     // Unwrap is ok here, as we already determined that struct_fields is not None
     let field_atoms = ctx.field_atoms().unwrap();
 
-    let atom_defs = if add_exception {
+    let optional_exception_field = if add_exception {
         quote! {
-            rustler::atoms! {
-                atom_struct = "__struct__",
-                atom_exception = "__exception__",
-                atom_module = #elixir_module,
-                #(#field_atoms)*
-            }
+            atom_exception = "__exception__",
         }
     } else {
-        quote! {
-            rustler::atoms! {
-                atom_struct = "__struct__",
-                atom_module = #elixir_module,
-                #(#field_atoms)*
-            }
+        quote! {}
+    };
+
+    let atom_defs = quote! {
+        rustler::atoms! {
+            atom_struct = "__struct__",
+            atom_module = #elixir_module,
+            #optional_exception_field
+            #(#field_atoms)*
         }
     };
 
@@ -177,12 +177,18 @@ fn gen_encoder(
     gen
 }
 
-fn get_module(ctx: &Context) -> String {
+fn get_module(ctx: &Context, add_exception: bool) -> String {
+    let expect_message = if add_exception {
+        "NifException requires a 'module' attribute"
+    } else {
+        "NifStruct requires a 'module' attribute"
+    };
+
     ctx.attrs
         .iter()
         .find_map(|attr| match attr {
             RustlerAttr::Module(ref module) => Some(module.clone()),
             _ => None,
         })
-        .expect("NifStruct requires a 'module' attribute")
+        .expect(expect_message)
 }
