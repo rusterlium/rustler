@@ -2,6 +2,10 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.22 -> 0.23
+
+0.23 fixes only bugs, no extra steps are needed when upgrading.
+
 ## 0.21 -> 0.22
 
 0.22 changes how to define NIFs. Users upgrading to 0.22 should to do these things:

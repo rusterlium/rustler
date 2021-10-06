@@ -58,22 +58,78 @@ defmodule Rustler.Compiler.Config do
   end
 
   defp build(opts) do
+    crate = Keyword.fetch!(opts, :crate)
+
     resources =
       opts
       |> Keyword.get(:path)
-      |> external_resources()
+      |> external_resources(crate)
 
     opts = Keyword.put(opts, :external_resources, resources)
 
     struct!(Config, opts)
   end
 
-  defp external_resources(crate_path) do
-    "#{crate_path}/**/*"
+  defp external_resources(crate_path, crate) do
+    crate_str = to_string(crate)
+
+    metadata =
+      case System.cmd("cargo", ~w(metadata --format-version=1), cd: crate_path) do
+        {metadata, 0} ->
+          metadata
+
+        {_error, code} ->
+          System.stop(code)
+      end
+
+    json = Jason.decode!(metadata)
+
+    packages = json["packages"]
+
+    crate_spec = get_spec(packages, crate_str)
+
+    packages
+    |> gather_local_crates([crate_spec], [crate_path], MapSet.new([crate_str]))
+    |> Enum.flat_map(&expand_paths/1)
+  end
+
+  defp expand_paths(path) do
+    path
+    |> Path.join("**/*")
     |> Path.wildcard()
-    |> Enum.reject(fn path ->
-      String.starts_with?(path, "#{crate_path}/target/")
-    end)
+    |> Enum.reject(&String.starts_with?(&1, "#{path}/target/"))
+  end
+
+  defp local_crate?(package) do
+    package["path"]
+  end
+
+  defp gather_local_crates(_, [], paths, _visited) do
+    paths
+  end
+
+  defp gather_local_crates(packages, [current_spec | rest], paths_acc, visited) do
+    local_deps =
+      current_spec["dependencies"]
+      |> Enum.filter(&local_crate?/1)
+      |> Enum.reject(fn dep -> MapSet.member?(visited, dep["name"]) end)
+
+    paths = Enum.map(local_deps, & &1["path"]) ++ paths_acc
+
+    as_specs = Enum.map(local_deps, &get_spec(packages, &1["name"]))
+
+    visited =
+      local_deps
+      |> MapSet.new(& &1["name"])
+      |> MapSet.union(visited)
+
+    gather_local_crates(packages, as_specs ++ rest, paths, visited)
+  end
+
+  defp get_spec(packages, name) do
+    packages
+    |> Enum.filter(&(&1["name"] == name))
+    |> List.first()
   end
 
   defp build_mode(env) when env in [:prod, :bench], do: :release
