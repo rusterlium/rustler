@@ -103,7 +103,6 @@ pub unsafe fn map_iterator_next(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
     rustler_sys::enif_map_iterator_next(env, iter);
 }
 
-#[cfg(nif_version_2_14)]
 pub unsafe fn make_map_from_arrays(
     env: NIF_ENV,
     keys: &[NIF_TERM],
