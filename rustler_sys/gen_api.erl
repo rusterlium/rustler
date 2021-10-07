@@ -246,12 +246,6 @@ api_list(Opts) -> [
     end ++
 
 
-    case proplists:get_bool(dirty_schedulers, Opts) of
-        true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
-        false -> []
-    end ++
-
-
     case proplists:get_bool(nif_2_11, Opts) of
         true -> [
             {"ERL_NIF_TERM", "enif_now_time", "env: *mut ErlNifEnv"},
