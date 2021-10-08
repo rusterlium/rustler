@@ -187,7 +187,6 @@ pub enum ErlNifResourceFlags {
 #[repr(C)]
 pub enum ErlNifCharEncoding {
     ERL_NIF_LATIN1 = 1,
-    DUMMY = 999, // prevents "univariant enum" compile error
 }
 
 /// See [ErlNifPid](http://www.erlang.org/doc/man/erl_nif.html#ErlNifPid) in the Erlang docs.
