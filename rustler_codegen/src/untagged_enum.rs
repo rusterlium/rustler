@@ -69,7 +69,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
             fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
                 #(#variant_defs)*
 
-                Err(::rustler::Error::Atom("invalid_variant"))
+                Err(::rustler::Error::RaiseAtom("invalid_variant"))
             }
         }
     };

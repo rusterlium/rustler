@@ -54,7 +54,11 @@ defmodule RustlerTest.CodegenTest do
     test "transcoder" do
       value = %AddStruct{lhs: 45, rhs: 123}
       assert value == RustlerTest.struct_echo(value)
-      assert :invalid_struct == RustlerTest.struct_echo(DateTime.utc_now())
+
+      assert %ErlangError{original: :invalid_struct} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.struct_echo(DateTime.utc_now())
+               end)
     end
 
     test "with invalid struct" do
@@ -73,8 +77,14 @@ defmodule RustlerTest.CodegenTest do
       require AddRecord
       value = AddRecord.record()
       assert value == RustlerTest.record_echo(value)
-      assert :invalid_record == RustlerTest.record_echo({})
-      assert :invalid_record == RustlerTest.record_echo({:wrong_tag, 1, 2})
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn -> RustlerTest.record_echo({}) end)
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.record_echo({:wrong_tag, 1, 2})
+               end)
     end
 
     test "with invalid Record structure" do
@@ -95,7 +105,9 @@ defmodule RustlerTest.CodegenTest do
   test "unit enum transcoder" do
     assert :foo_bar == RustlerTest.unit_enum_echo(:foo_bar)
     assert :baz == RustlerTest.unit_enum_echo(:baz)
-    assert :invalid_variant == RustlerTest.unit_enum_echo(:somethingelse)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn -> RustlerTest.unit_enum_echo(:somethingelse) end)
   end
 
   test "untagged enum transcoder" do
@@ -107,7 +119,11 @@ defmodule RustlerTest.CodegenTest do
              RustlerTest.untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
 
     assert true == RustlerTest.untagged_enum_echo(true)
-    assert :invalid_variant == RustlerTest.untagged_enum_echo([1, 2, 3, 4])
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.untagged_enum_echo([1, 2, 3, 4])
+             end)
   end
 
   test "untagged enum with truthy" do
@@ -155,7 +171,11 @@ defmodule RustlerTest.CodegenTest do
     require NewtypeRecord
     value = NewtypeRecord.newtype()
     assert value == RustlerTest.newtype_record_echo(value)
-    assert :invalid_record == RustlerTest.newtype_record_echo({"with error message"})
+
+    assert %ErlangError{original: :invalid_record} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.newtype_record_echo({"with error message"})
+             end)
 
     assert_raise ErlangError,
                  "Erlang error: \"Invalid Record structure for NewtypeRecord\"",
@@ -174,7 +194,9 @@ defmodule RustlerTest.CodegenTest do
     require TupleStructRecord
     value = TupleStructRecord.tuplestruct()
     assert value == RustlerTest.tuplestruct_record_echo(value)
-    assert :invalid_record == RustlerTest.tuplestruct_record_echo({"invalid"})
+
+    assert %ErlangError{original: :invalid_record} ==
+             assert_raise(ErlangError, fn -> RustlerTest.tuplestruct_record_echo({"invalid"}) end)
 
     assert_raise ErlangError,
                  "Erlang error: \"Invalid Record structure for TupleStructRecord\"",
