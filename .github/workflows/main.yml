@@ -93,7 +93,7 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-elixir@v1
         with:
-          otp-version: 21.x
+          otp-version: 22.x
           elixir-version: 1.6
 
       - name: Test rustler_mix
@@ -157,22 +157,6 @@ jobs:
           - erlang: 22.x
             elixir: 1.7
           - erlang: 22.x
-            elixir: 1.6
-
-          - erlang: 21.x
-            elixir: 1.9
-          - erlang: 21.x
-            elixir: 1.8
-          - erlang: 21.x
-            elixir: 1.7
-          - erlang: 21.x
-            elixir: 1.6
-
-          - erlang: 20.3.8.23
-            elixir: 1.8
-          - erlang: 20.3.8.23
-            elixir: 1.7
-          - erlang: 20.3.8.23
             elixir: 1.6
 
         rust:

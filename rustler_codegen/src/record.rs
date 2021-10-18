@@ -108,13 +108,13 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 };
 
                 if terms.len() != #field_num + 1 {
-                    return Err(::rustler::Error::Atom("invalid_record"));
+                    return Err(::rustler::Error::RaiseAtom("invalid_record"));
                 }
 
                 let tag : ::rustler::types::atom::Atom = terms[0].decode()?;
 
                 if tag != atom_tag() {
-                    return Err(::rustler::Error::Atom("invalid_record"));
+                    return Err(::rustler::Error::RaiseAtom("invalid_record"));
                 }
 
                 fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> Result<T, rustler::Error>

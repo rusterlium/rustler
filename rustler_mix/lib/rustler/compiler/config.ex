@@ -61,9 +61,13 @@ defmodule Rustler.Compiler.Config do
     crate = Keyword.fetch!(opts, :crate)
 
     resources =
-      opts
-      |> Keyword.get(:path)
-      |> external_resources(crate)
+      if opts[:skip_compilation?] do
+        []
+      else
+        opts
+        |> Keyword.get(:path)
+        |> external_resources(crate)
+      end
 
     opts = Keyword.put(opts, :external_resources, resources)
 

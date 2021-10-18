@@ -13,10 +13,18 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 - `NifException` for using Elixir exception structs
 
+## [0.22.2] - 2021-10-07
+
+### Fixed
+
+- Fixed a regression introduced with #386: `Rustler.Compiler.Config` called into `cargo` when `skip_compilation?` was set, breaking setups where cargo is not installed. Fixed with #389, thanks @karolsluszniak
+
 ## [0.22.1] - 2021-10-05
 
 ### Fixed
 
+- [Breaking change] codegen-generated decoders always raise an error instead of
+  causing the calling NIF to return an atom in some cases
 - Fix codegen problem for untagged enums (#370)
 - Fix handling local dependencies with `@external_resources` (#381)
 

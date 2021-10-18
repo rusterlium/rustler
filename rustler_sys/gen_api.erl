@@ -20,16 +20,8 @@
     nif_2_11               .  % general 2.11 API additions
 
 
-version_opts("2.7")  -> [{major,2}, {minor,7} ];                           % erlang 17.3
-version_opts("2.8")  -> [{major,2}, {minor,8},  exception];                % erlang 18.0
-version_opts("2.9")  -> [{major,2}, {minor,9},  exception, getenv];        % erlang 18.2
-version_opts("2.10") -> [{major,2}, {minor,10}, exception, getenv, time];  % erlang 18.3
-version_opts("2.11") -> [{major,2}, {minor,11}, exception, getenv, time,   % erlang 19.0
-                        dirty_scheduler_opt, nif_2_11];
-version_opts("2.12") -> [{major,2}, {minor,12}, exception, getenv, time,   % erlang 20.0
-                        dirty_scheduler_opt, nif_2_11, nif_2_12];
-version_opts("2.13") -> [{major,2}, {minor,13}, exception, getenv, time,   % erlang 20.1
-                        dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13];
+-define(OLDEST_SUPPORTED_VERSION, "2.14").
+
 version_opts("2.14") -> [{major,2}, {minor,14}, exception, getenv, time,   % erlang 21.0
                         dirty_scheduler_opt, nif_2_11, nif_2_12, nif_2_13,
                         nif_2_14];
@@ -41,28 +33,15 @@ version_opts("2.16") -> [{major,2}, {minor,16}, exception, getenv, time,   % erl
                         nif_2_14, nif_2_15, nif_2_16];
 version_opts(Ver) ->
     io:format(
-        "This OTP release uses the unsupported Erlang NIF version ~p.\n\n"
-        "Please report at https://github.com/rusterlium/rustler.\n",
-        [Ver]
+        "This OTP release uses the unsupported Erlang NIF version ~p.\n"
+        "Note that the oldest version rustler_sys supports is ~p.\n\n"
+        "Please report at https://github.com/rusterlium/rustler if this version should be supported.\n",
+        [Ver, ?OLDEST_SUPPORTED_VERSION]
     ),
     halt(1).
 
 ulong_opts("4") -> [{ulongsize, 4}];
 ulong_opts("8") -> [{ulongsize, 8}].
-
-
-dirty_scheduler_opts("2.7") -> dirty_scheduler_opts();
-dirty_scheduler_opts("2.8") -> dirty_scheduler_opts();
-dirty_scheduler_opts("2.9") -> dirty_scheduler_opts();
-dirty_scheduler_opts("2.10") -> dirty_scheduler_opts();
-dirty_scheduler_opts(_) -> []. % dirty schedulers non-optional in 2.11
-
-dirty_scheduler_opts() ->
-    case catch erlang:system_info(dirty_cpu_schedulers) of
-                                 _X when is_integer(_X) -> [dirty_schedulers, dirty_scheduler_opt];
-                                 _ -> []
-                             end.
-
 
 -spec api_list([api_opt()]) -> [term()].
 api_list(Opts) -> [
@@ -267,12 +246,6 @@ api_list(Opts) -> [
     end ++
 
 
-    case proplists:get_bool(dirty_schedulers, Opts) of
-        true -> [{"c_int", "enif_is_on_dirty_scheduler", "env: *mut ErlNifEnv"}  ];
-        false -> []
-    end ++
-
-
     case proplists:get_bool(nif_2_11, Opts) of
         true -> [
             {"ERL_NIF_TERM", "enif_now_time", "env: *mut ErlNifEnv"},
@@ -381,7 +354,7 @@ main([UlongSizeT]) -> main([UlongSizeT,"nif_api.snippet"]);
 main([UlongSizeT, Filename]) ->
     %% Round up all configuration options
     Version = (catch erlang:system_info(nif_version)),
-    Opts = version_opts(Version) ++ ulong_opts(UlongSizeT) ++ dirty_scheduler_opts(Version),
+    Opts = version_opts(Version) ++ ulong_opts(UlongSizeT),
     %% Generate API list
     Entries = api_list(Opts),
     %% Generate Rust code

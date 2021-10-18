@@ -27,7 +27,6 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// List.zip(keys, values) |> Map.new()
     /// ```
-    #[cfg(nif_version_2_14)]
     pub fn map_from_arrays(
         env: Env<'a>,
         keys: &[Term<'a>],
@@ -41,23 +40,6 @@ impl<'a> Term<'a> {
                 map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
                     .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
             }
-        } else {
-            Err(Error::BadArg)
-        }
-    }
-
-    // Fallback for older NIF version
-    #[cfg(not(nif_version_2_14))]
-    pub fn map_from_arrays(
-        env: Env<'a>,
-        keys: &[Term<'a>],
-        values: &[Term<'a>],
-    ) -> NifResult<Term<'a>> {
-        if keys.len() == values.len() {
-            let map = map_new(env);
-            keys.iter()
-                .zip(values.iter())
-                .try_fold(map, |map, (k, v)| map.map_put(*k, *v))
         } else {
             Err(Error::BadArg)
         }

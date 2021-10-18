@@ -121,7 +121,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 
                 let module: ::rustler::types::atom::Atom = term.map_get(atom_struct().to_term(env))?.decode()?;
                 if module != atom_module() {
-                    return Err(::rustler::Error::Atom("invalid_struct"));
+                    return Err(::rustler::Error::RaiseAtom("invalid_struct"));
                 }
 
                 #(#assignments);*
