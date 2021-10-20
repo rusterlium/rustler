@@ -15,7 +15,6 @@
     getenv                 |  % enif_getenv() functions
     time                   |  % new timer API
     {ulongsize, integer()} |  % number of bytes in a C ulong
-    dirty_schedulers       |  % enif_is_on_dirty_scheduler().  Only for 2.7-2.10
     dirty_scheduler_opt    |  % dirty scheduler nifentry option flag.  For >=2.7
     nif_2_11               .  % general 2.11 API additions
 

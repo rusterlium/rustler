@@ -4,7 +4,7 @@ use std::process::Command;
 
 // keep this sorted by version number
 const NIF_VERSION: &[&str] = &[
-    "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15", "2.16",
+    "2.14", "2.15", "2.16",
 ];
 
 fn main() {
