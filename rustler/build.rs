@@ -3,9 +3,7 @@ use std::env;
 use std::process::Command;
 
 // keep this sorted by version number
-const NIF_VERSION: &[&str] = &[
-    "2.14", "2.15", "2.16",
-];
+const NIF_VERSION: &[&str] = &["2.14", "2.15", "2.16"];
 
 fn main() {
     let latest_version = NIF_VERSION.last().unwrap().to_string();
