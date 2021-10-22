@@ -36,3 +36,6 @@ categories = ["external-ffi-bindings"]
 
 [dependencies]
 unreachable = "1.0"
+
+[build-dependencies]
+regex = "1"

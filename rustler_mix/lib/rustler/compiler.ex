@@ -27,7 +27,11 @@ defmodule Rustler.Compiler do
         System.cmd(cmd, args,
           cd: crate_full_path,
           stderr_to_stdout: true,
-          env: [{"CARGO_TARGET_DIR", config.target_dir} | config.env],
+          env: [
+            {"CARGO_TARGET_DIR", config.target_dir},
+            {"RUSTLER_NIF_VERSION", nif_version()}
+            | config.env
+          ],
           into: IO.stream(:stdio, :line)
         )
 
@@ -43,6 +47,10 @@ defmodule Rustler.Compiler do
     end
 
     config
+  end
+
+  defp nif_version do
+    System.get_env("RUSTLER_NIF_VERSION") || to_string(:erlang.system_info(:nif_version))
   end
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
