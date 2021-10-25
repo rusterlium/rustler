@@ -77,14 +77,8 @@ defmodule Rustler.Compiler.Config do
   defp external_resources(crate_path, crate) do
     crate_str = to_string(crate)
 
-    metadata =
-      case System.cmd("cargo", ~w(metadata --format-version=1), cd: crate_path) do
-        {metadata, 0} ->
-          metadata
-
-        {_error, code} ->
-          System.stop(code)
-      end
+    {metadata, 0} =
+      System.cmd("cargo", ~w(metadata --format-version=1), cd: crate_path)
 
     json = Jason.decode!(metadata)
 
