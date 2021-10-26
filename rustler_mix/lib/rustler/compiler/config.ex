@@ -83,7 +83,7 @@ defmodule Rustler.Compiler.Config do
           metadata
 
         {output, code} ->
-          raise "calling `cargo metadata` failed. Output:\n" <> output
+          raise "calling `cargo metadata` failed.\n" <> output
       end
 
     json = Jason.decode!(metadata)
