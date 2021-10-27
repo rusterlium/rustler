@@ -52,10 +52,10 @@ Rustler aims to support the newest three OTP versions as well as Elixir versions
 Rustler uses `erlang:system_info(nif_version)` to detect the supported NIF version of the Erlang/OTP
 system for which the NIF is to be compiled. It is possible to restrict the NIF version to an older
 version if the NIF is to be compiled for an older version of Erlang. For example, if the target NIF
-version should be `2.7` (Erlang/OTP 17.3), this can be defined using an environment variable:
+version should be `2.14` (Erlang/OTP 21), this can be defined using an environment variable:
 
 ```
-RUSTLER_NIF_VERSION=2.7 mix compile
+RUSTLER_NIF_VERSION=2.14 mix compile
 ```
 
 #### Community
