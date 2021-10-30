@@ -80,6 +80,7 @@ defmodule RustlerTest.CodegenTest do
     test "transcoder" do
       value = %AddException{message: "testing"}
       assert value == RustlerTest.exception_echo(value)
+
       assert %ErlangError{original: :invalid_struct} ==
                assert_raise(ErlangError, fn ->
                  RustlerTest.exception_echo(DateTime.utc_now())
