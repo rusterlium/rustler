@@ -101,7 +101,32 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_derive(NifStruct, attributes(module, rustler))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
-    ex_struct::transcoder_decorator(&ast).into()
+    ex_struct::transcoder_decorator(&ast, false).into()
+}
+
+/// Implementation of the `NifException` macro that lets the user annotate a struct that will
+/// be translated directly from an Elixir exception to a Rust struct. For example, the following
+/// struct, annotated as such:
+///
+/// ```ignore
+/// #[derive(Debug, NifException)]
+/// #[module = "AddException"]
+/// pub struct AddException {
+///     message: String,
+/// }
+/// ```
+///
+/// This would be translated by Rustler into:
+///
+/// ```elixir
+/// defmodule AddException do
+///   defexception message: ""
+/// end
+/// ```
+#[proc_macro_derive(NifException, attributes(module, rustler))]
+pub fn nif_exception(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    ex_struct::transcoder_decorator(&ast, true).into()
 }
 
 /// Implementation of a macro that lets the user annotate a struct with `NifMap` so that the

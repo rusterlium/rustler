@@ -55,6 +55,7 @@ rustler::init!(
         test_codegen::tuple_echo,
         test_codegen::record_echo,
         test_codegen::map_echo,
+        test_codegen::exception_echo,
         test_codegen::struct_echo,
         test_codegen::unit_enum_echo,
         test_codegen::untagged_enum_echo,

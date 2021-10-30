@@ -5,23 +5,34 @@ use syn::{self, spanned::Spanned, Field, Ident};
 use super::context::Context;
 use super::RustlerAttr;
 
-pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
+pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> TokenStream {
     let ctx = Context::from_ast(ast);
 
-    let elixir_module = get_module(&ctx);
+    let elixir_module = get_module(&ctx, add_exception);
+    let expect_message = if add_exception {
+        "NifException can only be used with structs"
+    } else {
+        "NifStruct can only be used with structs"
+    };
 
-    let struct_fields = ctx
-        .struct_fields
-        .as_ref()
-        .expect("NifStruct can only be used with structs");
+    let struct_fields = ctx.struct_fields.as_ref().expect(expect_message);
 
     // Unwrap is ok here, as we already determined that struct_fields is not None
     let field_atoms = ctx.field_atoms().unwrap();
+
+    let optional_exception_field = if add_exception {
+        quote! {
+            atom_exception = "__exception__",
+        }
+    } else {
+        quote! {}
+    };
 
     let atom_defs = quote! {
         rustler::atoms! {
             atom_struct = "__struct__",
             atom_module = #elixir_module,
+            #optional_exception_field
             #(#field_atoms)*
         }
     };
@@ -35,7 +46,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let encoder = if ctx.encode() {
-        gen_encoder(&ctx, struct_fields, &atoms_module_name)
+        gen_encoder(&ctx, struct_fields, &atoms_module_name, add_exception)
     } else {
         quote! {}
     };
@@ -123,7 +134,12 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     gen
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_encoder(
+    ctx: &Context,
+    fields: &[&Field],
+    atoms_module_name: &Ident,
+    add_exception: bool,
+) -> TokenStream {
     let struct_type = &ctx.ident_with_lifetime;
 
     let field_defs: Vec<TokenStream> = fields
@@ -137,12 +153,21 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         })
         .collect();
 
+    let exception_field = if add_exception {
+        quote! {
+            map = map.map_put(atom_exception().encode(env), true.encode(env)).unwrap();
+        }
+    } else {
+        quote! {}
+    };
+
     let gen = quote! {
         impl<'b> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);
                 map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).unwrap();
+                #exception_field
                 #(#field_defs)*
                 map
             }
@@ -152,12 +177,18 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     gen
 }
 
-fn get_module(ctx: &Context) -> String {
+fn get_module(ctx: &Context, add_exception: bool) -> String {
+    let expect_message = if add_exception {
+        "NifException requires a 'module' attribute"
+    } else {
+        "NifStruct requires a 'module' attribute"
+    };
+
     ctx.attrs
         .iter()
         .find_map(|attr| match attr {
             RustlerAttr::Module(ref module) => Some(module.clone()),
             _ => None,
         })
-        .expect("NifStruct requires a 'module' attribute")
+        .expect(expect_message)
 }

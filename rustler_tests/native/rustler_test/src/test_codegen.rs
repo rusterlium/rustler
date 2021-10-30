@@ -1,5 +1,5 @@
 use rustler::types::truthy::Truthy;
-use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
+use rustler::{NifException, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
 
 #[derive(NifTuple)]
 pub struct AddTuple {
@@ -45,9 +45,20 @@ pub struct AddStruct {
     rhs: i32,
 }
 
+#[derive(Debug, NifException)]
+#[module = "AddException"]
+pub struct AddException {
+    message: String,
+}
+
 #[rustler::nif]
 pub fn struct_echo(add_struct: AddStruct) -> AddStruct {
     add_struct
+}
+
+#[rustler::nif]
+pub fn exception_echo(add_exception: AddException) -> AddException {
+    add_exception
 }
 
 #[derive(NifUnitEnum)]
