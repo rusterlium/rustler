@@ -7,8 +7,16 @@ defmodule RustlerTest.TermTest do
     assert RustlerTest.term_debug("饂") == "<<233,165,130>>"
     assert RustlerTest.term_debug({:atom, :pair}) == "{atom,pair}"
 
-    assert RustlerTest.term_debug(0..1000) ==
-             "\#{'__struct__'=>'Elixir.Range',first=>0,last=>1000}"
+    range = 0..1000
+
+    # For Elixir >= v1.12, Range has a :step field.
+    if Map.has_key?(range, :step) do
+      assert RustlerTest.term_debug(range) ==
+               "\#{'__struct__'=>'Elixir.Range',first=>0,last=>1000,step=>1}"
+    else
+      assert RustlerTest.term_debug(range) ==
+               "\#{'__struct__'=>'Elixir.Range',first=>0,last=>1000}"
+    end
 
     assert RustlerTest.term_debug(Enum.to_list(0..5)) == "[0,1,2,3,4,5]"
     assert RustlerTest.term_debug(Enum.to_list(0..1000)) == "[#{Enum.join(0..1000, ",")}]"
