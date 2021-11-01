@@ -220,6 +220,12 @@ where
 
         let first = term.map_get(atom::first().to_term(env))?.decode::<T>()?;
         let last = term.map_get(atom::last().to_term(env))?.decode::<T>()?;
+        if let Ok(step) = term.map_get(atom::step().to_term(env)) {
+            match step.decode::<i64>()? {
+                1 => (),
+                _ => return Err(Error::BadArg),
+            }
+        }
 
         Ok(first..=last)
     }

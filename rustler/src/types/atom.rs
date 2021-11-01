@@ -305,4 +305,7 @@ atoms! {
 
     /// The `last` atom used by `Elixir.Range`.
     last,
+
+    /// The `step` atom used by `Elixir.Range` vor Elixir >= v1.12
+    step,
 }
