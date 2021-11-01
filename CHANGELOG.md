@@ -13,6 +13,11 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 - `NifException` for using Elixir exception structs
 
+### Changed
+
+- The decoder for `Range` requires that `:step` equals `1`. The `:step` field was introduced with
+  Elixir v1.12 and cannot be represented with Rust's `RangeInclusive`.
+
 ## [0.22.2] - 2021-10-07
 
 ### Fixed
