@@ -84,6 +84,7 @@ use crate::{
 };
 use std::{
     borrow::{Borrow, BorrowMut},
+    hash::{Hash, Hasher},
     io::Write,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
@@ -196,6 +197,22 @@ impl Deref for OwnedBinary {
 impl DerefMut for OwnedBinary {
     fn deref_mut(&mut self) -> &mut [u8] {
         self.as_mut_slice()
+    }
+}
+impl Hash for OwnedBinary {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
+    }
+}
+impl PartialEq for OwnedBinary {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+impl Eq for OwnedBinary {}
+impl PartialEq<Binary<'_>> for OwnedBinary {
+    fn eq(&self, other: &Binary) -> bool {
+        self.as_slice() == other.as_slice()
     }
 }
 
@@ -352,6 +369,22 @@ impl<'a> Decoder<'a> for Binary<'a> {
 impl<'a> Encoder for Binary<'a> {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.to_term(env)
+    }
+}
+impl Hash for Binary<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
+    }
+}
+impl PartialEq for Binary<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+impl Eq for Binary<'_> {}
+impl PartialEq<OwnedBinary> for Binary<'_> {
+    fn eq(&self, other: &OwnedBinary) -> bool {
+        self.as_slice() == other.as_slice()
     }
 }
 
