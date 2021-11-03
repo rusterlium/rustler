@@ -141,6 +141,8 @@ jobs:
       matrix:
         pair:
           - erlang: "24.0"
+            elixir: "1.12.2"
+          - erlang: "24.0"
             elixir: "1.11.4"
           - erlang: "23.3"
             elixir: "1.11.4"
