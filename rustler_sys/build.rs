@@ -23,16 +23,15 @@ trait ApiBuilder {
 }
 
 #[derive(PartialEq, Clone, Copy)]
-pub enum OS {
+pub enum OsFamily {
+    Unix,
     Win,
-    Darwin,
-    Linux,
 }
 
 pub struct GenerateOptions {
     pub ulong_size: usize,
     pub nif_version: (u32, u32),
-    pub target_os: OS,
+    pub target_family: OsFamily,
 }
 
 fn write_ret(out: &mut String, ret: &str) {
@@ -207,7 +206,7 @@ fn generate(opts: &GenerateOptions) -> String {
     .unwrap();
 
     // Basic
-    if opts.target_os == OS::Win {
+    if opts.target_family == OsFamily::Win {
         writeln!(out, "#[allow(dead_code)]").unwrap();
         writeln!(out, "#[derive(Copy, Clone)]").unwrap();
         writeln!(out, "pub struct TWinDynNifCallbacks {{").unwrap();
@@ -933,18 +932,17 @@ fn main() {
 
     // It's unlikely that we are going to cross compile to different OS,
     // but this guarantees that we choose the correct OS APIs if we do so.
-    let target_os_or_current =
-        env::var("CARGO_CFG_TARGET_OS").unwrap_or_else(|_| env::consts::OS.to_string());
+    let target_family_or_current =
+        env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_else(|_| env::consts::FAMILY.to_string());
 
-    let target_os = match &target_os_or_current as &str {
-        "windows" => OS::Win,
-        "linux" => OS::Linux,
-        "macos" => OS::Darwin,
+    let target_family = match &target_family_or_current as &str {
+        "windows" => OsFamily::Win,
+        "unix" => OsFamily::Unix,
         other => panic!("Unsupported Operational System: {}", other),
     };
 
-    let ulong_size = match (target_pointer_width, target_os) {
-        (_, OS::Win) => 4,
+    let ulong_size = match (target_pointer_width, target_family) {
+        (_, OsFamily::Win) => 4,
         (Ok(ref val), _) if val == "32" => 4,
         (Ok(ref val), _) if val == "64" => 8,
         (Ok(ref val), _) => panic!("Unsupported target pointer width: {}", val),
@@ -957,7 +955,7 @@ fn main() {
     let opts = GenerateOptions {
         ulong_size,
         nif_version,
-        target_os,
+        target_family,
     };
     let api = generate(&opts);
 
