@@ -938,7 +938,7 @@ fn main() {
     let target_family = match &target_family_or_current as &str {
         "windows" => OsFamily::Win,
         "unix" => OsFamily::Unix,
-        other => panic!("Unsupported Operational System: {}", other),
+        other => panic!("Unsupported Operational System Family: {}", other),
     };
 
     let ulong_size = match (target_pointer_width, target_family) {
