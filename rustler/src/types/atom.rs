@@ -310,5 +310,11 @@ atoms! {
     step,
 
     /// The `map` atom as used in `Elixir.MapSet`.
-    map
+    map,
+
+    /// The `version` atom as used in `Elixir.MapSet`. This atom is flagged for
+    /// removal in Elixir 2.0, not including it however when rebuilding the
+    /// MapSet prevents correct `==` results. Version 1 hasn't been in use since
+    /// Elixir 1.5.
+    version
 }

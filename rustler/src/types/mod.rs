@@ -189,6 +189,7 @@ where
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
         let mapset_struct = elixir_struct::make_ex_struct(env, "Elixir.MapSet").unwrap();
         let empty_vec: Vec<u8> = vec![];
+        let version: u8 = 2;
 
         let (keys, values): (Vec<_>, Vec<_>) = self
             .iter()
@@ -198,6 +199,8 @@ where
         let map_set = Term::map_from_arrays(env, &keys, &values).unwrap();
         mapset_struct
             .map_put(atom::map().to_term(env), map_set)
+            .unwrap()
+            .map_put(atom::version().to_term(env), version.encode(env))
             .unwrap()
     }
 }
