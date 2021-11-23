@@ -308,4 +308,7 @@ atoms! {
 
     /// The `step` atom used by `Elixir.Range` vor Elixir >= v1.12
     step,
+
+    /// The `map` atom as used in `Elixir.MapSet`.
+    map
 }

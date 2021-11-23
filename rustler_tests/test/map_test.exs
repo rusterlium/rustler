@@ -32,4 +32,13 @@ defmodule RustlerTest.MapTest do
       RustlerTest.map_generic(%{1 => "hello", not_a_number: "world"})
     end)
   end
+
+  test "generic mapsets" do
+    mapset = MapSet.new([1, 2, 3, 4, 5])
+    assert mapset == RustlerTest.mapset_generic(mapset)
+
+    assert_raise(ArgumentError, fn ->
+      RustlerTest.mapset_generic(%{1 => "I am a regular map"})
+    end)
+  end
 end

@@ -28,6 +28,7 @@ defmodule RustlerTest do
   def map_entries_sorted(_), do: err()
   def map_from_arrays(_keys, _values), do: err()
   def map_generic(_), do: err()
+  def mapset_generic(_), do: err()
 
   def resource_make(), do: err()
   def resource_set_integer_field(_, _), do: err()

@@ -161,3 +161,43 @@ where
         Term::map_from_arrays(env, &keys, &values).unwrap()
     }
 }
+
+impl<'a, K> Decoder<'a> for std::collections::HashSet<K>
+where
+    K: Decoder<'a> + Eq + std::hash::Hash,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        let map_set = term.map_get(atom::map().to_term(term.get_env()))?;
+        let size = map_set.map_size()?;
+
+        let it = MapIterator::new(map_set).ok_or(Error::BadArg)?;
+        let mut set = std::collections::HashSet::with_capacity(size);
+
+        for (k, _) in it {
+            let k = k.decode()?;
+            set.insert(k);
+        }
+
+        Ok(set)
+    }
+}
+
+impl<K> Encoder for std::collections::HashSet<K>
+where
+    K: Encoder + Eq + std::hash::Hash,
+{
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
+        let mapset_struct = elixir_struct::make_ex_struct(env, "Elixir.MapSet").unwrap();
+        let empty_vec: Vec<u8> = vec![];
+
+        let (keys, values): (Vec<_>, Vec<_>) = self
+            .iter()
+            .map(|k| (k.encode(env), empty_vec.encode(env)))
+            .unzip();
+
+        let map_set = Term::map_from_arrays(env, &keys, &values).unwrap();
+        mapset_struct
+            .map_put(atom::map().to_term(env), map_set)
+            .unwrap()
+    }
+}

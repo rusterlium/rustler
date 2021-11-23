@@ -41,3 +41,8 @@ pub fn map_generic(
 ) -> std::collections::HashMap<i64, String> {
     map
 }
+
+#[rustler::nif]
+pub fn mapset_generic(mapset: std::collections::HashSet<u32>) -> std::collections::HashSet<u32> {
+    mapset
+}
