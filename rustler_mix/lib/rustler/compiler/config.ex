@@ -82,7 +82,7 @@ defmodule Rustler.Compiler.Config do
         {metadata, 0} ->
           metadata
 
-        {output, code} ->
+        {output, _code} ->
           raise "calling `cargo metadata` failed.\n" <> output
       end
 
