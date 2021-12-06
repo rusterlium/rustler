@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Rustler.New do
     end
   end
 
-  @switches [:module, :name, :otp_app]
+  @switches [module: :string, name: :string, otp_app: :string]
 
   def run(argv) do
     {opts, _argv, _} = OptionParser.parse(argv, switches: @switches)
