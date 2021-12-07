@@ -86,7 +86,7 @@ defmodule Mix.Tasks.Rustler.New do
 
     copy_from(path, binding, @basic)
 
-    Mix.Shell.IO.info([:green, "Ready to go! See #{path}/README.md for further instructions."])
+    Mix.shell().info([:green, "Ready to go! See #{path}/README.md for further instructions."])
   end
 
   defp check_module_name_validity!(name) do

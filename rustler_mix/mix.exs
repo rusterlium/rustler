@@ -10,6 +10,7 @@ defmodule Rustler.Mixfile do
       name: "Rustler",
       version: @version,
       elixir: "~> 1.11",
+      elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -19,13 +20,15 @@ defmodule Rustler.Mixfile do
   end
 
   def application do
-    [extra_applications: [:logger, :eex]]
+    [extra_applications: [:logger, :eex, :inets, :public_key]]
   end
 
   defp deps do
     [
+      {:castore, "~> 0.1.13"},
       {:toml, "~> 0.5.2", runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:bypass, "~> 2.1", only: :test},
       {:jason, "~> 1.2", runtime: false}
     ]
   end
@@ -49,6 +52,7 @@ defmodule Rustler.Mixfile do
         "../CHANGELOG.md",
         {:"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
         {:"../LICENSE-MIT", [title: "License (MIT)"]},
+        "../PRECOMPILATION_GUIDE.md",
         "README.md"
       ],
       main: "readme",
@@ -58,4 +62,8 @@ defmodule Rustler.Mixfile do
       formatters: ["html"]
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_), do: ["lib"]
 end

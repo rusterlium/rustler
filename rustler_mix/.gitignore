@@ -25,3 +25,5 @@ rustler-*.tar
 
 # Temporary files for e.g. tests
 /tmp
+
+/test/fixtures/precompiled_nifs/rustler/

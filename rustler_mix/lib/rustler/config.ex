@@ -1,4 +1,4 @@
-defmodule Rustler.Compiler.Config do
+defmodule Rustler.Config do
   @moduledoc false
 
   @type rust_version :: :stable | :beta | :nightly | binary()
@@ -21,19 +21,21 @@ defmodule Rustler.Compiler.Config do
             load_data: 0,
             load_from: nil,
             mode: :release,
+            module: nil,
             otp_app: nil,
             path: "",
+            precompiled: [],
             priv_dir: "",
-            skip_compilation?: false,
+            skip_compilation?: nil,
             target: nil,
             target_dir: ""
 
-  alias Rustler.Compiler.Config
+  alias Rustler.Config
 
   def from(otp_app, module, opts) do
     config = Application.get_env(otp_app, module, [])
 
-    crate = config[:crate] || opts[:crate] || otp_app
+    crate = config[:crate] || opts[:crate] || Atom.to_string(otp_app)
 
     # TODO: Remove in 1.0
     rustler_crates = Mix.Project.config()[:rustler_crates] || []
@@ -43,6 +45,7 @@ defmodule Rustler.Compiler.Config do
       crate: crate,
       load_from: {otp_app, "priv/native/lib#{crate}"},
       mode: build_mode(Mix.env()),
+      module: module,
       otp_app: otp_app,
       path: "native/#{crate}",
       target_dir: Application.app_dir(otp_app, "native/#{crate}")
@@ -60,18 +63,26 @@ defmodule Rustler.Compiler.Config do
   defp build(opts) do
     crate = Keyword.fetch!(opts, :crate)
 
+    opts = maybe_skip_compilation_if_precompilation_opts(opts)
+
     resources =
       if opts[:skip_compilation?] do
         []
       else
-        opts
-        |> Keyword.get(:path)
-        |> external_resources(crate)
+        external_resources(opts[:path], crate)
       end
 
     opts = Keyword.put(opts, :external_resources, resources)
 
     struct!(Config, opts)
+  end
+
+  defp maybe_skip_compilation_if_precompilation_opts(opts) do
+    if opts[:precompiled] != [] and is_nil(opts[:skip_compilation?]) do
+      Keyword.put(opts, :skip_compilation?, true)
+    else
+      opts
+    end
   end
 
   defp external_resources(crate_path, crate) do
@@ -144,4 +155,11 @@ defmodule Rustler.Compiler.Config do
 
   defp to_atom(name) when is_atom(name),
     do: name
+
+  @doc """
+  Returns if the project must use precompilation.
+  """
+  def use_precompilation?(%__MODULE__{} = config) do
+    config.skip_compilation? == true and not is_nil(config.precompiled[:base_url])
+  end
 end

@@ -1,50 +1,46 @@
 defmodule Rustler.Compiler do
   @moduledoc false
 
-  alias Rustler.Compiler.{Config, Messages, Rustup}
+  alias Rustler.Config
+  alias Rustler.Compiler.{Messages, Rustup}
 
   @doc false
-  def compile_crate(module, opts) do
-    otp_app = Keyword.fetch!(opts, :otp_app)
-    config = Config.from(otp_app, module, opts)
+  def compile_crate(config = %Config{}) do
+    crate_full_path = Path.expand(config.path, File.cwd!())
 
-    unless config.skip_compilation? do
-      crate_full_path = Path.expand(config.path, File.cwd!())
+    File.mkdir_p!(priv_dir())
 
-      File.mkdir_p!(priv_dir())
+    Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
 
-      Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
+    [cmd | args] =
+      make_base_command(config.cargo)
+      |> make_no_default_features_flag(config.default_features)
+      |> make_features_flag(config.features)
+      |> make_target_flag(config.target)
+      |> make_build_mode_flag(config.mode)
+      |> make_platform_hacks(crate_full_path, :os.type())
 
-      [cmd | args] =
-        make_base_command(config.cargo)
-        |> make_no_default_features_flag(config.default_features)
-        |> make_features_flag(config.features)
-        |> make_target_flag(config.target)
-        |> make_build_mode_flag(config.mode)
-        |> make_platform_hacks(crate_full_path, :os.type())
+    compile_result =
+      System.cmd(cmd, args,
+        cd: crate_full_path,
+        stderr_to_stdout: true,
+        env: [
+          {"CARGO_TARGET_DIR", config.target_dir},
+          {"RUSTLER_NIF_VERSION", nif_version()}
+          | config.env
+        ],
+        into: IO.stream(:stdio, :line)
+      )
 
-      compile_result =
-        System.cmd(cmd, args,
-          cd: crate_full_path,
-          stderr_to_stdout: true,
-          env: [
-            {"CARGO_TARGET_DIR", config.target_dir},
-            {"RUSTLER_NIF_VERSION", nif_version()}
-            | config.env
-          ],
-          into: IO.stream(:stdio, :line)
-        )
-
-      case compile_result do
-        {_, 0} -> :ok
-        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
-      end
-
-      handle_artifacts(crate_full_path, config)
-      # See #326: Ensure that the libraries are copied into the correct subdirectory
-      # in `_build`.
-      Mix.Project.build_structure()
+    case compile_result do
+      {_, 0} -> :ok
+      {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
     end
+
+    handle_artifacts(crate_full_path, config)
+    # See #326: Ensure that the libraries are copied into the correct subdirectory
+    # in `_build`.
+    Mix.Project.build_structure()
 
     config
   end

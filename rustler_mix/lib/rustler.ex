@@ -50,6 +50,8 @@ defmodule Rustler do
       artifacts. To override the default behaviour specify a tuple:
       `{:my_app, "priv/native/<artifact>"}`. Due to the way `:erlang.load_nif/2`
       works, the artifact should not include the file extension (i.e. `.so`, `.dll`).
+      In case you want to load precompiled NIFs from an external source (eg. GitHub releases),
+      you can use the `:precompiled` option.
 
     * `:mode` - Specify which mode to compile the crate with. If you do not specify
       this option, a default will be provide based on the `Mix.env()`:
@@ -59,8 +61,17 @@ defmodule Rustler do
     * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
       root of the project. Use this option to override this.
 
+    * `:precompiled` - This option does something similar to `:load_from`, but it will load
+      a precompiled NIF from an external source. This will require an especial attention to
+      the release flow and security. You can check more details in the [precompilation guide].
+      It is a keyword list and requires the following fields:
+      - `:base_url` - the URL where the precompiled artifacts are published.
+      - `:version` - the version of the given precompiled artifact.
+
     * `:skip_compilation?` - This option skips envoking the rust compiler. Specify this option
-      in combination with `:load_from` to load a pre-compiled artifact.
+      in combination with `:load_from` to load a pre-compiled artifact. If `:precompiled` option
+      is given, you can set `:skip_compilation?` to `false` in order to force the compilation
+      for a given environment.
 
     * `:target` - Specify a compile [target] triple.
 
@@ -76,11 +87,50 @@ defmodule Rustler do
       end
 
   [target]: https://forge.rust-lang.org/release/platform-support.html
+  [precompilation guide]: https://github.com/rusterlium/rustler/blob/master/PRECOMPILATION_GUIDE.md 
   """
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      config = Rustler.Compiler.compile_crate(__MODULE__, opts)
+      # TODO: should we use "Mix.shell()" like the compiler?
+      require Logger
+
+      otp_app = Keyword.fetch!(opts, :otp_app)
+      config = Rustler.Config.from(otp_app, __MODULE__, opts)
+
+      env_var_name = "#{String.upcase(to_string(config.crate))}_NIF_BUILD"
+
+      config =
+        cond do
+          System.get_env(env_var_name) in ["1", "true"] ->
+            Rustler.Compiler.compile_crate(config)
+
+          Rustler.Config.use_precompilation?(config) ->
+            case Rustler.Precompiled.download_or_reuse_nif_file(config) do
+              {:ok, new_config} ->
+                new_config
+
+              {:error, precomp_error} ->
+                error =
+                  "Error while downloading precompiled NIF: #{precomp_error}\n\n" <>
+                    "Set #{env_var_name}=1 env var to compile the NIF from scratch. " <>
+                    "You can also configure this application to force compilation:\n\n" <>
+                    "    config #{inspect(config.otp_app)}, #{inspect(__MODULE__)}, skip_compilation?: false\n"
+
+                if Mix.env() == :prod do
+                  raise error
+                else
+                  Logger.debug(error)
+                  Rustler.Compiler.compile_crate(config)
+                end
+            end
+
+          config.skip_compilation? ->
+            config
+
+          true ->
+            Rustler.Compiler.compile_crate(config)
+        end
 
       for resource <- config.external_resources do
         @external_resource resource

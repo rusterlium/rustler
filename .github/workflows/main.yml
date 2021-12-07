@@ -122,6 +122,9 @@ jobs:
       - name: Hex
         run: mix local.hex --force
 
+      - name: Rebar
+        run: mix local.rebar --force
+
       - name: Test rustler_mix
         working-directory: rustler_mix
         run: |
@@ -138,6 +141,7 @@ jobs:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         pair:
           - { erlang: "24.1.7", elixir: "1.13.0" }
