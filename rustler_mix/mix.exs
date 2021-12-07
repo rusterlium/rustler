@@ -9,7 +9,7 @@ defmodule Rustler.Mixfile do
       app: :rustler,
       name: "Rustler",
       version: @version,
-      elixir: "~> 1.6",
+      elixir: "~> 1.11",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
