@@ -93,8 +93,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-elixir@v1
         with:
-          otp-version: 22.x
-          elixir-version: 1.6
+          otp-version: "24.1.7"
+          elixir-version: 1.13
 
       - name: Test rustler_mix
         working-directory: rustler_mix
