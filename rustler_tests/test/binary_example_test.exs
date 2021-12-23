@@ -13,11 +13,11 @@ defmodule BinaryExampleTest do
     assert_exists(name, :os.type())
   end
 
-  defp assert_exists(name, {:win32, _} = type) do
+  defp assert_exists(name, {:win32, _} = _type) do
     assert File.exists?("priv/native/#{name}.exe")
   end
 
-  defp assert_exists(name, type) do
+  defp assert_exists(name, _type) do
     assert File.exists?("priv/native/#{name}")
   end
 end
