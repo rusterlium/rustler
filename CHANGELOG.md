@@ -7,16 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
-## [Unreleased]
+## [0.23.0] - 2021-12-22
 
 ### Added
 
 - `NifException` for using Elixir exception structs
+- Hashing for term
+- Hash and Equality for `Binary` and `OwnedBinary`
 
 ### Changed
 
+- Rustler changed its supported range of OTP and Elixir versions. We aim to support the three newest versions of OTP and Elixir.
 - The decoder for `Range` requires that `:step` equals `1`. The `:step` field was introduced with
   Elixir v1.12 and cannot be represented with Rust's `RangeInclusive`.
+- NIF API bindings are generated using Rust
+
+## Fixed
+
+- `mix rustler.new` with Elixir v1.13
+- Template config for `macos`
+- Crash if metadata cannot be retrieved while compiling (#398)
 
 ## [0.22.2] - 2021-10-07
 
