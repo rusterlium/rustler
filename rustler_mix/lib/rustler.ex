@@ -43,6 +43,24 @@ defmodule Rustler do
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)
 
+    * `:load_data_fun` - `{Module, :function}` to dynamically generate `load_data`.
+      Default value: `nil`.
+
+      This parameter is mutually exclusive with `load_data`
+      which means that `load_data` has to be set to it's default value.
+
+      Example
+
+        defmodule NIF do
+          use Rustler, load_data_fun: {Deployment, :nif_data}
+        end
+
+        defmodule Deployment do
+          def nif_data do
+            :code.priv_dir(:otp_app) |> IO.iodata_to_binary()
+          end
+        end
+
     * `:load_from` - This option allows control over where the final artifact should be
       loaded from at runtime. By default the compiled artifact is loaded from the
       owning `:otp_app`'s `priv/native` directory. This option comes in handy in
@@ -86,6 +104,7 @@ defmodule Rustler do
       if config.lib do
         @load_from config.load_from
         @load_data config.load_data
+        @load_data_fun config.load_data_fun
 
         @before_compile Rustler
       end
@@ -109,8 +128,37 @@ defmodule Rustler do
           |> Application.app_dir(path)
           |> to_charlist()
 
-        :erlang.load_nif(load_path, @load_data)
+        load_data = Rustler.construct_load_data(@load_data, @load_data_fun)
+
+        :erlang.load_nif(load_path, load_data)
       end
+    end
+  end
+
+  def construct_load_data(load_data, load_data_fun) do
+    default_load_data_value = %Rustler.Compiler.Config{}.load_data
+    default_fun_value = %Rustler.Compiler.Config{}.load_data_fun
+
+    case {load_data, load_data_fun} do
+      {load_data, ^default_fun_value} ->
+        load_data
+
+      {^default_load_data_value, {module, function}}
+      when is_atom(module) and is_atom(function) ->
+        apply(module, function, [])
+
+      {^default_load_data_value, provided_value} ->
+        raise """
+        `load_data` has to be `{Module, :function}`.
+        Instead received: #{inspect(provided_value)}
+        """
+
+      {load_data, load_data_fun} ->
+        raise """
+        Only `load_data` or `load_data_fun` can be provided. Instead received:
+        >>> load_data: #{inspect(load_data)}
+        >>> load_data_fun: #{inspect(load_data_fun)}
+        """
     end
   end
 
