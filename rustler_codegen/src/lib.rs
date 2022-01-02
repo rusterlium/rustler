@@ -28,7 +28,7 @@ enum RustlerAttr {
     Tag(String),
 }
 
-/// Implementation of a Native Implementated Function (NIF) macro that lets the user annotate
+/// Implementation of a Native Implemented Function (NIF) macro that lets the user annotate
 /// a function that will be wrapped in higer-level NIF implementation.
 ///
 /// ```ignore
@@ -61,7 +61,7 @@ pub fn init(input: TokenStream) -> TokenStream {
     output.into()
 }
 
-/// Implementation of a Native Implementated Function (NIF) macro that lets the user annotate
+/// Implementation of a Native Implemented Function (NIF) macro that lets the user annotate
 /// a function that will be wrapped in higer-level NIF implementation.
 ///
 /// ```ignore

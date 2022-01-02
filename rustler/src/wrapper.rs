@@ -1,6 +1,6 @@
 //! Contains basic wrappers for the Erlang NIF API. Should not be used directly.
 //!
-//! This module should preform validation and make them (reasonably) safe and easy to
+//! This module should perform validation and make them (reasonably) safe and easy to
 //! use from Rust. This module should try to be as non-opinionated as possible, and
 //! should try to stick as close as possible to the original C API.
 //!

@@ -10,7 +10,7 @@
 /// The second argument is a list of 3-tuples. Each tuple contains information on a single exported
 /// NIF function. The first tuple item is the name you want to export the function into, the second
 /// is the arity (number of arguments) of the exported function. The third argument is a
-/// indentifier of a rust function. This is where your actual NIF will be implemented.
+/// identifier of a rust function. This is where your actual NIF will be implemented.
 ///
 /// The third argument is an `Option<fn(env: &Env, load_info: Term) -> bool>`. If this is
 /// `Some`, the function will execute when the NIF is first loaded by the BEAM.
