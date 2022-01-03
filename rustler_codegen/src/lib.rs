@@ -1,14 +1,6 @@
 #![recursion_limit = "128"]
 
-extern crate proc_macro;
 use proc_macro::TokenStream;
-
-extern crate heck;
-extern crate proc_macro2;
-extern crate syn;
-
-#[macro_use]
-extern crate quote;
 
 mod context;
 mod ex_struct;
