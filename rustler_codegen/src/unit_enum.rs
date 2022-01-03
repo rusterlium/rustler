@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 
-use heck::SnakeCase;
+use heck::ToSnakeCase;
 use syn::{self, spanned::Spanned, Fields, Ident, Variant};
 
 use super::context::Context;
