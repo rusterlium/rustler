@@ -92,7 +92,7 @@ macro_rules! slice_args {
     }};
 }
 
-/// Internal macro for implenting a ErlNifEntry-creating function.
+/// Internal macro for implementing a ErlNifEntry-creating function.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! get_entry {

@@ -2,7 +2,7 @@
 /// It reads from the RUSTLER_NIF_VERSION env var.
 ///
 /// If this env var is not present we try to read from the installed Erlang.
-/// If the environment doens't have Erlang installed, then we use the latest
+/// If the environment doesn't have Erlang installed, then we use the latest
 /// NIF version and write a warning to stderr.
 use std::env;
 use std::process::Command;

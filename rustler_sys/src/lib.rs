@@ -59,13 +59,13 @@ The `erlang_nif-sys` analog of [`ERL_NIF_INIT()`](http://www.erlang.org/doc/man/
 
 `name` is a string literal indicating the name of the function as seen from Erlang code.
 `arity` is an integer indicating how many parameter this function takes as seen from Erlang code.
-`function` is the Rust implentation of the NIF and must be of the form
+`function` is the Rust implementation of the NIF and must be of the form
 `Fn(env: *mut ErlNifEnv, argc: c_int, args: *const ERL_NIF_TERM) -> ERL_NIF_TERM`.  This is usually a plain
 Rust function, but closures are permitted.
 `flags` is optional and allows you to specify if this NIF is to run on a dirty scheduler.  See [dirty NIFs](http://www.erlang.org/doc/man/erl_nif.html#dirty_nifs)
 in the Erlang docs.
 
-The `options` are the NIF module intialization functions [`load`](http://www.erlang.org/doc/man/erl_nif.html#load), [`reload`](http://www.erlang.org/doc/man/erl_nif.html#reload),
+The `options` are the NIF module initialization functions [`load`](http://www.erlang.org/doc/man/erl_nif.html#load), [`reload`](http://www.erlang.org/doc/man/erl_nif.html#reload),
 [`upgrade`](http://www.erlang.org/doc/man/erl_nif.html#upgrade), and [`unload`](http://www.erlang.org/doc/man/erl_nif.html#unload).
 Each is optional and is specified in struct-init style if present.  If no options are needed,
 the curly braces may be elided.  Stub implementation of all these functions looks something like:
