@@ -23,16 +23,13 @@
 //! For more information about this, see [the documentation for
 //! rustler](https://hexdocs.pm/rustler).
 
-#[macro_use(enif_snprintf)]
-extern crate rustler_sys;
-
 #[doc(hidden)]
 pub mod wrapper;
 
 #[doc(hidden)]
 pub mod codegen_runtime;
 
-pub extern crate lazy_static;
+pub use lazy_static;
 
 #[macro_use]
 pub mod types;

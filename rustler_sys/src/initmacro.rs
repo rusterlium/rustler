@@ -56,8 +56,6 @@ macro_rules! platform_nif_init {
 ///
 /// # Examples
 /// ```
-/// #[macro_use]
-/// extern crate rustler_sys;
 /// use rustler_sys::*;
 /// use std::mem;
 ///

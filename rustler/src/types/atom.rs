@@ -146,8 +146,6 @@ unsafe impl Send for Atom {}
 ///
 /// For example, this code:
 ///
-///     #[macro_use] extern crate rustler;
-///
 ///     mod my_atoms {
 ///         rustler::atoms! {
 ///             jpeg,
@@ -159,7 +157,6 @@ unsafe impl Send for Atom {}
 ///
 /// Multiple atoms can be defined. Each one can have its own doc comment and other attributes.
 ///
-///     # #[macro_use] extern crate rustler;
 ///     rustler::atoms! {
 ///         /// The `jpeg` atom.
 ///         jpeg,
@@ -175,7 +172,6 @@ unsafe impl Send for Atom {}
 /// When you need an atom that's not a legal Rust function name, write `NAME = "ATOM"`, like
 /// this:
 ///
-///     # #[macro_use] extern crate rustler;
 ///     rustler::atoms! {
 ///         /// The `mod` atom. The function isn't called `mod` because that's
 ///         /// a Rust keyword.

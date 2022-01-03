@@ -11,8 +11,6 @@ A NIF module is built by creating a new crate that uses `erlang_nif-sys` as a de
 All NIF functions must have the following signature:
 
 ```
-#[macro_use]
-extern crate rustler_sys;
 use rustler_sys::*;
 # fn main(){} //0
 fn my_nif(env: *mut ErlNifEnv,
@@ -28,8 +26,6 @@ fn my_nif(env: *mut ErlNifEnv,
 
 ## For the Impatient
 ```
-#[macro_use]
-extern crate rustler_sys;
 use rustler_sys::*;
 
 nif_init!("my_nif_module",[
@@ -71,8 +67,6 @@ Each is optional and is specified in struct-init style if present.  If no option
 the curly braces may be elided.  Stub implementation of all these functions looks something like:
 
 ```
-#[macro_use]
-extern crate rustler_sys;
 use rustler_sys::*;
 
 nif_init!("mymod", [], {load: load, reload: reload, upgrade: upgrade, unload: unload});
@@ -103,9 +97,9 @@ Below is an example of invoking NIF APIs along with an approach for dealing with
 the the `args` parameter.
 
 ```
-extern crate rustler_sys;
 use rustler_sys::*;
 use std::mem;
+
 fn native_add(env: *mut ErlNifEnv,
               argc: c_int,
               args: *const ERL_NIF_TERM) -> ERL_NIF_TERM {
@@ -129,9 +123,6 @@ fn native_add(env: *mut ErlNifEnv,
 
 // Don't throw warnings on NIF naming conventions
 #![allow(non_camel_case_types)]
-
-#[cfg(windows)]
-extern crate unreachable;
 
 #[macro_use]
 mod initmacro;

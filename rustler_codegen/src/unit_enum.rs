@@ -1,4 +1,5 @@
 use proc_macro2::{Span, TokenStream};
+use quote::{quote, quote_spanned};
 
 use heck::SnakeCase;
 use syn::{self, spanned::Spanned, Fields, Ident, Variant};

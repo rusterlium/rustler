@@ -9,7 +9,7 @@ pub fn fmt(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     let mut n = 0;
     for _ in 0..10 {
         let i = unsafe {
-            enif_snprintf!(
+            rustler_sys::enif_snprintf!(
                 bytes.as_mut_ptr() as *mut c_char,
                 bytes.capacity(),
                 b"%T\x00" as *const u8 as *const c_char,

@@ -1,5 +1,3 @@
-extern crate rustler_sys;
-
 #[cfg(unix)]
 #[test]
 fn test1() {
