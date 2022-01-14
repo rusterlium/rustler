@@ -307,7 +307,7 @@ defmodule Rustler.Compiler do
 
     output_dir =
       if is_binary(target) do
-        config.target <> "/" <> Atom.to_string(config.mode)
+        Path.join([config.target, Atom.to_string(config.mode)])
       else
         Atom.to_string(config.mode)
       end
