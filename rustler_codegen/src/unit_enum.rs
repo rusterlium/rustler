@@ -67,7 +67,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
+    let enum_type = &ctx.ident_with_generics;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<TokenStream> = variants
@@ -103,7 +103,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 }
 
 fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
+    let enum_type = &ctx.ident_with_generics;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<TokenStream> = variants

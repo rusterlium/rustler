@@ -2,13 +2,26 @@ defmodule AddStruct do
   defstruct lhs: 0, rhs: 0
 end
 
+defmodule GenericStruct do
+  defstruct lhs: 0, rhs: "hi"
+end
+
 defmodule AddException do
   defexception message: ""
+end
+
+defmodule GenericException do
+  defexception message: "", t: 0
 end
 
 defmodule AddRecord do
   import Record
   defrecord :record, lhs: 1, rhs: 2
+end
+
+defmodule GenericRecord do
+  import Record
+  defrecord :generic_record, field1: 1, field2: "hi"
 end
 
 defmodule NewtypeRecord do
@@ -39,6 +52,45 @@ defmodule RustlerTest.CodegenTest do
     end
   end
 
+  describe "generic tuple" do
+    test "transcoder" do
+      value = {1, 2}
+      assert value == RustlerTest.generic_tuple_echo_usize(value)
+
+      value = {"foo", "bar"}
+      assert value == RustlerTest.generic_tuple_echo_str(value)
+    end
+
+    test "with invalid tuple" do
+      # This is invalid because they have different types
+      value = {"invalid", 2}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field t1 on GenericTuple\"",
+                   fn ->
+                     RustlerTest.generic_tuple_echo_usize(value)
+                   end
+    end
+  end
+
+  describe "generic tuple 2" do
+    test "transcoder" do
+      value = {1, -23, "foo"}
+      assert value == RustlerTest.generic_tuple2_echo(value)
+    end
+
+    test "with invalid tuple" do
+      # This is invalid because they have different types
+      value = {1, "invalid", :bar}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field u on GenericTuple2\"",
+                   fn ->
+                     RustlerTest.generic_tuple2_echo(value)
+                   end
+    end
+  end
+
   describe "map" do
     test "transcoder" do
       value = %{lhs: 1, rhs: 2}
@@ -50,6 +102,21 @@ defmodule RustlerTest.CodegenTest do
 
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
         assert value == RustlerTest.map_echo(value)
+      end
+    end
+  end
+
+  describe "generic map" do
+    test "transcoder" do
+      value = %{lhs: 1, rhs: "hi"}
+      assert value == RustlerTest.generic_map_echo(value)
+    end
+
+    test "with invalid map" do
+      value = %{lhs: "invalid", rhs: 2}
+
+      assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
+        assert value == RustlerTest.generic_map_echo(value)
       end
     end
   end
@@ -76,6 +143,28 @@ defmodule RustlerTest.CodegenTest do
     end
   end
 
+  describe "generic struct" do
+    test "transcoder" do
+      value = %GenericStruct{lhs: 45, rhs: "hi"}
+      assert value == RustlerTest.generic_struct_echo(value)
+
+      assert %ErlangError{original: :invalid_struct} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.generic_struct_echo(DateTime.utc_now())
+               end)
+    end
+
+    test "with invalid struct" do
+      value = %GenericStruct{lhs: "lhs", rhs: 123}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :lhs on %GenericStruct{}\"",
+                   fn ->
+                     RustlerTest.generic_struct_echo(value)
+                   end
+    end
+  end
+
   describe "exception" do
     test "transcoder" do
       value = %AddException{message: "testing"}
@@ -94,6 +183,28 @@ defmodule RustlerTest.CodegenTest do
                    "Erlang error: \"Could not decode field :message on %AddException{}\"",
                    fn ->
                      RustlerTest.exception_echo(value)
+                   end
+    end
+  end
+
+  describe "generic exception" do
+    test "transcoder" do
+      value = %GenericException{message: "testing"}
+      assert value == RustlerTest.generic_exception_echo(value)
+
+      assert %ErlangError{original: :invalid_struct} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.generic_exception_echo(DateTime.utc_now())
+               end)
+    end
+
+    test "with invalid struct" do
+      value = %GenericException{message: 'this is a charlist', t: 23}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :message on %GenericException{}\"",
+                   fn ->
+                     RustlerTest.generic_exception_echo(value)
                    end
     end
   end
@@ -125,6 +236,38 @@ defmodule RustlerTest.CodegenTest do
       message = "Erlang error: \"Could not decode field rhs on Record AddRecord\""
 
       assert_raise ErlangError, message, fn -> RustlerTest.record_echo(value) end
+    end
+  end
+
+  describe "generic record" do
+    test "transcoder" do
+      require GenericRecord
+      value = GenericRecord.generic_record()
+      assert value == RustlerTest.generic_record_echo(value)
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn -> RustlerTest.generic_record_echo({}) end)
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.generic_record_echo({:wrong_tag, 1, "hi"})
+               end)
+    end
+
+    test "with invalid Record structure" do
+      assert_raise ErlangError,
+                   "Erlang error: \"Invalid Record structure for GenericRecord\"",
+                   fn ->
+                     RustlerTest.generic_record_echo(:somethingelse)
+                   end
+    end
+
+    test "with invalid Record" do
+      require GenericRecord
+      value = GenericRecord.generic_record(field1: :invalid, field2: 23)
+      message = "Erlang error: \"Could not decode field field1 on Record GenericRecord\""
+
+      assert_raise ErlangError, message, fn -> RustlerTest.generic_record_echo(value) end
     end
   end
 
@@ -292,6 +435,18 @@ defmodule RustlerTest.CodegenTest do
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.untagged_enum_echo([1, 2, 3, 4])
+             end)
+  end
+
+  test "generic untagged enum transcoder" do
+    assert 123 == RustlerTest.generic_untagged_enum_echo(123)
+    assert %{lhs: 23, rhs: 42} == RustlerTest.generic_untagged_enum_echo(%{lhs: 23, rhs: 42})
+    assert "hello" == RustlerTest.generic_untagged_enum_echo("hello")
+    assert RustlerTest.generic_untagged_enum_echo(true)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.generic_untagged_enum_echo([1, 2, 3, 4])
              end)
   end
 

@@ -16,10 +16,11 @@ use super::RustlerAttr;
 pub(crate) struct Context<'a> {
     pub attrs: Vec<RustlerAttr>,
     pub ident: &'a proc_macro2::Ident,
-    pub ident_with_lifetime: proc_macro2::TokenStream,
+    pub ident_with_generics: proc_macro2::TokenStream,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
     pub is_tuple_struct: bool,
+    pub type_param_idents: Vec<&'a Ident>,
 }
 
 impl<'a> Context<'a> {
@@ -44,11 +45,37 @@ impl<'a> Context<'a> {
             _ => panic!("Struct can only have one lifetime argument"),
         };
 
+        let type_param_idents = ast
+            .generics
+            .type_params()
+            .map(|type_param| {
+                if !type_param.attrs.is_empty() {
+                    panic!("Attributes for type parameters are currently not supported.");
+                }
+                if !type_param.bounds.is_empty() {
+                    panic!("Type parameter bounds are currently not supported.");
+                }
+                if type_param.eq_token.is_some() {
+                    panic!("Type parameter constraints are currently not supported.");
+                }
+                if type_param.default.is_some() {
+                    panic!("Type parameter defaults are currently not supported.");
+                }
+                &type_param.ident
+            })
+            .collect::<Vec<_>>();
+
         let ident = &ast.ident;
-        let ident_with_lifetime = if has_lifetime {
-            quote! { #ident <'a> }
+
+        let lifetimes = if has_lifetime {
+            vec![quote! {'a}]
         } else {
+            Vec::new()
+        };
+        let ident_with_generics = if type_param_idents.is_empty() && lifetimes.is_empty() {
             quote! { #ident }
+        } else {
+            quote! { #ident < #(#lifetimes,)* #(#type_param_idents),* > }
         };
 
         let variants = match ast.data {
@@ -72,10 +99,11 @@ impl<'a> Context<'a> {
         Self {
             attrs,
             ident,
-            ident_with_lifetime,
+            ident_with_generics,
             variants,
             struct_fields,
             is_tuple_struct,
+            type_param_idents,
         }
     }
 

@@ -19,6 +19,15 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
         .map(|ref n| syn::Ident::new(n, Span::call_site()))
         .unwrap_or_else(|| name.clone());
 
+    if fun.sig.generics.type_params().next().is_some() {
+        panic!(
+            "Cannot apply the nif macro to polymorphic functions. \
+            Since Erlang is untyped, rustler cannot know the type of expected inputs and outputs, \
+            and therefore doesn't know which decoder and encoder to apply. \
+            You need to monomorphize your function by giving explicit, non-generic types."
+        );
+    }
+
     quote! {
         #[allow(non_camel_case_types)]
         pub struct #name;

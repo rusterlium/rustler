@@ -49,8 +49,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
+    let struct_type = &ctx.ident_with_generics;
     let struct_name = ctx.ident;
+    let type_param_idents = &ctx.type_param_idents;
 
     let idents: Vec<_> = fields
         .iter()
@@ -77,7 +78,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .unzip();
 
     let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
+        impl<'a #(, #type_param_idents : 'a + ::rustler::Decoder<'a>)*> ::rustler::Decoder<'a> for #struct_type {
             fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
@@ -109,7 +110,8 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 }
 
 fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
+    let struct_type = &ctx.ident_with_generics;
+    let type_param_idents = &ctx.type_param_idents;
 
     let field_defs: Vec<TokenStream> = fields
         .iter()
@@ -124,7 +126,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .collect();
 
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_type {
+        impl<'b #(, #type_param_idents: ::rustler::Encoder)*> ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
 
