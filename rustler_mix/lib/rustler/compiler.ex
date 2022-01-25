@@ -122,6 +122,10 @@ defmodule Rustler.Compiler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args
 
+  defp get_target_os_type(nil) do
+    :os.type()
+  end
+
   defp get_target_os_type(target) when is_binary(target) do
     case target do
       "aarch64-apple-darwin" -> {:unix, :darwin}
@@ -132,15 +136,15 @@ defmodule Rustler.Compiler do
       "aarch64-fuchsia" -> {:unix, :linux}
       "aarch64-linux-android" -> {:unix, :linux}
       "aarch64-pc-windows-msvc" -> {:win32, :nt}
-      "aarch64-unknown-freebsd" -> {:unix, :bsd}
+      "aarch64-unknown-freebsd" -> {:unix, :freebsd}
       "aarch64-unknown-hermit" -> {:unix, :linux}
       "aarch64-unknown-linux-gnu" -> {:unix, :linux}
       "aarch64-unknown-linux-gnu_ilp32" -> {:unix, :linux}
       "aarch64-unknown-linux-musl" -> {:unix, :linux}
-      "aarch64-unknown-netbsd" -> {:unix, :bsd}
+      "aarch64-unknown-netbsd" -> {:unix, :netbsd}
       "aarch64-unknown-none" -> {:unix, :linux}
       "aarch64-unknown-none-softfloat" -> {:unix, :linux}
-      "aarch64-unknown-openbsd" -> {:unix, :linux}
+      "aarch64-unknown-openbsd" -> {:unix, :openbsd}
       "aarch64-unknown-redox" -> {:unix, :linux}
       "aarch64-unknown-uefi" -> {:unix, :linux}
       "aarch64-uwp-windows-msvc" -> {:win32, :nt}
@@ -158,16 +162,16 @@ defmodule Rustler.Compiler do
       "armv5te-unknown-linux-gnueabi" -> {:unix, :linux}
       "armv5te-unknown-linux-musleabi" -> {:unix, :linux}
       "armv5te-unknown-linux-uclibceabi" -> {:unix, :linux}
-      "armv6-unknown-freebsd" -> {:unix, :bsd}
-      "armv6-unknown-netbsd-eabihf" -> {:unix, :bsd}
+      "armv6-unknown-freebsd" -> {:unix, :freebsd}
+      "armv6-unknown-netbsd-eabihf" -> {:unix, :netbsd}
       "armv7-apple-ios" -> {:unix, :darwin}
       "armv7-linux-androideabi" -> {:unix, :linux}
-      "armv7-unknown-freebsd" -> {:unix, :bsd}
+      "armv7-unknown-freebsd" -> {:unix, :freebsd}
       "armv7-unknown-linux-gnueabi" -> {:unix, :linux}
       "armv7-unknown-linux-gnueabihf" -> {:unix, :linux}
       "armv7-unknown-linux-musleabi" -> {:unix, :linux}
       "armv7-unknown-linux-musleabihf" -> {:unix, :linux}
-      "armv7-unknown-netbsd-eabihf" -> {:unix, :bsd}
+      "armv7-unknown-netbsd-eabihf" -> {:unix, :netbsd}
       "armv7-wrs-vxworks-eabihf" -> {:unix, :linux}
       "armv7a-none-eabi" -> {:unix, :linux}
       "armv7a-none-eabihf" -> {:unix, :linux}
@@ -187,12 +191,12 @@ defmodule Rustler.Compiler do
       "i686-linux-android" -> {:unix, :linux}
       "i686-pc-windows-gnu" -> {:win32, :nt}
       "i686-pc-windows-msvc" -> {:win32, :nt}
-      "i686-unknown-freebsd" -> {:unix, :bsd}
+      "i686-unknown-freebsd" -> {:unix, :freebsd}
       "i686-unknown-haiku" -> {:unix, :linux}
       "i686-unknown-linux-gnu" -> {:unix, :linux}
       "i686-unknown-linux-musl" -> {:unix, :linux}
-      "i686-unknown-netbsd" -> {:unix, :bsd}
-      "i686-unknown-openbsd" -> {:unix, :linux}
+      "i686-unknown-netbsd" -> {:unix, :netbsd}
+      "i686-unknown-openbsd" -> {:unix, :openbsd}
       "i686-unknown-uefi" -> {:unix, :linux}
       "i686-uwp-windows-gnu" -> {:win32, :nt}
       "i686-uwp-windows-msvc" -> {:win32, :nt}
@@ -215,19 +219,19 @@ defmodule Rustler.Compiler do
       "mipsisa64r6el-unknown-linux-gnuabi64" -> {:unix, :linux}
       "msp430-none-elf" -> {:unix, :linux}
       "nvptx64-nvidia-cuda" -> {:unix, :linux}
-      "powerpc-unknown-freebsd" -> {:unix, :bsd}
+      "powerpc-unknown-freebsd" -> {:unix, :freebsd}
       "powerpc-unknown-linux-gnu" -> {:unix, :linux}
       "powerpc-unknown-linux-gnuspe" -> {:unix, :linux}
       "powerpc-unknown-linux-musl" -> {:unix, :linux}
-      "powerpc-unknown-netbsd" -> {:unix, :bsd}
-      "powerpc-unknown-openbsd" -> {:unix, :linux}
+      "powerpc-unknown-netbsd" -> {:unix, :netbsd}
+      "powerpc-unknown-openbsd" -> {:unix, :openbsd}
       "powerpc-wrs-vxworks" -> {:unix, :linux}
       "powerpc-wrs-vxworks-spe" -> {:unix, :linux}
-      "powerpc64-unknown-freebsd" -> {:unix, :bsd}
+      "powerpc64-unknown-freebsd" -> {:unix, :freebsd}
       "powerpc64-unknown-linux-gnu" -> {:unix, :linux}
       "powerpc64-unknown-linux-musl" -> {:unix, :linux}
       "powerpc64-wrs-vxworks" -> {:unix, :linux}
-      "powerpc64le-unknown-freebsd" -> {:unix, :bsd}
+      "powerpc64le-unknown-freebsd" -> {:unix, :freebsd}
       "powerpc64le-unknown-linux-gnu" -> {:unix, :linux}
       "powerpc64le-unknown-linux-musl" -> {:unix, :linux}
       "riscv32gc-unknown-linux-gnu" -> {:unix, :linux}
@@ -244,8 +248,8 @@ defmodule Rustler.Compiler do
       "s390x-unknown-linux-musl" -> {:unix, :linux}
       "sparc-unknown-linux-gnu" -> {:unix, :linux}
       "sparc64-unknown-linux-gnu" -> {:unix, :linux}
-      "sparc64-unknown-netbsd" -> {:unix, :bsd}
-      "sparc64-unknown-openbsd" -> {:unix, :linux}
+      "sparc64-unknown-netbsd" -> {:unix, :netbsd}
+      "sparc64-unknown-openbsd" -> {:unix, :openbsd}
       "sparcv9-sun-solaris" -> {:unix, :sunos}
       "thumbv4t-none-eabi" -> {:unix, :linux}
       "thumbv6m-none-eabi" -> {:unix, :linux}
@@ -276,7 +280,7 @@ defmodule Rustler.Compiler do
       "x86_64-pc-windows-msvc" -> {:win32, :nt}
       "x86_64-sun-solaris" -> {:unix, :sunos}
       "x86_64-unknown-dragonfly" -> {:unix, :linux}
-      "x86_64-unknown-freebsd" -> {:unix, :bsd}
+      "x86_64-unknown-freebsd" -> {:unix, :freebsd}
       "x86_64-unknown-haiku" -> {:unix, :linux}
       "x86_64-unknown-hermit" -> {:unix, :linux}
       "x86_64-unknown-illumos" -> {:unix, :linux}
@@ -284,20 +288,16 @@ defmodule Rustler.Compiler do
       "x86_64-unknown-linux-gnu" -> {:unix, :linux}
       "x86_64-unknown-linux-gnux32" -> {:unix, :linux}
       "x86_64-unknown-linux-musl" -> {:unix, :linux}
-      "x86_64-unknown-netbsd" -> {:unix, :bsd}
+      "x86_64-unknown-netbsd" -> {:unix, :netbsd}
       "x86_64-unknown-none-hermitkernel" -> {:unix, :linux}
       "x86_64-unknown-none-linuxkernel" -> {:unix, :linux}
-      "x86_64-unknown-openbsd" -> {:unix, :linux}
+      "x86_64-unknown-openbsd" -> {:unix, :openbsd}
       "x86_64-unknown-redox" -> {:unix, :linux}
       "x86_64-unknown-uefi" -> {:unix, :linux}
       "x86_64-uwp-windows-gnu" -> {:win32, :nt}
       "x86_64-uwp-windows-msvc" -> {:win32, :nt}
       "x86_64-wrs-vxworks" -> {:unix, :linux}
     end
-  end
-
-  defp get_target_os_type(_) do
-    :os.type()
   end
 
   defp handle_artifacts(path, config) do
@@ -307,7 +307,7 @@ defmodule Rustler.Compiler do
 
     output_dir =
       if is_binary(target) do
-        Path.join([config.target, Atom.to_string(config.mode)])
+        Path.join([target, Atom.to_string(config.mode)])
       else
         Atom.to_string(config.mode)
       end
@@ -351,6 +351,7 @@ defmodule Rustler.Compiler do
 
   defp make_file_names(base_name, :lib, target) do
     suffix = get_suffix(target, :lib)
+
     case get_target_os_type(target) do
       {:win32, _} -> {"#{base_name}.#{suffix}", "lib#{base_name}.dll"}
       {:unix, :darwin} -> {"lib#{base_name}.#{suffix}", "lib#{base_name}.so"}
@@ -360,6 +361,7 @@ defmodule Rustler.Compiler do
 
   defp make_file_names(base_name, :bin, target) do
     suffix = get_suffix(target, :bin)
+
     case get_target_os_type(target) do
       {:win32, _} -> {"#{base_name}.#{suffix}", "#{base_name}.exe"}
       {:unix, _} -> {base_name, base_name}
