@@ -122,13 +122,48 @@ defmodule Rustler.Compiler do
   defp make_build_mode_flag(args, :release), do: args ++ ["--release"]
   defp make_build_mode_flag(args, :debug), do: args
 
+  defp get_target_os_type(nil) do
+    :os.type()
+  end
+
+  defp get_target_os_type(target) when is_binary(target) do
+    os_type =
+      [
+        %{pattern: ~r/.*-linux.*/, os_type: {:unix, :linux}},
+        %{pattern: ~r/.*-windows.*/, os_type: {:win32, :nt}},
+        %{pattern: ~r/.*-apple.*/, os_type: {:unix, :darwin}},
+        %{pattern: ~r/.*-freebsd.*/, os_type: {:unix, :freebsd}},
+        %{pattern: ~r/.*-netbsd.*/, os_type: {:unix, :netbsd}},
+        %{pattern: ~r/.*-openbsd.*/, os_type: {:unix, :openbsd}},
+        %{pattern: ~r/.*-solaris.*/, os_type: {:unix, :solaris}}
+      ]
+      |> Enum.find(&Regex.match?(&1.pattern, target))
+
+    if os_type do
+      os_type.os_type
+    else
+      throw_error(
+        {:unknown_target,
+         "#{target} is not in the support list yet. Please report it on https://github.com/rusterlium/rustler/issues."}
+      )
+    end
+  end
+
   defp handle_artifacts(path, config) do
     toml = toml_data(path)
+    target = config.target
     names = get_name(toml, :lib) ++ get_name(toml, :bin)
 
+    output_dir =
+      if is_binary(target) do
+        Path.join([target, Atom.to_string(config.mode)])
+      else
+        Atom.to_string(config.mode)
+      end
+
     Enum.each(names, fn {name, type} ->
-      {src_file, dst_file} = make_file_names(name, type)
-      compiled_lib = Path.join([config.target_dir, Atom.to_string(config.mode), src_file])
+      {src_file, dst_file} = make_file_names(name, type, target)
+      compiled_lib = Path.join([config.target_dir, output_dir, src_file])
       destination_lib = Path.join(priv_dir(), dst_file)
 
       # If the file exists already, we delete it first. This is to ensure that another
@@ -148,17 +183,36 @@ defmodule Rustler.Compiler do
     end
   end
 
-  defp make_file_names(base_name, :lib) do
-    case :os.type() do
-      {:win32, _} -> {"#{base_name}.dll", "lib#{base_name}.dll"}
-      {:unix, :darwin} -> {"lib#{base_name}.dylib", "lib#{base_name}.so"}
-      {:unix, _} -> {"lib#{base_name}.so", "lib#{base_name}.so"}
+  defp get_suffix(target, :lib) do
+    case get_target_os_type(target) do
+      {:win32, _} -> "dll"
+      {:unix, :darwin} -> "dylib"
+      {:unix, _} -> "so"
     end
   end
 
-  defp make_file_names(base_name, :bin) do
-    case :os.type() do
-      {:win32, _} -> {"#{base_name}.exe", "#{base_name}.exe"}
+  defp get_suffix(target, :bin) do
+    case get_target_os_type(target) do
+      {:win32, _} -> "exe"
+      {:unix, _} -> ""
+    end
+  end
+
+  defp make_file_names(base_name, :lib, target) do
+    suffix = get_suffix(target, :lib)
+
+    case get_target_os_type(target) do
+      {:win32, _} -> {"#{base_name}.#{suffix}", "lib#{base_name}.dll"}
+      {:unix, :darwin} -> {"lib#{base_name}.#{suffix}", "lib#{base_name}.so"}
+      {:unix, _} -> {"lib#{base_name}.#{suffix}", "lib#{base_name}.so"}
+    end
+  end
+
+  defp make_file_names(base_name, :bin, target) do
+    suffix = get_suffix(target, :bin)
+
+    case get_target_os_type(target) do
+      {:win32, _} -> {"#{base_name}.#{suffix}", "#{base_name}.exe"}
       {:unix, _} -> {base_name, base_name}
     end
   end
