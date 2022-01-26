@@ -145,7 +145,7 @@ defmodule Rustler.Compiler do
     else
       throw_error(
         {:unknown_target,
-         "#{target} is not in the support list yet, we'd like to investigate on this if you agree to report this error to https://github.com/rusterlium/rustler/issues"}
+         "#{target} is not in the support list yet. Please report it on https://github.com/rusterlium/rustler/issues."}
       )
     end
   end
