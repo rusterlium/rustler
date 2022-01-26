@@ -138,11 +138,10 @@ defmodule Rustler.Compiler do
         %{pattern: ~r/.*-solaris.*/, os_type: {:unix, :solaris}}
       ]
       |> Enum.map(&%{matched: Regex.match?(&1.pattern, target), os_type: &1.os_type})
-      |> Enum.reject(&(&1.matched == false))
-      |> Enum.map(& &1.os_type)
+      |> Enum.find(&(&1.matched == true))
 
-    if Enum.count(os_type) == 1 do
-      Enum.at(os_type, 0)
+    if os_type do
+      os_type.os_type
     else
       throw_error({:unknown_target, target})
     end
