@@ -127,176 +127,24 @@ defmodule Rustler.Compiler do
   end
 
   defp get_target_os_type(target) when is_binary(target) do
-    case target do
-      "aarch64-apple-darwin" -> {:unix, :darwin}
-      "aarch64-apple-ios" -> {:unix, :darwin}
-      "aarch64-apple-ios-macabi" -> {:unix, :darwin}
-      "aarch64-apple-ios-sim" -> {:unix, :darwin}
-      "aarch64-apple-tvos" -> {:unix, :darwin}
-      "aarch64-fuchsia" -> {:unix, :linux}
-      "aarch64-linux-android" -> {:unix, :linux}
-      "aarch64-pc-windows-msvc" -> {:win32, :nt}
-      "aarch64-unknown-freebsd" -> {:unix, :freebsd}
-      "aarch64-unknown-hermit" -> {:unix, :linux}
-      "aarch64-unknown-linux-gnu" -> {:unix, :linux}
-      "aarch64-unknown-linux-gnu_ilp32" -> {:unix, :linux}
-      "aarch64-unknown-linux-musl" -> {:unix, :linux}
-      "aarch64-unknown-netbsd" -> {:unix, :netbsd}
-      "aarch64-unknown-none" -> {:unix, :linux}
-      "aarch64-unknown-none-softfloat" -> {:unix, :linux}
-      "aarch64-unknown-openbsd" -> {:unix, :openbsd}
-      "aarch64-unknown-redox" -> {:unix, :linux}
-      "aarch64-unknown-uefi" -> {:unix, :linux}
-      "aarch64-uwp-windows-msvc" -> {:win32, :nt}
-      "aarch64-wrs-vxworks" -> {:unix, :linux}
-      "aarch64_be-unknown-linux-gnu" -> {:unix, :linux}
-      "aarch64_be-unknown-linux-gnu_ilp32" -> {:unix, :linux}
-      "arm-linux-androideabi" -> {:unix, :linux}
-      "arm-unknown-linux-gnueabi" -> {:unix, :linux}
-      "arm-unknown-linux-gnueabihf" -> {:unix, :linux}
-      "arm-unknown-linux-musleabi" -> {:unix, :linux}
-      "arm-unknown-linux-musleabihf" -> {:unix, :linux}
-      "armebv7r-none-eabi" -> {:unix, :linux}
-      "armebv7r-none-eabihf" -> {:unix, :linux}
-      "armv4t-unknown-linux-gnueabi" -> {:unix, :linux}
-      "armv5te-unknown-linux-gnueabi" -> {:unix, :linux}
-      "armv5te-unknown-linux-musleabi" -> {:unix, :linux}
-      "armv5te-unknown-linux-uclibceabi" -> {:unix, :linux}
-      "armv6-unknown-freebsd" -> {:unix, :freebsd}
-      "armv6-unknown-netbsd-eabihf" -> {:unix, :netbsd}
-      "armv7-apple-ios" -> {:unix, :darwin}
-      "armv7-linux-androideabi" -> {:unix, :linux}
-      "armv7-unknown-freebsd" -> {:unix, :freebsd}
-      "armv7-unknown-linux-gnueabi" -> {:unix, :linux}
-      "armv7-unknown-linux-gnueabihf" -> {:unix, :linux}
-      "armv7-unknown-linux-musleabi" -> {:unix, :linux}
-      "armv7-unknown-linux-musleabihf" -> {:unix, :linux}
-      "armv7-unknown-netbsd-eabihf" -> {:unix, :netbsd}
-      "armv7-wrs-vxworks-eabihf" -> {:unix, :linux}
-      "armv7a-none-eabi" -> {:unix, :linux}
-      "armv7a-none-eabihf" -> {:unix, :linux}
-      "armv7r-none-eabi" -> {:unix, :linux}
-      "armv7r-none-eabihf" -> {:unix, :linux}
-      "armv7s-apple-ios" -> {:unix, :darwin}
-      "asmjs-unknown-emscripten" -> {:unix, :linux}
-      "avr-unknown-gnu-atmega328" -> {:unix, :linux}
-      "bpfeb-unknown-none" -> {:unix, :linux}
-      "bpfel-unknown-none" -> {:unix, :linux}
-      "hexagon-unknown-linux-musl" -> {:unix, :linux}
-      "i386-apple-ios" -> {:unix, :darwin}
-      "i586-pc-windows-msvc" -> {:win32, :nt}
-      "i586-unknown-linux-gnu" -> {:unix, :linux}
-      "i586-unknown-linux-musl" -> {:unix, :linux}
-      "i686-apple-darwin" -> {:unix, :darwin}
-      "i686-linux-android" -> {:unix, :linux}
-      "i686-pc-windows-gnu" -> {:win32, :nt}
-      "i686-pc-windows-msvc" -> {:win32, :nt}
-      "i686-unknown-freebsd" -> {:unix, :freebsd}
-      "i686-unknown-haiku" -> {:unix, :linux}
-      "i686-unknown-linux-gnu" -> {:unix, :linux}
-      "i686-unknown-linux-musl" -> {:unix, :linux}
-      "i686-unknown-netbsd" -> {:unix, :netbsd}
-      "i686-unknown-openbsd" -> {:unix, :openbsd}
-      "i686-unknown-uefi" -> {:unix, :linux}
-      "i686-uwp-windows-gnu" -> {:win32, :nt}
-      "i686-uwp-windows-msvc" -> {:win32, :nt}
-      "i686-wrs-vxworks" -> {:unix, :linux}
-      "mips-unknown-linux-gnu" -> {:unix, :linux}
-      "mips-unknown-linux-musl" -> {:unix, :linux}
-      "mips-unknown-linux-uclibc" -> {:unix, :linux}
-      "mips64-unknown-linux-gnuabi64" -> {:unix, :linux}
-      "mips64-unknown-linux-muslabi64" -> {:unix, :linux}
-      "mips64el-unknown-linux-gnuabi64" -> {:unix, :linux}
-      "mips64el-unknown-linux-muslabi64" -> {:unix, :linux}
-      "mipsel-sony-psp" -> {:unix, :linux}
-      "mipsel-unknown-linux-gnu" -> {:unix, :linux}
-      "mipsel-unknown-linux-musl" -> {:unix, :linux}
-      "mipsel-unknown-linux-uclibc" -> {:unix, :linux}
-      "mipsel-unknown-none" -> {:unix, :linux}
-      "mipsisa32r6-unknown-linux-gnu" -> {:unix, :linux}
-      "mipsisa32r6el-unknown-linux-gnu" -> {:unix, :linux}
-      "mipsisa64r6-unknown-linux-gnuabi64" -> {:unix, :linux}
-      "mipsisa64r6el-unknown-linux-gnuabi64" -> {:unix, :linux}
-      "msp430-none-elf" -> {:unix, :linux}
-      "nvptx64-nvidia-cuda" -> {:unix, :linux}
-      "powerpc-unknown-freebsd" -> {:unix, :freebsd}
-      "powerpc-unknown-linux-gnu" -> {:unix, :linux}
-      "powerpc-unknown-linux-gnuspe" -> {:unix, :linux}
-      "powerpc-unknown-linux-musl" -> {:unix, :linux}
-      "powerpc-unknown-netbsd" -> {:unix, :netbsd}
-      "powerpc-unknown-openbsd" -> {:unix, :openbsd}
-      "powerpc-wrs-vxworks" -> {:unix, :linux}
-      "powerpc-wrs-vxworks-spe" -> {:unix, :linux}
-      "powerpc64-unknown-freebsd" -> {:unix, :freebsd}
-      "powerpc64-unknown-linux-gnu" -> {:unix, :linux}
-      "powerpc64-unknown-linux-musl" -> {:unix, :linux}
-      "powerpc64-wrs-vxworks" -> {:unix, :linux}
-      "powerpc64le-unknown-freebsd" -> {:unix, :freebsd}
-      "powerpc64le-unknown-linux-gnu" -> {:unix, :linux}
-      "powerpc64le-unknown-linux-musl" -> {:unix, :linux}
-      "riscv32gc-unknown-linux-gnu" -> {:unix, :linux}
-      "riscv32gc-unknown-linux-musl" -> {:unix, :linux}
-      "riscv32i-unknown-none-elf" -> {:unix, :linux}
-      "riscv32imac-unknown-none-elf" -> {:unix, :linux}
-      "riscv32imc-esp-espidf" -> {:unix, :linux}
-      "riscv32imc-unknown-none-elf" -> {:unix, :linux}
-      "riscv64gc-unknown-linux-gnu" -> {:unix, :linux}
-      "riscv64gc-unknown-linux-musl" -> {:unix, :linux}
-      "riscv64gc-unknown-none-elf" -> {:unix, :linux}
-      "riscv64imac-unknown-none-elf" -> {:unix, :linux}
-      "s390x-unknown-linux-gnu" -> {:unix, :linux}
-      "s390x-unknown-linux-musl" -> {:unix, :linux}
-      "sparc-unknown-linux-gnu" -> {:unix, :linux}
-      "sparc64-unknown-linux-gnu" -> {:unix, :linux}
-      "sparc64-unknown-netbsd" -> {:unix, :netbsd}
-      "sparc64-unknown-openbsd" -> {:unix, :openbsd}
-      "sparcv9-sun-solaris" -> {:unix, :sunos}
-      "thumbv4t-none-eabi" -> {:unix, :linux}
-      "thumbv6m-none-eabi" -> {:unix, :linux}
-      "thumbv7a-pc-windows-msvc" -> {:win32, :nt}
-      "thumbv7a-uwp-windows-msvc" -> {:win32, :nt}
-      "thumbv7em-none-eabi" -> {:unix, :linux}
-      "thumbv7em-none-eabihf" -> {:unix, :linux}
-      "thumbv7m-none-eabi" -> {:unix, :linux}
-      "thumbv7neon-linux-androideabi" -> {:unix, :linux}
-      "thumbv7neon-unknown-linux-gnueabihf" -> {:unix, :linux}
-      "thumbv7neon-unknown-linux-musleabihf" -> {:unix, :linux}
-      "thumbv8m.base-none-eabi" -> {:unix, :linux}
-      "thumbv8m.main-none-eabi" -> {:unix, :linux}
-      "thumbv8m.main-none-eabihf" -> {:unix, :linux}
-      "wasm32-unknown-emscripten" -> {:unix, :linux}
-      "wasm32-unknown-unknown" -> {:unix, :linux}
-      "wasm32-wasi" -> {:unix, :linux}
-      "wasm64-unknown-unknown" -> {:unix, :linux}
-      "x86_64-apple-darwin" -> {:unix, :darwin}
-      "x86_64-apple-ios" -> {:unix, :darwin}
-      "x86_64-apple-ios-macabi" -> {:unix, :darwin}
-      "x86_64-apple-tvos" -> {:unix, :darwin}
-      "x86_64-fortanix-unknown-sgx" -> {:unix, :linux}
-      "x86_64-fuchsia" -> {:unix, :linux}
-      "x86_64-linux-android" -> {:unix, :linux}
-      "x86_64-pc-solaris" -> {:unix, :linux}
-      "x86_64-pc-windows-gnu" -> {:win32, :nt}
-      "x86_64-pc-windows-msvc" -> {:win32, :nt}
-      "x86_64-sun-solaris" -> {:unix, :sunos}
-      "x86_64-unknown-dragonfly" -> {:unix, :linux}
-      "x86_64-unknown-freebsd" -> {:unix, :freebsd}
-      "x86_64-unknown-haiku" -> {:unix, :linux}
-      "x86_64-unknown-hermit" -> {:unix, :linux}
-      "x86_64-unknown-illumos" -> {:unix, :linux}
-      "x86_64-unknown-l4re-uclibc" -> {:unix, :linux}
-      "x86_64-unknown-linux-gnu" -> {:unix, :linux}
-      "x86_64-unknown-linux-gnux32" -> {:unix, :linux}
-      "x86_64-unknown-linux-musl" -> {:unix, :linux}
-      "x86_64-unknown-netbsd" -> {:unix, :netbsd}
-      "x86_64-unknown-none-hermitkernel" -> {:unix, :linux}
-      "x86_64-unknown-none-linuxkernel" -> {:unix, :linux}
-      "x86_64-unknown-openbsd" -> {:unix, :openbsd}
-      "x86_64-unknown-redox" -> {:unix, :linux}
-      "x86_64-unknown-uefi" -> {:unix, :linux}
-      "x86_64-uwp-windows-gnu" -> {:win32, :nt}
-      "x86_64-uwp-windows-msvc" -> {:win32, :nt}
-      "x86_64-wrs-vxworks" -> {:unix, :linux}
+    os_type =
+      [
+        %{pattern: ~r/.*-linux.*/, os_type: {:unix, :linux}},
+        %{pattern: ~r/.*-windows.*/, os_type: {:win32, :nt}},
+        %{pattern: ~r/.*-apple.*/, os_type: {:unix, :darwin}},
+        %{pattern: ~r/.*-freebsd.*/, os_type: {:unix, :freebsd}},
+        %{pattern: ~r/.*-netbsd.*/, os_type: {:unix, :netbsd}},
+        %{pattern: ~r/.*-openbsd.*/, os_type: {:unix, :openbsd}},
+        %{pattern: ~r/.*-solaris.*/, os_type: {:unix, :solaris}}
+      ]
+      |> Enum.map(&%{matched: Regex.match?(&1.pattern, target), os_type: &1.os_type})
+      |> Enum.reject(&(&1.matched == false))
+      |> Enum.map(& &1.os_type)
+
+    if Enum.count(os_type) == 1 do
+      Enum.at(os_type, 0)
+    else
+      throw_error({:unknown_target, target})
     end
   end
 
