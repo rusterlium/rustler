@@ -137,7 +137,7 @@ defmodule Rustler.Compiler do
         %{pattern: ~r/.*-openbsd.*/, os_type: {:unix, :openbsd}},
         %{pattern: ~r/.*-solaris.*/, os_type: {:unix, :solaris}}
       ]
-      |> Enum.find(&(Regex.match?(&1.pattern, target)))
+      |> Enum.find(&Regex.match?(&1.pattern, target))
 
     if os_type do
       os_type.os_type
