@@ -20,8 +20,8 @@ enum RustlerAttr {
     Tag(String),
 }
 
-/// Implementation of a Native Implemented Function (NIF) macro that lets the user annotate
-/// a function that will be wrapped in higer-level NIF implementation.
+/// Initialise the Native Implemented Function (NIF) environment
+/// and register NIF functions in an Elixir module.
 ///
 /// ```ignore
 /// #[rustler::nif]
@@ -53,8 +53,9 @@ pub fn init(input: TokenStream) -> TokenStream {
     output.into()
 }
 
-/// Implementation of a Native Implemented Function (NIF) macro that lets the user annotate
-/// a function that will be wrapped in higer-level NIF implementation.
+/// Wrap a function in a Native Implemented Function (NIF) implementation,
+/// so that it can be called from Elixir,
+/// with all encoding and decoding steps done automatically.
 ///
 /// ```ignore
 /// #[nif]
@@ -70,9 +71,10 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
     nif::transcoder_decorator(args, input).into()
 }
 
-/// Implementation of the `NifStruct` macro that lets the user annotate a struct that will
-/// be translated directly from an Elixir struct to a Rust struct. For example, the following
-/// struct, annotated as such:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between an Elixir struct and a Rust struct.
+///
+/// For example, annotate the following Rust struct:
 ///
 /// ```ignore
 /// #[derive(Debug, NifStruct)]
@@ -83,22 +85,27 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// This would be translated by Rustler into:
+/// Write the following corresponding Elixir struct definition:
 ///
 /// ```elixir
 /// defmodule AddStruct do
 ///   defstruct lhs: 0, rhs: 0
 /// end
 /// ```
+///
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that you can use the Elixir struct definition for it.
+
 #[proc_macro_derive(NifStruct, attributes(module, rustler))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     ex_struct::transcoder_decorator(&ast, false).into()
 }
 
-/// Implementation of the `NifException` macro that lets the user annotate a struct that will
-/// be translated directly from an Elixir exception to a Rust struct. For example, the following
-/// struct, annotated as such:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between an Elixir exception and a Rust struct.
+///
+/// For example, annotate the following struct:
 ///
 /// ```ignore
 /// #[derive(Debug, NifException)]
@@ -108,22 +115,26 @@ pub fn nif_struct(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// This would be translated by Rustler into:
+/// Write the corresponding Elixir exception definition:
 ///
 /// ```elixir
 /// defmodule AddException do
 ///   defexception message: ""
 /// end
 /// ```
+///
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that you can use the Elixir exception definition for it.
 #[proc_macro_derive(NifException, attributes(module, rustler))]
 pub fn nif_exception(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     ex_struct::transcoder_decorator(&ast, true).into()
 }
 
-/// Implementation of a macro that lets the user annotate a struct with `NifMap` so that the
-/// struct can be encoded or decoded from an Elixir map. For example, the following struct
-/// annotated as such:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between Rust struct and an Elixir map.
+///
+/// For example, annotate the following struct:
 ///
 /// ```ignore
 /// #[derive(NifMap)]
@@ -133,21 +144,31 @@ pub fn nif_exception(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// Given the values 33 and 21 for this struct, this would result, when encoded, in an elixir
+/// Create a value of that type:
+///
+/// ```ignore
+/// let value = AddMap { lhs: 33, rhs: 21 };
+/// ```
+///
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that encoding `value` would result in an elixir
 /// map with two elements like:
 ///
 /// ```elixir
 /// %{lhs: 33, rhs: 21}
 /// ```
+///
+/// And vice versa, decoding this map would result in `value`.
 #[proc_macro_derive(NifMap, attributes(rustler))]
 pub fn nif_map(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     map::transcoder_decorator(&ast).into()
 }
 
-/// Implementation of a macro that lets the user annotate a struct with `NifTuple` so that the
-/// struct can be encoded or decoded from an Elixir tuple. For example, the following struct
-/// annotated as such:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between a Rust struct and an Elixir tuple.
+///
+/// For example, annotate the following struct:
 ///
 /// ```ignore
 /// #[derive(NifTuple)]
@@ -157,12 +178,21 @@ pub fn nif_map(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// Given the values 33 and 21 for this struct, this would result, when encoded, in an elixir
+/// Create a value of that type:
+///
+/// ```ignore
+/// let value = AddMap { lhs: 33, rhs: 21 };
+/// ```
+///
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that encoding `value` would result in an elixir
 /// tuple with two elements like:
 ///
 /// ```elixir
 /// {33, 21}
 /// ```
+///
+/// And vice versa, decoding this map would result in `value`.
 ///
 /// The size of the tuple will depend on the number of elements in the struct.
 #[proc_macro_derive(NifTuple, attributes(rustler))]
@@ -171,9 +201,10 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
     tuple::transcoder_decorator(&ast).into()
 }
 
-/// Implementation of the `NifRecord` macro that lets the user annotate a struct that will
-/// be translated directly from an Elixir struct to a Rust struct. For example, the following
-/// struct, annotated as such:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between a Rust struct and an Elixir record.
+///
+/// For example, annotate the following struct:
 ///
 /// ```ignore
 /// #[derive(Debug, NifRecord)]
@@ -184,7 +215,20 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// This would be translated by Rustler into:
+/// Create a value of that type:
+///
+/// ```ignore
+/// let value = AddRecord { lhs: 33, rhs: 21 };
+/// ```
+///
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that `value` would be encoded into the following elixir value:
+///
+/// ```elixir
+/// {:record, 33, 21}
+/// ```
+///
+/// If you supply the following matching Elixir record definition:
 ///
 /// ```elixir
 /// defmodule AddRecord do
@@ -192,14 +236,20 @@ pub fn nif_tuple(input: TokenStream) -> TokenStream {
 ///   defrecord :record, [lhs: 1, rhs: 2]
 /// end
 /// ```
+///
+/// Then you can use record functions such as `AddRecord.record/0`, `AddRecord.record/1`, `AddRecord.record/2`,
+/// to work with the encoded data,
+/// and to create data that can be decoded back into your Rust struct.
 #[proc_macro_derive(NifRecord, attributes(tag, rustler))]
 pub fn nif_record(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     record::transcoder_decorator(&ast).into()
 }
 
-/// Implementation of the `NifUnitEnum` macro that lets the user annotate an enum with a unit type
-/// that will generate elixir atoms when encoded
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between an enum and a union of elixir atoms.
+///
+/// For example:
 ///
 /// ```ignore
 /// #[derive(NifUnitEnum)]
@@ -209,13 +259,27 @@ pub fn nif_record(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// An example usage in elixir would look like the following.
+/// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
+/// such that `FooBar` is encoded to, and decoded from, `:foo_bar`.
+/// - The variant name is translated from camel case to snake case for the atom name.
+/// - Each constructor is required not to have arguments, i.e. to be of unit type.
+///
+/// An example usage in Rust and Elixir would look like the following.
+///
+/// ```ignore
+/// #[rustler::nif]
+/// pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
+///     unit_enum
+/// }
+/// ```
+///
+/// (We are leaving out some boiler plate code to connect the rust code to elixir functions.)
 ///
 /// ```elixir
 /// test "unit enum transcoder" do
-///   assert :foo_bar == RustlerTest.unit_enum_echo(:foo_bar)
-///   assert :baz == RustlerTest.unit_enum_echo(:baz)
-///   assert :invalid_variant == RustlerTest.unit_enum_echo(:somethingelse)
+///   assert :foo_bar == unit_enum_echo(:foo_bar)
+///   assert :baz == unit_enum_echo(:baz)
+///   assert :invalid_variant == unit_enum_echo(:somethingelse)
 /// end
 /// ```
 ///
@@ -227,9 +291,15 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
     unit_enum::transcoder_decorator(&ast).into()
 }
 
-/// Implementation of the `NifUntaggedEnum` macro that lets the user annotate an enum that will
-/// generate elixir values when decoded. This can be used for rust enums that contain data and
-/// will generate a value based on the kind of data encoded. For example from the test code:
+/// Derives implementations for the `Encoder` and `Decoder` traits
+/// which convert between a Rust enum and a union of Elixir types.
+///
+/// This can be used for Rust enums that contain several constructors containing different types of data,
+/// each implementing the `Encoder` and `Decoder` traits.
+/// An enum value will be encoded based on the constructor used,
+/// and an Elixir value will be decoded based on the value.
+///
+/// For example from the test code:
 ///
 /// ```ignore
 /// #[derive(NifUntaggedEnum)]
@@ -239,20 +309,21 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 ///     Baz(AddStruct),
 /// }
 ///
-/// pub fn untagged_enum_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-///     let untagged_enum: UntaggedEnum = args[0].decode()?;
-///     Ok(untagged_enum.encode(env))
+/// #[rustler::nif]
+/// pub fn untagged_enum_echo(untagged_enum: UntaggedEnum) -> UntaggedEnum {
+///     untagged_enum
 /// }
 /// ```
 ///
-/// This can be used from elixir in the following manner.
+/// Adding boiler plate code to connect Rust code to elixir functions,
+/// this can be used from elixir in the following manner.
 ///
 /// ```elixir
 /// test "untagged enum transcoder" do
-///   assert 123 == RustlerTest.untagged_enum_echo(123)
-///   assert "Hello" == RustlerTest.untagged_enum_echo("Hello")
-///   assert %AddStruct{lhs: 45, rhs: 123} = RustlerTest.untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
-///   assert :invalid_variant == RustlerTest.untagged_enum_echo([1,2,3,4])
+///   assert 123 == untagged_enum_echo(123)
+///   assert "Hello" == untagged_enum_echo("Hello")
+///   assert %AddStruct{lhs: 45, rhs: 123} = untagged_enum_echo(%AddStruct{lhs: 45, rhs: 123})
+///   assert :invalid_variant == untagged_enum_echo([1,2,3,4])
 /// end
 /// ```
 ///
