@@ -73,7 +73,7 @@ rustler::init!(
         test_codegen::tuplestruct_echo,
         test_codegen::newtype_record_echo,
         test_codegen::tuplestruct_record_echo,
-        test_codegen::string_slice_lifetime,
+        test_codegen::string_slice_lifetime_echo,
         test_dirty::dirty_cpu,
         test_dirty::dirty_io,
         test_range::sum_range,

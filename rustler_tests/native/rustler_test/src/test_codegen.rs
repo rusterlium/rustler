@@ -201,8 +201,10 @@ pub struct StringSliceLifetime<'c> {
 }
 
 #[rustler::nif]
-pub fn string_slice_lifetime() -> StringSliceLifetime<'static> {
-    StringSliceLifetime { message: "hi" }
+pub fn string_slice_lifetime_echo<'a>(
+    string_slice_lifetime: StringSliceLifetime<'a>,
+) -> StringSliceLifetime<'a> {
+    string_slice_lifetime
 }
 
 pub mod reserved_keywords {
