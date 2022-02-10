@@ -380,7 +380,7 @@ defmodule RustlerTest.CodegenTest do
 
   test "string_slice_lifetime" do
     value = %StringSliceLifetime{message: "hello"}
-    assert value == string_slice_lifetime_echo(value)
+    assert value == string_slice_lifetime_echo()
   end
 
   test "reserved keywords" do
