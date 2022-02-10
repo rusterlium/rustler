@@ -65,9 +65,12 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> Toke
 }
 
 fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
+    let lifetimes = &ctx.lifetimes;
+    let mut rustler_encoder_lifetimes = vec![];
+    rustler_encoder_lifetimes.resize(lifetimes.len(), quote! { 'a });
+    let struct_type = quote! { #struct_name < #(#rustler_encoder_lifetimes),* > };
 
     let idents: Vec<_> = fields
         .iter()
@@ -172,8 +175,6 @@ fn gen_encoder(
             }
         }
     };
-
-    print!("{}", gen);
 
     gen
 }

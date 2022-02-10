@@ -43,7 +43,17 @@ impl<'a> Context<'a> {
         let lifetimes: Vec<_> = ast
             .generics
             .lifetimes()
-            .map(|lifetime_def| lifetime_def.lifetime.clone())
+            .map(|lifetime_def| {
+                if lifetime_def
+                    .lifetime
+                    .ident
+                    .to_string()
+                    .contains("__rustler")
+                {
+                    panic!("Lifetime declaration may not refer to internal rustler lifetimes")
+                }
+                lifetime_def.lifetime.clone()
+            })
             .collect();
 
         let has_lifetime = match lifetimes.len() {

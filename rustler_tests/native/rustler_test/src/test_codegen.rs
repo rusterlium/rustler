@@ -196,8 +196,8 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
 
 #[derive(NifStruct)]
 #[module = "StringSliceLifetime"]
-pub struct StringSliceLifetime<'a> {
-    message: &'a str,
+pub struct StringSliceLifetime<'c> {
+    message: &'c str,
 }
 
 #[rustler::nif]
