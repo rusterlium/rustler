@@ -22,7 +22,7 @@ defmodule TupleStructRecord do
 end
 
 defmodule StringSliceLifetime do
-  defstruct :message
+  defstruct message: ""
 end
 
 defmodule RustlerTest.CodegenTest do
@@ -379,8 +379,8 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "string_slice_lifetime" do
-    value = %StringSliceLifetime{message: "hello"}
-    assert value == string_slice_lifetime_echo()
+    value = %StringSliceLifetime{message: "hi"}
+    assert value == RustlerTest.string_slice_lifetime()
   end
 
   test "reserved keywords" do

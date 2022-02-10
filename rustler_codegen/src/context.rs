@@ -4,7 +4,7 @@
 use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{Data, Field, Fields, Ident, Lit, Meta, NestedMeta, Variant};
+use syn::{Data, Field, Fields, Ident, Lifetime, Lit, Meta, NestedMeta, Variant};
 
 use super::RustlerAttr;
 
@@ -16,6 +16,8 @@ use super::RustlerAttr;
 pub(crate) struct Context<'a> {
     pub attrs: Vec<RustlerAttr>,
     pub ident: &'a proc_macro2::Ident,
+    pub lifetimes: Vec<Lifetime>,
+    // FIXME make method
     pub ident_with_lifetime: proc_macro2::TokenStream,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
@@ -38,15 +40,22 @@ impl<'a> Context<'a> {
             attrs.push(RustlerAttr::Decode);
         }
 
-        let has_lifetime = match ast.generics.lifetimes().count() {
+        let lifetimes: Vec<_> = ast
+            .generics
+            .lifetimes()
+            .map(|lifetime_def| lifetime_def.lifetime.clone())
+            .collect();
+
+        let has_lifetime = match lifetimes.len() {
             0 => false,
             1 => true,
+            // FIXME remove restriction
             _ => panic!("Struct can only have one lifetime argument"),
         };
 
         let ident = &ast.ident;
         let ident_with_lifetime = if has_lifetime {
-            quote! { #ident <'a> }
+            quote! { #ident <#(#lifetimes),*> }
         } else {
             quote! { #ident }
         };
@@ -72,6 +81,7 @@ impl<'a> Context<'a> {
         Self {
             attrs,
             ident,
+            lifetimes,
             ident_with_lifetime,
             variants,
             struct_fields,

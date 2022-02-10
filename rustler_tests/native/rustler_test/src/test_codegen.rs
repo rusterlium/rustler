@@ -196,7 +196,7 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
 
 #[derive(NifStruct)]
 #[module = "StringSliceLifetime"]
-struct StringSliceLifetime<'a> {
+pub struct StringSliceLifetime<'a> {
     message: &'a str,
 }
 

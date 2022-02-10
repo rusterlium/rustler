@@ -77,7 +77,7 @@ defmodule RustlerTest do
   def tuplestruct_echo(_), do: err()
   def newtype_record_echo(_), do: err()
   def tuplestruct_record_echo(_), do: err()
-  def string_slice_lifetime_echo(), do: err()
+  def string_slice_lifetime(), do: err()
   def reserved_keywords_type_echo(_), do: err()
 
   def dirty_io(), do: err()
