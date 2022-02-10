@@ -21,6 +21,10 @@ defmodule TupleStructRecord do
   defrecord :tuplestruct, a: 1, b: 2, c: 3
 end
 
+defmodule StringSliceLifetime do
+  defstruct :message
+end
+
 defmodule RustlerTest.CodegenTest do
   use ExUnit.Case, async: true
 
@@ -372,6 +376,11 @@ defmodule RustlerTest.CodegenTest do
                  fn ->
                    RustlerTest.tuplestruct_record_echo("error")
                  end
+  end
+
+  test "string_slice_lifetime" do
+    value = %StringSliceLifetime{message: "hello"}
+    assert value == string_slice_lifetime_echo(value)
   end
 
   test "reserved keywords" do

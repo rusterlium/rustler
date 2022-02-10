@@ -194,6 +194,19 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
     tuplestruct
 }
 
+#[derive(NifStruct)]
+#[module = "StringSliceLifetime"]
+struct StringSliceLifetime<'a> {
+    message: &'a str,
+}
+
+#[rustler::nif]
+pub fn string_slice_lifetime_echo<'a>(
+    string_slice_lifetime: StringSliceLifetime<'a>,
+) -> StringSliceLifetime<'a> {
+    string_slice_lifetime
+}
+
 pub mod reserved_keywords {
     use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUntaggedEnum};
 
