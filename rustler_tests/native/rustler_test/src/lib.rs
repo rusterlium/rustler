@@ -45,6 +45,7 @@ rustler::init!(
         test_binary::parse_integer,
         test_binary::binary_new,
         test_binary::owned_binary_new,
+        test_binary::new_binary_new,
         test_binary::unowned_to_owned,
         test_binary::realloc_shrink,
         test_binary::realloc_grow,
