@@ -196,20 +196,18 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
 
 #[derive(NifStruct)]
 #[module = "StructLifetime"]
-pub struct StructLifetime<'c> {
-    message: &'c str,
+pub struct StructLifetime<'a> {
+    message: &'a str,
 }
 
 #[rustler::nif]
-pub fn struct_lifetime_echo<'__rustler>(
-    struct_lifetime: StructLifetime<'__rustler>,
-) -> StructLifetime<'__rustler> {
+pub fn struct_lifetime_echo<'a>(struct_lifetime: StructLifetime<'a>) -> StructLifetime<'a> {
     struct_lifetime
 }
 
 #[derive(NifTuple)]
-pub struct TupleLifetime<'l> {
-    lhs: &'l i32,
+pub struct TupleLifetime<'a> {
+    lhs: &'a str,
     rhs: i32,
 }
 
@@ -220,30 +218,30 @@ pub fn tuple_lifetime_echo(tuple: TupleLifetime<'static>) -> TupleLifetime<'stat
 
 #[derive(NifRecord)]
 #[tag = "record_lifetime"]
-pub struct RecordLifetime<'l> {
-    lhs: &'l i32,
+pub struct RecordLifetime<'a> {
+    lhs: &'a str,
     rhs: i32,
 }
 
 #[rustler::nif]
-pub fn record_lifetime_echo<'l>(record: RecordLifetime<'l>) -> RecordLifetime<'l> {
+pub fn record_lifetime_echo<'a>(record: RecordLifetime<'a>) -> RecordLifetime<'a> {
     record
 }
 
 #[derive(NifMap)]
-pub struct MapLifetime<'l> {
-    lhs: &'l i32,
+pub struct MapLifetime<'a> {
+    lhs: &'a str,
     rhs: i32,
 }
 
 #[rustler::nif]
-pub fn map_lifetime_echo<'l>(map: MapLifetime<'l>) -> MapLifetime<'l> {
+pub fn map_lifetime_echo<'a>(map: MapLifetime<'a>) -> MapLifetime<'a> {
     map
 }
 
 #[derive(NifUntaggedEnum)]
 pub enum UntaggedEnumLifetime<'a> {
-    Foo(&'a u32),
+    Foo(&'a str),
     Bar(String),
     Baz(StructLifetime<'a>),
     Bool(bool),
@@ -257,12 +255,12 @@ pub fn untagged_enum_lifetime_echo<'a>(
 }
 
 #[derive(NifTuple)]
-pub struct TupleStructLifetime<'l>(&'l i64, i64, i64);
+pub struct TupleStructLifetime<'a>(&'a str, i64, i64);
 
 #[rustler::nif]
-pub fn tuplestruct_lifetime_echo<'l>(
-    tuplestruct_lifetime: TupleStructLifetime<'l>,
-) -> TupleStructLifetime<'l> {
+pub fn tuplestruct_lifetime_echo<'a>(
+    tuplestruct_lifetime: TupleStructLifetime<'a>,
+) -> TupleStructLifetime<'a> {
     tuplestruct_lifetime
 }
 
