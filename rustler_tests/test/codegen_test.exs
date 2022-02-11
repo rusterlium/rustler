@@ -21,8 +21,13 @@ defmodule TupleStructRecord do
   defrecord :tuplestruct, a: 1, b: 2, c: 3
 end
 
-defmodule StringSliceLifetime do
+defmodule StructLifetime do
   defstruct message: ""
+end
+
+defmodule RecordLifetime do
+  import Record
+  defrecord :record_lifetime, lhs: 1, rhs: 2
 end
 
 defmodule RustlerTest.CodegenTest do
@@ -378,9 +383,75 @@ defmodule RustlerTest.CodegenTest do
                  end
   end
 
-  test "string_slice_lifetime" do
-    value = %StringSliceLifetime{message: "hello"}
-    assert value == RustlerTest.string_slice_lifetime_echo(value)
+  test "struct lifetime" do
+    value = %StructLifetime{message: "hello"}
+    assert value == RustlerTest.struct_lifetime_echo(value)
+  end
+
+  describe "record lifetime" do
+    test "transcoder" do
+      require RecordLifetime
+      value = RecordLifetime.record_lifetime()
+      assert value == RustlerTest.record_lifetime_echo(value)
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn -> RustlerTest.record_lifetime_echo({}) end)
+
+      assert %ErlangError{original: :invalid_record} ==
+               assert_raise(ErlangError, fn ->
+                 RustlerTest.record_lifetime_echo({:wrong_tag, 1, 2})
+               end)
+    end
+
+    test "with invalid Record structure" do
+      assert_raise ErlangError,
+                   "Erlang error: \"Invalid Record structure for RecordLifetime\"",
+                   fn ->
+                     RustlerTest.record_lifetime_echo(:somethingelse)
+                   end
+    end
+
+    test "with invalid Record" do
+      require RecordLifetime
+      value = RecordLifetime.record_lifetime(lhs: 5, rhs: "invalid")
+      message = "Erlang error: \"Could not decode field rhs on Record RecordLifetime\""
+
+      assert_raise ErlangError, message, fn -> RustlerTest.record_lifetime_echo(value) end
+    end
+  end
+
+  test "untagged enum lifetime" do
+    assert 123 == RustlerTest.untagged_enum_lifetime_echo(123)
+    assert "Hello" == RustlerTest.untagged_enum_lifetime_echo("Hello")
+    assert RustlerTest.untagged_enum_lifetime_echo(true)
+
+    assert %AddStruct{lhs: 45, rhs: 123} =
+             RustlerTest.untagged_enum_lifetime_echo(%AddStruct{lhs: 45, rhs: 123})
+
+    assert true == RustlerTest.untagged_enum_lifetime_echo(true)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.untagged_enum_lifetime_echo([1, 2, 3, 4])
+             end)
+  end
+
+  test "tuplestruct tuple lifetime" do
+    assert {1, 2, 3} == RustlerTest.tuplestruct_lifetime_echo({1, 2, 3})
+
+    assert_raise ArgumentError, fn ->
+      RustlerTest.tuplestruct_lifetime_echo({1, 2})
+    end
+
+    assert_raise ErlangError,
+                 "Erlang error: \"Could not decode field 1 on TupleStructLifetime\"",
+                 fn ->
+                   RustlerTest.tuplestruct_lifetime_echo({1, "with error message", 3})
+                 end
+
+    assert_raise ArgumentError, fn ->
+      RustlerTest.tuplestruct_lifetime_echo("will result in argument error")
+    end
   end
 
   test "reserved keywords" do

@@ -195,16 +195,75 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
 }
 
 #[derive(NifStruct)]
-#[module = "StringSliceLifetime"]
-pub struct StringSliceLifetime<'c> {
+#[module = "StructLifetime"]
+pub struct StructLifetime<'c> {
     message: &'c str,
 }
 
 #[rustler::nif]
-pub fn string_slice_lifetime_echo<'a>(
-    string_slice_lifetime: StringSliceLifetime<'a>,
-) -> StringSliceLifetime<'a> {
-    string_slice_lifetime
+pub fn struct_lifetime_echo<'__rustler>(
+    struct_lifetime: StructLifetime<'__rustler>,
+) -> StructLifetime<'__rustler> {
+    struct_lifetime
+}
+
+#[derive(NifTuple)]
+pub struct TupleLifetime<'l> {
+    lhs: &'l i32,
+    rhs: i32,
+}
+
+#[rustler::nif]
+pub fn tuple_lifetime_echo(tuple: TupleLifetime<'static>) -> TupleLifetime<'static> {
+    tuple
+}
+
+#[derive(NifRecord)]
+#[tag = "record_lifetime"]
+pub struct RecordLifetime<'l> {
+    lhs: &'l i32,
+    rhs: i32,
+}
+
+#[rustler::nif]
+pub fn record_lifetime_echo<'l>(record: RecordLifetime<'l>) -> RecordLifetime<'l> {
+    record
+}
+
+#[derive(NifMap)]
+pub struct MapLifetime<'l> {
+    lhs: &'l i32,
+    rhs: i32,
+}
+
+#[rustler::nif]
+pub fn map_lifetime_echo<'l>(map: MapLifetime<'l>) -> MapLifetime<'l> {
+    map
+}
+
+#[derive(NifUntaggedEnum)]
+pub enum UntaggedEnumLifetime<'a> {
+    Foo(&'a u32),
+    Bar(String),
+    Baz(StructLifetime<'a>),
+    Bool(bool),
+}
+
+#[rustler::nif]
+pub fn untagged_enum_lifetime_echo<'a>(
+    untagged_enum_lifetime: UntaggedEnumLifetime<'a>,
+) -> UntaggedEnumLifetime<'a> {
+    untagged_enum_lifetime
+}
+
+#[derive(NifTuple)]
+pub struct TupleStructLifetime<'l>(&'l i64, i64, i64);
+
+#[rustler::nif]
+pub fn tuplestruct_lifetime_echo<'l>(
+    tuplestruct_lifetime: TupleStructLifetime<'l>,
+) -> TupleStructLifetime<'l> {
+    tuplestruct_lifetime
 }
 
 pub mod reserved_keywords {
