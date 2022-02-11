@@ -201,7 +201,7 @@ pub struct StructLifetime<'a> {
 }
 
 #[rustler::nif]
-pub fn struct_lifetime_echo<'a>(struct_lifetime: StructLifetime<'a>) -> StructLifetime<'a> {
+pub fn struct_lifetime_echo(struct_lifetime: StructLifetime<'_>) -> StructLifetime<'_> {
     struct_lifetime
 }
 
@@ -212,7 +212,7 @@ pub struct TupleLifetime<'a> {
 }
 
 #[rustler::nif]
-pub fn tuple_lifetime_echo(tuple: TupleLifetime<'static>) -> TupleLifetime<'static> {
+pub fn tuple_lifetime_echo(tuple: TupleLifetime<'_>) -> TupleLifetime<'_> {
     tuple
 }
 
@@ -224,7 +224,7 @@ pub struct RecordLifetime<'a> {
 }
 
 #[rustler::nif]
-pub fn record_lifetime_echo<'a>(record: RecordLifetime<'a>) -> RecordLifetime<'a> {
+pub fn record_lifetime_echo(record: RecordLifetime<'_>) -> RecordLifetime<'_> {
     record
 }
 
@@ -235,22 +235,21 @@ pub struct MapLifetime<'a> {
 }
 
 #[rustler::nif]
-pub fn map_lifetime_echo<'a>(map: MapLifetime<'a>) -> MapLifetime<'a> {
+pub fn map_lifetime_echo(map: MapLifetime<'_>) -> MapLifetime<'_> {
     map
 }
 
 #[derive(NifUntaggedEnum)]
 pub enum UntaggedEnumLifetime<'a> {
     Foo(&'a str),
-    Bar(String),
     Baz(StructLifetime<'a>),
     Bool(bool),
 }
 
 #[rustler::nif]
-pub fn untagged_enum_lifetime_echo<'a>(
-    untagged_enum_lifetime: UntaggedEnumLifetime<'a>,
-) -> UntaggedEnumLifetime<'a> {
+pub fn untagged_enum_lifetime_echo(
+    untagged_enum_lifetime: UntaggedEnumLifetime<'_>,
+) -> UntaggedEnumLifetime<'_> {
     untagged_enum_lifetime
 }
 
@@ -258,9 +257,9 @@ pub fn untagged_enum_lifetime_echo<'a>(
 pub struct TupleStructLifetime<'a>(&'a str, i64, i64);
 
 #[rustler::nif]
-pub fn tuplestruct_lifetime_echo<'a>(
-    tuplestruct_lifetime: TupleStructLifetime<'a>,
-) -> TupleStructLifetime<'a> {
+pub fn tuplestruct_lifetime_echo(
+    tuplestruct_lifetime: TupleStructLifetime<'_>,
+) -> TupleStructLifetime<'_> {
     tuplestruct_lifetime
 }
 

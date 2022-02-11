@@ -27,7 +27,7 @@ end
 
 defmodule RecordLifetime do
   import Record
-  defrecord :record_lifetime, lhs: 1, rhs: 2
+  defrecord :record_lifetime, lhs: "hello", rhs: 2
 end
 
 defmodule RustlerTest.CodegenTest do
@@ -413,7 +413,7 @@ defmodule RustlerTest.CodegenTest do
 
     test "with invalid Record" do
       require RecordLifetime
-      value = RecordLifetime.record_lifetime(lhs: 5, rhs: "invalid")
+      value = RecordLifetime.record_lifetime(lhs: "hello", rhs: "invalid")
       message = "Erlang error: \"Could not decode field rhs on Record RecordLifetime\""
 
       assert_raise ErlangError, message, fn -> RustlerTest.record_lifetime_echo(value) end
@@ -421,12 +421,11 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "untagged enum lifetime" do
-    assert 123 == RustlerTest.untagged_enum_lifetime_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_lifetime_echo("Hello")
     assert RustlerTest.untagged_enum_lifetime_echo(true)
 
-    assert %AddStruct{lhs: 45, rhs: 123} =
-             RustlerTest.untagged_enum_lifetime_echo(%AddStruct{lhs: 45, rhs: 123})
+    assert %StructLifetime{message: "hello"} =
+             RustlerTest.untagged_enum_lifetime_echo(%StructLifetime{message: "hello"})
 
     assert true == RustlerTest.untagged_enum_lifetime_echo(true)
 
@@ -436,8 +435,8 @@ defmodule RustlerTest.CodegenTest do
              end)
   end
 
-  test "tuplestruct tuple lifetime" do
-    assert {1, 2, 3} == RustlerTest.tuplestruct_lifetime_echo({1, 2, 3})
+  test "tuple struct lifetime" do
+    assert {"one", 2, 3} == RustlerTest.tuplestruct_lifetime_echo({"one", 2, 3})
 
     assert_raise ArgumentError, fn ->
       RustlerTest.tuplestruct_lifetime_echo({1, 2})
@@ -446,7 +445,7 @@ defmodule RustlerTest.CodegenTest do
     assert_raise ErlangError,
                  "Erlang error: \"Could not decode field 1 on TupleStructLifetime\"",
                  fn ->
-                   RustlerTest.tuplestruct_lifetime_echo({1, "with error message", 3})
+                   RustlerTest.tuplestruct_lifetime_echo({"one", "with error message", 3})
                  end
 
     assert_raise ArgumentError, fn ->

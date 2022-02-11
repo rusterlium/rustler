@@ -81,6 +81,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
 fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
+    let lifetimes = &ctx.lifetimes;
 
     let variant_defs: Vec<_> = variants
         .iter()
@@ -94,8 +95,8 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         .collect();
 
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
+        impl<'__rustler_Encoder #(, #lifetimes)*> ::rustler::Encoder for #enum_type {
+            fn encode<'__rustler_encode>(&self, env: ::rustler::Env<'__rustler_encode>) -> ::rustler::Term<'__rustler_encode> {
                 match *self {
                     #(#variant_defs)*
                 }
