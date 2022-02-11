@@ -70,7 +70,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     let lifetimes = &ctx.lifetimes;
     // FIXME maybe put in context
     let mut rustler_decoder_lifetimes = vec![];
-    rustler_decoder_lifetimes.resize(lifetimes.len(), quote! { 'a });
+    rustler_decoder_lifetimes.resize(lifetimes.len(), quote! { '__rustler_Decoder });
     let struct_type = quote! { #struct_name < #(#rustler_decoder_lifetimes),* > };
 
     let idents: Vec<_> = fields
@@ -99,17 +99,17 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .unzip();
 
     let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
+        impl<'__rustler_Decoder> ::rustler::Decoder<'__rustler_Decoder> for #struct_type {
+            fn decode(term: ::rustler::Term<'__rustler_Decoder>) -> Result<Self, ::rustler::Error> {
                 use #atoms_module_name::*;
                 use ::rustler::Encoder;
 
-                fn try_decode_field<'a, T>(
-                    term: rustler::Term<'a>,
+                fn try_decode_field<'__rustler_Decoder, T>(
+                    term: rustler::Term<'__rustler_Decoder>,
                     field: rustler::Atom,
                     ) -> ::rustler::NifResult<T>
                     where
-                        T: rustler::Decoder<'a>,
+                        T: rustler::Decoder<'__rustler_Decoder>,
                     {
                         use rustler::Encoder;
                         match ::rustler::Decoder::decode(term.map_get(&field)?) {
