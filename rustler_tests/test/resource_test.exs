@@ -48,13 +48,16 @@ defmodule RustlerTest.ResourceTest do
   test "monitor resource" do
     resource = RustlerTest.monitor_resource_make()
     parent = self()
+
     spawn(fn ->
       RustlerTest.monitor_resource_monitor(resource, self())
       send(parent, :done)
     end)
+
     receive do
-        :done -> :ok
+      :done -> :ok
     end
+
     :timer.sleep(10)
     assert RustlerTest.monitor_resource_down_called(resource) == true
   end
@@ -62,14 +65,17 @@ defmodule RustlerTest.ResourceTest do
   test "monitor resource demonitor" do
     resource = RustlerTest.monitor_resource_make()
     parent = self()
+
     spawn(fn ->
       RustlerTest.monitor_resource_monitor(resource, self())
       RustlerTest.monitor_resource_demonitor(resource)
       send(parent, :done)
     end)
+
     receive do
-        :done -> :ok
+      :done -> :ok
     end
+
     :timer.sleep(10)
     assert RustlerTest.monitor_resource_down_called(resource) == false
   end

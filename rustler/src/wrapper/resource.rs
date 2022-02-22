@@ -2,11 +2,11 @@ use crate::wrapper::{
     NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_RESOURCE_TYPE, NIF_TERM,
 };
 
-use rustler_sys::{ErlNifResourceTypeInit, ErlNifResourceDown};
 pub use rustler_sys::{
     enif_alloc_resource as alloc_resource, enif_keep_resource as keep_resource,
     enif_make_resource as make_resource, enif_release_resource as release_resource,
 };
+use rustler_sys::{ErlNifResourceDown, ErlNifResourceTypeInit};
 
 use std::mem::MaybeUninit;
 
@@ -26,7 +26,7 @@ pub unsafe fn open_resource_type(
         stop: None,
         down,
         members: 4,
-        dyncall: None
+        dyncall: None,
     };
     let res = {
         let mut tried = MaybeUninit::uninit();

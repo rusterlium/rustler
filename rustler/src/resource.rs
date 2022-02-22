@@ -4,16 +4,17 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-use std::{marker::PhantomData, mem::MaybeUninit};
 use std::mem;
 use std::ops::Deref;
 use std::ptr;
+use std::{marker::PhantomData, mem::MaybeUninit};
 
 use rustler_sys::{ErlNifMonitor, ErlNifPid, ErlNifResourceDown};
 
 use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
 use crate::wrapper::{
     c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
+    LocalPid,
 };
 
 /// Re-export a type used by the `resource!` macro.
@@ -95,7 +96,7 @@ pub extern "C" fn resource_down<T: MonitorResource>(
     _env: NIF_ENV,
     handle: MUTABLE_NIF_RESOURCE_HANDLE,
     pid: *const ErlNifPid,
-    mon: *const ErlNifMonitor
+    mon: *const ErlNifMonitor,
 ) {
     unsafe {
         let pid = LocalPid::from_raw((&*pid).clone());
@@ -103,7 +104,7 @@ pub extern "C" fn resource_down<T: MonitorResource>(
         crate::wrapper::resource::keep_resource(handle);
         let resource = ResourceArc {
             inner: align_alloced_mem_for_struct::<T>(handle) as *mut T,
-            raw: handle
+            raw: handle,
         };
         T::down(resource, pid, mon);
     }
@@ -316,10 +317,12 @@ impl<T: MonitorResource> ResourceArcMonitor for ResourceArc<T> {
     fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor> {
         let env = maybe_env(caller_env);
         let mut mon = MaybeUninit::uninit();
-        let res = unsafe { rustler_sys::enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0 };
+        let res = unsafe {
+            rustler_sys::enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0
+        };
         if res {
             Some(Monitor {
-                inner: unsafe { mon.assume_init() }
+                inner: unsafe { mon.assume_init() },
             })
         } else {
             None
@@ -339,7 +342,10 @@ fn maybe_env(env: Option<&Env>) -> NIF_ENV {
         env.pid();
         env.as_c_arg()
     } else {
-        assert!(env.is_none(), "Env provided when not calling from a scheduler thread");
+        assert!(
+            env.is_none(),
+            "Env provided when not calling from a scheduler thread"
+        );
         ptr::null_mut()
     }
 }
@@ -389,6 +395,10 @@ macro_rules! resource {
 #[macro_export]
 macro_rules! monitor_resource {
     ($struct_name:ty, $env: ident) => {
-        $crate::resource!($struct_name, $env, Some($crate::resource::resource_down::<$struct_name>))
-    }
+        $crate::resource!(
+            $struct_name,
+            $env,
+            Some($crate::resource::resource_down::<$struct_name>)
+        )
+    };
 }

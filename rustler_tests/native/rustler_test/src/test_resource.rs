@@ -1,4 +1,4 @@
-use rustler::{Binary, Env, ResourceArc, ResourceArcMonitor, Monitor, MonitorResource, LocalPid};
+use rustler::{Binary, Env, LocalPid, Monitor, MonitorResource, ResourceArc, ResourceArcMonitor};
 use std::sync::{RwLock, Mutex};
 
 pub struct TestResource {
@@ -19,11 +19,11 @@ pub struct WithBinaries {
 
 struct TestMonitorResourceInner {
     mon: Option<Monitor>,
-    down_called: bool
+    down_called: bool,
 }
 
 pub struct TestMonitorResource {
-    inner: Mutex<TestMonitorResourceInner>
+    inner: Mutex<TestMonitorResourceInner>,
 }
 
 impl MonitorResource for TestMonitorResource {
@@ -107,8 +107,8 @@ pub fn monitor_resource_make() -> ResourceArc<TestMonitorResource> {
     ResourceArc::new(TestMonitorResource {
         inner: Mutex::new(TestMonitorResourceInner {
             mon: None,
-            down_called: false
-        })
+            down_called: false,
+        }),
     })
 }
 
