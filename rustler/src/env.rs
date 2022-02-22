@@ -77,19 +77,13 @@ impl<'a> Env<'a> {
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
     pub fn send(self, pid: &LocalPid, message: Term<'a>) {
-        let thread_type = unsafe { rustler_sys::enif_thread_type() };
-        let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
-            ptr::null_mut()
-        } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
-        {
+        let env = if is_scheduler_thread() {
             // Panic if `self` is not the environment of the calling process.
             self.pid();
 
             self.as_c_arg()
         } else {
-            panic!("Env::send(): unrecognized calling thread type");
+            ptr::null_mut()
         };
 
         // Send the message.
@@ -318,4 +312,11 @@ impl Default for OwnedEnv {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Is the current thread an Erlang scheduler thread?
+pub fn is_scheduler_thread() -> bool {
+    // From `enif_thread_type` docs: A positive value indicates a scheduler
+    // thread while a negative value or zero indicates another type of thread.
+    unsafe { rustler_sys::enif_thread_type() > 0 }
 }

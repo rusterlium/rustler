@@ -45,6 +45,12 @@ pub struct Monitor {
     inner: ErlNifMonitor,
 }
 
+impl Monitor {
+    fn from_raw(inner: ErlNifMonitor) -> Monitor {
+        Monitor { inner }
+    }
+}
+
 impl PartialEq for Monitor {
     fn eq(&self, other: &Self) -> bool {
         unsafe { rustler_sys::enif_compare_monitors(&self.inner, &other.inner) == 0 }
@@ -82,6 +88,9 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
     }
 }
 
+/// Notity that resource that a monitored object is down (erlang_nif-sys
+/// requires us to declare this function safe, but it is of course thoroughly
+/// unsafe!)
 pub extern "C" fn resource_down<T: MonitorResource>(
     _env: NIF_ENV,
     handle: MUTABLE_NIF_RESOURCE_HANDLE,
@@ -89,8 +98,8 @@ pub extern "C" fn resource_down<T: MonitorResource>(
     mon: *const ErlNifMonitor
 ) {
     unsafe {
-        let pid = LocalPid::new((&*pid).clone());
-        let mon = Monitor { inner: (&*mon).clone() };
+        let pid = LocalPid::from_raw((&*pid).clone());
+        let mon = Monitor::from_raw((&*mon).clone());
         crate::wrapper::resource::keep_resource(handle);
         let resource = ResourceArc {
             inner: align_alloced_mem_for_struct::<T>(handle) as *mut T,
@@ -323,22 +332,15 @@ impl<T: MonitorResource> ResourceArcMonitor for ResourceArc<T> {
     }
 }
 
-fn maybe_env(caller_env: Option<&Env>) -> NIF_ENV {
-    let thread_type = unsafe { rustler_sys::enif_thread_type() };
-    if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
-        assert!(caller_env.is_none());
-        ptr::null_mut()
-    } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
-        || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-        || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
-    {
-        let caller_env = caller_env.unwrap();
-        // Panic if `caller_env` is not the environment of the calling process.
-        caller_env.pid();
-
-        caller_env.as_c_arg()
+fn maybe_env(env: Option<&Env>) -> NIF_ENV {
+    if crate::env::is_scheduler_thread() {
+        let env = env.expect("Env required when calling from a scheduler thread");
+        // Panic if `env` is not the environment of the calling process.
+        env.pid();
+        env.as_c_arg()
     } else {
-        panic!("Unrecognized calling thread type");
+        assert!(env.is_none(), "Env provided when not calling from a scheduler thread");
+        ptr::null_mut()
     }
 }
 

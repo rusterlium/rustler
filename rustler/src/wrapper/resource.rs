@@ -1,5 +1,5 @@
 use crate::wrapper::{
-    NifResourceDtor,  NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_RESOURCE_TYPE, NIF_TERM,
+    NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_RESOURCE_TYPE, NIF_TERM,
 };
 
 use rustler_sys::{ErlNifResourceTypeInit, ErlNifResourceDown};

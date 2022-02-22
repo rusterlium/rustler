@@ -8,7 +8,7 @@ pub struct LocalPid {
 }
 
 impl LocalPid {
-    pub unsafe fn new(c: ErlNifPid) -> LocalPid {
+    pub unsafe fn from_raw(c: ErlNifPid) -> LocalPid {
         LocalPid { c }
     }
     pub fn as_c_arg(&self) -> &ErlNifPid {
