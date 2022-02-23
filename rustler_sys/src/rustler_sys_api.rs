@@ -149,8 +149,6 @@ pub struct ErlNifResourceTypeInit {
     pub dtor: Option<ErlNifResourceDtor>,
     pub stop: Option<ErlNifResourceStop>, // at ERL_NIF_SELECT_STOP event
     pub down: Option<ErlNifResourceDown>, // enif_monitor_process
-    pub members: c_int,
-    pub dyncall: Option<ErlNifResourceDynCall>,
 }
 
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.

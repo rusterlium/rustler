@@ -25,8 +25,6 @@ pub unsafe fn open_resource_type(
         dtor,
         stop: None,
         down,
-        members: 4,
-        dyncall: None,
     };
     let res = {
         let mut tried = MaybeUninit::uninit();
