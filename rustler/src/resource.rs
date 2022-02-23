@@ -92,15 +92,15 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 /// Notity that resource that a monitored object is down (erlang_nif-sys
 /// requires us to declare this function safe, but it is of course thoroughly
 /// unsafe!)
-pub extern "C" fn resource_down<T: MonitorResource>(
+extern "C" fn resource_down<T: MonitorResource>(
     _env: NIF_ENV,
     handle: MUTABLE_NIF_RESOURCE_HANDLE,
     pid: *const ErlNifPid,
     mon: *const ErlNifMonitor,
 ) {
     unsafe {
-        let pid = LocalPid::from_raw((&*pid).clone());
-        let mon = Monitor::from_raw((&*mon).clone());
+        let pid = LocalPid::from_raw(*pid);
+        let mon = Monitor::from_raw(*mon);
         crate::wrapper::resource::keep_resource(handle);
         let resource = ResourceArc {
             inner: align_alloced_mem_for_struct::<T>(handle) as *mut T,
@@ -358,20 +358,40 @@ macro_rules! resource_struct_init {
     };
 }
 
+/// Used by the resource! macro to pass the unsafe `resource_down` callback in a
+/// safe way (because `resource_down` cannot be accessed outside of this module)
+#[doc(hidden)]
+pub trait ResourceDownProvider {
+    fn down_callback() -> Option<ErlNifResourceDown>;
+}
+
+impl ResourceDownProvider for () {
+    fn down_callback() -> Option<ErlNifResourceDown> {
+        None
+    }
+}
+
+impl<T: MonitorResource> ResourceDownProvider for T {
+    fn down_callback() -> Option<ErlNifResourceDown> {
+        Some(resource_down::<T>)
+    }
+}
+
 #[macro_export]
 macro_rules! resource {
     ($struct_name:ty, $env: ident) => {
-        $crate::resource!($struct_name, $env, None)
+        $crate::resource!($struct_name, $env, ())
     };
-    ($struct_name:ty, $env: ident, $down: expr) => {
+    ($struct_name:ty, $env: ident, $down: ty) => {
         {
+            use $crate::resource::ResourceDownProvider;
             static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
 
             let temp_struct_type =
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
                     concat!(stringify!($struct_name), "\x00"),
-                    $down,
+                    <$down>::down_callback(),
                     $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,
@@ -395,10 +415,6 @@ macro_rules! resource {
 #[macro_export]
 macro_rules! monitor_resource {
     ($struct_name:ty, $env: ident) => {
-        $crate::resource!(
-            $struct_name,
-            $env,
-            Some($crate::resource::resource_down::<$struct_name>)
-        )
+        $crate::resource!($struct_name, $env, $struct_name)
     };
 }
