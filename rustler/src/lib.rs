@@ -38,7 +38,7 @@ mod term;
 
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ListIterator, LocalPid, MapIterator, OwnedBinary,
+    Atom, Binary, Decoder, Encoder, ListIterator, LocalPid, MapIterator, NewBinary, OwnedBinary,
 };
 pub mod resource;
 pub use crate::resource::ResourceArc;
