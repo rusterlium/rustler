@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
+## [0.24.0] - 2021-02-24
+
+### Added
+
+* A `NewBinary` type to create binaries in Rust without going through
+  `OwnedBinary`. This can improve performance. Thanks @dlesl!
+* `TermType` derives `Eq` and `PartialEq`.
+
+### Updated
+
+* `rustler_mix`: Bumped required toml dependency to 0.6
+* Bumped `rustler_sys` dependency to `~2.2`.
+
+### Changed
+
+* Rustler supports the latest 3 versions of Elixir and OTP. Currently, those
+  are Elixir => 1.11 and OTP >= 22.
+
+### Fixed
+
+* Set library file extension based on the compile target, thanks @cocoa-xu!
+* Relaxed Jason version requirement to ~> 1.0
+* Various typos in the documentation, thanks @kianmeng!
+
 ## [0.23.0] - 2021-12-22
 
 ### Added
