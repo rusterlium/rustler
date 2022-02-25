@@ -68,5 +68,5 @@ fn activate_versions(version: &str) {
 }
 
 fn version_feature(version: &str) -> String {
-    version.replace(".", "_")
+    version.replace('.', "_")
 }
