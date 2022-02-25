@@ -5,7 +5,7 @@ pub mod atom;
 pub use crate::types::atom::Atom;
 
 pub mod binary;
-pub use crate::types::binary::{Binary, OwnedBinary};
+pub use crate::types::binary::{Binary, NewBinary, OwnedBinary};
 
 #[doc(hidden)]
 pub mod list;
