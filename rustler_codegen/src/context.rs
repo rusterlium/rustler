@@ -26,8 +26,7 @@ impl<'a> Context<'a> {
         let mut attrs: Vec<_> = ast
             .attrs
             .iter()
-            .map(Context::get_rustler_attrs)
-            .flatten()
+            .flat_map(Context::get_rustler_attrs)
             .collect();
 
         //
