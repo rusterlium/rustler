@@ -32,4 +32,34 @@ defmodule RustlerTest.MapTest do
       RustlerTest.map_generic(%{1 => "hello", not_a_number: "world"})
     end)
   end
+
+  test "map from pairs" do
+    pairs = []
+
+    assert %{} == RustlerTest.map_from_pairs(pairs)
+
+    pairs = [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, {"e", 4.1}, {"foo", "bar"}]
+
+    assert %{"d" => 0, "a" => 1, "b" => 7, "e" => 4.1, "c" => 6, "foo" => "bar"} ==
+             RustlerTest.map_from_pairs(pairs)
+
+    pairs = [foo: [complex: true], bar: %{"simple" => false}]
+
+    assert %{bar: %{"simple" => false}, foo: [complex: true]} ==
+             RustlerTest.map_from_pairs(pairs)
+  end
+
+  test "map from pairs with incorrect type" do
+    pairs = [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, nil]
+
+    assert_raise(ArgumentError, fn ->
+      RustlerTest.map_from_pairs(pairs)
+    end)
+
+    pairs = [false, true]
+
+    assert_raise(ArgumentError, fn ->
+      RustlerTest.map_from_pairs(pairs)
+    end)
+  end
 end
