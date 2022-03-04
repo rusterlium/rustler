@@ -25,6 +25,8 @@ impl<'a> Term<'a> {
     ///
     /// ### Elixir equivalent
     /// ```elixir
+    /// keys = ["foo", "bar"]
+    /// values = [1, 2]
     /// List.zip(keys, values) |> Map.new()
     /// ```
     pub fn map_from_arrays(
@@ -42,6 +44,28 @@ impl<'a> Term<'a> {
             }
         } else {
             Err(Error::BadArg)
+        }
+    }
+
+    /// Construct a new map from pairs of terms
+    ///
+    /// It is similar to `map_from_arrays` but
+    /// receives only one vector with the pairs
+    /// of `(key, value)`.
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// Map.new([{"foo", 1}, {"bar", 2}])
+    /// ```
+    pub fn map_from_pairs(env: Env<'a>, pairs: &[(Term<'a>, Term<'a>)]) -> NifResult<Term<'a>> {
+        let (keys, values): (Vec<_>, Vec<_>) = pairs
+            .iter()
+            .map(|(k, v)| (k.as_c_arg(), v.as_c_arg()))
+            .unzip();
+
+        unsafe {
+            map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
         }
     }
 

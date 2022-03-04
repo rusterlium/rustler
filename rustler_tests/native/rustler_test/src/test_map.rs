@@ -1,6 +1,6 @@
 use rustler::types::map::MapIterator;
 use rustler::types::tuple::make_tuple;
-use rustler::{Encoder, Env, NifResult, Term};
+use rustler::{Encoder, Env, Error, ListIterator, NifResult, Term};
 
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
@@ -33,6 +33,13 @@ pub fn map_from_arrays<'a>(
     values: Vec<Term<'a>>,
 ) -> NifResult<Term<'a>> {
     Term::map_from_arrays(env, &keys, &values)
+}
+
+#[rustler::nif]
+pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Term<'a>> {
+    let res: Result<Vec<(Term, Term)>, Error> = pairs.map(|x| x.decode()).collect();
+
+    res.and_then(|v| Term::map_from_pairs(env, &v))
 }
 
 #[rustler::nif]
