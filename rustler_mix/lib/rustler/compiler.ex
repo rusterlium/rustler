@@ -90,7 +90,7 @@ defmodule Rustler.Compiler do
         To remove this warning, please create #{path}
         with the following content:
 
-              [target.x86_64-apple-darwin]
+              [target.'cfg(target_os = "macos")']
               rustflags = [
                   "-C", "link-arg=-undefined",
                   "-C", "link-arg=dynamic_lookup",
