@@ -21,7 +21,8 @@ defmodule Rustler.Compiler do
         |> make_features_flag(config.features)
         |> make_target_flag(config.target)
         |> make_build_mode_flag(config.mode)
-        |> make_platform_hacks(crate_full_path, :os.type())
+
+      ensure_platform_requirements!(crate_full_path, config, :os.type())
 
       compile_result =
         System.cmd(cmd, args,
@@ -69,46 +70,63 @@ defmodule Rustler.Compiler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp make_platform_hacks(args, crate_path, {:unix, :darwin}) do
-    root = Path.join([".cargo", "config"])
-    path = Path.join([crate_path, ".cargo", "config"])
+  defp ensure_platform_requirements!(crate_path, config, {:unix, :darwin}) do
+    # We attempt to find a .cargo/config upwards from the crate_path, which
+    # has a target configuration for macos. If any such config exists, we
+    # assume that the config correctly encodes the needed linker arguments.
 
-    if File.exists?(root) || File.exists?(path) do
-      args
-    else
-      IO.write([
-        "\n",
-        IO.ANSI.yellow(),
-        """
-        Compiling on macOS requires special link args in order to compile
-        correctly.
+    workspace_root = config.metadata["workspace_root"]
 
-        Rustler is currently working around this issue in the compiler task.
-        This will be removed in v1.0.0 in favor of a user supplied .cargo/config
-        file.
+    components =
+      crate_path
+      |> Path.relative_to(workspace_root)
+      |> Path.split()
 
-        To remove this warning, please create #{path}
-        with the following content:
+    {potential_config_files, _} =
+      Enum.map_reduce(["" | components], workspace_root, fn component, path ->
+        path = Path.join(path, component)
+        file = Path.join([path, ".cargo", "config"])
+        {file, path}
+      end)
 
-              [target.'cfg(target_os = "macos")']
-              rustflags = [
-                  "-C", "link-arg=-undefined",
-                  "-C", "link-arg=dynamic_lookup",
-              ]
+    has_macos_target_os_configuration? =
+      potential_config_files
+      |> Enum.filter(&File.exists?/1)
+      |> Enum.reverse()
+      |> Stream.map(&Toml.decode_file!/1)
+      |> Enum.find(&macos_target_configuration/1)
 
-        See https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
-        for more details.
+    unless has_macos_target_os_configuration? do
+      raise """
+      Compiling on macOS requires special link args in order to compile
+      correctly.
 
-        """,
-        IO.ANSI.default_color(),
-        "\n"
-      ])
+      To remove this error, please create .cargo/config
+      with the following content:
 
-      args ++ ["--", "-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+             [target.'cfg(target_os = "macos")']
+             rustflags = [
+                 "-C", "link-arg=-undefined",
+                 "-C", "link-arg=dynamic_lookup",
+             ]
+
+
+      See https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
+      for more details.
+      """
     end
   end
 
-  defp make_platform_hacks(args, _, _), do: args
+  defp ensure_platform_requirements!(_, _, _), do: :ok
+
+  defp macos_target_configuration(toml) do
+    toml
+    |> Map.get("target", [])
+    |> Enum.filter(fn {key, _} ->
+      String.match?(key, ~r/(.*macos.*)|(.*darwin.*)/)
+    end)
+    |> Map.new()
+  end
 
   defp make_no_default_features_flag(args, true), do: args
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
