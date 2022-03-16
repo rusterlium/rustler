@@ -1,5 +1,8 @@
 use rustler::types::truthy::Truthy;
-use rustler::{NifException, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
+use rustler::{
+    NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
+    NifUntaggedEnum,
+};
 
 #[derive(NifTuple)]
 pub struct AddTuple {
@@ -70,6 +73,19 @@ pub enum UnitEnum {
 #[rustler::nif]
 pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
     unit_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum {
+    Foo { x: i32, y: i32 },
+    Bar(String),
+    Baz(String),
+    Qux,
+}
+
+#[rustler::nif]
+pub fn tagged_enum_echo(tagged_enum: TaggedEnum) -> TaggedEnum {
+    tagged_enum
 }
 
 #[derive(NifUntaggedEnum)]

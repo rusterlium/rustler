@@ -66,6 +66,7 @@ defmodule RustlerTest do
   def exception_echo(_), do: err()
   def struct_echo(_), do: err()
   def unit_enum_echo(_), do: err()
+  def tagged_enum_echo(_), do: err()
   def untagged_enum_echo(_), do: err()
   def untagged_enum_with_truthy(_), do: err()
   def untagged_enum_for_issue_370(_), do: err()

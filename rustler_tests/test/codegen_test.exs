@@ -136,6 +136,15 @@ defmodule RustlerTest.CodegenTest do
              assert_raise(ErlangError, fn -> RustlerTest.unit_enum_echo(:somethingelse) end)
   end
 
+  test "tagged enum transcoder" do
+    assert %{__enum__: :foo, x: 1, y: 2} ==
+             RustlerTest.tagged_enum_echo(%{__enum__: :foo, x: 1, y: 2})
+
+    assert {:bar, "hello"} == RustlerTest.tagged_enum_echo({:bar, "hello"})
+    assert {:baz, "world"} == RustlerTest.tagged_enum_echo({:baz, "world"})
+    assert :qux == RustlerTest.tagged_enum_echo(:qux)
+  end
+
   test "untagged enum transcoder" do
     assert 123 == RustlerTest.untagged_enum_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_echo("Hello")

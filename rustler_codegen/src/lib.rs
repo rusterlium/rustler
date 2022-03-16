@@ -8,6 +8,7 @@ mod init;
 mod map;
 mod nif;
 mod record;
+mod tagged_enum;
 mod tuple;
 mod unit_enum;
 mod untagged_enum;
@@ -225,6 +226,39 @@ pub fn nif_record(input: TokenStream) -> TokenStream {
 pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     unit_enum::transcoder_decorator(&ast).into()
+}
+
+/// Implementation of the `NifTaggedEnum` macro that lets the user annotate an enum that will
+/// generate elixir values when encoded. This can be used for any rust enums and will generate
+/// three types of values based on the kind of the enum. For example from the test code:
+///
+/// ```ignore
+/// #[derive(NifTaggedEnum)]
+/// enum TaggedEnum {
+///     Foo,
+///     Bar(String),
+///     Baz{ a: i32, b: i32 },
+/// }
+///
+/// pub fn tagged_enum_echo<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+///     let tagged_enum: TaggedEnum = args[0].decode()?;
+///     Ok(tagged_enum.encode(env))
+/// }
+/// ```
+///
+/// This can be used from elixir in the following manner.
+///
+/// ```elixir
+/// test "tagged enum transcoder" do
+///   assert :foo == RustlerTest.tagged_enum_echo(:foo)
+///   assert {:bar, "Hello"} == RustlerTest.tagged_enum_echo(:bar, "Hello")
+///   assert %{type: :baz, a: 33, b: 21} == RustlerTest.tagged_enum_echo(%{type: :baz, a: 33, b: 21})
+/// end
+/// ```
+#[proc_macro_derive(NifTaggedEnum, attributes(rustler))]
+pub fn nif_tagged_enum(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    tagged_enum::transcoder_decorator(&ast).into()
 }
 
 /// Implementation of the `NifUntaggedEnum` macro that lets the user annotate an enum that will
