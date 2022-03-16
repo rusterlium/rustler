@@ -14,7 +14,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let variants = ctx
         .variants
         .as_ref()
-        .expect("NifTaggedEnum can only be used with enums");
+        .expect("NifEnum can only be used with enums");
 
     // Remove duplicated atoms.
     let mut atom_set = variants.iter().map(|variant| {

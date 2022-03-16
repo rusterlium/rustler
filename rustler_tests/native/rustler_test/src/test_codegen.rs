@@ -1,6 +1,6 @@
 use rustler::types::truthy::Truthy;
 use rustler::{
-    NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
+    NifException, NifMap, NifRecord, NifStruct, NifEnum, NifTuple, NifUnitEnum,
     NifUntaggedEnum,
 };
 
@@ -75,7 +75,7 @@ pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
     unit_enum
 }
 
-#[derive(NifTaggedEnum)]
+#[derive(NifEnum)]
 pub enum TaggedEnum {
     Foo { x: i32, y: i32 },
     Bar(String),
