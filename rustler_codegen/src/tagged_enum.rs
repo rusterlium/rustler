@@ -87,7 +87,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             match &variant.fields {
                 Fields::Unit => 
                     quote! {
-                        if let Ok(true) = value.map(|a| a == #atom_fn()) {
+                        if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
                             return Ok ( #enum_name :: #variant_ident );
                         }
                     },
