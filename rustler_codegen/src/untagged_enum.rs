@@ -48,7 +48,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
+    let enum_type = ctx.ident_with_lifetime();
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<_> = variants
@@ -75,11 +75,15 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         }
     };
 
+    // if enum_type.to_string() == "UntaggedEnumLifetime" {
+        // print!("{}", &gen);
+    // }
+
     gen
 }
 
 fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
+    let enum_type = ctx.ident_with_lifetime();
     let enum_name = ctx.ident;
     let lifetimes = &ctx.lifetimes;
 

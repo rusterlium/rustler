@@ -37,11 +37,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
 
-    let lifetimes = &ctx.lifetimes;
-    // FIXME maybe put in context
-    let mut rustler_decoder_lifetimes = vec![];
-    rustler_decoder_lifetimes.resize(lifetimes.len(), quote! { 'a });
-    let struct_type = quote! { #struct_name < #(#rustler_decoder_lifetimes),* > };
+    let struct_type = ctx.ident_with_decoder_lifetime();
 
     // Make a decoder for each of the fields in the struct.
     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
@@ -87,16 +83,16 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
         }
     };
     let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
+        impl<'__rustler_Decoder> ::rustler::Decoder<'__rustler_Decoder> for #struct_type {
+            fn decode(term: ::rustler::Term<'__rustler_Decoder>) -> ::rustler::NifResult<Self> {
                 let terms = ::rustler::types::tuple::get_tuple(term)?;
                 if terms.len() != #field_num {
                     return Err(::rustler::Error::BadArg);
                 }
 
-                fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
+                fn try_decode_index<'__rustler_Decoder, T>(terms: &[::rustler::Term<'__rustler_Decoder>], pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
                     where
-                        T: rustler::Decoder<'a>,
+                        T: rustler::Decoder<'__rustler_Decoder>,
                 {
                     match ::rustler::Decoder::decode(terms[index]) {
                         Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(
@@ -113,7 +109,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
 }
 
 fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
+    let struct_type = ctx.ident_with_lifetime();
     let lifetimes = &ctx.lifetimes;
 
     // Make a field encoder expression for each of the items in the struct.

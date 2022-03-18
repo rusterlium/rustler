@@ -17,8 +17,6 @@ pub(crate) struct Context<'a> {
     pub attrs: Vec<RustlerAttr>,
     pub ident: &'a proc_macro2::Ident,
     pub lifetimes: Vec<Lifetime>,
-    // FIXME make method
-    pub ident_with_lifetime: proc_macro2::TokenStream,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
     pub is_tuple_struct: bool,
@@ -56,19 +54,12 @@ impl<'a> Context<'a> {
             })
             .collect();
 
-        let has_lifetime = match lifetimes.len() {
-            0 => false,
-            1 => true,
+        if lifetimes.len() > 1 {
             // FIXME remove restriction
-            _ => panic!("Struct can only have one lifetime argument"),
-        };
+            panic!("Type can have at most lifetime argument")
+        }
 
         let ident = &ast.ident;
-        let ident_with_lifetime = if has_lifetime {
-            quote! { #ident <#(#lifetimes),*> }
-        } else {
-            quote! { #ident }
-        };
 
         let variants = match ast.data {
             Data::Enum(ref data_enum) => Some(data_enum.variants.iter().collect()),
@@ -92,7 +83,6 @@ impl<'a> Context<'a> {
             attrs,
             ident,
             lifetimes,
-            ident_with_lifetime,
             variants,
             struct_fields,
             is_tuple_struct,
@@ -165,6 +155,28 @@ impl<'a> Context<'a> {
             &format!("rustler_{}_field_{}", infix, Self::remove_raw(ident_str)),
             Span::call_site(),
         )
+    }
+
+    pub fn ident_with_lifetime(&self) -> proc_macro2::TokenStream {
+        let ident = self.ident;
+        let lifetimes = &self.lifetimes;
+        if !lifetimes.is_empty() {
+            quote! { #ident <#(#lifetimes),*> }
+        } else {
+            quote! { #ident }
+        }
+    }
+
+    pub fn ident_with_decoder_lifetime(&self) -> proc_macro2::TokenStream {
+        let ident = self.ident;
+        let lifetimes = &self.lifetimes;
+        // let rustler_decoder_lifetimes = lifetimes.iter().map(|lifetime| quote! { #lifetime : '__rustler_Decoder });
+        let rustler_decoder_lifetimes = vec![quote! { '__rustler_Decoder }; lifetimes.len()];
+        if !lifetimes.is_empty() {
+            quote! { #ident < #(#rustler_decoder_lifetimes),* > }
+        } else {
+            quote! { #ident }
+        }
     }
 
     fn remove_raw(ident_str: &str) -> &str {

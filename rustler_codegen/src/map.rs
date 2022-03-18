@@ -49,8 +49,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
+    let struct_type = ctx.ident_with_lifetime();
     let struct_name = ctx.ident;
+    let lifetimes = &ctx.lifetimes;
 
     let idents: Vec<_> = fields
         .iter()
@@ -66,7 +67,14 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
             let assignment = quote_spanned! { field.span() =>
-            let #variable = try_decode_field(term, #atom_fun())?;
+                let field = #atom_fun();
+                let #variable = match ::rustler::Decoder::decode(term.map_get(::rustler::Encoder::encode(field, env))?) {
+                    Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                    "Could not decode field :{:?} on %{{}}",
+                                    field
+                    )))),
+                    Ok(value) => Ok(value),
+                }?;
             };
 
             let field_def = quote! {
@@ -77,39 +85,28 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .unzip();
 
     let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
+        impl<'__rustler_Decoder #(, #lifetimes : '__rustler_Decoder)*> ::rustler::Decoder<'__rustler_Decoder> for #struct_type {
+            fn decode(term: ::rustler::Term<'__rustler_Decoder>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
-                fn try_decode_field<'a, T>(
-                    term: rustler::Term<'a>,
-                    field: rustler::Atom,
-                    ) -> ::rustler::NifResult<T>
-                    where
-                        T: rustler::Decoder<'a>,
-                    {
-                        use rustler::Encoder;
-                        match ::rustler::Decoder::decode(term.map_get(&field)?) {
-                            Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                                            "Could not decode field :{:?} on %{{}}",
-                                            field
-                            )))),
-                            Ok(value) => Ok(value),
-                        }
-                    };
+                let env = term.get_env();
 
-                #(#assignments);*
+                use rustler::Encoder;
+
+                #(#assignments)*
 
                 Ok(#struct_name { #(#field_defs),* })
             }
         }
     };
 
+    print!("{}", &gen);
+
     gen
 }
 
 fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
+    let struct_type = ctx.ident_with_lifetime();
     let lifetimes = &ctx.lifetimes;
 
     let field_defs: Vec<TokenStream> = fields
