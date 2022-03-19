@@ -19,7 +19,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     // Remove duplicated atoms.
     let mut atom_set = variants
         .iter()
-        .map(|variant| {
+        .flat_map(|variant| {
             let mut ret: Vec<(String, Ident)> = if let Fields::Named(fields) = &variant.fields {
                 fields
                     .named
@@ -40,7 +40,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
             ret
         })
-        .flatten()
         .collect::<HashMap<_, _>>();
     // Add :type atom.
     atom_set.insert(
