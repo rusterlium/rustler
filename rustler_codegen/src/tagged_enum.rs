@@ -17,29 +17,45 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .expect("NifEnum can only be used with enums");
 
     // Remove duplicated atoms.
-    let mut atom_set = variants.iter().map(|variant| {
-        let mut ret: Vec<(String, Ident)> = if let Fields::Named(fields) = &variant.fields {
-            fields.named.iter().map(|field| {
-                let atom_str = field.ident.as_ref().expect("").to_string().to_snake_case();
-                let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
-                (atom_str, atom_fn)
-            }).collect()
-        } else {vec![]};
+    let mut atom_set = variants
+        .iter()
+        .map(|variant| {
+            let mut ret: Vec<(String, Ident)> = if let Fields::Named(fields) = &variant.fields {
+                fields
+                    .named
+                    .iter()
+                    .map(|field| {
+                        let atom_str = field.ident.as_ref().expect("").to_string().to_snake_case();
+                        let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+                        (atom_str, atom_fn)
+                    })
+                    .collect()
+            } else {
+                vec![]
+            };
 
-        let atom_str = variant.ident.to_string().to_snake_case();
-        let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
-        ret.push((atom_str, atom_fn));
+            let atom_str = variant.ident.to_string().to_snake_case();
+            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            ret.push((atom_str, atom_fn));
 
-        ret
-    }).flatten().collect::<HashMap<_, _>>();
+            ret
+        })
+        .flatten()
+        .collect::<HashMap<_, _>>();
     // Add :type atom.
-    atom_set.insert("__enum__".to_string(), Ident::new("__enum__", Span::call_site()));
+    atom_set.insert(
+        "__enum__".to_string(),
+        Ident::new("__enum__", Span::call_site()),
+    );
 
-    let atoms = atom_set.iter().map(|(atom_str, atom_fn)| {
-        quote! {
-            #atom_fn = #atom_str,
-        }
-    }).collect::<Vec<_>>();
+    let atoms = atom_set
+        .iter()
+        .map(|(atom_str, atom_fn)| {
+            quote! {
+                #atom_fn = #atom_str,
+            }
+        })
+        .collect::<Vec<_>>();
 
     let atom_defs = quote! {
         rustler::atoms! {
@@ -85,7 +101,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
 
             match &variant.fields {
-                Fields::Unit => 
+                Fields::Unit =>
                     quote! {
                         if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
                             return Ok ( #enum_name :: #variant_ident );
@@ -117,11 +133,11 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         .map(|(index, (field, ident))| {
                             let atom_fun = Context::field_to_atom_fun(field);
                             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
-                        
+
                             let assignment = quote_spanned! { field.span() =>
                                 let #variable = try_decode_field(env, term, #atom_fun())?;
                             };
-                        
+
                             let field_def = quote! {
                                 #ident: #variable
                             };
@@ -208,7 +224,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         .map(|field| {
                             let field_ident = field.ident.as_ref().unwrap();
                             let atom_fun = Context::field_to_atom_fun(field);
-                        
+
                             quote_spanned! { field.span() =>
                                 map = map.map_put(#atom_fun().encode(env), #field_ident.encode(env)).unwrap();
                             }

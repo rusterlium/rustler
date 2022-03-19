@@ -1,7 +1,6 @@
 use rustler::types::truthy::Truthy;
 use rustler::{
-    NifException, NifMap, NifRecord, NifStruct, NifEnum, NifTuple, NifUnitEnum,
-    NifUntaggedEnum,
+    NifEnum, NifException, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum,
 };
 
 #[derive(NifTuple)]
