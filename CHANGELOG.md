@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
-## [0.24.0] - 2021-02-24
+## [0.24.0] - 2022-02-24
 
 ### Added
 
