@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
+## [0.25.0] - 2022-04-11
+
+### Added
+
+* `NewBinary` now also available as `rustler::NewBinary` (thanks @ayrat555)
+* `Term::map_from_pairs()` to conveniently build a map from a list -of pairs (thanks @philss)
+* CI now also tests against macos
+
+### Fixed
+
+* Snake-case warening for auto-generated `RUSTLER_{}_field_{}` variables (renamed to `rustler_{}_field_{}`)
+
+### Changed
+
+* Abort compilation on macos if macos target configuration is missing
+
 ## [0.24.0] - 2022-02-24
 
 ### Added
