@@ -75,7 +75,7 @@ defmodule Rustler do
           load_data: :something
       end
 
-  [target]: https://forge.rust-lang.org/release/platform-support.html
+  [target]: https://doc.rust-lang.org/stable/rustc/platform-support.html
   """
 
   defmacro __using__(opts) do
