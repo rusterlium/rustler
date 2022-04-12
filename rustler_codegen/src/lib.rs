@@ -63,6 +63,26 @@ pub fn init(input: TokenStream) -> TokenStream {
 ///     a + b
 /// }
 /// ```
+///
+/// For functions that may take some time to return - let's say more than 1 millisecond - it is
+/// recommended to use the `schedule` flag. This tells the BEAM to allocate that NIF call
+/// to a special scheduler. These special schedulers are called "dirty" schedulers.
+///
+/// We can have two types of "lengthy work" functions: those that are CPU intensive
+/// and those that are IO intensive. They should be flagged with "DirtyCpu" and "DirtyIo",
+/// respectively.
+///
+/// See: <https://www.erlang.org/doc/man/erl_nif.html#lengthy_work>
+///
+/// ```ignore
+/// #[nif(schedule = "DirtyCpu")]
+/// pub fn my_lengthy_work() -> i64 {
+///     let duration = Duration::from_millis(100);
+///     std::thread::sleep(duration);
+///
+///     42
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(args as syn::AttributeArgs);
