@@ -17,7 +17,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .expect("NifEnum can only be used with enums");
 
     // Remove duplicated atoms.
-    let mut atom_set = variants
+    let atom_set = variants
         .iter()
         .flat_map(|variant| {
             let mut ret: Vec<(String, Ident)> = if let Fields::Named(fields) = &variant.fields {
@@ -41,11 +41,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             ret
         })
         .collect::<HashMap<_, _>>();
-    // Add :type atom.
-    atom_set.insert(
-        "__enum__".to_string(),
-        Ident::new("__enum__", Span::call_site()),
-    );
 
     let atoms = atom_set
         .iter()
@@ -100,12 +95,11 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
 
             match &variant.fields {
-                Fields::Unit =>
-                    quote! {
-                        if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
-                            return Ok ( #enum_name :: #variant_ident );
-                        }
-                    },
+                Fields::Unit => quote! {
+                    if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
+                        return Ok ( #enum_name :: #variant_ident );
+                    }
+                },
                 Fields::Unnamed(_) => {
                     let field_type = &variant.fields.iter().next().unwrap().ty;
                     quote! {
@@ -120,21 +114,24 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     }
                 }
                 Fields::Named(fields) => {
-                    let idents: Vec<_> = fields.named
+                    let idents: Vec<_> = fields
+                        .named
                         .iter()
                         .map(|field| field.ident.as_ref().unwrap())
                         .collect();
 
-                    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields.named
+                    let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
+                        .named
                         .iter()
                         .zip(idents.iter())
                         .enumerate()
                         .map(|(index, (field, ident))| {
                             let atom_fun = Context::field_to_atom_fun(field);
-                            let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
+                            let variable =
+                                Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
                             let assignment = quote_spanned! { field.span() =>
-                                let #variable = try_decode_field(env, term, #atom_fun())?;
+                                let #variable = try_decode_field(env, tuple[1], #atom_fun())?;
                             };
 
                             let field_def = quote! {
@@ -143,11 +140,11 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                             (assignment, field_def)
                         })
                         .unzip();
-                    let enum_fun = Ident::new("__enum__", Span::call_site());
 
                     quote! {
-                        if let Ok(value) = try_decode_field::<::rustler::Atom>(env, term, #enum_fun()) {
-                            if (value == #atom_fn()) {
+                        if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
+                            let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
+                            if tuple.len() == 2 && name == #atom_fn() {
                                 #(#assignments)*
                                 return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
                             }
@@ -229,15 +226,13 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                             }
                         })
                         .collect::<Vec<_>>();
-                    let enum_fun = Ident::new("__enum__", Span::call_site());
                     quote! {
                         #enum_name :: #variant_ident{
                             #(#field_decls)*
                         } => {
                             let mut map = ::rustler::types::map::map_new(env);
-                            map = map.map_put(#enum_fun().encode(env), #atom_fn().encode(env)).unwrap();
                             #(#field_defs)*
-                            map
+                            ::rustler::types::tuple::make_tuple(env, &[#atom_fn().encode(env), map])
                         }
                     }
                 }
@@ -250,7 +245,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
 
-                match *self {
+                match self {
                     #(#variant_defs)*
                 }
             }
