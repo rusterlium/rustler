@@ -336,7 +336,7 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 /// test "tagged enum transcoder" do
 ///   assert :foo == RustlerTest.tagged_enum_echo(:foo)
 ///   assert {:bar, "Hello"} == RustlerTest.tagged_enum_echo(:bar, "Hello")
-///   assert %{type: :baz, a: 33, b: 21} == RustlerTest.tagged_enum_echo(%{type: :baz, a: 33, b: 21})
+///   assert {:baz, %{a: 33, b: 21}} == RustlerTest.tagged_enum_echo({:baz, %{a: 33, b: 21}})
 /// end
 /// ```
 #[proc_macro_derive(NifEnum, attributes(rustler))]
