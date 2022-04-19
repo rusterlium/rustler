@@ -2,7 +2,7 @@
 #![allow(clippy::missing_safety_doc)]
 
 //! [Github](https://github.com/rusterlium/rustler)
-//! [Example](https://github.com/hansihe/Rustler_Example)
+//! [Example](https://github.com/rusterlium/NifIo)
 //!
 //! Rustler is a library for writing Erlang NIFs in safe Rust code. That means there should be no
 //! ways to crash the BEAM (Erlang VM). The library provides facilities for generating the

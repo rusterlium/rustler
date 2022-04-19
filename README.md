@@ -1,8 +1,11 @@
 # Rustler
 
-[Documentation](https://docs.rs/crate/rustler) | [Getting Started](https://github.com/rusterlium/rustler/blob/master/README.md#getting-started) | [Example](https://github.com/hansihe/NifIo)
+[Documentation](https://docs.rs/rustler/latest/rustler) | [Getting Started](https://github.com/rusterlium/rustler/blob/master/README.md#getting-started) | [Example](https://github.com/rusterlium/NifIo)
 
-![Build Status](https://github.com/rusterlium/rustler/workflows/CI/badge.svg?branch=master)
+[![Build Status](https://github.com/rusterlium/rustler/workflows/CI/badge.svg?branch=master)](https://github.com/rusterlium/rustler/actions/workflows/main.yml)
+[![Hex.pm package version](https://img.shields.io/hexpm/v/rustler.svg)](https://hex.pm/packages/rustler)
+[![Crates.io package version](https://img.shields.io/crates/v/rustler.svg)](https://crates.io/crates/rustler)
+[![Last Updated](https://img.shields.io/github/last-commit/rusterlium/rustler.svg)](https://github.com/rusterlium/rustler/commits/master)
 
 Rustler is a library for writing Erlang NIFs in safe Rust code. That means
 there should be no ways to crash the BEAM (Erlang VM). The library provides
@@ -60,7 +63,8 @@ RUSTLER_NIF_VERSION=2.14 mix compile
 
 #### Community
 
-You can find us in `#rustler` on [freenode](http://freenode.net/) or [the elixir-lang slack](https://elixir-slackin.herokuapp.com/).
+You can find us in the `#rustler:matrix.org` channel on [Matrix](https://matrix.to/#/#rustler:matrix.org)
+or in the `#rustler` channel in [the Elixir lang Slack](https://elixir-slackin.herokuapp.com/).
 
 #### License
 

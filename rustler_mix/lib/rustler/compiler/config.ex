@@ -26,7 +26,8 @@ defmodule Rustler.Compiler.Config do
             priv_dir: "",
             skip_compilation?: false,
             target: nil,
-            target_dir: ""
+            target_dir: "",
+            metadata: nil
 
   alias Rustler.Compiler.Config
 
@@ -58,25 +59,25 @@ defmodule Rustler.Compiler.Config do
   end
 
   defp build(opts) do
-    crate = Keyword.fetch!(opts, :crate)
-
-    resources =
+    opts =
       if opts[:skip_compilation?] do
-        []
-      else
         opts
-        |> Keyword.get(:path)
-        |> external_resources(crate)
-      end
+      else
+        crate = Keyword.fetch!(opts, :crate)
+        crate_path = Keyword.fetch!(opts, :path)
 
-    opts = Keyword.put(opts, :external_resources, resources)
+        metadata = metadata!(crate_path)
+        resources = external_resources(crate_path, crate, metadata)
+
+        opts
+        |> Keyword.put(:metadata, metadata)
+        |> Keyword.put(:external_resources, resources)
+      end
 
     struct!(Config, opts)
   end
 
-  defp external_resources(crate_path, crate) do
-    crate_str = to_string(crate)
-
+  defp metadata!(crate_path) do
     metadata =
       case System.cmd("cargo", ~w(metadata --format-version=1), cd: crate_path) do
         {metadata, 0} ->
@@ -86,10 +87,12 @@ defmodule Rustler.Compiler.Config do
           raise "calling `cargo metadata` failed.\n" <> output
       end
 
-    json = Jason.decode!(metadata)
+    Jason.decode!(metadata)
+  end
 
-    packages = json["packages"]
-
+  defp external_resources(crate_path, crate, metadata) do
+    crate_str = to_string(crate)
+    packages = Map.fetch!(metadata, "packages")
     crate_spec = get_spec(packages, crate_str)
 
     packages

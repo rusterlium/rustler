@@ -75,7 +75,7 @@ defmodule Rustler do
           load_data: :something
       end
 
-  [target]: https://forge.rust-lang.org/release/platform-support.html
+  [target]: https://doc.rust-lang.org/stable/rustc/platform-support.html
   """
 
   defmacro __using__(opts) do
@@ -118,7 +118,7 @@ defmodule Rustler do
   end
 
   @doc false
-  def rustler_version, do: "0.24.0"
+  def rustler_version, do: "0.25.0"
 
   @doc """
   Supported NIF API versions.
