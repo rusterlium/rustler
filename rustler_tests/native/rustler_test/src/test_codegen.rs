@@ -75,7 +75,7 @@ pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
 }
 
 #[derive(NifEnum)]
-pub enum TaggedEnum {
+pub enum TaggedEnum1 {
     Foo { x: i32, y: i32 },
     Bar(String),
     Baz(String),
@@ -83,7 +83,20 @@ pub enum TaggedEnum {
 }
 
 #[rustler::nif]
-pub fn tagged_enum_echo(tagged_enum: TaggedEnum) -> TaggedEnum {
+pub fn tagged_enum_1_echo(tagged_enum: TaggedEnum1) -> TaggedEnum1 {
+    tagged_enum
+}
+
+#[derive(NifEnum)]
+pub enum TaggedEnum2 {
+    Foo,
+    Bar(std::collections::HashMap<i32, i32>),
+    Baz { s: String },
+    Qux(TaggedEnum1),
+}
+
+#[rustler::nif]
+pub fn tagged_enum_2_echo(tagged_enum: TaggedEnum2) -> TaggedEnum2 {
     tagged_enum
 }
 

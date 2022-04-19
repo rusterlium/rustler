@@ -136,13 +136,22 @@ defmodule RustlerTest.CodegenTest do
              assert_raise(ErlangError, fn -> RustlerTest.unit_enum_echo(:somethingelse) end)
   end
 
-  test "tagged enum transcoder" do
-    assert %{__enum__: :foo, x: 1, y: 2} ==
-             RustlerTest.tagged_enum_echo(%{__enum__: :foo, x: 1, y: 2})
+  test "tagged enum transcoder 1" do
+    assert {:foo, %{x: 1, y: 2}} ==
+             RustlerTest.tagged_enum_1_echo({:foo, %{x: 1, y: 2}})
 
-    assert {:bar, "hello"} == RustlerTest.tagged_enum_echo({:bar, "hello"})
-    assert {:baz, "world"} == RustlerTest.tagged_enum_echo({:baz, "world"})
-    assert :qux == RustlerTest.tagged_enum_echo(:qux)
+    assert {:bar, "hello"} == RustlerTest.tagged_enum_1_echo({:bar, "hello"})
+    assert {:baz, "world"} == RustlerTest.tagged_enum_1_echo({:baz, "world"})
+    assert :qux == RustlerTest.tagged_enum_1_echo(:qux)
+  end
+
+  test "tagged enum transcoder 2" do
+    assert :foo ==
+             RustlerTest.tagged_enum_2_echo(:foo)
+
+    assert {:bar, %{1 => 1, 2 => 4}} == RustlerTest.tagged_enum_1_echo({:bar, %{1 => 1, 2 => 4}})
+    assert {:baz, %{s: "Hello"}} == RustlerTest.tagged_enum_1_echo({:baz, %{s: "Hello"}})
+    assert {:qux, :qux} == RustlerTest.tagged_enum_1_echo({:qux, :qux})
   end
 
   test "untagged enum transcoder" do
