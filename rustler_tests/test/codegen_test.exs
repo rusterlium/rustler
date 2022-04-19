@@ -146,12 +146,10 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "tagged enum transcoder 2" do
-    assert :foo ==
-             RustlerTest.tagged_enum_2_echo(:foo)
-
-    assert {:bar, %{1 => 1, 2 => 4}} == RustlerTest.tagged_enum_1_echo({:bar, %{1 => 1, 2 => 4}})
-    assert {:baz, %{s: "Hello"}} == RustlerTest.tagged_enum_1_echo({:baz, %{s: "Hello"}})
-    assert {:qux, :qux} == RustlerTest.tagged_enum_1_echo({:qux, :qux})
+    assert :foo == RustlerTest.tagged_enum_2_echo(:foo)
+    assert {:bar, %{1 => 1, 2 => 4}} == RustlerTest.tagged_enum_2_echo({:bar, %{1 => 1, 2 => 4}})
+    assert {:baz, %{s: "Hello"}} == RustlerTest.tagged_enum_2_echo({:baz, %{s: "Hello"}})
+    assert {:qux, :qux} == RustlerTest.tagged_enum_2_echo({:qux, :qux})
   end
 
   test "untagged enum transcoder" do
