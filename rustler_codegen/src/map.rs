@@ -78,7 +78,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
                 let env = term.get_env();
@@ -87,7 +87,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                     env: rustler::Env<'a>,
                     term: rustler::Term<'a>,
                     field: rustler::Atom,
-                    ) -> Result<T, rustler::Error>
+                    ) -> ::rustler::NifResult<T>
                     where
                         T: rustler::Decoder<'a>,
                     {
