@@ -57,7 +57,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .collect::<Vec<_>>();
 
     let atom_defs = quote! {
-        rustler::atoms! {
+        ::rustler::atoms! {
             #(#atoms)*
         }
     };
@@ -162,21 +162,21 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
                 let env = term.get_env();
                 let value = ::rustler::types::atom::Atom::from_term(term);
 
                 fn try_decode_field<'a, T>(
-                    env: rustler::Env<'a>,
-                    term: rustler::Term<'a>,
-                    field: rustler::Atom,
-                    ) -> Result<T, rustler::Error>
+                    env: ::rustler::Env<'a>,
+                    term: ::rustler::Term<'a>,
+                    field: ::rustler::Atom,
+                    ) -> ::rustler::NifResult<T>
                     where
-                        T: rustler::Decoder<'a>,
+                        T: ::rustler::Decoder<'a>,
                 {
-                    use rustler::Encoder;
+                    use ::rustler::Encoder;
                     match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
                         Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                         "Could not decode field :{:?} on %{{}}",
