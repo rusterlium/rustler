@@ -25,7 +25,12 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
                     .named
                     .iter()
                     .map(|field| {
-                        let atom_str = field.ident.as_ref().expect("Atom is expected").to_string().to_snake_case();
+                        let atom_str = field
+                            .ident
+                            .as_ref()
+                            .expect("Atom is expected")
+                            .to_string()
+                            .to_snake_case();
                         let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
                         (atom_str, atom_fn)
                     })
