@@ -99,7 +99,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     };
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
                 let terms = match ::rustler::types::tuple::get_tuple(term) {
@@ -118,7 +118,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                     return Err(::rustler::Error::RaiseAtom("invalid_record"));
                 }
 
-                fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> Result<T, rustler::Error>
+                fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
                     where
                         T: rustler::Decoder<'a>,
                 {

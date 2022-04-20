@@ -87,7 +87,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
                 let value = ::rustler::types::atom::Atom::from_term(term)?;
