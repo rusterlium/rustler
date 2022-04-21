@@ -92,8 +92,8 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         return Ok ( #enum_name :: #variant_ident );
                     }
                 },
-                Fields::Unnamed(_) => {
-                    let decode_field = &variant
+                Fields::Unnamed(fields) => {
+                    let decoded_field = &variant
                         .fields
                         .iter()
                         .map(|f| &f.ty)
@@ -101,15 +101,19 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         .map(|(i, ty)| {
                             let i = i + 1;
                             quote! {
-                                <#ty>::decode(tuple[#i])?
+                                <#ty>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseAtom("invalid_variant"))?
                             }
                         })
                         .collect::<Vec<_>>();
+                    let len = fields.unnamed.len();
                     quote! {
                         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
                             let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
                             if name == #atom_fn() {
-                                return Ok( #enum_name :: #variant_ident ( #(#decode_field),* ) )
+                                if tuple.len() -1 != #len {
+                                    return Err(::rustler::Error::RaiseAtom("invalid_variant"));
+                                }
+                                return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
                             }
                         }
                     }
@@ -133,7 +137,8 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                                 Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
                             let assignment = quote_spanned! { field.span() =>
-                                let #variable = try_decode_field(env, tuple[1], #atom_fun())?;
+                                let #variable = try_decode_field(env, tuple[1], #atom_fun())
+                                  .map_err(|_| ::rustler::Error::RaiseAtom("invalid_variant"))?;
                             };
 
                             let field_def = quote! {
