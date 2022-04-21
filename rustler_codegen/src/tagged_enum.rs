@@ -88,14 +88,23 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     }
                 },
                 Fields::Unnamed(_) => {
-                    let field_type = &variant.fields.iter().next().unwrap().ty;
+                    let decode_field = &variant
+                        .fields
+                        .iter()
+                        .map(|f| &f.ty)
+                        .enumerate()
+                        .map(|(i, ty)| {
+                            let i = i + 1;
+                            quote! {
+                                <#ty>::decode(tuple[#i])?
+                            }
+                        })
+                        .collect::<Vec<_>>();
                     quote! {
                         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
                             let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
-                            if tuple.len() == 2 && name == #atom_fn() {
-                                if let Ok(inner) = <#field_type>::decode(tuple[1]) {
-                                    return Ok( #enum_name :: #variant_ident ( inner ) )
-                                }
+                            if name == #atom_fn() {
+                                return Ok( #enum_name :: #variant_ident ( #(#decode_field),* ) )
                             }
                         }
                     }
@@ -192,8 +201,12 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                 Fields::Unit => quote! {
                     #enum_name :: #variant_ident => #atom_fn().encode(env),
                 },
-                Fields::Unnamed(_) => quote! {
-                    #enum_name :: #variant_ident ( ref inner ) => (#atom_fn(), inner).encode(env),
+                Fields::Unnamed(fields) => {
+                    let len = fields.unnamed.len();
+                    let inners = (0..len).map(|i| Ident::new(&format!("inner{}", i), Span::call_site())).collect::<Vec<_>>();
+                    quote! {
+                        #enum_name :: #variant_ident ( #(ref #inners),* ) => (#atom_fn(), #(#inners),*).encode(env),
+                    }
                 },
                 Fields::Named(fields) => {
                     let field_decls = fields.named.iter().map(|field| {

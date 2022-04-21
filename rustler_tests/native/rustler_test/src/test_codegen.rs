@@ -91,6 +91,7 @@ pub fn tagged_enum_1_echo(tagged_enum: TaggedEnum1) -> TaggedEnum1 {
 pub enum TaggedEnum2 {
     Foo,
     Bar(std::collections::HashMap<i32, i32>),
+    Bar2(i64, i64),
     Baz { s: String },
     Qux(TaggedEnum1),
 }
