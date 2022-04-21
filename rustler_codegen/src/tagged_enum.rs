@@ -77,6 +77,9 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
+    let invalid_variant = quote! {
+        ::rustler::Error::RaiseAtom("invalid_variant")
+    };
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
@@ -101,7 +104,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         .map(|(i, ty)| {
                             let i = i + 1;
                             quote! {
-                                <#ty>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseAtom("invalid_variant"))?
+                                <#ty>::decode(tuple[#i]).map_err(|_| #invalid_variant)?
                             }
                         })
                         .collect::<Vec<_>>();
@@ -111,7 +114,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                             let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
                             if name == #atom_fn() {
                                 if tuple.len() -1 != #len {
-                                    return Err(::rustler::Error::RaiseAtom("invalid_variant"));
+                                    return Err(#invalid_variant);
                                 }
                                 return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
                             }
@@ -138,7 +141,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                             let assignment = quote_spanned! { field.span() =>
                                 let #variable = try_decode_field(env, tuple[1], #atom_fun())
-                                  .map_err(|_| ::rustler::Error::RaiseAtom("invalid_variant"))?;
+                                  .map_err(|_| #invalid_variant)?;
                             };
 
                             let field_def = quote! {
@@ -190,7 +193,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                 #(#variant_defs)*
 
-                Err(::rustler::Error::RaiseAtom("invalid_variant"))
+                Err(#invalid_variant)
             }
         }
     };
