@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
@@ -16,40 +14,31 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .as_ref()
         .expect("NifEnum can only be used with enums");
 
-    // Remove duplicated atoms.
-    let atom_set = variants
+    let atoms = variants
         .iter()
         .flat_map(|variant| {
-            let mut ret: Vec<(String, Ident)> = if let Fields::Named(fields) = &variant.fields {
+            let mut ret = if let Fields::Named(fields) = &variant.fields {
                 fields
                     .named
                     .iter()
                     .map(|field| {
-                        let atom_str = field
+                        field
                             .ident
                             .as_ref()
                             .expect("Atom is expected")
                             .to_string()
-                            .to_snake_case();
-                        let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
-                        (atom_str, atom_fn)
+                            .to_snake_case()
                     })
-                    .collect()
+                    .collect::<Vec<_>>()
             } else {
                 vec![]
             };
 
-            let atom_str = variant.ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
-            ret.push((atom_str, atom_fn));
-
+            ret.push(variant.ident.to_string().to_snake_case());
             ret
         })
-        .collect::<HashMap<_, _>>();
-
-    let atoms = atom_set
-        .iter()
-        .map(|(atom_str, atom_fn)| {
+        .map(|atom_str| {
+            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
             quote! {
                 #atom_fn = #atom_str,
             }
