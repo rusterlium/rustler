@@ -21,7 +21,12 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
                 fields
                     .named
                     .iter()
-                    .map(|field| field.ident.as_ref().expect("Field name is missing."))
+                    .map(|field| {
+                        field
+                            .ident
+                            .as_ref()
+                            .expect("Named fields must have an ident.")
+                    })
                     .collect::<Vec<_>>()
             } else {
                 vec![]
@@ -110,16 +115,17 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     }
                 }
                 Fields::Named(fields) => {
-                    let idents: Vec<_> = fields
-                        .named
-                        .iter()
-                        .map(|field| field.ident.as_ref().unwrap())
-                        .collect();
+                    let idents = fields.named.iter().map(|field| {
+                        field
+                            .ident
+                            .as_ref()
+                            .expect("Named fields must have an ident.")
+                    });
 
                     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
                         .named
                         .iter()
-                        .zip(idents.iter())
+                        .zip(idents)
                         .enumerate()
                         .map(|(index, (field, ident))| {
                             let atom_fun = Context::field_to_atom_fun(field);
@@ -217,11 +223,11 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     }).collect::<Vec<_>>();
                     let field_defs = fields.named.iter()
                         .map(|field| {
-                            let field_ident = field.ident.as_ref().unwrap();
+                            let field_ident = field.ident.as_ref().expect("Named fields must have an ident.");
                             let atom_fun = Context::field_to_atom_fun(field);
 
                             quote_spanned! { field.span() =>
-                                map = map.map_put(#atom_fun().encode(env), #field_ident.encode(env)).unwrap();
+                                map = map.map_put(#atom_fun().encode(env), #field_ident.encode(env)).expect("Failed to putting map");
                             }
                         })
                         .collect::<Vec<_>>();
