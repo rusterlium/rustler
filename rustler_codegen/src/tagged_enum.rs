@@ -150,11 +150,17 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                             (assignment, field_def)
                         })
                         .unzip();
+                    let len = fields.named.len();
 
                     quote! {
                         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
                             let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
                             if tuple.len() == 2 && name == #atom_fn() {
+                                if tuple[1].map_size().and_then(|len| {
+                                        if len == #len {Ok(())} else {Err(#invalid_variant)}
+                                    }).is_err() {
+                                    return Err(#invalid_variant);
+                                }
                                 #(#assignments)*
                                 return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
                             }
