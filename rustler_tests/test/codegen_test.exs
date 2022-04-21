@@ -248,6 +248,16 @@ defmodule RustlerTest.CodegenTest do
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_3_echo({:bar, %AddStruct{lhs: 45, rhs: 123}})
              end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({nil})
+             end)
   end
 
   test "untagged enum transcoder" do

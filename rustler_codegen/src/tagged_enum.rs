@@ -111,7 +111,10 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     let len = fields.unnamed.len();
                     quote! {
                         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
-                            let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
+                            let name = tuple
+                                .get(0)
+                                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
+                                .ok_or(#invalid_variant)?;
                             if name == #atom_fn() {
                                 if tuple.len() -1 != #len {
                                     return Err(#invalid_variant);
@@ -154,7 +157,10 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                     quote! {
                         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
-                            let name = ::rustler::types::atom::Atom::from_term(tuple[0])?;
+                            let name = tuple
+                                .get(0)
+                                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
+                                .ok_or(#invalid_variant)?;
                             if tuple.len() == 2 && name == #atom_fn() {
                                 if tuple[1].map_size().and_then(|len| {
                                         if len == #len {Ok(())} else {Err(#invalid_variant)}
