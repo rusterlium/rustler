@@ -312,12 +312,12 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
     unit_enum::transcoder_decorator(&ast).into()
 }
 
-/// Implementation of the `NifEnum` macro that lets the user annotate an enum that will
+/// Implementation of the `NifTaggedEnum` macro that lets the user annotate an enum that will
 /// generate elixir values when encoded. This can be used for any rust enums and will generate
 /// three types of values based on the kind of the enum. For example from the test code:
 ///
 /// ```ignore
-/// #[derive(NifEnum)]
+/// #[derive(NifTaggedEnum)]
 /// enum TaggedEnum {
 ///     Foo,
 ///     Bar(String),
@@ -339,7 +339,7 @@ pub fn nif_unit_enum(input: TokenStream) -> TokenStream {
 ///   assert {:baz, %{a: 33, b: 21}} == RustlerTest.tagged_enum_echo({:baz, %{a: 33, b: 21}})
 /// end
 /// ```
-#[proc_macro_derive(NifEnum, attributes(rustler))]
+#[proc_macro_derive(NifTaggedEnum, attributes(rustler))]
 pub fn nif_tagged_enum(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     tagged_enum::transcoder_decorator(&ast).into()

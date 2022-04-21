@@ -1,6 +1,7 @@
 use rustler::types::truthy::Truthy;
 use rustler::{
-    NifEnum, NifException, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum,
+    NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
+    NifUntaggedEnum,
 };
 
 #[derive(NifTuple)]
@@ -74,7 +75,7 @@ pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
     unit_enum
 }
 
-#[derive(NifEnum)]
+#[derive(NifTaggedEnum)]
 pub enum TaggedEnum1 {
     Foo { x: i32, y: i32 },
     Bar(String),
@@ -87,7 +88,7 @@ pub fn tagged_enum_1_echo(tagged_enum: TaggedEnum1) -> TaggedEnum1 {
     tagged_enum
 }
 
-#[derive(NifEnum)]
+#[derive(NifTaggedEnum)]
 pub enum TaggedEnum2 {
     Foo,
     Bar(std::collections::HashMap<i32, i32>),
@@ -101,7 +102,7 @@ pub fn tagged_enum_2_echo(tagged_enum: TaggedEnum2) -> TaggedEnum2 {
     tagged_enum
 }
 
-#[derive(NifEnum)]
+#[derive(NifTaggedEnum)]
 pub enum TaggedEnum3 {
     Foo(AddStruct),
     Bar { lhs: i32, rhs: i32 },
