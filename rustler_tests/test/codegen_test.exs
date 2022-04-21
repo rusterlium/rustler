@@ -145,6 +145,48 @@ defmodule RustlerTest.CodegenTest do
     assert :qux == RustlerTest.tagged_enum_1_echo(:qux)
   end
 
+  test "tagged enum transcoder 1 raising errors" do
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo(nil)
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:foo, "not a map"})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:bar, %{a: :map}})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:baz, 10})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:qux, :not_even_a_variant})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:foo, :too, :many, :elements})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:foo})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:not_exists, :not_even_a_variant})
+             end)
+  end
+
   test "tagged enum transcoder 2" do
     assert :foo == RustlerTest.tagged_enum_2_echo(:foo)
 
@@ -156,6 +198,33 @@ defmodule RustlerTest.CodegenTest do
 
     assert {:baz, %{s: "Hello"}} == RustlerTest.tagged_enum_2_echo({:baz, %{s: "Hello"}})
     assert {:qux, :qux} == RustlerTest.tagged_enum_2_echo({:qux, :qux})
+  end
+
+  test "tagged enum transcoder 2 raising errors" do
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:foo, "another argument"})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:bar, %{a: "different", b: "type"}})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:bar2, 1, 2, 3})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:baz, a: "not a map", b: "keywords"})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:qux, {:foo, :too, :many, :elements}})
+             end)
   end
 
   test "untagged enum transcoder" do
