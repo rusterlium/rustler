@@ -228,7 +228,25 @@ defmodule RustlerTest.CodegenTest do
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:qux, {:foo, :too, :many, :elements}})
+               RustlerTest.tagged_enum_2_echo({:qux, {:foo, :too, :many, :elements}})
+             end)
+  end
+
+  test "tagged enum transcoder 3" do
+    assert {:foo, %AddStruct{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:foo, %AddStruct{lhs: 45, rhs: 123}})
+
+    assert {:bar, %{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:bar, %{lhs: 45, rhs: 123}})
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({:foo, %{lhs: 45, rhs: 123}})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({:bar, %AddStruct{lhs: 45, rhs: 123}})
              end)
   end
 

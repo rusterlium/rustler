@@ -101,6 +101,17 @@ pub fn tagged_enum_2_echo(tagged_enum: TaggedEnum2) -> TaggedEnum2 {
     tagged_enum
 }
 
+#[derive(NifEnum)]
+pub enum TaggedEnum3 {
+    Foo(AddStruct),
+    Bar { lhs: i32, rhs: i32 },
+}
+
+#[rustler::nif]
+pub fn tagged_enum_3_echo(tagged_enum: TaggedEnum3) -> TaggedEnum3 {
+    tagged_enum
+}
+
 #[derive(NifUntaggedEnum)]
 pub enum UntaggedEnum {
     Foo(u32),
