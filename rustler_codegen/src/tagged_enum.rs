@@ -21,24 +21,18 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
                 fields
                     .named
                     .iter()
-                    .map(|field| {
-                        field
-                            .ident
-                            .as_ref()
-                            .expect("Atom is expected")
-                            .to_string()
-                            .to_snake_case()
-                    })
+                    .map(|field| field.ident.as_ref().expect("Field name is missing."))
                     .collect::<Vec<_>>()
             } else {
                 vec![]
             };
 
-            ret.push(variant.ident.to_string().to_snake_case());
+            ret.push(&variant.ident);
             ret
         })
-        .map(|atom_str| {
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+        .map(|atom_ident| {
+            let atom_str = atom_ident.to_string().to_snake_case();
+            let atom_fn = Context::ident_to_atom_fun(atom_ident);
             quote! {
                 #atom_fn = #atom_str,
             }
@@ -85,8 +79,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .iter()
         .map(|variant| {
             let variant_ident = &variant.ident;
-            let atom_str = variant_ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            let atom_fn = Context::ident_to_atom_fun(variant_ident);
 
             match &variant.fields {
                 Fields::Unit => quote! {
@@ -193,8 +186,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .iter()
         .map(|variant| {
             let variant_ident = &variant.ident;
-            let atom_str = variant_ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            let atom_fn = Context::ident_to_atom_fun(variant_ident);
 
             match &variant.fields {
                 Fields::Unit => quote! {
