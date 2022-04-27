@@ -137,12 +137,12 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "tagged enum transcoder 1" do
-    assert {:foo, %{x: 1, y: 2}} ==
-             RustlerTest.tagged_enum_1_echo({:foo, %{x: 1, y: 2}})
+    assert {:named, %{x: 1, y: 2}} ==
+             RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2}})
 
-    assert {:bar, "hello"} == RustlerTest.tagged_enum_1_echo({:bar, "hello"})
-    assert {:baz, "world"} == RustlerTest.tagged_enum_1_echo({:baz, "world"})
-    assert :qux == RustlerTest.tagged_enum_1_echo(:qux)
+    assert {:string1, "hello"} == RustlerTest.tagged_enum_1_echo({:string1, "hello"})
+    assert {:string2, "world"} == RustlerTest.tagged_enum_1_echo({:string2, "world"})
+    assert :untagged == RustlerTest.tagged_enum_1_echo(:untagged)
   end
 
   test "tagged enum transcoder 1 raising errors" do
@@ -153,37 +153,37 @@ defmodule RustlerTest.CodegenTest do
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:foo, "not a map"})
+               RustlerTest.tagged_enum_1_echo({:named, "not a map"})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:foo, %{x: 1, y: 2, extra: 3}})
+               RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2, extra: 3}})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:bar, %{a: :map}})
+               RustlerTest.tagged_enum_1_echo({:string1, %{a: :map}})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:baz, 10})
+               RustlerTest.tagged_enum_1_echo({:string2, 10})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:qux, :not_even_a_variant})
+               RustlerTest.tagged_enum_1_echo({:untagged, :not_even_a_variant})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:foo, :too, :many, :elements})
+               RustlerTest.tagged_enum_1_echo({:string1, :too, :many, :elements})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:foo})
+               RustlerTest.tagged_enum_1_echo({:named})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
@@ -193,65 +193,78 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "tagged enum transcoder 2" do
-    assert :foo == RustlerTest.tagged_enum_2_echo(:foo)
+    assert :untagged == RustlerTest.tagged_enum_2_echo(:untagged)
 
-    assert {:bar, %{1 => 1, 2 => 4}} ==
-             RustlerTest.tagged_enum_2_echo({:bar, %{1 => 1, 2 => 4}})
+    assert {:hash_map, %{1 => 1, 2 => 4}} ==
+             RustlerTest.tagged_enum_2_echo({:hash_map, %{1 => 1, 2 => 4}})
 
-    assert {:bar2, 1, 2} ==
-             RustlerTest.tagged_enum_2_echo({:bar2, 1, 2})
+    assert {:tuple, 1, 2} ==
+             RustlerTest.tagged_enum_2_echo({:tuple, 1, 2})
 
-    assert {:baz, %{s: "Hello"}} == RustlerTest.tagged_enum_2_echo({:baz, %{s: "Hello"}})
-    assert {:qux, :qux} == RustlerTest.tagged_enum_2_echo({:qux, :qux})
+    assert {:named, %{s: "Hello"}} == RustlerTest.tagged_enum_2_echo({:named, %{s: "Hello"}})
+    assert {:enum, :untagged} == RustlerTest.tagged_enum_2_echo({:enum, :untagged})
+
+    assert {:enum, {:string1, "world"}} ==
+             RustlerTest.tagged_enum_2_echo({:enum, {:string1, "world"}})
   end
 
   test "tagged enum transcoder 2 raising errors" do
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:foo, "another argument"})
+               RustlerTest.tagged_enum_2_echo({:named, "another argument"})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:bar, %{a: "different", b: "type"}})
+               RustlerTest.tagged_enum_2_echo({:hash_map, %{a: "different", b: "type"}})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:bar2, 1, 2, 3})
+               RustlerTest.tagged_enum_2_echo({:tuple, 1, 2, 3})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:baz, a: "not a map", b: "keywords"})
+               RustlerTest.tagged_enum_2_echo({:tuple, 1})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:qux, {:foo, :too, :many, :elements}})
+               RustlerTest.tagged_enum_2_echo({:named, a: "not a map", b: "keywords"})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:enum, {:foo, :too, :many, :elements}})
              end)
   end
 
   test "tagged enum transcoder 3" do
-    assert {:foo, %AddStruct{lhs: 45, rhs: 123}} ==
-             RustlerTest.tagged_enum_3_echo({:foo, %AddStruct{lhs: 45, rhs: 123}})
+    assert {:struct, %AddStruct{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:struct, %AddStruct{lhs: 45, rhs: 123}})
 
-    assert {:bar, %{lhs: 45, rhs: 123}} ==
-             RustlerTest.tagged_enum_3_echo({:bar, %{lhs: 45, rhs: 123}})
+    assert {:named, %{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:named, %{lhs: 45, rhs: 123}})
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_3_echo({:foo, %{lhs: 45, rhs: 123}})
+               RustlerTest.tagged_enum_3_echo({:struct, %{lhs: 45, rhs: 123}})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_3_echo({:bar, %AddStruct{lhs: 45, rhs: 123}})
+               RustlerTest.tagged_enum_3_echo({:named, %AddStruct{lhs: 45, rhs: 123}})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_3_echo({})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo(%{})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
