@@ -199,10 +199,10 @@ fn gen_unnamed_decoder<'a>(
 ) -> TokenStream {
     let invalid_variant = invalid_variant();
     let decoded_field = &fields_iter
-        .map(|f| &f.ty)
         .enumerate()
-        .map(|(i, ty)| {
+        .map(|(i, f)| {
             let i = i + 1;
+            let ty = &f.ty;
             quote! {
                 <#ty>::decode(tuple[#i]).map_err(|_| #invalid_variant)?
             }
