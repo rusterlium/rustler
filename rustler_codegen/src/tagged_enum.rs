@@ -94,11 +94,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             let atom_fn = Context::ident_to_atom_fun(variant_ident);
 
             match &variant.fields {
-                Fields::Unit => quote! {
-                    if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
-                        return Ok ( #enum_name :: #variant_ident );
-                    }
-                },
+                Fields::Unit => gen_unit_decoder(enum_name, variant_ident, atom_fn),
                 Fields::Unnamed(fields) => gen_unnamed_decoder(
                     enum_name,
                     fields,
@@ -160,19 +156,13 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             let atom_fn = Context::ident_to_atom_fun(variant_ident);
 
             match &variant.fields {
-                Fields::Unit => quote! {
-                    #enum_name :: #variant_ident => #atom_fn().encode(env),
-                },
+                Fields::Unit => gen_unit_encoder(enum_name, variant_ident, atom_fn),
                 Fields::Unnamed(fields) => {
-                    let len = fields.unnamed.len();
-                    let inners = (0..len)
-                        .map(|i| Ident::new(&format!("inner{}", i), Span::call_site()))
-                        .collect::<Vec<_>>();
-                    quote! {
-                        #enum_name :: #variant_ident ( #(ref #inners),* ) => (#atom_fn(), #(#inners),*).encode(env),
-                    }
-                },
-                Fields::Named(fields) => gen_named_encoder(enum_name, fields, variant_ident, atom_fn)
+                    gen_unnamed_encoder(enum_name, fields, variant_ident, atom_fn)
+                }
+                Fields::Named(fields) => {
+                    gen_named_encoder(enum_name, fields, variant_ident, atom_fn)
+                }
             }
         })
         .collect();
@@ -190,6 +180,14 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
     };
 
     gen
+}
+
+fn gen_unit_decoder(enum_name: &Ident, variant_ident: &Ident, atom_fn: Ident) -> TokenStream {
+    quote! {
+        if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
+            return Ok ( #enum_name :: #variant_ident );
+        }
+    }
 }
 
 fn gen_unnamed_decoder<'a>(
@@ -279,6 +277,27 @@ fn gen_named_decoder(
                 return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
             }
         }
+    }
+}
+
+fn gen_unit_encoder(enum_name: &Ident, variant_ident: &Ident, atom_fn: Ident) -> TokenStream {
+    quote! {
+        #enum_name :: #variant_ident => #atom_fn().encode(env),
+    }
+}
+
+fn gen_unnamed_encoder(
+    enum_name: &Ident,
+    fields: &FieldsUnnamed,
+    variant_ident: &Ident,
+    atom_fn: Ident,
+) -> TokenStream {
+    let len = fields.unnamed.len();
+    let inners = (0..len)
+        .map(|i| Ident::new(&format!("inner{}", i), Span::call_site()))
+        .collect::<Vec<_>>();
+    quote! {
+        #enum_name :: #variant_ident ( #(ref #inners),* ) => (#atom_fn(), #(#inners),*).encode(env),
     }
 }
 
