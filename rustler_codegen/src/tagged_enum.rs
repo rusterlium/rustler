@@ -216,7 +216,7 @@ fn gen_unnamed_decoder<'a>(
                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
                 .ok_or(#invalid_variant)?;
             if name == #atom_fn() {
-                if tuple.len() -1 != #len {
+                if tuple.len() - 1 != #len {
                     return Err(#invalid_variant);
                 }
                 return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
@@ -268,9 +268,12 @@ fn gen_named_decoder(
                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
                 .ok_or(#invalid_variant)?;
             if tuple.len() == 2 && name == #atom_fn() {
-                if tuple[1].map_size().and_then(|len| {
-                        if len == #len {Ok(())} else {Err(#invalid_variant)}
-                    }).is_err() {
+                if tuple[1]
+                    .map_size()
+                    .ok()
+                    .and_then(|len| (len == #len).then(|| ()))
+                    .is_none()
+                {
                     return Err(#invalid_variant);
                 }
                 #(#assignments)*
