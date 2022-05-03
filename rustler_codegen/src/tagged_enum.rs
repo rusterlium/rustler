@@ -76,14 +76,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn invalid_variant() -> TokenStream {
-    quote! {
-        ::rustler::Error::RaiseAtom("invalid_variant")
-    }
-}
-
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let invalid_variant = invalid_variant();
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
@@ -137,7 +130,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                 #(#variant_defs)*
 
-                Err(#invalid_variant)
+                Err(::rustler::Error::RaiseAtom("invalid_variant"))
             }
         }
     };
@@ -197,14 +190,15 @@ fn gen_unnamed_decoder<'a>(
     variant_ident: &Ident,
     atom_fn: Ident,
 ) -> TokenStream {
-    let invalid_variant = invalid_variant();
     let decoded_field = &fields_iter
         .enumerate()
         .map(|(i, f)| {
             let i = i + 1;
             let ty = &f.ty;
             quote! {
-                <#ty>::decode(tuple[#i]).map_err(|_| #invalid_variant)?
+                <#ty>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseTerm(
+                    Box::new(format!("Could not decode field on position {}", #i))
+                ))?
             }
         })
         .collect::<Vec<_>>();
@@ -214,10 +208,13 @@ fn gen_unnamed_decoder<'a>(
             let name = tuple
                 .get(0)
                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                .ok_or(#invalid_variant)?;
+                .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
             if name == #atom_fn() {
                 if tuple.len() - 1 != #len {
-                    return Err(#invalid_variant);
+                    return Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                        "The tuple must have {} elements, but it has {}",
+                        #len + 1, tuple.len()
+                    ))));
                 }
                 return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
             }

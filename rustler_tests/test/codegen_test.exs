@@ -176,12 +176,12 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_1_echo({:named, %{x: "string", y: 2}})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:string1, %{a: :map}})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:string2, 10})
              end)
@@ -189,11 +189,6 @@ defmodule RustlerTest.CodegenTest do
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:untagged, :not_even_a_variant})
-             end)
-
-    assert %ErlangError{original: :invalid_variant} ==
-             assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_1_echo({:string1, :too, :many, :elements})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
@@ -224,17 +219,17 @@ defmodule RustlerTest.CodegenTest do
   end
 
   test "tagged enum transcoder 2 raising errors" do
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:hash_map, %{a: "different", b: "type"}})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The tuple must have 3 elements, but it has 4"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:tuple, 1, 2, 3})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The tuple must have 3 elements, but it has 2"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:tuple, 1})
              end)
@@ -244,7 +239,7 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_2_echo({:named, a: "not a map", b: "keywords"})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:enum, {:foo, :too, :many, :elements}})
              end)
@@ -257,7 +252,7 @@ defmodule RustlerTest.CodegenTest do
     assert {:named, %{lhs: 45, rhs: 123}} ==
              RustlerTest.tagged_enum_3_echo({:named, %{lhs: 45, rhs: 123}})
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_3_echo({:struct, %{lhs: 45, rhs: 123}})
              end)
