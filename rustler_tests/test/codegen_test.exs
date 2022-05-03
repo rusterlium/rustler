@@ -161,6 +161,11 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2, extra: 3}})
              end)
 
+    assert %ErlangError{original: "Could not decode field x on Enum TaggedEnum1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named, %{x: "string", y: 2}})
+             end)
+
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:string1, %{a: :map}})

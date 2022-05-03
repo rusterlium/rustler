@@ -232,25 +232,28 @@ fn gen_named_decoder(
     atom_fn: Ident,
 ) -> TokenStream {
     let invalid_variant = invalid_variant();
-    let idents = fields.named.iter().map(|field| {
-        field
-            .ident
-            .as_ref()
-            .expect("Named fields must have an ident.")
-    });
-
     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
         .named
         .iter()
-        .zip(idents)
         .enumerate()
-        .map(|(index, (field, ident))| {
+        .map(|(index, field)| {
+            let ident = field
+                .ident
+                .as_ref()
+                .expect("Named fields must have an ident.");
             let atom_fun = Context::field_to_atom_fun(field);
             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
+            let ident_string = ident.to_string();
+            let enum_name_string = enum_name.to_string();
+
             let assignment = quote_spanned! { field.span() =>
-                let #variable = try_decode_field(env, tuple[1], #atom_fun())
-                  .map_err(|_| #invalid_variant)?;
+                let #variable = try_decode_field(env, tuple[1], #atom_fun()).map_err(|_|{
+                    ::rustler::Error::RaiseTerm(Box::new(format!(
+                        "Could not decode field {} on Enum {}",
+                        #ident_string, #enum_name_string
+                    )))
+                })?;
             };
 
             let field_def = quote! {
