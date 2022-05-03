@@ -269,7 +269,9 @@ fn gen_named_decoder(
             let name = tuple
                 .get(0)
                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                .ok_or(#invalid_variant)?;
+                .ok_or(::rustler::Error::RaiseTerm(Box::new(format!(
+                    "The first element of the tuple must be an atom"
+                ))))?;
             if tuple.len() == 2 && name == #atom_fn() {
                 if tuple[1]
                     .map_size()

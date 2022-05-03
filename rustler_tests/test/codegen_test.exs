@@ -156,6 +156,11 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_1_echo({:named, "not a map"})
              end)
 
+    assert %ErlangError{original: "The first element of the tuple must be an atom"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({"named", %{x: 1, y: 2}})
+             end)
+
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2, extra: 3}})
