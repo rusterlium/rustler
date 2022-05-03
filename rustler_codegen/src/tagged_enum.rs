@@ -231,7 +231,6 @@ fn gen_named_decoder(
     variant_ident: &Ident,
     atom_fn: Ident,
 ) -> TokenStream {
-    let invalid_variant = invalid_variant();
     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
         .named
         .iter()
@@ -269,17 +268,18 @@ fn gen_named_decoder(
             let name = tuple
                 .get(0)
                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                .ok_or(::rustler::Error::RaiseTerm(Box::new(format!(
+                .ok_or(::rustler::Error::RaiseTerm(Box::new(
                     "The first element of the tuple must be an atom"
-                ))))?;
+                )))?;
             if tuple.len() == 2 && name == #atom_fn() {
-                if tuple[1]
-                    .map_size()
-                    .ok()
-                    .and_then(|len| (len == #len).then(|| ()))
-                    .is_none()
-                {
-                    return Err(#invalid_variant);
+                let len = tuple[1].map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
+                    "The second element of the tuple must be a map"
+                )))?;
+                if len != #len {
+                    return Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                        "The map must have {} elements, but it has {}",
+                        #len, len
+                    ))));
                 }
                 #(#assignments)*
                 return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )

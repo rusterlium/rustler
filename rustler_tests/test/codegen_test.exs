@@ -151,7 +151,7 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_1_echo(nil)
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The second element of the tuple must be a map"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:named, "not a map"})
              end)
@@ -161,7 +161,12 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_1_echo({"named", %{x: 1, y: 2}})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The map must have 2 elements, but it has 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named, %{x: 1}})
+             end)
+
+    assert %ErlangError{original: "The map must have 2 elements, but it has 3"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2, extra: 3}})
              end)
@@ -221,11 +226,6 @@ defmodule RustlerTest.CodegenTest do
   test "tagged enum transcoder 2 raising errors" do
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_2_echo({:named, "another argument"})
-             end)
-
-    assert %ErlangError{original: :invalid_variant} ==
-             assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:hash_map, %{a: "different", b: "type"}})
              end)
 
@@ -239,7 +239,7 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_2_echo({:tuple, 1})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The second element of the tuple must be a map"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_2_echo({:named, a: "not a map", b: "keywords"})
              end)
@@ -262,7 +262,7 @@ defmodule RustlerTest.CodegenTest do
                RustlerTest.tagged_enum_3_echo({:struct, %{lhs: 45, rhs: 123}})
              end)
 
-    assert %ErlangError{original: :invalid_variant} ==
+    assert %ErlangError{original: "The map must have 2 elements, but it has 3"} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_3_echo({:named, %AddStruct{lhs: 45, rhs: 123}})
              end)
