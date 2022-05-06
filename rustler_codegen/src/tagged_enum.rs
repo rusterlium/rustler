@@ -246,7 +246,7 @@ fn gen_named_decoder(
             let assignment = quote_spanned! { field.span() =>
                 let #variable = try_decode_field(env, tuple[1], #atom_fun()).map_err(|_|{
                     ::rustler::Error::RaiseTerm(Box::new(format!(
-                        "Could not decode field {} on Enum {}",
+                        "Could not decode field '{}' on Enum '{}'",
                         #ident_string, #enum_name_string
                     )))
                 })?;
@@ -258,7 +258,6 @@ fn gen_named_decoder(
             (assignment, field_def)
         })
         .unzip();
-    let len = fields.named.len();
 
     quote! {
         if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
@@ -272,12 +271,6 @@ fn gen_named_decoder(
                 let len = tuple[1].map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
                     "The second element of the tuple must be a map"
                 )))?;
-                if len != #len {
-                    return Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                        "The map must have {} elements, but it has {}",
-                        #len, len
-                    ))));
-                }
                 #(#assignments)*
                 return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
             }
