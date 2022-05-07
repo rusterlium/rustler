@@ -1,5 +1,8 @@
 use rustler::types::truthy::Truthy;
-use rustler::{NifException, NifMap, NifRecord, NifStruct, NifTuple, NifUnitEnum, NifUntaggedEnum};
+use rustler::{
+    NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
+    NifUntaggedEnum,
+};
 
 #[derive(NifTuple)]
 pub struct AddTuple {
@@ -70,6 +73,44 @@ pub enum UnitEnum {
 #[rustler::nif]
 pub fn unit_enum_echo(unit_enum: UnitEnum) -> UnitEnum {
     unit_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum1 {
+    Named { x: i32, y: i32 },
+    String1(String),
+    String2(String),
+    Untagged,
+}
+
+#[rustler::nif]
+pub fn tagged_enum_1_echo(tagged_enum: TaggedEnum1) -> TaggedEnum1 {
+    tagged_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum2 {
+    Untagged,
+    HashMap(std::collections::HashMap<i32, i32>),
+    Tuple(i64, i64),
+    Named { s: String },
+    Enum(TaggedEnum1),
+}
+
+#[rustler::nif]
+pub fn tagged_enum_2_echo(tagged_enum: TaggedEnum2) -> TaggedEnum2 {
+    tagged_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum3 {
+    Struct(AddStruct),
+    Named { lhs: i32, rhs: i32 },
+}
+
+#[rustler::nif]
+pub fn tagged_enum_3_echo(tagged_enum: TaggedEnum3) -> TaggedEnum3 {
+    tagged_enum
 }
 
 #[derive(NifUntaggedEnum)]

@@ -1,6 +1,7 @@
 // TODO When we settle for a minimum version of Rust >= 1.42, remove this.
 #![allow(clippy::match_like_matches_macro)]
 
+use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{Data, Field, Fields, Ident, Lit, Meta, NestedMeta, Variant};
@@ -117,7 +118,11 @@ impl<'a> Context<'a> {
 
     pub fn field_to_atom_fun(field: &Field) -> Ident {
         let ident = field.ident.as_ref().unwrap();
-        let ident_str = ident.to_string();
+        Self::ident_to_atom_fun(ident)
+    }
+
+    pub fn ident_to_atom_fun(ident: &Ident) -> Ident {
+        let ident_str = ident.to_string().to_snake_case();
         let ident_str = Self::remove_raw(&ident_str);
 
         Ident::new(&format!("atom_{}", ident_str), Span::call_site())

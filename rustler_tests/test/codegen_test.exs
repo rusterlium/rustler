@@ -136,6 +136,149 @@ defmodule RustlerTest.CodegenTest do
              assert_raise(ErlangError, fn -> RustlerTest.unit_enum_echo(:somethingelse) end)
   end
 
+  test "tagged enum transcoder 1" do
+    assert {:named, %{x: 1, y: 2}} ==
+             RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2}})
+
+    assert {:named, %{x: 1, y: 2}} =
+             RustlerTest.tagged_enum_1_echo({:named, %{x: 1, y: 2, extra: 3}})
+
+    assert {:string1, "hello"} == RustlerTest.tagged_enum_1_echo({:string1, "hello"})
+    assert {:string2, "world"} == RustlerTest.tagged_enum_1_echo({:string2, "world"})
+    assert :untagged == RustlerTest.tagged_enum_1_echo(:untagged)
+  end
+
+  test "tagged enum transcoder 1 raising errors" do
+    assert %ErlangError{original: "The second element of the tuple must be a map"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named, "not a map"})
+             end)
+
+    assert %ErlangError{original: "The first element of the tuple must be an atom"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({"named", %{x: 1, y: 2}})
+             end)
+
+    assert %ErlangError{original: "Could not decode field 'x' on Enum 'TaggedEnum1'"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named, %{x: "string", y: 2}})
+             end)
+
+    assert %ErlangError{original: "Could not decode field 'y' on Enum 'TaggedEnum1'"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named, %{x: 1}})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:named})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo(nil)
+             end)
+
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:string1, %{a: :map}})
+             end)
+
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:string2, 10})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:untagged, :not_even_a_variant})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo({:not_exists, :not_even_a_variant})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_1_echo(:not_exists)
+             end)
+  end
+
+  test "tagged enum transcoder 2" do
+    assert :untagged == RustlerTest.tagged_enum_2_echo(:untagged)
+
+    assert {:hash_map, %{1 => 1, 2 => 4}} ==
+             RustlerTest.tagged_enum_2_echo({:hash_map, %{1 => 1, 2 => 4}})
+
+    assert {:tuple, 1, 2} ==
+             RustlerTest.tagged_enum_2_echo({:tuple, 1, 2})
+
+    assert {:named, %{s: "Hello"}} == RustlerTest.tagged_enum_2_echo({:named, %{s: "Hello"}})
+    assert {:enum, :untagged} == RustlerTest.tagged_enum_2_echo({:enum, :untagged})
+
+    assert {:enum, {:string1, "world"}} ==
+             RustlerTest.tagged_enum_2_echo({:enum, {:string1, "world"}})
+  end
+
+  test "tagged enum transcoder 2 raising errors" do
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:hash_map, %{a: "different", b: "type"}})
+             end)
+
+    assert %ErlangError{original: "The tuple must have 3 elements, but it has 4"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:tuple, 1, 2, 3})
+             end)
+
+    assert %ErlangError{original: "The tuple must have 3 elements, but it has 2"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:tuple, 1})
+             end)
+
+    assert %ErlangError{original: "The second element of the tuple must be a map"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:named, a: "not a map", b: "keywords"})
+             end)
+
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_2_echo({:enum, {:foo, :too, :many, :elements}})
+             end)
+  end
+
+  test "tagged enum transcoder 3" do
+    assert {:struct, %AddStruct{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:struct, %AddStruct{lhs: 45, rhs: 123}})
+
+    assert {:named, %{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:named, %{lhs: 45, rhs: 123}})
+
+    assert %ErlangError{original: "Could not decode field on position 1"} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({:struct, %{lhs: 45, rhs: 123}})
+             end)
+
+    assert {:named, %{lhs: 45, rhs: 123}} ==
+             RustlerTest.tagged_enum_3_echo({:named, %AddStruct{lhs: 45, rhs: 123}})
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo(%{})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_3_echo({nil})
+             end)
+  end
+
   test "untagged enum transcoder" do
     assert 123 == RustlerTest.untagged_enum_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_echo("Hello")
