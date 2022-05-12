@@ -154,7 +154,7 @@ where
     V: Encoder,
 {
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
-        let (keys, values): (Vec<_>, Vec<_>) = self.iter().map(|(k, v)| (k, v)).unzip();
+        let (keys, values): (Vec<_>, Vec<_>) = self.iter().unzip();
         Term::map_from_arrays(env, &keys, &values).unwrap()
     }
 }
