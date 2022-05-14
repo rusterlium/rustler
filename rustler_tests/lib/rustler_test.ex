@@ -38,6 +38,8 @@ defmodule RustlerTest do
   def resource_make_immutable(_), do: err()
   def resource_immutable_count(), do: err()
 
+  def big_int_add_one(_), do: err()
+
   def make_shorter_subbinary(_), do: err()
   def parse_integer(_), do: err()
   def binary_new(), do: err()

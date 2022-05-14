@@ -19,4 +19,4 @@ path = "src/main.rs"
 
 [dependencies]
 lazy_static = "1.4"
-rustler = { path = "../../../rustler" }
+rustler = { path = "../../../rustler", features = ["num-bigint"] }

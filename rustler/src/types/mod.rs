@@ -37,6 +37,9 @@ pub mod truthy;
 
 pub mod elixir_struct;
 
+#[cfg(feature = "num-bigint")]
+pub mod big_int;
+
 pub trait Encoder {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a>;
 }
