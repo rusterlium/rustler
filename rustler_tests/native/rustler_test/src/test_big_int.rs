@@ -1,4 +1,3 @@
-
 use rustler::types::big_int::BigInt;
 
 #[rustler::nif]

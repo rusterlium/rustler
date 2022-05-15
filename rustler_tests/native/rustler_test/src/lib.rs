@@ -1,6 +1,6 @@
 mod test_atom;
-mod test_binary;
 mod test_big_int;
+mod test_binary;
 mod test_codegen;
 mod test_dirty;
 mod test_env;

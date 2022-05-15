@@ -1,3 +1,4 @@
+use crate::types::atom::error;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 pub use num_bigint;
@@ -83,7 +84,7 @@ impl Encoder for num_bigint::BigInt {
         if let Some((term, _)) = env.binary_to_term(&binary) {
             term
         } else {
-            panic!("encode_big_integer gives invalid bytes")
+            error().encode(env)
         }
     }
 }
