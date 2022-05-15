@@ -11,6 +11,7 @@ edition = "2018"
 [features]
 default = ["derive"]
 derive = ["rustler_codegen"]
+bigint = ["num-bigint"]
 alternative_nif_init_name = []
 
 [dependencies]

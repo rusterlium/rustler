@@ -37,7 +37,7 @@ pub mod truthy;
 
 pub mod elixir_struct;
 
-#[cfg(feature = "num-bigint")]
+#[cfg(feature = "bigint")]
 pub mod big_int;
 
 pub trait Encoder {
