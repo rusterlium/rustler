@@ -62,8 +62,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-elixir@v1
         with:
-          otp-version: "22.3.4"
-          elixir-version: "1.11.4"
+          otp-version: "25.0.0"
+          elixir-version: "1.13.4"
 
       - name: Check cargo fmt
         uses: actions-rs/cargo@v1
@@ -140,14 +140,11 @@ jobs:
     strategy:
       matrix:
         pair:
+          - { erlang: "25.0.0", elixir: "1.13.4" }
           - { erlang: "24.1.7", elixir: "1.13.0" }
           - { erlang: "24.1.7", elixir: "1.12.3" }
           - { erlang: "24.1.7", elixir: "1.11.4" }
-
           - { erlang: "23.3.4", elixir: "1.11.4" }
-
-          - { erlang: "22.3.4", elixir: "1.11.4" }
-
         rust:
           - stable
           - beta
