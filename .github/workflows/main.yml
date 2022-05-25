@@ -141,10 +141,10 @@ jobs:
       matrix:
         pair:
           - { erlang: "25.0.0", elixir: "1.13.4" }
-          - { erlang: "24.1.7", elixir: "1.13.0" }
-          - { erlang: "24.1.7", elixir: "1.12.3" }
-          - { erlang: "24.1.7", elixir: "1.11.4" }
-          - { erlang: "23.3.4", elixir: "1.11.4" }
+          - { erlang: "24.3.4", elixir: "1.13.0" }
+          - { erlang: "24.3.4", elixir: "1.12.3" }
+          - { erlang: "24.3.4", elixir: "1.11.4" }
+          - { erlang: "23.3.4.14", elixir: "1.11.4" }
         rust:
           - stable
           - beta
