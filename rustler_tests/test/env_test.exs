@@ -57,4 +57,14 @@ defmodule RustlerTest.EnvTest do
                ]
     end
   end
+
+  test "whereis_pid" do
+    assert self() == RustlerTest.whereis_pid(self())
+
+    {:ok, agent_pid} = Agent.start(fn -> 42 end, name: MyAgentName)
+    assert agent_pid == RustlerTest.whereis_pid(MyAgentName)
+
+    assert nil == RustlerTest.whereis_pid("not a PID")
+    assert nil == RustlerTest.whereis_pid(:not_a_registered_name)
+  end
 end

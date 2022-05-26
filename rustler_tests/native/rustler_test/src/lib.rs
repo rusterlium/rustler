@@ -55,6 +55,7 @@ rustler::init!(
         test_thread::threaded_fac,
         test_thread::threaded_sleep,
         test_env::send_all,
+        test_env::whereis_pid,
         test_env::sublists,
         test_codegen::tuple_echo,
         test_codegen::record_echo,

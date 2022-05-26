@@ -58,6 +58,7 @@ defmodule RustlerTest do
   def threaded_sleep(_), do: err()
 
   def send_all(_, _), do: err()
+  def whereis_pid(_), do: err()
   def sublists(_), do: err()
 
   def tuple_echo(_), do: err()
