@@ -11,6 +11,10 @@ impl LocalPid {
     pub fn as_c_arg(&self) -> &ErlNifPid {
         &self.c
     }
+
+    pub fn from_c_arg(erl_nif_pid: ErlNifPid) -> Self {
+        LocalPid { c: erl_nif_pid }
+    }
 }
 
 impl<'a> Decoder<'a> for LocalPid {
