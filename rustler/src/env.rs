@@ -98,9 +98,7 @@ impl<'a> Env<'a> {
         }
     }
 
-    /// Attempts to find the PID of a process registered by the atom `name_or_pid`
-    ///
-    /// If the term `name_or_pid` already is a PID, will return this PID as LocalPid.
+    /// Attempts to find the PID of a process registered by `name_or_pid`
     ///
     /// Safe wrapper around [`enif_whereis_pid`](https://www.erlang.org/doc/man/erl_nif.html#enif_whereis_pid).
     ///
