@@ -60,7 +60,7 @@ jobs:
             override: true
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           otp-version: "25.0.0"
           elixir-version: "1.13.4"
@@ -91,7 +91,7 @@ jobs:
           override: true
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           otp-version: "24.1.7"
           elixir-version: 1.13
@@ -154,7 +154,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.pair.erlang}}
           elixir-version: ${{matrix.pair.elixir}}
