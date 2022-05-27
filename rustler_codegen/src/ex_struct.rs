@@ -83,7 +83,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "struct");
 
             let assignment = quote_spanned! { field.span() =>
-                let #variable = try_decode_field(env, term, #atom_fun())?;
+                let #variable = try_decode_field(term, #atom_fun())?;
             };
 
             let field_def = quote! {
@@ -100,10 +100,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 use #atoms_module_name::*;
                 use ::rustler::Encoder;
 
-                let env = term.get_env();
-
                 fn try_decode_field<'a, T>(
-                    env: rustler::Env<'a>,
                     term: rustler::Term<'a>,
                     field: rustler::Atom,
                     ) -> ::rustler::NifResult<T>
@@ -111,7 +108,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                         T: rustler::Decoder<'a>,
                     {
                         use rustler::Encoder;
-                        match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
+                        match ::rustler::Decoder::decode(term.map_get(field)?) {
                             Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                             "Could not decode field :{:?} on %{}{{}}",
                                             field, #struct_name_str
@@ -120,7 +117,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                         }
                     };
 
-                let module: ::rustler::types::atom::Atom = term.map_get(atom_struct().to_term(env))?.decode()?;
+                let module: ::rustler::types::atom::Atom = term.map_get(atom_struct())?.decode()?;
                 if module != atom_module() {
                     return Err(::rustler::Error::RaiseAtom("invalid_struct"));
                 }
@@ -149,14 +146,14 @@ fn gen_encoder(
             let field_ident = field.ident.as_ref().unwrap();
             let atom_fun = Context::field_to_atom_fun(field);
             quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun().encode(env), self.#field_ident.encode(env)).unwrap();
+                map = map.map_put(#atom_fun(), &self.#field_ident).unwrap();
             }
         })
         .collect();
 
     let exception_field = if add_exception {
         quote! {
-            map = map.map_put(atom_exception().encode(env), true.encode(env)).unwrap();
+            map = map.map_put(atom_exception(), true).unwrap();
         }
     } else {
         quote! {}
@@ -167,7 +164,7 @@ fn gen_encoder(
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);
-                map = map.map_put(atom_struct().encode(env), atom_module().encode(env)).unwrap();
+                map = map.map_put(atom_struct(), atom_module()).unwrap();
                 #exception_field
                 #(#field_defs)*
                 map

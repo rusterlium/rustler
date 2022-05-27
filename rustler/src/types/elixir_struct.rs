@@ -12,17 +12,15 @@ use super::map::map_new;
 use crate::{Env, NifResult, Term};
 
 pub fn get_ex_struct_name(map: Term) -> NifResult<Atom> {
-    let env = map.get_env();
     // In an Elixir struct the value in the __struct__ field is always an atom.
-    map.map_get(atom::__struct__().to_term(env))
-        .and_then(Atom::from_term)
+    map.map_get(atom::__struct__()).and_then(Atom::from_term)
 }
 
 pub fn make_ex_struct<'a>(env: Env<'a>, struct_module: &str) -> NifResult<Term<'a>> {
     let map = map_new(env);
 
-    let struct_atom = atom::__struct__().to_term(env);
-    let module_atom = Atom::from_str(env, struct_module)?.to_term(env);
+    let struct_atom = atom::__struct__();
+    let module_atom = Atom::from_str(env, struct_module)?;
 
     map.map_put(struct_atom, module_atom)
 }

@@ -2,7 +2,7 @@
 
 use super::atom;
 use crate::wrapper::map;
-use crate::{Decoder, Env, Error, NifResult, Term};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::ops::RangeInclusive;
 
 pub fn map_new(env: Env) -> Term {
@@ -31,12 +31,12 @@ impl<'a> Term<'a> {
     /// ```
     pub fn map_from_arrays(
         env: Env<'a>,
-        keys: &[Term<'a>],
-        values: &[Term<'a>],
+        keys: &[impl Encoder],
+        values: &[impl Encoder],
     ) -> NifResult<Term<'a>> {
         if keys.len() == values.len() {
-            let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
-            let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
+            let keys: Vec<_> = keys.iter().map(|k| k.encode(env).as_c_arg()).collect();
+            let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
 
             unsafe {
                 map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
@@ -57,10 +57,13 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.new([{"foo", 1}, {"bar", 2}])
     /// ```
-    pub fn map_from_pairs(env: Env<'a>, pairs: &[(Term<'a>, Term<'a>)]) -> NifResult<Term<'a>> {
+    pub fn map_from_pairs(
+        env: Env<'a>,
+        pairs: &[(impl Encoder, impl Encoder)],
+    ) -> NifResult<Term<'a>> {
         let (keys, values): (Vec<_>, Vec<_>) = pairs
             .iter()
-            .map(|(k, v)| (k.as_c_arg(), v.as_c_arg()))
+            .map(|(k, v)| (k.encode(env).as_c_arg(), v.encode(env).as_c_arg()))
             .unzip();
 
         unsafe {
@@ -78,9 +81,11 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.get(self_term, key)
     /// ```
-    pub fn map_get(self, key: Term) -> NifResult<Term<'a>> {
+    pub fn map_get(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
-        match unsafe { map::get_map_value(env.as_c_arg(), self.as_c_arg(), key.as_c_arg()) } {
+        match unsafe {
+            map::get_map_value(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg())
+        } {
             Some(value) => Ok(unsafe { Term::new(env, value) }),
             None => Err(Error::BadArg),
         }
@@ -108,27 +113,18 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.put(self_term, key, value)
     /// ```
-    pub fn map_put(self, key: Term<'a>, value: Term<'a>) -> NifResult<Term<'a>> {
-        let map_env = self.get_env();
-
-        assert!(
-            map_env == key.get_env(),
-            "key is from different environment as map"
-        );
-        assert!(
-            map_env == value.get_env(),
-            "value is from different environment as map"
-        );
+    pub fn map_put(self, key: impl Encoder, value: impl Encoder) -> NifResult<Term<'a>> {
+        let env = self.get_env();
 
         match unsafe {
             map::map_put(
-                map_env.as_c_arg(),
+                env.as_c_arg(),
                 self.as_c_arg(),
-                key.as_c_arg(),
-                value.as_c_arg(),
+                key.encode(env).as_c_arg(),
+                value.encode(env).as_c_arg(),
             )
         } {
-            Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
+            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
             None => Err(Error::BadArg),
         }
     }
@@ -142,16 +138,13 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.delete(self_term, key)
     /// ```
-    pub fn map_remove(self, key: Term<'a>) -> NifResult<Term<'a>> {
-        let map_env = self.get_env();
+    pub fn map_remove(self, key: impl Encoder) -> NifResult<Term<'a>> {
+        let env = self.get_env();
 
-        assert!(
-            map_env == key.get_env(),
-            "key is from different environment as map"
-        );
-
-        match unsafe { map::map_remove(map_env.as_c_arg(), self.as_c_arg(), key.as_c_arg()) } {
-            Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
+        match unsafe {
+            map::map_remove(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg())
+        } {
+            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
             None => Err(Error::BadArg),
         }
     }
@@ -160,27 +153,18 @@ impl<'a> Term<'a> {
     ///
     /// Returns Err(Error::BadArg) if the term is not a map of if key
     /// doesn't exist.
-    pub fn map_update(self, key: Term<'a>, new_value: Term<'a>) -> NifResult<Term<'a>> {
-        let map_env = self.get_env();
-
-        assert!(
-            map_env == key.get_env(),
-            "key is from different environment as map"
-        );
-        assert!(
-            map_env == new_value.get_env(),
-            "value is from different environment as map"
-        );
+    pub fn map_update(self, key: impl Encoder, new_value: impl Encoder) -> NifResult<Term<'a>> {
+        let env = self.get_env();
 
         match unsafe {
             map::map_update(
-                map_env.as_c_arg(),
+                env.as_c_arg(),
                 self.as_c_arg(),
-                key.as_c_arg(),
-                new_value.as_c_arg(),
+                key.encode(env).as_c_arg(),
+                new_value.encode(env).as_c_arg(),
             )
         } {
-            Some(inner) => Ok(unsafe { Term::new(map_env, inner) }),
+            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
             None => Err(Error::BadArg),
         }
     }
@@ -234,17 +218,16 @@ where
     T: Decoder<'a>,
 {
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let env = term.get_env();
-        let name = term.map_get(atom::__struct__().to_term(env))?;
+        let name = term.map_get(atom::__struct__())?;
 
         match name.atom_to_string()?.as_ref() {
             "Elixir.Range" => (),
             _ => return Err(Error::BadArg),
         }
 
-        let first = term.map_get(atom::first().to_term(env))?.decode::<T>()?;
-        let last = term.map_get(atom::last().to_term(env))?.decode::<T>()?;
-        if let Ok(step) = term.map_get(atom::step().to_term(env)) {
+        let first = term.map_get(atom::first())?.decode::<T>()?;
+        let last = term.map_get(atom::last())?.decode::<T>()?;
+        if let Ok(step) = term.map_get(atom::step()) {
             match step.decode::<i64>()? {
                 1 => (),
                 _ => return Err(Error::BadArg),
