@@ -107,11 +107,9 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
 
-                let env = term.get_env();
                 let value = ::rustler::types::atom::Atom::from_term(term);
 
                 fn try_decode_field<'a, T>(
-                    env: ::rustler::Env<'a>,
                     term: ::rustler::Term<'a>,
                     field: ::rustler::Atom,
                     ) -> ::rustler::NifResult<T>
@@ -119,7 +117,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         T: ::rustler::Decoder<'a>,
                 {
                     use ::rustler::Encoder;
-                    match ::rustler::Decoder::decode(term.map_get(field.encode(env))?) {
+                    match ::rustler::Decoder::decode(term.map_get(field)?) {
                         Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                         "Could not decode field :{:?} on %{{}}",
                                         field
@@ -244,7 +242,7 @@ fn gen_named_decoder(
             let enum_name_string = enum_name.to_string();
 
             let assignment = quote_spanned! { field.span() =>
-                let #variable = try_decode_field(env, tuple[1], #atom_fun()).map_err(|_|{
+                let #variable = try_decode_field(tuple[1], #atom_fun()).map_err(|_|{
                     ::rustler::Error::RaiseTerm(Box::new(format!(
                         "Could not decode field '{}' on Enum '{}'",
                         #ident_string, #enum_name_string
@@ -315,22 +313,24 @@ fn gen_named_encoder(
             }
         })
         .collect::<Vec<_>>();
-    let field_defs = fields.named.iter()
+    let (keys, values): (Vec<_>, Vec<_>) = fields
+        .named
+        .iter()
         .map(|field| {
-            let field_ident = field.ident.as_ref().expect("Named fields must have an ident.");
+            let field_ident = field
+                .ident
+                .as_ref()
+                .expect("Named fields must have an ident.");
             let atom_fun = Context::field_to_atom_fun(field);
-
-            quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun().encode(env), #field_ident.encode(env)).expect("Failed to putting map");
-            }
+            (atom_fun, field_ident)
         })
-        .collect::<Vec<_>>();
+        .unzip();
     quote! {
         #enum_name :: #variant_ident{
             #(#field_decls)*
         } => {
-            let mut map = ::rustler::types::map::map_new(env);
-            #(#field_defs)*
+            let map = ::rustler::Term::map_from_arrays(env, &[#(#keys()),*], &[#(#values),*])
+                .expect("Failed to create map");
             ::rustler::types::tuple::make_tuple(env, &[#atom_fn().encode(env), map])
         }
     }
