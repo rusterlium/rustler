@@ -1,5 +1,4 @@
 mod test_atom;
-mod test_big_int;
 mod test_binary;
 mod test_codegen;
 mod test_dirty;
@@ -53,7 +52,6 @@ rustler::init!(
         test_binary::realloc_grow,
         test_binary::encode_string,
         test_binary::decode_iolist,
-        test_big_int::big_int_add_one,
         test_thread::threaded_fac,
         test_thread::threaded_sleep,
         test_env::send_all,

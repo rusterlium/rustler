@@ -1,0 +1,10 @@
+[package]
+name = "rustler_bigint"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num-bigint = {version = "0.4"}
+rustler = {path = "../rustler"}
