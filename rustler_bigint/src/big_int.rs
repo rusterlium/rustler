@@ -3,6 +3,52 @@ use rustler::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use num_bigint::Sign;
 
+/// Wrapper around num-bigint that implements [Decoder](rustler::Decoder) and [Encoder](rustler::Encoder) traits
+///
+/// ```rust
+/// use rustler_bigint::{BigInt, num_bigint};
+///
+/// // convert from and to the bigint wrapper
+/// let number = num_bigint::BigInt::from(12);
+/// let implements_decode_encode = BigInt::from(number.clone());
+/// let bigint = num_bigint::BigInt::from(implements_decode_encode);
+/// assert_eq!(number, bigint);
+/// ```
+///
+/// ## Examples
+///
+/// ```rust
+/// use rustler_bigint::BigInt;
+///
+/// #[rustler::nif]
+/// pub fn pow(base: BigInt, exponent: u32) -> BigInt {
+///   base.pow(exponent).into()
+/// }
+/// ```
+///
+/// ```rust
+/// use rustler::Binary;
+/// use rustler_bigint::{BigInt, num_bigint};
+///
+/// #[rustler::nif]
+/// pub fn binary_to_integer(binary: Binary) -> BigInt {
+///   num_bigint::BigInt::from_signed_bytes_be(binary.as_slice()).into()
+/// }
+/// ```
+///
+/// ```rust
+/// use rustler::{Binary, Env, NewBinary};
+/// use rustler_bigint::BigInt;
+///
+/// #[rustler::nif]
+/// pub fn integer_to_binary<'a>(env: Env<'a>, integer: BigInt) -> Binary<'a> {
+///   let bytes = integer.to_signed_bytes_be();
+///   let mut output = NewBinary::new(env, bytes.len());
+///   output.as_mut_slice().copy_from_slice(bytes.as_slice());
+///   output.into()
+/// }
+/// ```
+///
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct BigInt(num_bigint::BigInt);
 
