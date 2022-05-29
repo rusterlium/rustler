@@ -10,7 +10,7 @@ pub fn echo(input: BigInt) -> NifResult<BigInt> {
 #[rustler::nif]
 pub fn add_one(input: BigInt) -> NifResult<BigInt> {
     Ok(input
-        .checked_add(&num_bigint::BigInt::from_signed_bytes_be(&[1]))
+        .checked_add(&num_bigint::BigInt::from(1))
         .unwrap()
         .into())
 }

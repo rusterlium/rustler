@@ -165,28 +165,28 @@ impl Encoder for BigInt {
 
 #[test]
 fn from_test() {
-    let right = BigInt::from(num_bigint::BigInt::from_signed_bytes_be(&[123]));
-    let left = BigInt(num_bigint::BigInt::from_signed_bytes_be(&[123]));
+    let right = BigInt::from(num_bigint::BigInt::from(123));
+    let left = BigInt(num_bigint::BigInt::from(123));
     assert_eq!(left, right)
 }
 
 #[test]
 fn into_test() {
-    let right = BigInt(num_bigint::BigInt::from_signed_bytes_be(&[123]));
-    let left = num_bigint::BigInt::from_signed_bytes_be(&[123]);
+    let right = BigInt(num_bigint::BigInt::from(123));
+    let left = num_bigint::BigInt::from(123);
     assert_eq!(left, right.into())
 }
 
 #[test]
 fn deref_test() {
-    let input = BigInt(num_bigint::BigInt::from_signed_bytes_be(&[123]));
+    let input = BigInt(num_bigint::BigInt::from(123));
     assert_eq!(vec![123], input.to_signed_bytes_be())
 }
 
 #[test]
 fn deref_mut_test() {
-    let expected = BigInt(num_bigint::BigInt::from_signed_bytes_be(&[127]));
-    let mut input = BigInt(num_bigint::BigInt::from_signed_bytes_be(&[123]));
+    let expected = BigInt(num_bigint::BigInt::from(127));
+    let mut input = BigInt(num_bigint::BigInt::from(123));
     input.set_bit(2, true);
 
     assert_eq!(expected, input)
@@ -197,7 +197,7 @@ fn decode_small_int() {
     // :erlang.term_to_binary(3)
     let data = [131, 97, 3];
 
-    let expected = num_bigint::BigInt::from_signed_bytes_be(&[3]);
+    let expected = num_bigint::BigInt::from(3);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -207,7 +207,7 @@ fn decode_small_negative_int() {
     // :erlang.term_to_binary(-5)
     let data = [131, 98, 255, 255, 255, 251];
 
-    let expected = num_bigint::BigInt::from_bytes_be(Sign::Minus, &[5]);
+    let expected = num_bigint::BigInt::from(-5);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -217,7 +217,7 @@ fn decode_normal_int() {
     // :erlang.term_to_binary(12345)
     let data = [131, 98, 0, 0, 48, 57];
 
-    let expected = num_bigint::BigInt::from_signed_bytes_be(&[48, 57]);
+    let expected = num_bigint::BigInt::from(12345);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -231,7 +231,7 @@ fn decode_small_big_int() {
         240, 96, 176, 91, 142, 219, 66, 30, 177, 137, 199, 21, 191, 153, 182, 169, 73, 73,
     ];
 
-    let expected = num_bigint::BigInt::from_signed_bytes_be(&[24]).pow(120);
+    let expected = num_bigint::BigInt::from(24).pow(120);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -246,7 +246,7 @@ fn decode_negative_small_big_int() {
         186, 211, 12, 168, 222, 95,
     ];
 
-    let expected = num_bigint::BigInt::from_bytes_be(Sign::Minus, &[17]).pow(121);
+    let expected = num_bigint::BigInt::from(-17).pow(121);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -271,7 +271,7 @@ fn decode_large_big_int() {
         133, 185, 168, 30, 64, 0, 151, 20, 186, 82, 147, 226, 1, 2, 141,
     ];
 
-    let expected = num_bigint::BigInt::from_signed_bytes_be(&[5]).pow(923);
+    let expected = num_bigint::BigInt::from(5).pow(923);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -299,7 +299,7 @@ fn decode_negative_large_big_int() {
         193, 165, 1, 16, 3,
     ];
 
-    let expected = num_bigint::BigInt::from_bytes_be(Sign::Minus, &[17]).pow(613);
+    let expected = num_bigint::BigInt::from(-17).pow(613);
 
     assert_eq!(expected, decode_big_integer(&data).unwrap());
 }
@@ -308,7 +308,7 @@ fn decode_negative_large_big_int() {
 fn encode_normal_int_as_small_big_int() {
     let expected = vec![131, 110, 1, 0, 12];
 
-    let input = num_bigint::BigInt::from_signed_bytes_be(&[12]);
+    let input = num_bigint::BigInt::from(12);
 
     assert_eq!(expected, encode_big_integer(&input));
 }
@@ -322,7 +322,7 @@ fn encode_small_big_int() {
         240, 96, 176, 91, 142, 219, 66, 30, 177, 137, 199, 21, 191, 153, 182, 169, 73, 73,
     ];
 
-    let input = num_bigint::BigInt::from_signed_bytes_be(&[24]).pow(120);
+    let input = num_bigint::BigInt::from(24).pow(120);
 
     assert_eq!(expected, encode_big_integer(&input));
 }
@@ -337,7 +337,7 @@ fn encode_negative_small_big_int() {
         186, 211, 12, 168, 222, 95,
     ];
 
-    let input = num_bigint::BigInt::from_bytes_be(Sign::Minus, &[17]).pow(121);
+    let input = num_bigint::BigInt::from(-17).pow(121);
 
     assert_eq!(expected, encode_big_integer(&input));
 }
@@ -362,7 +362,7 @@ fn encode_large_big_int() {
         133, 185, 168, 30, 64, 0, 151, 20, 186, 82, 147, 226, 1, 2, 141,
     ];
 
-    let input = num_bigint::BigInt::from_signed_bytes_be(&[5]).pow(923);
+    let input = num_bigint::BigInt::from(5).pow(923);
 
     assert_eq!(expected, encode_big_integer(&input));
 }
@@ -390,7 +390,7 @@ fn encode_negative_large_big_int() {
         193, 165, 1, 16, 3,
     ];
 
-    let input = num_bigint::BigInt::from_bytes_be(Sign::Minus, &[17]).pow(613);
+    let input = num_bigint::BigInt::from(-17).pow(613);
 
     assert_eq!(expected, encode_big_integer(&input));
 }
