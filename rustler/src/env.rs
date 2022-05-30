@@ -98,6 +98,41 @@ impl<'a> Env<'a> {
         }
     }
 
+    /// Attempts to find the PID of a process registered by `name_or_pid`
+    ///
+    /// Safe wrapper around [`enif_whereis_pid`](https://www.erlang.org/doc/man/erl_nif.html#enif_whereis_pid).
+    ///
+    /// # Returns
+    /// - `Some(pid)` if `name_or_pid` is already a PID.
+    /// - `Some(pid)` if `name_or_pid` is an atom and an alive process is currently registered under the given name.
+    /// - `None` if `name_or_pid` is an atom but there is no alive process registered under this name.
+    /// - `None` if `name_or_pid` is not a PID or atom.
+    pub fn whereis_pid(&self, name_or_pid: Term<'a>) -> Option<LocalPid> {
+        if name_or_pid.is_pid() {
+            return Some(name_or_pid.decode().unwrap());
+        }
+
+        let mut enif_pid = std::mem::MaybeUninit::uninit();
+
+        if unsafe {
+            rustler_sys::enif_whereis_pid(
+                self.as_c_arg(),
+                name_or_pid.as_c_arg(),
+                enif_pid.as_mut_ptr(),
+            )
+        } == 0
+        {
+            // If `name_or_pid` is not an atom, or not the name of a registered process
+            None
+        } else {
+            // Safety: Initialized by successful enif_whereis_pid call
+            let enif_pid = unsafe { enif_pid.assume_init() };
+
+            let pid = LocalPid::from_c_arg(enif_pid);
+            Some(pid)
+        }
+    }
+
     /// Decodes binary data to a term.
     ///
     /// Follows the erlang

@@ -16,6 +16,12 @@ pub fn send_all<'a>(env: Env<'a>, pids: Vec<LocalPid>, msg: Term<'a>) -> Term<'a
 }
 
 #[rustler::nif]
+pub fn whereis_pid<'a>(env: Env<'a>, term: Term<'a>) -> Term<'a> {
+    let result = env.whereis_pid(term);
+    result.encode(env)
+}
+
+#[rustler::nif]
 pub fn sublists<'a>(env: Env<'a>, list: Term<'a>) -> NifResult<Atom> {
     // This is a "threaded NIF": it spawns a thread that sends a message back
     // to the calling thread later.
