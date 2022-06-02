@@ -89,7 +89,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                         T: rustler::Decoder<'a>,
                     {
                         use rustler::Encoder;
-                        match ::rustler::Decoder::decode(term.map_get(field)?) {
+                        match ::rustler::Decoder::decode(term.map_get(&field)?) {
                             Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                             "Could not decode field :{:?} on %{{}}",
                                             field
@@ -118,7 +118,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
             let atom_fun = Context::field_to_atom_fun(field);
 
             quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun(), self.#field_ident).unwrap();
+                map = map.map_put(#atom_fun(), &self.#field_ident).unwrap();
             }
         })
         .collect();
