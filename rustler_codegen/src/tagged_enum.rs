@@ -117,7 +117,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                         T: ::rustler::Decoder<'a>,
                 {
                     use ::rustler::Encoder;
-                    match ::rustler::Decoder::decode(term.map_get(field)?) {
+                    match ::rustler::Decoder::decode(term.map_get(&field)?) {
                         Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                         "Could not decode field :{:?} on %{{}}",
                                         field
