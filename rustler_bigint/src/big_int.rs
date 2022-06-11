@@ -1,4 +1,3 @@
-use rustler::types::atom::error;
 use rustler::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use num_bigint::Sign;
@@ -157,12 +156,11 @@ impl<'a> Decoder<'a> for BigInt {
 
 impl Encoder for BigInt {
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
+        // returns nil if the encode_big_integer returns invalid ETF bytes
         let binary = encode_big_integer(&self.0);
-        if let Some((term, _)) = env.binary_to_term(&binary) {
-            term
-        } else {
-            error().encode(env)
-        }
+        env.binary_to_term(&binary)
+            .map(|(term, _)| term)
+            .encode(env)
     }
 }
 
