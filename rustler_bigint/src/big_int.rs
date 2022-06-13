@@ -9,6 +9,10 @@ const INTEGER: u8 = 98;
 const SMALL_BIG_EXT: u8 = 110;
 const LARGE_BIG_EXT: u8 = 111;
 
+rustler::atoms! {
+    big_int_encoder_invalid_bytes
+}
+
 /// Wrapper around num-bigint that implements [Decoder](rustler::Decoder) and [Encoder](rustler::Encoder) traits
 ///
 /// ```rust
@@ -156,11 +160,12 @@ impl<'a> Decoder<'a> for BigInt {
 
 impl Encoder for BigInt {
     fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
-        // returns nil if the encode_big_integer returns invalid ETF bytes
+        // Returns error tuple if the encode_big_integer returns invalid ETF bytes
         let binary = encode_big_integer(&self.0);
-        env.binary_to_term(&binary)
-            .map(|(term, _)| term)
-            .encode(env)
+        match env.binary_to_term(&binary) {
+            Some((term, _)) => term,
+            None => env.error_tuple(big_int_encoder_invalid_bytes()),
+        }
     }
 }
 
