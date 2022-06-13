@@ -1,0 +1,13 @@
+[package]
+name = "rustler_bigint_test"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rustler_bigint_test"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler_bigint = { path = "../../../rustler_bigint" }
+rustler = { path = "../../../rustler" }

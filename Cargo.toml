@@ -1,9 +1,11 @@
 [workspace]
 members = [
   "rustler",
+  "rustler_bigint",
   "rustler_codegen",
   "rustler_sys",
   "rustler_tests/native/binary_example",
   "rustler_tests/native/rustler_test",
+  "rustler_tests/native/rustler_bigint_test",
   "rustler_tests/native/deprecated_macros",
 ]
