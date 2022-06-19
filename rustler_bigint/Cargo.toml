@@ -1,10 +1,14 @@
 [package]
 name = "rustler_bigint"
+description = "Handle Erlang's arbitrarily-sized integers"
+repository = "https://github.com/rusterlium/rustler"
+authors = ["Thomas Timmer"]
+license = "MIT/Apache-2.0"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+readme = "README.md"
+keywords = ["bigint", "Erlang", "Elixir"]
 
 [dependencies]
 num-bigint = {version = "0.4"}
-rustler = {path = "../rustler"}
+rustler = {path = "../rustler", version = "0.25.0"}
