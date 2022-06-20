@@ -32,7 +32,7 @@ from `num_bigint::BigInt` can be called directly.
 ```rust
 /// Simply echo `large` back to the caller.
 #[rustler::nif]
-pub fn handle_large(large: rustler_bigint::BigInt) -> NifResult<BigInt> {
+pub fn handle_large(large: rustler_bigint::BigInt) -> NifResult<rustler_bigint::BigInt> {
   Ok(large)
 }
 ```
