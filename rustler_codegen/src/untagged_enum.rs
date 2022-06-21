@@ -88,7 +88,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
             let variant_name = &variant.ident;
 
             quote! {
-                #enum_name :: #variant_name ( ref inner ) => inner.encode(env),
+                #enum_name :: #variant_name ( ref inner ) => ::rustler::Encoder::encode(&inner, env),
             }
         })
         .collect();

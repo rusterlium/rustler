@@ -278,7 +278,7 @@ fn gen_named_decoder(
 
 fn gen_unit_encoder(enum_name: &Ident, variant_ident: &Ident, atom_fn: Ident) -> TokenStream {
     quote! {
-        #enum_name :: #variant_ident => #atom_fn().encode(env),
+        #enum_name :: #variant_ident => ::rustler::Encoder::encode(&#atom_fn(), env),
     }
 }
 
@@ -293,7 +293,7 @@ fn gen_unnamed_encoder(
         .map(|i| Ident::new(&format!("inner{}", i), Span::call_site()))
         .collect::<Vec<_>>();
     quote! {
-        #enum_name :: #variant_ident ( #(ref #inners),* ) => (#atom_fn(), #(#inners),*).encode(env),
+        #enum_name :: #variant_ident ( #(ref #inners),* ) => ::rustler::Encoder::encode(&(#atom_fn(), #(#inners),*), env),
     }
 }
 
@@ -331,7 +331,7 @@ fn gen_named_encoder(
         } => {
             let map = ::rustler::Term::map_from_arrays(env, &[#(#keys()),*], &[#(#values),*])
                 .expect("Failed to create map");
-            ::rustler::types::tuple::make_tuple(env, &[#atom_fn().encode(env), map])
+            ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
         }
     }
 }
