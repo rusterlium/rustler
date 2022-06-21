@@ -194,7 +194,7 @@ fn gen_unnamed_decoder<'a>(
             let i = i + 1;
             let ty = &f.ty;
             quote! {
-                <#ty>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseTerm(
+                <#ty as ::rustler::Decoder>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseTerm(
                     Box::new(format!("Could not decode field on position {}", #i))
                 ))?
             }

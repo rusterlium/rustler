@@ -58,7 +58,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
             let field_type = &variant.fields.iter().next().unwrap().ty;
 
             quote! {
-                if let Ok(inner) = <#field_type>::decode(term) {
+                if let Ok(inner) = <#field_type as ::rustler::Decoder>::decode(term) {
                     return Ok( #enum_name :: #variant_name ( inner ) )
                 }
             }

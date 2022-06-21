@@ -4,6 +4,17 @@ use rustler::{
     NifUntaggedEnum,
 };
 
+/// A test trait for testing the ambiguity of `encode` and `decode`.
+pub trait TestMessage {
+    fn encode(&self);
+    fn decode();
+}
+
+impl<T> TestMessage for T {
+    fn encode(&self) {}
+    fn decode() {}
+}
+
 #[derive(NifTuple)]
 pub struct AddTuple {
     lhs: i32,
