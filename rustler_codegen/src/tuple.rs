@@ -121,7 +121,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
                 Some(ident) => quote! { self.#ident },
             };
 
-            quote_spanned! { field.span() => #field_source.encode(env) }
+            quote_spanned! { field.span() => ::rustler::Encoder::encode(&#field_source, env) }
         })
         .collect();
 

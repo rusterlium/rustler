@@ -151,11 +151,11 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 Some(ident) => quote! { self.#ident },
             };
 
-            quote_spanned! { field.span() => #field_source.encode(env) }
+            quote_spanned! { field.span() => ::rustler::Encoder::encode(&#field_source, env) }
         })
         .collect();
 
-    let tag_encoder = quote! { atom_tag().encode(env) };
+    let tag_encoder = quote! { ::rustler::Encoder::encode(&atom_tag(), env) };
 
     // Build a slice ast from the field_encoders
 

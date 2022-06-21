@@ -114,7 +114,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
             let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
 
             quote! {
-                #enum_name :: #variant_ident => #atom_fn().encode(env),
+                #enum_name :: #variant_ident => ::rustler::Encoder::encode(&#atom_fn(), env),
             }
         })
         .collect();
