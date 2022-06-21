@@ -4,13 +4,13 @@ use rustler::{
     NifUntaggedEnum,
 };
 
-/// A test trait for testing the ambiguity of `encode` and `decode`.
-pub trait TestMessage {
+/// A trait for testing the ambiguity of `encode` and `decode`.
+pub trait EmptyTranscoder {
     fn encode(&self);
     fn decode();
 }
 
-impl<T> TestMessage for T {
+impl<T> EmptyTranscoder for T {
     fn encode(&self) {}
     fn decode() {}
 }
