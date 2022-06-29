@@ -85,9 +85,14 @@ defmodule Rustler.Compiler do
     {potential_config_files, _} =
       Enum.map_reduce(["" | components], workspace_root, fn component, path ->
         path = Path.join(path, component)
+        # See https://doc.rust-lang.org/cargo/reference/config.html, cargo
+        # accepts the config with and without a file extension of `.toml`.
         file = Path.join([path, ".cargo", "config"])
-        {file, path}
+        file_with_extension = file <> ".toml"
+        {[file, file_with_extension], path}
       end)
+
+    potential_config_files = List.flatten(potential_config_files)
 
     has_macos_target_os_configuration? =
       potential_config_files
@@ -101,7 +106,7 @@ defmodule Rustler.Compiler do
       Compiling on macOS requires special link args in order to compile
       correctly.
 
-      To remove this error, please create .cargo/config
+      To remove this error, please create .cargo/config.toml or .cargo/config
       with the following content:
 
              [target.'cfg(target_os = "macos")']
