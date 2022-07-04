@@ -163,7 +163,7 @@ fn gen_encoder(
     };
 
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_type {
+        impl ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use #atoms_module_name::*;
                 let mut map = ::rustler::types::map::map_new(env);

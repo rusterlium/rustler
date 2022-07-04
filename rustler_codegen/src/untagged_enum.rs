@@ -67,7 +67,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> Result<Self, ::rustler::Error> {
+            fn decode(term: ::rustler::Term) -> Result<Self, ::rustler::Error> {
                 #(#variant_defs)*
 
                 Err(::rustler::Error::RaiseAtom("invalid_variant"))
@@ -94,7 +94,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         .collect();
 
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
+        impl ::rustler::Encoder for #enum_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 match *self {
                     #(#variant_defs)*
