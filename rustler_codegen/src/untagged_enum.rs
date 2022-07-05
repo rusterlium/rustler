@@ -94,7 +94,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         .collect();
 
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
+        impl ::rustler::Encoder for #enum_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 match *self {
                     #(#variant_defs)*

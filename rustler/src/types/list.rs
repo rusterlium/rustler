@@ -86,18 +86,11 @@ impl<'a> Decoder<'a> for ListIterator<'a> {
     }
 }
 
-//impl<'a, T> Encoder for Iterator<Item = T> where T: Encoder {
-//    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-//        let term_arr: Vec<NIF_TERM> =
-//            self.map(|x| x.encode(env).as_c_arg()).collect();
-//    }
-//}
-
-impl<'a, T> Encoder for Vec<T>
+impl<T> Encoder for Vec<T>
 where
     T: Encoder,
 {
-    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.as_slice().encode(env)
     }
 }
@@ -113,11 +106,11 @@ where
     }
 }
 
-impl<'a, T> Encoder for [T]
+impl<T> Encoder for [T]
 where
     T: Encoder,
 {
-    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         let term_array: Vec<NIF_TERM> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }

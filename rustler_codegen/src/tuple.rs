@@ -132,7 +132,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
 
     // The implementation itself
     let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_type {
+        impl ::rustler::Encoder for #struct_type {
             fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
                 use ::rustler::Encoder;
                 let arr = #field_list_ast;
