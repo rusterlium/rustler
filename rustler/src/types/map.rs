@@ -21,7 +21,7 @@ impl<'a> Term<'a> {
         map_new(env)
     }
 
-    /// Construct a new map from two vectors
+    /// Construct a new map from two iterators
     ///
     /// ### Elixir equivalent
     /// ```elixir
@@ -29,15 +29,20 @@ impl<'a> Term<'a> {
     /// values = [1, 2]
     /// List.zip(keys, values) |> Map.new()
     /// ```
-    pub fn map_from_arrays(
-        env: Env<'a>,
-        keys: &[impl Encoder],
-        values: &[impl Encoder],
-    ) -> NifResult<Term<'a>> {
-        if keys.len() == values.len() {
-            let keys: Vec<_> = keys.iter().map(|k| k.encode(env).as_c_arg()).collect();
-            let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
+    pub fn map_from_arrays<A, B, K, V>(env: Env<'a>, keys: A, values: B) -> NifResult<Term<'a>>
+    where
+        A: IntoIterator<Item = K>,
+        B: IntoIterator<Item = V>,
+        K: Encoder,
+        V: Encoder,
+    {
+        let keys: Vec<_> = keys.into_iter().map(|k| k.encode(env).as_c_arg()).collect();
+        let values: Vec<_> = values
+            .into_iter()
+            .map(|v| v.encode(env).as_c_arg())
+            .collect();
 
+        if keys.len() == values.len() {
             unsafe {
                 map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
                     .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
@@ -50,19 +55,21 @@ impl<'a> Term<'a> {
     /// Construct a new map from pairs of terms
     ///
     /// It is similar to `map_from_arrays` but
-    /// receives only one vector with the pairs
+    /// receives only one iterator with the pairs
     /// of `(key, value)`.
     ///
     /// ### Elixir equivalent
     /// ```elixir
     /// Map.new([{"foo", 1}, {"bar", 2}])
     /// ```
-    pub fn map_from_pairs(
-        env: Env<'a>,
-        pairs: &[(impl Encoder, impl Encoder)],
-    ) -> NifResult<Term<'a>> {
+    pub fn map_from_pairs<K, V, I>(env: Env<'a>, pairs: I) -> NifResult<Term<'a>>
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: Encoder,
+        V: Encoder,
+    {
         let (keys, values): (Vec<_>, Vec<_>) = pairs
-            .iter()
+            .into_iter()
             .map(|(k, v)| (k.encode(env).as_c_arg(), v.encode(env).as_c_arg()))
             .unzip();
 
