@@ -62,11 +62,11 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.new([{"foo", 1}, {"bar", 2}])
     /// ```
-    pub fn map_from_pairs<K, V, I>(env: Env<'a>, pairs: I) -> NifResult<Term<'a>>
+    pub fn map_from_pairs<'t, K, V, I>(env: Env<'a>, pairs: I) -> NifResult<Term<'a>>
     where
-        I: IntoIterator<Item = (K, V)>,
-        K: Encoder,
-        V: Encoder,
+        I: IntoIterator<Item = &'t (K, V)>,
+        K: Encoder + 't,
+        V: Encoder + 't,
     {
         let (keys, values): (Vec<_>, Vec<_>) = pairs
             .into_iter()
