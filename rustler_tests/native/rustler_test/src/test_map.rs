@@ -37,9 +37,10 @@ pub fn map_from_arrays<'a>(
 
 #[rustler::nif]
 pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Term<'a>> {
-    let res: Result<Vec<(Term, Term)>, Error> = pairs.map(|x| x.decode()).collect();
-
-    res.and_then(|v| Term::map_from_pairs(env, &v))
+    let res = pairs
+        .map(|x| x.decode())
+        .collect::<NifResult<Vec<(Term, Term)>>>()?;
+    Term::map_from_pairs(env, res)
 }
 
 #[rustler::nif]
