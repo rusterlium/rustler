@@ -10,10 +10,12 @@ pub struct LocalPid {
 }
 
 impl LocalPid {
+    #[inline]
     pub fn as_c_arg(&self) -> &ErlNifPid {
         &self.c
     }
 
+    #[inline]
     pub fn from_c_arg(erl_nif_pid: ErlNifPid) -> Self {
         LocalPid { c: erl_nif_pid }
     }
@@ -25,6 +27,7 @@ impl LocalPid {
 }
 
 impl<'a> Decoder<'a> for LocalPid {
+    #[inline]
     fn decode(term: Term<'a>) -> NifResult<LocalPid> {
         unsafe { pid::get_local_pid(term.get_env().as_c_arg(), term.as_c_arg()) }
             .map(|pid| LocalPid { c: pid })
@@ -33,6 +36,7 @@ impl<'a> Decoder<'a> for LocalPid {
 }
 
 impl Encoder for LocalPid {
+    #[inline]
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), self.c)) }
     }
@@ -67,6 +71,7 @@ impl Env<'_> {
     /// Panics if this environment is process-independent.  (The only way to get such an
     /// environment is to use `OwnedEnv`.  The `Env` that Rustler passes to NIFs when they're
     /// called is always associated with the calling Erlang process.)
+    #[inline]
     pub fn pid(self) -> LocalPid {
         let mut pid = MaybeUninit::uninit();
         if unsafe { enif_self(self.as_c_arg(), pid.as_mut_ptr()) }.is_null() {
