@@ -1,7 +1,7 @@
 use crate::wrapper::check;
 use crate::Term;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TermType {
     Atom,
     Binary,
