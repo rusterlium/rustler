@@ -2,6 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
 use heck::ToSnakeCase;
+use std::collections::HashMap;
 use syn::{self, spanned::Spanned, Field, Fields, FieldsNamed, FieldsUnnamed, Ident, Variant};
 
 use super::context::Context;
@@ -38,6 +39,10 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .map(|atom_ident| {
             let atom_str = atom_ident.to_string().to_snake_case();
             let atom_fn = Context::ident_to_atom_fun(atom_ident);
+            (atom_str, atom_fn)
+        }).collect::<HashMap<_, _>>()
+        .into_iter()
+        .map(|(atom_str, atom_fn)| {
             quote! {
                 #atom_fn = #atom_str,
             }
@@ -129,8 +134,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
                 if let Ok(unit) = ::rustler::types::atom::Atom::from_term(term) {
                     #(#unit_decoders)*
-                } else {
-                    let tuple = ::rustler::types::tuple::get_tuple(term)?;
+                } else if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
                     let name = tuple
                                 .get(0)
                                 .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
