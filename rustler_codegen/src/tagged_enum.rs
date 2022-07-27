@@ -40,7 +40,8 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
             let atom_str = atom_ident.to_string().to_snake_case();
             let atom_fn = Context::ident_to_atom_fun(atom_ident);
             (atom_str, atom_fn)
-        }).collect::<HashMap<_, _>>()
+        })
+        .collect::<HashMap<_, _>>()
         .into_iter()
         .map(|(atom_str, atom_fn)| {
             quote! {
@@ -84,31 +85,37 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
-    let unit_decoders: Vec<TokenStream> = variants.iter().filter_map(|variant| {
-        let variant_ident = &variant.ident;
-        let atom_fn = Context::ident_to_atom_fun(variant_ident);
-        match &variant.fields {
-            Fields::Unit => Some(gen_unit_decoder(enum_name, variant_ident, atom_fn)),
-            _ => None
-        }
-    }).collect();
-    let named_unnamed_decoders: Vec<TokenStream> = variants.iter().filter_map(|variant| {
-        let variant_ident = &variant.ident;
-        let atom_fn = Context::ident_to_atom_fun(variant_ident);
-        match &variant.fields {
-            Fields::Unnamed(fields) => Some(gen_unnamed_decoder(
-                enum_name,
-                fields,
-                variant.fields.iter(),
-                variant_ident,
-                atom_fn,
-            )),
-            Fields::Named(fields) => {
-                Some(gen_named_decoder(enum_name, fields, variant_ident, atom_fn))
+    let unit_decoders: Vec<TokenStream> = variants
+        .iter()
+        .filter_map(|variant| {
+            let variant_ident = &variant.ident;
+            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            match &variant.fields {
+                Fields::Unit => Some(gen_unit_decoder(enum_name, variant_ident, atom_fn)),
+                _ => None,
             }
-            _ => None
-        }
-    }).collect();
+        })
+        .collect();
+    let named_unnamed_decoders: Vec<TokenStream> = variants
+        .iter()
+        .filter_map(|variant| {
+            let variant_ident = &variant.ident;
+            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            match &variant.fields {
+                Fields::Unnamed(fields) => Some(gen_unnamed_decoder(
+                    enum_name,
+                    fields,
+                    variant.fields.iter(),
+                    variant_ident,
+                    atom_fn,
+                )),
+                Fields::Named(fields) => {
+                    Some(gen_named_decoder(enum_name, fields, variant_ident, atom_fn))
+                }
+                _ => None,
+            }
+        })
+        .collect();
 
     let gen = quote! {
         impl<'a> ::rustler::Decoder<'a> for #enum_type {

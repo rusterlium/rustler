@@ -92,7 +92,7 @@ pub enum TaggedEnum1 {
     String1(String),
     String2(String),
     Untagged,
-    Samefields {x: i32, y: i32},
+    Samefields { x: i32, y: i32 },
 }
 
 #[rustler::nif]
