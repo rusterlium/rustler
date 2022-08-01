@@ -34,7 +34,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
 
@@ -81,9 +80,10 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
             Ok(#struct_name { #(#field_defs),* })
         }
     };
-    let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
+
+    super::encode_decode_templates::decoder(
+        ctx,
+        quote! {
                 let terms = ::rustler::types::tuple::get_tuple(term)?;
                 if terms.len() != #field_num {
                     return Err(::rustler::Error::BadArg);
@@ -99,17 +99,13 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
                         Ok(value) => Ok(value)
                     }
                 }
-                #construct
-            }
-        }
-    };
 
-    gen
+                #construct
+        },
+    )
 }
 
 fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
-
     // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<TokenStream> = fields
         .iter()
@@ -130,16 +126,12 @@ fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
         [#(#field_encoders),*]
     };
 
-    // The implementation itself
-    let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                use ::rustler::Encoder;
-                let arr = #field_list_ast;
-                ::rustler::types::tuple::make_tuple(env, &arr)
-            }
-        }
-    };
-
-    gen
+    super::encode_decode_templates::encoder(
+        ctx,
+        quote! {
+            use ::rustler::Encoder;
+            let arr = #field_list_ast;
+            ::rustler::types::tuple::make_tuple(env, &arr)
+        },
+    )
 }

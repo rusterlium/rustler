@@ -67,7 +67,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<TokenStream> = variants
@@ -85,25 +84,21 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         })
         .collect();
 
-    let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
-                use #atoms_module_name::*;
+    super::encode_decode_templates::decoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
 
-                let value = ::rustler::types::atom::Atom::from_term(term)?;
+            let value = ::rustler::types::atom::Atom::from_term(term)?;
 
-                #(#variant_defs)*
+            #(#variant_defs)*
 
-                Err(::rustler::Error::RaiseAtom("invalid_variant"))
-            }
-        }
-    };
-
-    gen
+            Err(::rustler::Error::RaiseAtom("invalid_variant"))
+        },
+    )
 }
 
 fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<TokenStream> = variants
@@ -119,17 +114,14 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         })
         .collect();
 
-    let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                use #atoms_module_name::*;
+    super::encode_decode_templates::encoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
 
-                match *self {
-                    #(#variant_defs)*
-                }
+            match *self {
+                #(#variant_defs)*
             }
-        }
-    };
-
-    gen
+        },
+    )
 }

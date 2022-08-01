@@ -65,7 +65,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> Toke
 }
 
 fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
 
@@ -94,42 +93,39 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         })
         .unzip();
 
-    let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #struct_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
-                use #atoms_module_name::*;
-                use ::rustler::Encoder;
+    super::encode_decode_templates::decoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
+            use ::rustler::Encoder;
 
-                fn try_decode_field<'a, T>(
-                    term: rustler::Term<'a>,
-                    field: rustler::Atom,
-                    ) -> ::rustler::NifResult<T>
-                    where
-                        T: rustler::Decoder<'a>,
-                    {
-                        use rustler::Encoder;
-                        match ::rustler::Decoder::decode(term.map_get(&field)?) {
-                            Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                                            "Could not decode field :{:?} on %{}{{}}",
-                                            field, #struct_name_str
-                            )))),
-                            Ok(value) => Ok(value),
-                        }
-                    };
-
-                let module: ::rustler::types::atom::Atom = term.map_get(atom_struct())?.decode()?;
-                if module != atom_module() {
-                    return Err(::rustler::Error::RaiseAtom("invalid_struct"));
+            fn try_decode_field<'a, T>(
+                term: rustler::Term<'a>,
+                field: rustler::Atom,
+                ) -> ::rustler::NifResult<T>
+                where
+                    T: rustler::Decoder<'a>,
+                {
+                    use rustler::Encoder;
+                    match ::rustler::Decoder::decode(term.map_get(&field)?) {
+                        Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                        "Could not decode field :{:?} on %{}{{}}",
+                                        field, #struct_name_str
+                        )))),
+                        Ok(value) => Ok(value),
+                    }
                 }
 
-                #(#assignments);*
-
-                Ok(#struct_name { #(#field_defs),* })
+            let module: ::rustler::types::atom::Atom = term.map_get(atom_struct())?.decode()?;
+            if module != atom_module() {
+                return Err(::rustler::Error::RaiseAtom("invalid_struct"));
             }
-        }
-    };
 
-    gen
+            #(#assignments);*
+
+            Ok(#struct_name { #(#field_defs),* })
+        },
+    )
 }
 
 fn gen_encoder(
@@ -138,8 +134,6 @@ fn gen_encoder(
     atoms_module_name: &Ident,
     add_exception: bool,
 ) -> TokenStream {
-    let struct_type = &ctx.ident_with_lifetime;
-
     let field_defs: Vec<TokenStream> = fields
         .iter()
         .map(|field| {
@@ -159,20 +153,17 @@ fn gen_encoder(
         quote! {}
     };
 
-    let gen = quote! {
-        impl<'b> ::rustler::Encoder for #struct_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                use #atoms_module_name::*;
-                let mut map = ::rustler::types::map::map_new(env);
-                map = map.map_put(atom_struct(), atom_module()).unwrap();
-                #exception_field
-                #(#field_defs)*
-                map
-            }
-        }
-    };
-
-    gen
+    super::encode_decode_templates::encoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
+            let mut map = ::rustler::types::map::map_new(env);
+            map = map.map_put(atom_struct(), atom_module()).unwrap();
+            #exception_field
+            #(#field_defs)*
+            map
+        },
+    )
 }
 
 fn get_module(ctx: &Context, add_exception: bool) -> String {
