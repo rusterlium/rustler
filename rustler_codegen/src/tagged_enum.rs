@@ -2,6 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
 use heck::ToSnakeCase;
+use std::collections::HashMap;
 use syn::{self, spanned::Spanned, Field, Fields, FieldsNamed, FieldsUnnamed, Ident, Variant};
 
 use super::context::Context;
@@ -38,6 +39,11 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .map(|atom_ident| {
             let atom_str = atom_ident.to_string().to_snake_case();
             let atom_fn = Context::ident_to_atom_fun(atom_ident);
+            (atom_str, atom_fn)
+        })
+        .collect::<HashMap<_, _>>()
+        .into_iter()
+        .map(|(atom_str, atom_fn)| {
             quote! {
                 #atom_fn = #atom_str,
             }
@@ -79,25 +85,34 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
     let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
-
-    let variant_defs: Vec<TokenStream> = variants
+    let unit_decoders: Vec<TokenStream> = variants
         .iter()
-        .map(|variant| {
+        .filter_map(|variant| {
             let variant_ident = &variant.ident;
             let atom_fn = Context::ident_to_atom_fun(variant_ident);
-
             match &variant.fields {
-                Fields::Unit => gen_unit_decoder(enum_name, variant_ident, atom_fn),
-                Fields::Unnamed(fields) => gen_unnamed_decoder(
+                Fields::Unit => Some(gen_unit_decoder(enum_name, variant_ident, atom_fn)),
+                _ => None,
+            }
+        })
+        .collect();
+    let named_unnamed_decoders: Vec<TokenStream> = variants
+        .iter()
+        .filter_map(|variant| {
+            let variant_ident = &variant.ident;
+            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            match &variant.fields {
+                Fields::Unnamed(fields) => Some(gen_unnamed_decoder(
                     enum_name,
                     fields,
                     variant.fields.iter(),
                     variant_ident,
                     atom_fn,
-                ),
+                )),
                 Fields::Named(fields) => {
-                    gen_named_decoder(enum_name, fields, variant_ident, atom_fn)
+                    Some(gen_named_decoder(enum_name, fields, variant_ident, atom_fn))
                 }
+                _ => None,
             }
         })
         .collect();
@@ -106,8 +121,6 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         impl<'a> ::rustler::Decoder<'a> for #enum_type {
             fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
                 use #atoms_module_name::*;
-
-                let value = ::rustler::types::atom::Atom::from_term(term);
 
                 fn try_decode_field<'a, T>(
                     term: ::rustler::Term<'a>,
@@ -126,7 +139,15 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
                     }
                 }
 
-                #(#variant_defs)*
+                if let Ok(unit) = ::rustler::types::atom::Atom::from_term(term) {
+                    #(#unit_decoders)*
+                } else if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
+                    let name = tuple
+                                .get(0)
+                                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
+                                .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
+                    #(#named_unnamed_decoders)*
+                }
 
                 Err(::rustler::Error::RaiseAtom("invalid_variant"))
             }
@@ -175,7 +196,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
 fn gen_unit_decoder(enum_name: &Ident, variant_ident: &Ident, atom_fn: Ident) -> TokenStream {
     quote! {
-        if let Ok(true) = value.as_ref().map(|a| *a == #atom_fn()) {
+        if unit == #atom_fn() {
             return Ok ( #enum_name :: #variant_ident );
         }
     }
@@ -202,20 +223,14 @@ fn gen_unnamed_decoder<'a>(
         .collect::<Vec<_>>();
     let len = fields.unnamed.len();
     quote! {
-        if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
-            let name = tuple
-                .get(0)
-                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
-            if name == #atom_fn() {
-                if tuple.len() - 1 != #len {
-                    return Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                        "The tuple must have {} elements, but it has {}",
-                        #len + 1, tuple.len()
-                    ))));
-                }
-                return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
+        if name == #atom_fn() {
+            if tuple.len() - 1 != #len {
+                return Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                    "The tuple must have {} elements, but it has {}",
+                    #len + 1, tuple.len()
+                ))));
             }
+            return Ok( #enum_name :: #variant_ident ( #(#decoded_field),* ) )
         }
     }
 }
@@ -258,20 +273,12 @@ fn gen_named_decoder(
         .unzip();
 
     quote! {
-        if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
-            let name = tuple
-                .get(0)
-                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                .ok_or(::rustler::Error::RaiseTerm(Box::new(
-                    "The first element of the tuple must be an atom"
-                )))?;
-            if tuple.len() == 2 && name == #atom_fn() {
-                let len = tuple[1].map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
-                    "The second element of the tuple must be a map"
-                )))?;
-                #(#assignments)*
-                return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
-            }
+        if tuple.len() == 2 && name == #atom_fn() {
+            let len = tuple[1].map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
+                "The second element of the tuple must be a map"
+            )))?;
+            #(#assignments)*
+            return Ok( #enum_name :: #variant_ident { #(#field_defs),* } )
         }
     }
 }
