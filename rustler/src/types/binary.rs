@@ -102,7 +102,7 @@ use std::{
 /// See [module-level doc](index.html) for more information.
 pub struct OwnedBinary(ErlNifBinary);
 
-impl<'a> OwnedBinary {
+impl OwnedBinary {
     pub unsafe fn from_raw(inner: ErlNifBinary) -> OwnedBinary {
         OwnedBinary(inner)
     }

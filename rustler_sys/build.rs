@@ -22,7 +22,7 @@ trait ApiBuilder {
     fn dummy(&mut self, name: &str);
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum OsFamily {
     Unix,
     Win,
