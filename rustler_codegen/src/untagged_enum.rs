@@ -48,7 +48,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<_> = variants
@@ -65,21 +64,17 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         })
         .collect();
 
-    let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
-                #(#variant_defs)*
+    super::encode_decode_templates::decoder(
+        ctx,
+        quote! {
+            #(#variant_defs)*
 
-                Err(::rustler::Error::RaiseAtom("invalid_variant"))
-            }
-        }
-    };
-
-    gen
+            Err(::rustler::Error::RaiseAtom("invalid_variant"))
+        },
+    )
 }
 
 fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<_> = variants
@@ -93,15 +88,12 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant]) -> TokenStream {
         })
         .collect();
 
-    let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                match *self {
-                    #(#variant_defs)*
-                }
+    super::encode_decode_templates::encoder(
+        ctx,
+        quote! {
+            match *self {
+                #(#variant_defs)*
             }
-        }
-    };
-
-    gen
+        },
+    )
 }

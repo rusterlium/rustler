@@ -83,7 +83,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 }
 
 fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
     let unit_decoders: Vec<TokenStream> = variants
         .iter()
@@ -117,48 +116,44 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         })
         .collect();
 
-    let gen = quote! {
-        impl<'a> ::rustler::Decoder<'a> for #enum_type {
-            fn decode(term: ::rustler::Term<'a>) -> ::rustler::NifResult<Self> {
-                use #atoms_module_name::*;
+    super::encode_decode_templates::decoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
 
-                fn try_decode_field<'a, T>(
-                    term: ::rustler::Term<'a>,
-                    field: ::rustler::Atom,
-                    ) -> ::rustler::NifResult<T>
-                    where
-                        T: ::rustler::Decoder<'a>,
-                {
-                    use ::rustler::Encoder;
-                    match ::rustler::Decoder::decode(term.map_get(&field)?) {
-                        Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                                        "Could not decode field :{:?} on %{{}}",
-                                        field
-                        )))),
-                        Ok(value) => Ok(value),
-                    }
+            fn try_decode_field<'a, T>(
+                term: ::rustler::Term<'a>,
+                field: ::rustler::Atom,
+                ) -> ::rustler::NifResult<T>
+                where
+                    T: ::rustler::Decoder<'a>,
+            {
+                use ::rustler::Encoder;
+                match ::rustler::Decoder::decode(term.map_get(&field)?) {
+                    Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                                    "Could not decode field :{:?} on %{{}}",
+                                    field
+                    )))),
+                    Ok(value) => Ok(value),
                 }
-
-                if let Ok(unit) = ::rustler::types::atom::Atom::from_term(term) {
-                    #(#unit_decoders)*
-                } else if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
-                    let name = tuple
-                                .get(0)
-                                .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
-                                .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
-                    #(#named_unnamed_decoders)*
-                }
-
-                Err(::rustler::Error::RaiseAtom("invalid_variant"))
             }
-        }
-    };
 
-    gen
+            if let Ok(unit) = ::rustler::types::atom::Atom::from_term(term) {
+                #(#unit_decoders)*
+            } else if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
+                let name = tuple
+                            .get(0)
+                            .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
+                            .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
+                #(#named_unnamed_decoders)*
+            }
+
+            Err(::rustler::Error::RaiseAtom("invalid_variant"))
+        },
+    )
 }
 
 fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) -> TokenStream {
-    let enum_type = &ctx.ident_with_lifetime;
     let enum_name = ctx.ident;
 
     let variant_defs: Vec<TokenStream> = variants
@@ -179,19 +174,16 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         })
         .collect();
 
-    let gen = quote! {
-        impl<'b> ::rustler::Encoder for #enum_type {
-            fn encode<'a>(&self, env: ::rustler::Env<'a>) -> ::rustler::Term<'a> {
-                use #atoms_module_name::*;
+    super::encode_decode_templates::encoder(
+        ctx,
+        quote! {
+            use #atoms_module_name::*;
 
-                match self {
-                    #(#variant_defs)*
-                }
+            match self {
+                #(#variant_defs)*
             }
-        }
-    };
-
-    gen
+        },
+    )
 }
 
 fn gen_unit_decoder(enum_name: &Ident, variant_ident: &Ident, atom_fn: Ident) -> TokenStream {

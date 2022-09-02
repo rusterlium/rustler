@@ -59,7 +59,7 @@ rustler::atoms! {
 /// }
 /// ```
 ///
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Eq)]
 pub struct BigInt(num_bigint::BigInt);
 
 impl std::convert::From<num_bigint::BigInt> for BigInt {
@@ -89,7 +89,7 @@ impl std::ops::DerefMut for BigInt {
 }
 
 fn decode_big_integer(input: &[u8]) -> NifResult<num_bigint::BigInt> {
-    if Some(&EXTERNAL_TERM_FORMAT_VERSION) != input.get(0) {
+    if Some(&EXTERNAL_TERM_FORMAT_VERSION) != input.first() {
         return Err(Error::BadArg);
     }
 

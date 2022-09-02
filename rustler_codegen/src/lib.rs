@@ -3,6 +3,7 @@
 use proc_macro::TokenStream;
 
 mod context;
+mod encode_decode_templates;
 mod ex_struct;
 mod init;
 mod map;

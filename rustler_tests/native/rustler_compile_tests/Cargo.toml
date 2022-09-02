@@ -1,0 +1,14 @@
+[package]
+name = "rustler_compile_tests"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[lib]
+name = "rustler_test"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+lazy_static = "1.4"
+rustler = { path = "../../../rustler" }

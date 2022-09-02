@@ -16,7 +16,7 @@ use super::RustlerAttr;
 pub(crate) struct Context<'a> {
     pub attrs: Vec<RustlerAttr>,
     pub ident: &'a proc_macro2::Ident,
-    pub ident_with_lifetime: proc_macro2::TokenStream,
+    pub generics: &'a syn::Generics,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
     pub is_tuple_struct: bool,
@@ -38,19 +38,6 @@ impl<'a> Context<'a> {
             attrs.push(RustlerAttr::Decode);
         }
 
-        let has_lifetime = match ast.generics.lifetimes().count() {
-            0 => false,
-            1 => true,
-            _ => panic!("Struct can only have one lifetime argument"),
-        };
-
-        let ident = &ast.ident;
-        let ident_with_lifetime = if has_lifetime {
-            quote! { #ident <'a> }
-        } else {
-            quote! { #ident }
-        };
-
         let variants = match ast.data {
             Data::Enum(ref data_enum) => Some(data_enum.variants.iter().collect()),
             _ => None,
@@ -71,8 +58,8 @@ impl<'a> Context<'a> {
 
         Self {
             attrs,
-            ident,
-            ident_with_lifetime,
+            ident: &ast.ident,
+            generics: &ast.generics,
             variants,
             struct_fields,
             is_tuple_struct,
