@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
+## [0.26.0] - 2022-09-02
+
+### Highlight
+
+#### TaggedEnum
+
+We added `TaggedEnum`, which is a generalized enum type (#440, thanks to @SeokminHong!). Example:
+
+```rust
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum1 {
+    Named { x: i32, y: i32 },
+    String1(String),
+    String2(String),
+    Untagged,
+}
+```
+
+On the Elixir side, the variants are represented as two-tuples `{tag::atom(),
+inner::term()} | atom()`, where the `inner` term is
+
+* a map for the variant `Named` in the example above
+* a binary for the `String1` and `String2` variants
+
+The `Untagged` variant is represented as the atom `:untagged` in Elixir.
+
+### Added
+
+* Added `Clone` and `Copy` for `TermType` (#476, thanks @dvic)
+* Added `Env.whereis_pid()` (#456, thanks @Qqwy)
+
+### Improved
+
+* Use `&[impl Encoder]` for keys and values in `map_from_arrays()` to improve ergonomics (#453, thanks @SeokminHong)
+* Improved encode/decode performance of TaggedEnum considerably (#482, thanks @cleaton)
+* Test on OTP 25 (#455)
+
+### Fixed
+
+* Lifetime handling in `rustler_codegen` (#483, thanks @turion @SeokminHong and @neosimsim)
+* Support multiple variants with same field names in TaggedEnum (#482, thanks @cleaton)
+* Support .toml file extension for cargo config (#468, thanks @joshuataylor for the report in #467)
+* Disambiguate `encode`/`decode` in generated code (#466, thanks @SeokminHong)
+* Migrate CI to `erlef/setup-beam` (#457, thanks @SeokminHong)
+* Documentation of the `schedule` flag for `nif` macro (#444)
+* Improve documentation (#429, thanks @turion)
+
 ## [0.25.0] - 2022-04-11
 
 ### Added
