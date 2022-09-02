@@ -45,7 +45,7 @@ sed -i "s/{:rustler, \".*\"}/{:rustler, \"~> $VERSION\"}/" rustler_mix/README.md
 
 echo "Committing version.."
 git commit -m "(release) $VERSION" \
-    rustler/Cargo.toml rustler_codegen/Cargo.toml rustler_mix/mix.exs rustler_mix/lib/rustler.ex rustler_mix/README.md
+    rustler/Cargo.toml rustler_codegen/Cargo.toml rustler_mix/mix.exs rustler_mix/lib/rustler.ex rustler_mix/README.md rustler_bigint/Cargo.toml
 
 echo "Tagging version.."
 git tag "$TAG"
