@@ -4,11 +4,11 @@ description = "Handle Erlang's arbitrarily-sized integers"
 repository = "https://github.com/rusterlium/rustler"
 authors = ["Thomas Timmer"]
 license = "MIT/Apache-2.0"
-version = "0.1.0"
+version = "0.2.0-rc.1"
 edition = "2021"
 readme = "README.md"
 keywords = ["bigint", "Erlang", "Elixir"]
 
 [dependencies]
 num-bigint = {version = "0.4"}
-rustler = {path = "../rustler", version = "0.25.0"}
+rustler = {path = "../rustler", version = "0.26.0"}
