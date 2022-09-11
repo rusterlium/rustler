@@ -1,5 +1,4 @@
-use crate::wrapper::size_t;
-use crate::{Env, Term};
+use crate::{wrapper::size_t, Env, Term};
 pub(crate) use rustler_sys::ErlNifBinary;
 use std::mem::MaybeUninit;
 
