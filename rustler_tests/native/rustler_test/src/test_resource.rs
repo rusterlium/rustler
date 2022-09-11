@@ -1,5 +1,5 @@
 use rustler::wrapper::{binary, c_void};
-use rustler::{Env, Term, ResourceArc};
+use rustler::{Env, ResourceArc, Term};
 use std::sync::RwLock;
 
 pub struct TestResource {
