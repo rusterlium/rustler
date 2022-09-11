@@ -23,6 +23,8 @@ rustler::init!(
         test_primitives::result_to_int,
         test_list::sum_list,
         test_list::make_list,
+        test_list::make_list_from_end,
+        test_list::make_list_from_iter,
         test_term::term_debug,
         test_term::term_eq,
         test_term::term_cmp,

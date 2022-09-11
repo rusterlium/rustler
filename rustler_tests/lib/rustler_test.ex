@@ -19,6 +19,8 @@ defmodule RustlerTest do
 
   def sum_list(_), do: err()
   def make_list(), do: err()
+  def make_list_from_end(), do: err()
+  def make_list_from_iter(), do: err()
 
   def term_debug(_), do: err()
   def term_eq(_, _), do: err()
