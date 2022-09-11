@@ -1,4 +1,5 @@
-use crate::{wrapper::size_t, Env, Term};
+use crate::wrapper::{c_void, size_t, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_TERM};
+use crate::{Env, Term};
 pub(crate) use rustler_sys::ErlNifBinary;
 use std::mem::MaybeUninit;
 
@@ -23,4 +24,22 @@ pub unsafe fn new_binary(env: Env, size: size_t) -> (*mut u8, Term) {
         panic!("enif_make_new_binary: allocation failed");
     }
     (buf, Term::new(env, term.assume_init()))
+}
+
+pub unsafe fn make_sub_binary(
+    env: NIF_ENV,
+    binary: NIF_TERM,
+    offset: usize,
+    length: usize,
+) -> NIF_TERM {
+    rustler_sys::enif_make_sub_binary(env, binary, offset, length)
+}
+
+pub unsafe fn make_resource_binary(
+    env: NIF_ENV,
+    resource: NIF_RESOURCE_HANDLE,
+    ptr: *const c_void,
+    length: usize,
+) -> NIF_TERM {
+    rustler_sys::enif_make_resource_binary(env, resource, ptr, length)
 }

@@ -1,8 +1,10 @@
-use rustler::{Env, ResourceArc};
+use rustler::wrapper::{binary, c_void};
+use rustler::{Env, Term, ResourceArc};
 use std::sync::RwLock;
 
 pub struct TestResource {
     test_field: RwLock<i32>,
+    slice: [u8; 4],
 }
 
 /// This one is designed to look more like pointer data, to increase the
@@ -22,7 +24,22 @@ pub fn on_load(env: Env) -> bool {
 pub fn resource_make() -> ResourceArc<TestResource> {
     ResourceArc::new(TestResource {
         test_field: RwLock::new(0),
+        slice: [1, 2, 3, 4],
     })
+}
+
+#[rustler::nif]
+pub fn resource_binaries(env: Env, resource: ResourceArc<TestResource>) -> (Term, Term) {
+    let binary = unsafe {
+        binary::make_resource_binary(
+            env.as_c_arg(),
+            resource.clone().as_c_arg(),
+            resource.slice.as_ptr() as *const c_void,
+            resource.slice.len(),
+        )
+    };
+    let sub = unsafe { binary::make_sub_binary(env.as_c_arg(), binary, 1, 2) };
+    unsafe { (Term::new(env, binary), Term::new(env, sub)) }
 }
 
 #[rustler::nif]

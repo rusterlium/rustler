@@ -35,4 +35,9 @@ defmodule RustlerTest.ResourceTest do
     # Erlang's exact GC should have cleaned all that up.
     assert RustlerTest.resource_immutable_count() == 0
   end
+
+  test "resource binaries" do
+    resource = RustlerTest.resource_make()
+    assert RustlerTest.resource_binaries(resource) == {<<1, 2, 3, 4>>, <<2, 3>>}
+  end
 end

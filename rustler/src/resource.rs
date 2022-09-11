@@ -145,6 +145,10 @@ where
         }
     }
 
+    pub fn as_c_arg(&mut self) -> *const c_void {
+        self.raw
+    }
+
     fn from_term(term: Term) -> Result<Self, Error> {
         let res_resource = match unsafe {
             crate::wrapper::resource::get_resource(
@@ -173,10 +177,6 @@ where
                 crate::wrapper::resource::make_resource(env.as_c_arg(), self.raw),
             )
         }
-    }
-
-    fn as_c_arg(&mut self) -> *const c_void {
-        self.raw
     }
 
     fn inner(&self) -> &T {
