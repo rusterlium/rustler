@@ -35,7 +35,12 @@ pub unsafe fn make_list_from_end(
 }
 
 /// Builds a list from an iterator.
-/// Prefer to use make_list_from_end if the iterator is double ended.
+///
+/// This collects the iterator as a vector and then builds a list from it.
+///
+/// You may also use make_list_from_end if the iterator is double ended,
+/// which avoids the intermediate vector allocation but it is slightly slower
+/// as it allocates cons cells one at a time instead of upfront.
 pub unsafe fn make_list_from_iter(
     env: NIF_ENV,
     iter: &mut dyn std::iter::Iterator<Item = NIF_TERM>,
