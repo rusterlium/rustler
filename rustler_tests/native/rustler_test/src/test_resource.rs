@@ -1,4 +1,4 @@
-use rustler::{Env, ResourceArc};
+use rustler::{Binary, Env, ResourceArc};
 use std::sync::RwLock;
 
 pub struct TestResource {
@@ -12,9 +12,15 @@ pub struct ImmutableResource {
     b: u32,
 }
 
+pub struct WithBinaries {
+    a: [u8; 10],
+    b: Vec<u8>,
+}
+
 pub fn on_load(env: Env) -> bool {
     rustler::resource!(TestResource, env);
     rustler::resource!(ImmutableResource, env);
+    rustler::resource!(WithBinaries, env);
     true
 }
 
@@ -42,6 +48,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 lazy_static::lazy_static! {
     static ref COUNT: AtomicUsize = AtomicUsize::new(0);
+    static ref STATIC_BIN: [u8; 10] = [0,1,2,3,4,5,6,7,8,9];
 }
 
 impl ImmutableResource {
@@ -68,4 +75,36 @@ pub fn resource_make_immutable(u: u32) -> ResourceArc<ImmutableResource> {
 #[rustler::nif]
 pub fn resource_immutable_count() -> u32 {
     COUNT.load(Ordering::SeqCst) as u32
+}
+
+#[rustler::nif]
+pub fn resource_make_with_binaries() -> ResourceArc<WithBinaries> {
+    ResourceArc::new(WithBinaries {
+        a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        b: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    })
+}
+
+#[rustler::nif]
+pub fn resource_make_binaries(
+    env: Env,
+    resource: ResourceArc<WithBinaries>,
+) -> (Binary, Binary, Binary) {
+    // This won't compile:
+    // let temp = [1,2,3];
+    // resource.make_binary(env, |_w| &temp)
+
+    (
+        // From slice (embedded in T)
+        resource.make_binary(env, |w| &w.a),
+        // From vec (on the heap)
+        resource.make_binary(env, |w| &w.b),
+        // From static
+        resource.make_binary(env, |_| &*STATIC_BIN),
+    )
+}
+
+#[rustler::nif]
+pub fn resource_make_binary_from_vec(env: Env, resource: ResourceArc<WithBinaries>) -> Binary {
+    resource.make_binary(env, |w| &w.b)
 }

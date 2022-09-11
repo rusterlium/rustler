@@ -9,9 +9,9 @@ use std::mem;
 use std::ops::Deref;
 use std::ptr;
 
-use super::{Decoder, Encoder, Env, Error, NifResult, Term};
+use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
 use crate::wrapper::{
-    c_void, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
+    c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
 
 /// Re-export a type used by the `resource!` macro.
@@ -78,7 +78,7 @@ pub fn open_struct_resource_type<T: ResourceTypeProvider>(
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        crate::wrapper::resource::open_resource_type(
+        resource::open_resource_type(
             env.as_c_arg(),
             name.as_bytes(),
             Some(resource_destructor::<T>),
@@ -133,8 +133,7 @@ where
     /// ResourceTypeProvider implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
-        let mem_raw =
-            unsafe { crate::wrapper::resource::alloc_resource(T::get_type().res, alloc_size) };
+        let mem_raw = unsafe { resource::alloc_resource(T::get_type().res, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
         unsafe { ptr::write(aligned_mem, data) };
@@ -145,9 +144,28 @@ where
         }
     }
 
+    pub fn make_binary<'env, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
+    where
+        F: FnOnce(&T) -> &[u8],
+    {
+        let term = unsafe {
+            let bin = f(&*self.inner);
+            let binary = rustler_sys::enif_make_resource_binary(
+                env.as_c_arg(),
+                self.raw,
+                bin.as_ptr() as *const c_void,
+                bin.len(),
+            );
+
+            Term::new(env, binary)
+        };
+
+        Binary::from_term(term).unwrap()
+    }
+
     fn from_term(term: Term) -> Result<Self, Error> {
         let res_resource = match unsafe {
-            crate::wrapper::resource::get_resource(
+            resource::get_resource(
                 term.get_env().as_c_arg(),
                 term.as_c_arg(),
                 T::get_type().res,
@@ -157,7 +175,7 @@ where
             None => return Err(Error::BadArg),
         };
         unsafe {
-            crate::wrapper::resource::keep_resource(res_resource);
+            resource::keep_resource(res_resource);
         }
         let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
         Ok(ResourceArc {
@@ -167,12 +185,7 @@ where
     }
 
     fn as_term<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe {
-            Term::new(
-                env,
-                crate::wrapper::resource::make_resource(env.as_c_arg(), self.raw),
-            )
-        }
+        unsafe { Term::new(env, resource::make_resource(env.as_c_arg(), self.raw)) }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {
@@ -203,7 +216,7 @@ where
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
         unsafe {
-            crate::wrapper::resource::keep_resource(self.raw);
+            resource::keep_resource(self.raw);
         }
         ResourceArc {
             raw: self.raw,
