@@ -144,22 +144,26 @@ where
         }
     }
 
-    pub fn make_binary<'env, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
+    pub fn make_binary<'env, 'a, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
     where
-        F: FnOnce(&T) -> &[u8],
+        F: FnOnce(&'a T) -> &'a [u8],
     {
-        let term = unsafe {
-            let bin = f(&*self.inner);
-            let binary = rustler_sys::enif_make_resource_binary(
-                env.as_c_arg(),
-                self.raw,
-                bin.as_ptr() as *const c_void,
-                bin.len(),
-            );
+        unsafe { self.make_binary_unsafe(env, f) }
+    }
 
-            Term::new(env, binary)
-        };
+    pub unsafe fn make_binary_unsafe<'env, 'a, 'b, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
+    where
+        F: FnOnce(&'a T) -> &'b [u8],
+    {
+        let bin = f(&*self.inner);
+        let binary = rustler_sys::enif_make_resource_binary(
+            env.as_c_arg(),
+            self.raw,
+            bin.as_ptr() as *const c_void,
+            bin.len(),
+        );
 
+        let term = Term::new(env, binary);
         Binary::from_term(term).unwrap()
     }
 
