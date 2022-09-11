@@ -26,14 +26,20 @@ pub unsafe fn make_list(env: NIF_ENV, arr: &[NIF_TERM]) -> NIF_TERM {
     rustler_sys::enif_make_list_from_array(env, arr.as_ptr(), arr.len() as u32)
 }
 
-pub unsafe fn make_list_from_end(env: NIF_ENV, iter: &mut dyn std::iter::DoubleEndedIterator<Item=NIF_TERM>) -> NIF_TERM {
+pub unsafe fn make_list_from_end(
+    env: NIF_ENV,
+    iter: &mut dyn std::iter::DoubleEndedIterator<Item = NIF_TERM>,
+) -> NIF_TERM {
     let acc = make_list(env, &[]);
     iter.rfold(acc, |acc, term| make_list_cell(env, term, acc))
 }
 
 /// Builds a list from an iterator.
 /// Prefer to use make_list_from_end if the iterator is double ended.
-pub unsafe fn make_list_from_iter(env: NIF_ENV, iter: &mut dyn std::iter::Iterator<Item=NIF_TERM>) -> NIF_TERM {
+pub unsafe fn make_list_from_iter(
+    env: NIF_ENV,
+    iter: &mut dyn std::iter::Iterator<Item = NIF_TERM>,
+) -> NIF_TERM {
     make_list(env, iter.collect::<Vec<NIF_TERM>>().as_slice())
 }
 
