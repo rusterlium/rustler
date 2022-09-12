@@ -86,6 +86,7 @@
 //! [`OwnedBinary`]: struct.OwnedBinary.html
 
 use crate::{
+    wrapper::NIF_TERM,
     wrapper::binary::{alloc, new_binary, realloc, ErlNifBinary},
     Decoder, Encoder, Env, Error, NifResult, Term,
 };
@@ -236,7 +237,8 @@ unsafe impl Send for OwnedBinary {}
 /// See [module-level doc](index.html) for more information.
 #[derive(Copy, Clone)]
 pub struct Binary<'a> {
-    inner: ErlNifBinary,
+    buf: *mut u8,
+    size: usize,
     term: Term<'a>,
 }
 
@@ -256,7 +258,8 @@ impl<'a> Binary<'a> {
             )
         };
         Binary {
-            inner: owned.0,
+            buf: owned.0.data,
+            size: owned.0.size,
             term,
         }
     }
@@ -288,8 +291,11 @@ impl<'a> Binary<'a> {
         {
             return Err(Error::BadArg);
         }
+
+        let binary = unsafe { binary.assume_init() };
         Ok(Binary {
-            inner: unsafe { binary.assume_init() },
+            buf: binary.data,
+            size: binary.size,
             term,
         })
     }
@@ -311,8 +317,11 @@ impl<'a> Binary<'a> {
         {
             return Err(Error::BadArg);
         }
+
+        let binary = unsafe { binary.assume_init() };
         Ok(Binary {
-            inner: unsafe { binary.assume_init() },
+            buf: binary.data,
+            size: binary.size,
             term,
         })
     }
@@ -325,7 +334,7 @@ impl<'a> Binary<'a> {
 
     /// Extracts a slice containing the entire binary.
     pub fn as_slice(&self) -> &'a [u8] {
-        unsafe { ::std::slice::from_raw_parts(self.inner.data, self.inner.size) }
+        unsafe { ::std::slice::from_raw_parts(self.buf, self.size) }
     }
 
     /// Returns a new view into the same binary.
@@ -338,7 +347,7 @@ impl<'a> Binary<'a> {
     /// If `offset + length` is out of bounds, an error will be returned.
     pub fn make_subbinary(&self, offset: usize, length: usize) -> NifResult<Binary<'a>> {
         let min_len = length.checked_add(offset);
-        if min_len.ok_or(Error::BadArg)? > self.inner.size {
+        if min_len.ok_or(Error::BadArg)? > self.size {
             return Err(Error::BadArg);
         }
 
@@ -351,8 +360,12 @@ impl<'a> Binary<'a> {
             )
         };
         let term = unsafe { Term::new(self.term.get_env(), raw_term) };
-        // This should never fail, as we are always passing in a binary term.
-        Ok(Binary::from_term(term).ok().unwrap())
+
+        Ok(Binary {
+            buf: unsafe { self.buf.add(offset) },
+            size: length,
+            term,
+        })
     }
 }
 
