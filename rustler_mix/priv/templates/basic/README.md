@@ -15,6 +15,17 @@ defmodule <%= module %> do
 end
 ```
 
+Also add `:rustler` to the `:compilers` key in `mix.exs`:
+
+```
+def project do
+  [
+  # ...
+  compilers: [:rustler | Mix.compilers()]
+  ]
+end
+```
+
 ## Examples
 
 [This](https://github.com/rusterlium/NifIo) is a complete example of a NIF written in Rust.
