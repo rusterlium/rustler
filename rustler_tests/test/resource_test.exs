@@ -1,6 +1,6 @@
 defmodule RustlerTest.ResourceTest do
   use ExUnit.Case, async: true
-  use Bitwise
+  import Bitwise
 
   test "resource creation and interaction" do
     resource = RustlerTest.resource_make()
