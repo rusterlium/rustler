@@ -106,7 +106,6 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 where
                     T: rustler::Decoder<'a>,
                 {
-                    use rustler::Encoder;
                     match ::rustler::Decoder::decode(term.map_get(&field)?) {
                         Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
                                         "Could not decode field :{:?} on %{}{{}}",
@@ -134,21 +133,18 @@ fn gen_encoder(
     atoms_module_name: &Ident,
     add_exception: bool,
 ) -> TokenStream {
-    let field_defs: Vec<TokenStream> = fields
+    let (keys, values): (Vec<_>, Vec<_>) = fields
         .iter()
         .map(|field| {
             let field_ident = field.ident.as_ref().unwrap();
             let atom_fun = Context::field_to_atom_fun(field);
-            quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun(), &self.#field_ident).unwrap();
-            }
-        })
-        .collect();
 
-    let exception_field = if add_exception {
-        quote! {
-            map = map.map_put(atom_exception(), true).unwrap();
-        }
+            (atom_fun, field_ident)
+        })
+        .unzip();
+
+    let add_exception = if add_exception {
+        quote! { map = map.map_put(atom_exception(), true).unwrap(); }
     } else {
         quote! {}
     };
@@ -157,10 +153,14 @@ fn gen_encoder(
         ctx,
         quote! {
             use #atoms_module_name::*;
-            let mut map = ::rustler::types::map::map_new(env);
-            map = map.map_put(atom_struct(), atom_module()).unwrap();
-            #exception_field
-            #(#field_defs)*
+            let mut map = ::rustler::Term::map_from_arrays(
+                    env,
+                    &[atom_struct(), #(#keys()),*],
+                    &[rustler::Encoder::encode(&atom_module(), env), #(rustler::Encoder::encode(&self.#values, env)),*]
+                ).expect("Failed to create map");
+
+            #add_exception
+
             map
         },
     )
