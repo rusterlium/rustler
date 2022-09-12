@@ -20,6 +20,17 @@ def deps do
 end
 ```
 
+In order to also allow picking the build profile with `MIX_ENV`, add the `:rustler` compiler to your `project/0` in `mix.exs`:
+
+```elixir
+def project do
+  [
+  #...
+  compilers: [:rustler | Mix.compilers()]
+  ]
+end
+```
+
 ## Usage
 
 1.  Fetch all necessary dependencies:

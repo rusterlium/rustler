@@ -86,6 +86,8 @@ defmodule Rustler do
         @external_resource resource
       end
 
+      @external_resource Mix.Tasks.Compile.Rustler.mix_cache_path()
+
       if config.lib do
         @load_from config.load_from
         @load_data config.load_data
