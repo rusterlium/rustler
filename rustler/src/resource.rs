@@ -144,6 +144,11 @@ where
         }
     }
 
+    /// Make a resource binary associated with the given resource
+    ///
+    /// The closure `f` is called with the referenced object and must return a slice with the same
+    /// lifetime as the object. This means that the slice either has to be derived directly from
+    /// the instance or that it has to have static lifetime.
     pub fn make_binary<'env, 'a, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
     where
         F: FnOnce(&'a T) -> &'a [u8],
@@ -151,6 +156,10 @@ where
         unsafe { self.make_binary_unsafe(env, f) }
     }
 
+    /// Make a resource binary without strict lifetime checking
+    ///
+    /// The user *must* ensure that the lifetime of the returned slice is at least as long as the
+    /// lifetime of the referenced instance.
     pub unsafe fn make_binary_unsafe<'env, 'a, 'b, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
     where
         F: FnOnce(&'a T) -> &'b [u8],
@@ -164,7 +173,7 @@ where
         );
 
         let term = Term::new(env, binary);
-        Binary::from_term(term).unwrap()
+        Binary::from_term_and_slice(term, bin)
     }
 
     fn from_term(term: Term) -> Result<Self, Error> {

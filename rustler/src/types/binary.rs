@@ -86,7 +86,6 @@
 //! [`OwnedBinary`]: struct.OwnedBinary.html
 
 use crate::{
-    wrapper::NIF_TERM,
     wrapper::binary::{alloc, new_binary, realloc, ErlNifBinary},
     Decoder, Encoder, Env, Error, NifResult, Term,
 };
@@ -237,7 +236,7 @@ unsafe impl Send for OwnedBinary {}
 /// See [module-level doc](index.html) for more information.
 #[derive(Copy, Clone)]
 pub struct Binary<'a> {
-    buf: *mut u8,
+    buf: *const u8,
     size: usize,
     term: Term<'a>,
 }
@@ -298,6 +297,17 @@ impl<'a> Binary<'a> {
             size: binary.size,
             term,
         })
+    }
+
+    /// Creates a Binary from a `term` and the associated slice
+    ///
+    /// The `term` *must* be constructed from the given slice, it is not checked.
+    pub(crate) unsafe fn from_term_and_slice(term: Term<'a>, binary: &[u8]) -> Self {
+        Binary {
+            term,
+            buf: binary.as_ptr(),
+            size: binary.len(),
+        }
     }
 
     /// Creates a `Binary` from `term`.
