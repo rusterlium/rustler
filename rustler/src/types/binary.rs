@@ -230,6 +230,7 @@ impl Drop for OwnedBinary {
 }
 
 unsafe impl Send for OwnedBinary {}
+unsafe impl Sync for OwnedBinary {}
 
 /// An immutable smart-pointer to an Erlang binary.
 ///
