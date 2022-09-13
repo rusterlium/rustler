@@ -11,33 +11,13 @@ on:
 
 jobs:
   clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
+    name: Clippy ${{matrix.os}}
+    runs-on: ${{matrix.os}}-latest
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
     steps:
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
-            components: clippy
-            override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets --all-features -- -D warnings
-
-  clippy-windows:
-    name: Clippy-Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install Erlang/Elixir
-        run: choco install elixir
-      - name: Extend PATH
-        run: echo "C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      - name: Build API
-        working-directory: rustler_sys
-        run: |
-            cargo build
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
@@ -62,8 +42,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "25.0.0"
-          elixir-version: "1.13.4"
+          otp-version: "25"
+          elixir-version: "1.13"
 
       - name: Check cargo fmt
         uses: actions-rs/cargo@v1
@@ -100,55 +80,24 @@ jobs:
         working-directory: rustler_mix
         run: ./test.sh
 
-  test_windows:
-    name: Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-
-      - name: Install Erlang/Elixir
-        run: choco install elixir
-
-      - name: Install Rust stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Extend PATH
-        run: echo "C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Hex
-        run: mix local.hex --force
-
-      - name: Test rustler_mix
-        working-directory: rustler_mix
-        run: |
-          mix deps.get
-          mix test
-
-      - name: Test rustler_tests
-        working-directory: rustler_tests
-        run: |
-          mix deps.get
-          mix test
-
   test:
-    name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}}
-    runs-on: ubuntu-latest
+    name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
+    runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
         pair:
-          - { erlang: "25.0.0", elixir: "1.13.4" }
-          - { erlang: "24.3.4", elixir: "1.13.0" }
-          - { erlang: "24.3.4", elixir: "1.12.3" }
-          - { erlang: "24.3.4", elixir: "1.11.4" }
-          - { erlang: "23.3.4.14", elixir: "1.11.4" }
+          - { erlang: "25", elixir: "1.13" }
+          - { erlang: "24", elixir: "1.13" }
+          - { erlang: "24", elixir: "1.12" }
+          - { erlang: "24", elixir: "1.11" }
+          - { erlang: "23", elixir: "1.11" }
         rust:
           - stable
           - beta
           - nightly
+        os:
+          - windows
+          - ubuntu
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
