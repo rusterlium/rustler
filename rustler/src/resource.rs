@@ -153,6 +153,8 @@ where
     where
         F: FnOnce(&'a T) -> &'a [u8],
     {
+        // This call is safe because `f` can only return a slice that lives at least as long as
+        // the given instance of `T`.
         unsafe { self.make_binary_unsafe(env, f) }
     }
 
@@ -160,6 +162,12 @@ where
     ///
     /// The user *must* ensure that the lifetime of the returned slice is at least as long as the
     /// lifetime of the referenced instance.
+    ///
+    /// # Safety
+    ///
+    /// This function is only safe if the slice that is returned from the closure is guaranteed to
+    /// live at least as long as the `ResourceArc` instance. If in doubt, use the safe version
+    /// `ResourceArc::make_binary` which enforces this bound through its signature.
     pub unsafe fn make_binary_unsafe<'env, 'a, 'b, F>(&self, env: Env<'env>, f: F) -> Binary<'env>
     where
         F: FnOnce(&'a T) -> &'b [u8],
