@@ -361,6 +361,20 @@ impl<'a> Binary<'a> {
             return Err(Error::BadArg);
         }
 
+        Ok(unsafe { self.make_subbinary_unchecked(offset, length) })
+    }
+
+    /// Returns a new view into the same binary.
+    ///
+    /// This method is an unsafe variant of `Binary::make_subbinary` in that it does not check for
+    /// `offset + length < self.len()` and always returns a `Binary`.
+    ///
+    /// # Safety
+    ///
+    /// If `offset + length` is out of bounds, this call results in *undefined behavior*. The
+    /// caller has to ensure that `offset + length < self.len()`.
+    #[allow(unused_unsafe)]
+    pub unsafe fn make_subbinary_unchecked(&self, offset: usize, length: usize) -> Binary<'a> {
         let raw_term = unsafe {
             rustler_sys::enif_make_sub_binary(
                 self.term.get_env().as_c_arg(),
@@ -371,11 +385,11 @@ impl<'a> Binary<'a> {
         };
         let term = unsafe { Term::new(self.term.get_env(), raw_term) };
 
-        Ok(Binary {
+        Binary {
             buf: unsafe { self.buf.add(offset) },
             size: length,
             term,
-        })
+        }
     }
 }
 
