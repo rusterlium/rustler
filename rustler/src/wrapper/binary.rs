@@ -2,6 +2,8 @@ use crate::{wrapper::size_t, Env, Term};
 pub(crate) use rustler_sys::ErlNifBinary;
 use std::mem::MaybeUninit;
 
+pub use rustler_sys::enif_make_sub_binary as make_subbinary;
+
 pub unsafe fn alloc(size: size_t) -> Option<ErlNifBinary> {
     let mut binary = MaybeUninit::uninit();
     let success = rustler_sys::enif_alloc_binary(size, binary.as_mut_ptr());
