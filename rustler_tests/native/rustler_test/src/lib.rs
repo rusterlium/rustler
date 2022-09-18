@@ -38,6 +38,8 @@ rustler::init!(
         test_resource::resource_get_integer_field,
         test_resource::resource_make_immutable,
         test_resource::resource_immutable_count,
+        test_resource::resource_make_with_binaries,
+        test_resource::resource_make_binaries,
         test_atom::atom_to_string,
         test_atom::atom_equals_ok,
         test_atom::binary_to_atom,
