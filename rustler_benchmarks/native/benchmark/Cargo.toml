@@ -10,5 +10,5 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-rustler = "0.26.0"
-rustler_codegen = "0.26.0"
+rustler = { path = "../../../rustler" }
+rustler_codegen = { path = "../../../rustler_codegen" }
