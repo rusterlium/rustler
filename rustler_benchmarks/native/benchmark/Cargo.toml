@@ -1,0 +1,14 @@
+[package]
+name = "benchmark"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[lib]
+name = "benchmark"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = { path = "../../../rustler" }
+rustler_codegen = { path = "../../../rustler_codegen" }
