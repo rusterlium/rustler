@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer versions.
 
+## [unreleased]
+
+### BREAKING
+
+* `MIX_ENV` is no longer considered for determining the build profile. Now, the
+  profile defaults to `:release`. Use the `:mode` option to pick another profile explicitly.
+
 ## [0.26.0] - 2022-09-02
 
 ### Highlight
