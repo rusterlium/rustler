@@ -51,10 +51,7 @@ defmodule Rustler do
       `{:my_app, "priv/native/<artifact>"}`. Due to the way `:erlang.load_nif/2`
       works, the artifact should not include the file extension (i.e. `.so`, `.dll`).
 
-    * `:mode` - Specify which mode to compile the crate with. If you do not specify
-      this option, a default will be provide based on the `Mix.env()`:
-      - When `Mix.env()` is `:dev` or `:test`, the crate will be compiled in `:debug` mode.
-      - When `Mix.env()` is `:prod` or `:bench`, the crate will be compiled in `:release` mode.
+    * `:mode` - Specify which mode to compile the crate with (default: `:release`)
 
     * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
       root of the project. Use this option to override this.
