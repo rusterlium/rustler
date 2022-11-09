@@ -59,6 +59,7 @@ pub(crate) fn decoder(ctx: &Context, inner: TokenStream) -> TokenStream {
 
     quote! {
         impl #impl_generics ::rustler::Decoder<'__rustler_decode_lifetime> for #ident #ty_generics #where_clause {
+            #[allow(clippy::needless_borrow)]
             fn decode(term: ::rustler::Term<'__rustler_decode_lifetime>) -> ::rustler::NifResult<Self> {
                 #inner
             }
@@ -73,6 +74,7 @@ pub(crate) fn encoder(ctx: &Context, inner: TokenStream) -> TokenStream {
 
     quote! {
         impl #impl_generics ::rustler::Encoder for #ident #ty_generics #where_clause {
+            #[allow(clippy::needless_borrow)]
             fn encode<'__rustler__encode_lifetime>(&self, env: ::rustler::Env<'__rustler__encode_lifetime>) -> ::rustler::Term<'__rustler__encode_lifetime> {
                 #inner
             }
