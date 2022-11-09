@@ -105,15 +105,7 @@ pub unsafe fn handle_nif_init_call(
     let env = Env::new(&(), r_env);
     let term = Term::new(env, load_info);
 
-    if let Some(inner) = function {
-        if inner(env, term) {
-            0
-        } else {
-            1
-        }
-    } else {
-        0
-    }
+    function.map_or(0, |inner| i32::from(!inner(env, term)))
 }
 
 pub fn handle_nif_result<T>(
