@@ -131,7 +131,7 @@ fn encode_big_integer(big_int: &num_bigint::BigInt) -> Vec<u8> {
         out
     } else {
         let (sign, data) = big_int.to_bytes_le();
-        let sign = if sign == Sign::Minus { 1 } else { 0 };
+        let sign = u8::from(sign == Sign::Minus);
 
         let mut out = vec![EXTERNAL_TERM_FORMAT_VERSION];
         if data.len() < 256 {

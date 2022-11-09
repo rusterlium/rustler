@@ -113,7 +113,7 @@ pub unsafe fn make_map_from_arrays(
         env,
         keys.as_ptr(),
         values.as_ptr(),
-        keys.len() as usize,
+        keys.len(),
         map.as_mut_ptr(),
     ) == 0
     {
