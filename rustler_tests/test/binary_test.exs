@@ -3,7 +3,7 @@ defmodule RustlerTest.BinaryTest do
 
   test "subbinary creation" do
     assert RustlerTest.make_shorter_subbinary("test") == "es"
-    assert_raise ErlangError, fn -> RustlerTest.make_shorter_subbinary("t") end
+    assert_raise ArgumentError, fn -> RustlerTest.make_shorter_subbinary("t") end
   end
 
   test "parse integer from binary" do
