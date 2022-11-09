@@ -965,7 +965,7 @@ fn main() {
 
     let dest_path = Path::new(&out_dir).join(SNIPPET_NAME);
 
-    fs::write(&dest_path, &api).unwrap();
+    fs::write(dest_path, api).unwrap();
 
     // The following lines are important to tell Cargo to recompile if something changes.
     println!("cargo:rerun-if-changed=build.rs");
