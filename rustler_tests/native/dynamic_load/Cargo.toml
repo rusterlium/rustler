@@ -1,0 +1,13 @@
+[package]
+name = "dynamic_load"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "dynamic_load"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler_bigint = { path = "../../../rustler_bigint" }
+rustler = { path = "../../../rustler" }
