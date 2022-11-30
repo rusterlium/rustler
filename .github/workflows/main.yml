@@ -98,7 +98,10 @@ jobs:
           - nightly
         os:
           - windows
-          - ubuntu
+          # TODO change this to ubuntu after OTP 23 is deprecated, see
+          # https://github.com/erlef/setup-beam#compatibility-between-operating-system-and-erlangotp
+          # for compatibility
+          - ubuntu-20.04
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
