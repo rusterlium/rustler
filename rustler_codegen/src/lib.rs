@@ -46,7 +46,11 @@ enum RustlerAttr {
 ///     a / b
 /// }
 ///
-/// rustler::init!("Elixir.Math", [add, sub, mul, div], Some(load));
+/// fn load(env: Env, _term: Term) -> bool {
+///     true
+/// }
+///
+/// rustler::init!("Elixir.Math", [add, sub, mul, div], load = load);
 /// ```
 #[proc_macro]
 pub fn init(input: TokenStream) -> TokenStream {
