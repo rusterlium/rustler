@@ -73,7 +73,7 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "24.1.7"
+          otp-version: "24"
           elixir-version: 1.13
 
       - name: Test rustler_mix
@@ -86,6 +86,7 @@ jobs:
     strategy:
       matrix:
         pair:
+          - { erlang: "25", elixir: "1.14" }
           - { erlang: "25", elixir: "1.13" }
           - { erlang: "24", elixir: "1.13" }
           - { erlang: "24", elixir: "1.12" }
