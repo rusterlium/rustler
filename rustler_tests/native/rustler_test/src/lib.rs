@@ -21,6 +21,7 @@ rustler::init!(
         test_primitives::add_i32,
         test_primitives::echo_u8,
         test_primitives::option_inc,
+        test_primitives::erlang_option_inc,
         test_primitives::result_to_int,
         test_list::sum_list,
         test_list::make_list,

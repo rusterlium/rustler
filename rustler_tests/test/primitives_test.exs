@@ -20,6 +20,12 @@ defmodule RustlerTest.PrimitivesTest do
     assert_raise ArgumentError, fn -> RustlerTest.option_inc("hello") end
   end
 
+  test "erlang option decoding and encoding" do
+    assert 33.0 == RustlerTest.erlang_option_inc(32.0)
+    assert :undefined == RustlerTest.erlang_option_inc(:undefined)
+    assert_raise ArgumentError, fn -> RustlerTest.erlang_option_inc("hello") end
+  end
+
   test "result decoding and encoding" do
     assert {:ok, 1} == RustlerTest.result_to_int({:ok, true})
     assert {:ok, 0} == RustlerTest.result_to_int({:ok, false})

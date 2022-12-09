@@ -1,3 +1,5 @@
+use rustler::ErlOption;
+
 #[rustler::nif]
 pub fn add_u32(a: u32, b: u32) -> u32 {
     a + b
@@ -16,6 +18,11 @@ pub fn echo_u8(n: u8) -> u8 {
 #[rustler::nif]
 pub fn option_inc(opt: Option<f64>) -> Option<f64> {
     opt.map(|num| num + 1.0)
+}
+
+#[rustler::nif]
+pub fn erlang_option_inc(opt: ErlOption<f64>) -> ErlOption<f64> {
+    opt.as_ref().map(|num| num + 1.0).into()
 }
 
 #[rustler::nif]
