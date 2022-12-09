@@ -15,16 +15,14 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
     let arity = arity(inputs.clone());
     let decoded_terms = extract_inputs(inputs.clone());
     let argument_names = create_function_params(inputs.clone());
-    let erl_func_name = extract_attr_value(args, "name")
-        .map(|ref n| syn::Ident::new(n, Span::call_site()))
-        .unwrap_or_else(|| name.clone());
+    let erl_func_name = extract_attr_value(args, "name").unwrap_or_else(|| name.to_string());
 
     quote! {
         #[allow(non_camel_case_types)]
         pub struct #name;
 
         impl rustler::Nif for #name {
-            const NAME: *const u8 = concat!(stringify!(#erl_func_name), "\0").as_ptr() as *const u8;
+            const NAME: *const u8 = concat!(#erl_func_name, "\0").as_ptr() as *const u8;
             const ARITY: u32 = #arity;
             const FLAGS: u32 = #flags as u32;
             const RAW_FUNC: unsafe extern "C" fn(
