@@ -17,6 +17,12 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
     let argument_names = create_function_params(inputs.clone());
     let erl_func_name = extract_attr_value(args, "name").unwrap_or_else(|| name.to_string());
 
+    for chr in erl_func_name.chars() {
+        if chr > '\x7f' {
+            panic!("NIF names need to be Latin-1 encoded")
+        }
+    }
+
     quote! {
         #[allow(non_camel_case_types)]
         pub struct #name;
