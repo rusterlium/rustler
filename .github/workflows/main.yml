@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@v1.15.1
         with:
           otp-version: ${{matrix.pair.erlang}}
           elixir-version: ${{matrix.pair.elixir}}
