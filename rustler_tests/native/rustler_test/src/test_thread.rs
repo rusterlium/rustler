@@ -24,7 +24,7 @@ pub fn threaded_sleep(env: Env, msec: u64) -> Atom {
     let q = msec / 1000;
     let r = (msec % 1000) as u32;
     thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
-        std::thread::sleep(std::time::Duration::new(q as u64, r * 1_000_000));
+        std::thread::sleep(std::time::Duration::new(q, r * 1_000_000));
         msec.encode(thread_env)
     });
 
