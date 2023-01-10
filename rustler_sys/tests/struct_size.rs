@@ -38,7 +38,7 @@ fn test1() {
         .arg("-o")
         .arg(&exe)
         .arg("-I")
-        .arg(&erts_include)
+        .arg(erts_include)
         .arg("tests/struct_size.c")
         .status()
         .map_err(|_| "Can't find c compiler (cc or value of environment CC)")

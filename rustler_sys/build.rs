@@ -888,7 +888,7 @@ fn get_version_from_erl() -> Option<String> {
         r#"io:format("~s~n", [erlang:system_info(nif_version)]), init:stop()."#,
     ];
 
-    let version = Command::new("erl").args(&args).output().ok()?.stdout;
+    let version = Command::new("erl").args(args).output().ok()?.stdout;
 
     let version = String::from_utf8(version).ok()?;
 
