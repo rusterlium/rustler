@@ -5,7 +5,7 @@ authors = []
 edition = "2018"
 
 [lib]
-name = "rustler_test"
+name = "rustler_compile_test"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 
