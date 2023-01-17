@@ -2,6 +2,12 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.26 -> 0.27
+
+`MIX_ENV` is no longer considered for determining the build profile. Now, the
+profile defaults to `:release`. Use the `:mode` option to pick another profile
+explicitly. See #496.
+
 ## 0.21 -> 0.22
 
 0.22 changes how to define NIFs. Users upgrading to 0.22 should to do these things:
