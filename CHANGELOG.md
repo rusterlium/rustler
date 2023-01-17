@@ -9,10 +9,27 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+## [0.27.0] - 2023-01-17
+
 ### BREAKING
 
 * `MIX_ENV` is no longer considered for determining the build profile. Now, the
-  profile defaults to `:release`. Use the `:mode` option to pick another profile explicitly.
+  profile defaults to `:release`. Use the `:mode` option to pick another
+  profile explicitly. (#496)
+
+### Added
+
+* `ResourceArc::make_binary` for safe use of `enif_make_resource_binary` (#487)
+* `OwnedBinary` is now `Sync` (#493)
+* Specified MSRV to be 1.56.1.
+
+### Fixed
+
+* Documentation for `load` (#501, thanks @ishitatsuyuki)
+
+### Changed
+
+* Edition 2021 for the rustler mix template (#512, thanks @ayrat555)
 
 ## [0.26.0] - 2022-09-02
 
