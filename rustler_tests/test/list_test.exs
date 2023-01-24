@@ -20,4 +20,12 @@ defmodule RustlerTest.ListTest do
   test "simple list construction with sum" do
     assert RustlerTest.sum_list(RustlerTest.make_list()) == 6
   end
+
+  test "simple list from iterator" do
+    assert RustlerTest.make_list_from_iter() == [2, 3, 4]
+  end
+
+  test "simple list from end" do
+    assert RustlerTest.make_list_from_end() == [2, 3, 4]
+  end
 end
