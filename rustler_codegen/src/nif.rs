@@ -153,6 +153,16 @@ fn extract_inputs(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
                         }
                     }
                 }
+                syn::Type::Tuple(typ) => {
+                    let decoder = quote! {
+                        let #name: #typ = match args[#idx].decode() {
+                            Ok(value) => value,
+                            Err(err) => return Err(err)
+                        };
+                    };
+
+                    tokens.extend(decoder);
+                }
                 other => {
                     panic!("unsupported input given: {:?}", other);
                 }
