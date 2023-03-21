@@ -5,8 +5,7 @@ defmodule RustlerTest.Mixfile do
     [
       app: :rustler_test,
       version: "0.0.1",
-      elixir: "~> 1.11",
-      compilers: [:rustler] ++ Mix.compilers(),
+      elixir: "~> 1.12",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps()
