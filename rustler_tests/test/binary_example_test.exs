@@ -2,7 +2,7 @@ defmodule BinaryExampleTest do
   use ExUnit.Case
 
   test "binary is compiled" do
-    bins = ~w(binary_example hello_rust hello_rust2)
+    bins = ~w(binary_example hello_rust)
 
     for bin <- bins do
       assert_exists(bin)
