@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::panic;
 
 use rustler::types::binary::{Binary, NewBinary, OwnedBinary};
 use rustler::{Env, Error, NifResult, Term};
@@ -37,6 +38,9 @@ pub fn new_binary_new(env: Env) -> Binary {
 
 #[rustler::nif]
 pub fn unowned_to_owned<'a>(env: Env<'a>, binary: Binary<'a>) -> NifResult<Binary<'a>> {
+    // Do nothing and suppress panic message. From https://stackoverflow.com/a/35559417
+    panic::set_hook(Box::new(|_info| {}));
+
     let mut copied = binary.to_owned().unwrap();
     copied.as_mut_slice()[0] = 1;
     Ok(copied.release(env))

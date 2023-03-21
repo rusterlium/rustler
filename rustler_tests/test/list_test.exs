@@ -6,6 +6,8 @@ defmodule RustlerTest.ListTest do
   end
 
   test "list iteration fails on improper lists" do
+    # Note that this also panic, but we are suppressing
+    # the panic message at the function implementation.
     assert_raise ErlangError, fn -> RustlerTest.sum_list([1, 4, 2 | :invalid]) end
   end
 
