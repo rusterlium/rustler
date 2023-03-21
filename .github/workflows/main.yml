@@ -15,11 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+
+      - uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: stable
-            components: rustfmt
-            override: true
+          components: rustfmt
 
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
@@ -28,10 +27,7 @@ jobs:
           elixir-version: "1.14"
 
       - name: Check cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: Check mix format (rustler_mix)
         working-directory: rustler_mix
@@ -49,15 +45,12 @@ jobs:
         os: [ubuntu, windows, macos]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+
+      - uses: dtolnay/rust-toolchain@stable
         with:
-            toolchain: stable
-            components: clippy
-            override: true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-targets --all-features -- -D warnings
+          components: clippy
+
+      - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
@@ -100,10 +93,9 @@ jobs:
         if: "startsWith(matrix.os, 'macos')"
 
       - name: Install Rust ${{matrix.rust}} toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
-          override: true
 
       - run: cargo test
 
