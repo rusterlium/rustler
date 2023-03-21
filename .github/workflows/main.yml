@@ -59,9 +59,7 @@ jobs:
       matrix:
         pair:
           - { erlang: "25", elixir: "1.14", latest: true }
-          - { erlang: "25", elixir: "1.13" }
           - { erlang: "24", elixir: "1.13" }
-          - { erlang: "24", elixir: "1.12" }
           - { erlang: "23", elixir: "1.12" }
         rust:
           - stable
