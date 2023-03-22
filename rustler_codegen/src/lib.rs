@@ -1,6 +1,7 @@
 #![recursion_limit = "128"]
 
 use proc_macro::TokenStream;
+use syn::LitStr;
 
 mod context;
 mod encode_decode_templates;
@@ -91,10 +92,28 @@ pub fn init(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = syn::parse_macro_input!(args as syn::AttributeArgs);
+    let mut schedule: Option<LitStr> = None;
+    let mut custom_name: Option<LitStr> = None;
+
+    if !args.is_empty() {
+        let nif_macro_parser = syn::meta::parser(|meta| {
+            if meta.path.is_ident("schedule") {
+                schedule = Some(meta.value()?.parse()?);
+                Ok(())
+            } else if meta.path.is_ident("name") {
+                custom_name = Some(meta.value()?.parse()?);
+                Ok(())
+            } else {
+                Err(meta.error("Unsupported nif macro property. Expecting schedule or name."))
+            }
+        });
+
+        syn::parse_macro_input!(args with nif_macro_parser);
+    }
+
     let input = syn::parse_macro_input!(input as syn::ItemFn);
 
-    nif::transcoder_decorator(args, input).into()
+    nif::transcoder_decorator(schedule, custom_name, input).into()
 }
 
 /// Derives implementations for the `Encoder` and `Decoder` traits
