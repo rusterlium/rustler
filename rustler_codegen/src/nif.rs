@@ -1,24 +1,53 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
+use syn::meta::ParseNestedMeta;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::LitStr;
 
-pub fn transcoder_decorator(
+const VALID_SCHEDULE_OPTIONS: [&str; 3] = ["Normal", "DirtyCpu", "DirtyIo"];
+
+#[derive(Default)]
+pub struct NifAttributes {
     schedule: Option<LitStr>,
     custom_name: Option<LitStr>,
-    fun: syn::ItemFn,
-) -> TokenStream {
+}
+
+impl NifAttributes {
+    pub fn parse(&mut self, meta: ParseNestedMeta) -> syn::parse::Result<()> {
+        if meta.path.is_ident("schedule") {
+            let schedule: LitStr = meta.value()?.parse()?;
+
+            if VALID_SCHEDULE_OPTIONS.contains(&schedule.value().as_str()) {
+                self.schedule = Some(schedule);
+                Ok(())
+            } else {
+                Err(meta.error(format!(
+                    "The schedule option is expecting one of the values: {:?}",
+                    VALID_SCHEDULE_OPTIONS
+                )))
+            }
+        } else if meta.path.is_ident("name") {
+            self.custom_name = Some(meta.value()?.parse()?);
+            Ok(())
+        } else {
+            Err(meta.error("Unsupported nif macro attribute. Expecting schedule or name."))
+        }
+    }
+}
+
+pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> TokenStream {
     let sig = &fun.sig;
     let name = &sig.ident;
     let inputs = &sig.inputs;
 
-    let flags = schedule_flag(schedule);
+    let flags = schedule_flag(nif_attributes.schedule);
     let function = fun.to_owned().into_token_stream();
     let arity = arity(inputs.clone());
     let decoded_terms = extract_inputs(inputs.clone());
     let argument_names = create_function_params(inputs.clone());
-    let erl_func_name = custom_name
+    let erl_func_name = nif_attributes
+        .custom_name
         .map(|n| syn::Ident::new(n.value().as_str(), Span::call_site()))
         .unwrap_or_else(|| name.clone());
 
@@ -77,22 +106,10 @@ pub fn transcoder_decorator(
 fn schedule_flag(schedule: Option<LitStr>) -> TokenStream {
     let mut tokens = TokenStream::new();
 
-    let valid = ["DirtyCpu", "DirtyIo", "Normal"];
+    let flag = schedule.map_or("Normal".into(), |lit_str| lit_str.value());
+    let flag_ident = syn::Ident::new(&flag, Span::call_site());
 
-    let flag = match schedule {
-        Some(lit_str) => {
-            let value = lit_str.value();
-
-            if valid.contains(&value.as_str()) {
-                syn::Ident::new(value.as_str(), Span::call_site())
-            } else {
-                panic!("Invalid schedule option `{}`", value);
-            }
-        }
-        None => syn::Ident::new("Normal", Span::call_site()),
-    };
-
-    tokens.extend(quote! { rustler::SchedulerFlags::#flag });
+    tokens.extend(quote! { rustler::SchedulerFlags::#flag_ident });
     tokens
 }
 

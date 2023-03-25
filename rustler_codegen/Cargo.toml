@@ -6,7 +6,7 @@ version = "0.27.0" # rustler_codegen version
 authors = ["Hansihe <hansihe@hansihe.com>"]
 license = "MIT/Apache-2.0"
 readme = "../README.md"
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "rustler_codegen"
@@ -17,3 +17,6 @@ syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 heck = "0.4"
 proc-macro2 = "1.0"
+
+[dev-dependencies]
+trybuild = "1.0"
