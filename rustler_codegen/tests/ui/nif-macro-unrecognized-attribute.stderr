@@ -1,0 +1,5 @@
+error: Unsupported nif macro attribute. Expecting schedule or name.
+ --> tests/ui/nif-macro-unrecognized-attribute.rs:3:7
+  |
+3 | #[nif(scheduler = "DirtyCpu")]
+  |       ^^^^^^^^^
