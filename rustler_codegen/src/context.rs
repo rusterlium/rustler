@@ -1,6 +1,3 @@
-// TODO When we settle for a minimum version of Rust >= 1.42, remove this.
-#![allow(clippy::match_like_matches_macro)]
-
 use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -49,10 +46,7 @@ impl<'a> Context<'a> {
         };
 
         let is_tuple_struct = match ast.data {
-            Data::Struct(ref data_struct) => match data_struct.fields {
-                Fields::Unnamed(_) => true,
-                _ => false,
-            },
+            Data::Struct(ref data_struct) => matches!(data_struct.fields, Fields::Unnamed(_)),
             _ => false,
         };
 
@@ -71,17 +65,15 @@ impl<'a> Context<'a> {
     }
 
     pub fn encode(&self) -> bool {
-        self.attrs.iter().any(|attr| match attr {
-            RustlerAttr::Encode => true,
-            _ => false,
-        })
+        self.attrs
+            .iter()
+            .any(|attr| matches!(attr, RustlerAttr::Encode))
     }
 
     pub fn decode(&self) -> bool {
-        self.attrs.iter().any(|attr| match attr {
-            RustlerAttr::Decode => true,
-            _ => false,
-        })
+        self.attrs
+            .iter()
+            .any(|attr| matches!(attr, RustlerAttr::Decode))
     }
 
     pub fn field_atoms(&self) -> Option<Vec<TokenStream>> {
@@ -142,11 +134,9 @@ impl<'a> Context<'a> {
     }
 
     fn encode_decode_attr_set(attrs: &[RustlerAttr]) -> bool {
-        attrs.iter().any(|attr| match attr {
-            RustlerAttr::Encode => true,
-            RustlerAttr::Decode => true,
-            _ => false,
-        })
+        attrs
+            .iter()
+            .any(|attr| matches!(attr, RustlerAttr::Encode | RustlerAttr::Decode))
     }
 
     fn get_rustler_attrs(attr: &syn::Attribute) -> Vec<RustlerAttr> {
