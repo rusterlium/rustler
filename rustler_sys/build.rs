@@ -14,7 +14,7 @@ use std::process::Command;
 use std::{env, fs};
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
-const SUPPORTED_VERSIONS: [(u32, u32); 3] = [(2, 14), (2, 15), (2, 16)];
+const SUPPORTED_VERSIONS: &[(u32, u32)] = &[(2, 14), (2, 15), (2, 16), (2, 17)];
 
 trait ApiBuilder {
     fn func(&mut self, ret: &str, name: &str, args: &str);
@@ -846,6 +846,7 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
         b.func("c_int", "enif_make_map_from_arrays", "env: *mut ErlNifEnv, keys: *const ERL_NIF_TERM, values: *const ERL_NIF_TERM, cnt: usize, map_out: *mut ERL_NIF_TERM");
     }
 
+    // 2.15 was introduced in OTP 22
     if opts.nif_version >= (2, 15) {
         b.func(
             "ErlNifTermType",
@@ -862,9 +863,22 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
         );
     }
 
+    // 2.16 was introduced in OTP 24
     if opts.nif_version >= (2, 16) {
         b.func("*const ErlNifResourceType", "enif_init_resource_type", "env: *mut ErlNifEnv, name_str: *const c_uchar, init: *const ErlNifResourceTypeInit, flags: ErlNifResourceFlags, tried: *mut ErlNifResourceFlags");
         b.func("c_int", "enif_dynamic_resource_call", "env: *mut ErlNifEnv, module: ERL_NIF_TERM, name: ERL_NIF_TERM, rsrc: ERL_NIF_TERM, call_data: *const c_void");
+    }
+
+    // 2.17 was introduced in OTP 26
+    if opts.nif_version >= (2, 17) {
+        b.func(
+            "c_int",
+            "enif_set_option",
+            "env: *mut ErlNifEnv, opt: ErlNifOption",
+        );
+        b.func("c_int", "enif_get_string_length", "env: *mut ErlNifEnv, list: ERL_NIF_TERM, len: *mut c_uint, encoding: ErlNifCharEncoding");
+        b.func("c_int", "enif_make_new_atom", "env: *mut ErlNifEnv, name: *const c_uchar, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
+        b.func("c_int", "enif_make_new_atom_len", "env: *mut ErlNifEnv, name: *const c_uchar, len: size_t, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
     }
 }
 
