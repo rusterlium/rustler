@@ -12,6 +12,7 @@ mod test_range;
 mod test_resource;
 mod test_term;
 mod test_thread;
+mod test_tuple;
 
 rustler::init!(
     "Elixir.RustlerTest",
@@ -85,6 +86,12 @@ rustler::init!(
         test_error::raise_term_with_atom_error,
         test_error::term_with_tuple_error,
         test_nif_attrs::can_rename,
+        test_tuple::add_from_tuple,
+        test_tuple::add_one_to_tuple,
+        test_tuple::join_tuple_elements,
+        test_tuple::maybe_add_one_to_tuple,
+        test_tuple::add_i32_from_tuple,
+        test_tuple::greeting_person_from_tuple,
         test_codegen::reserved_keywords::reserved_keywords_type_echo
     ],
     load = load
