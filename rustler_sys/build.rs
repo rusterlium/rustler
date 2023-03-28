@@ -14,7 +14,7 @@ use std::process::Command;
 use std::{env, fs};
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
-const SUPPORTED_VERSIONS: [(u32, u32); 4] = [(2, 14), (2, 15), (2, 16), (2, 17)];
+const SUPPORTED_VERSIONS: &[(u32, u32)] = &[(2, 14), (2, 15), (2, 16), (2, 17)];
 
 trait ApiBuilder {
     fn func(&mut self, ret: &str, name: &str, args: &str);
