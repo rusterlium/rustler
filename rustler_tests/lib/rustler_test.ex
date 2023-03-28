@@ -7,9 +7,7 @@ defmodule RustlerTest do
     otp_app: :rustler_test,
     crate: :rustler_test
 
-  defp err do
-    throw(NifNotLoadedError)
-  end
+  defp err, do: :erlang.nif_error(:nif_not_loaded)
 
   def add_u32(_, _), do: err()
   def add_i32(_, _), do: err()
@@ -95,4 +93,11 @@ defmodule RustlerTest do
   def term_with_tuple_error(), do: err()
 
   def nif_attrs_can_rename(), do: err()
+
+  def add_from_tuple(_tuple), do: err()
+  def add_one_to_tuple(_tuple), do: err()
+  def join_tuple_elements(_tuple), do: err()
+  def maybe_add_one_to_tuple(_tuple), do: err()
+  def add_i32_from_tuple(_tuple), do: err()
+  def greeting_person_from_tuple(_tuple), do: err()
 end
