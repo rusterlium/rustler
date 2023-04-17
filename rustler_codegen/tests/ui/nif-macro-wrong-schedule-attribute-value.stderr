@@ -1,0 +1,5 @@
+error: The schedule option is expecting one of the values: ["Normal", "DirtyCpu", "DirtyIo"]
+ --> tests/ui/nif-macro-wrong-schedule-attribute-value.rs:3:7
+  |
+3 | #[nif(schedule = "DirtyGPU")]
+  |       ^^^^^^^^^^^^^^^^^^^^^

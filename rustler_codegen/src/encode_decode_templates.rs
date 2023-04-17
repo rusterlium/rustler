@@ -22,7 +22,7 @@ pub(crate) fn decoder(ctx: &Context, inner: TokenStream) -> TokenStream {
 
     let mut impl_generics = generics.clone();
     let decode_lifetime = syn::Lifetime::new("'__rustler_decode_lifetime", Span::call_site());
-    let lifetime_def = syn::LifetimeDef::new(decode_lifetime.clone());
+    let lifetime_def = syn::LifetimeParam::new(decode_lifetime.clone());
     impl_generics
         .params
         .push(syn::GenericParam::Lifetime(lifetime_def));

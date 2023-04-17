@@ -28,6 +28,8 @@ defmodule RustlerTest.BinaryTest do
   test "unowned binary to owned" do
     assert RustlerTest.unowned_to_owned("test") == <<1, "est">>
     assert RustlerTest.unowned_to_owned("whatisgoingon") == <<1, "hatisgoingon">>
+    # Notice that this also panic, but we are suppressing the message
+    # at the function implementation.
     assert_raise ErlangError, fn -> RustlerTest.unowned_to_owned("") end
   end
 

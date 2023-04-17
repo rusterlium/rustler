@@ -1,7 +1,11 @@
 use rustler::{Error, ListIterator, NifResult};
+use std::panic;
 
 #[rustler::nif]
 pub fn sum_list(iter: ListIterator) -> NifResult<i64> {
+    // Do nothing and suppress panic message. From https://stackoverflow.com/a/35559417
+    panic::set_hook(Box::new(|_info| {}));
+
     let res: Result<Vec<i64>, Error> = iter.map(|x| x.decode::<i64>()).collect();
 
     match res {

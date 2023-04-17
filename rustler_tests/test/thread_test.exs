@@ -49,7 +49,10 @@ defmodule RustlerTest.ThreadTest do
   end
 
   test "thread panic" do
-    # overflows u64 and panics
+    # Overflows u64 and panics.
+    #
+    # Note that we are suppressing the panic message inside the
+    # function implementation.
     RustlerTest.threaded_fac(100)
 
     receive do

@@ -1,22 +1,54 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
+use syn::meta::ParseNestedMeta;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
+use syn::LitStr;
 
-pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> TokenStream {
+const VALID_SCHEDULE_OPTIONS: [&str; 3] = ["Normal", "DirtyCpu", "DirtyIo"];
+
+#[derive(Default)]
+pub struct NifAttributes {
+    schedule: Option<LitStr>,
+    custom_name: Option<LitStr>,
+}
+
+impl NifAttributes {
+    pub fn parse(&mut self, meta: ParseNestedMeta) -> syn::parse::Result<()> {
+        if meta.path.is_ident("schedule") {
+            let schedule: LitStr = meta.value()?.parse()?;
+
+            if VALID_SCHEDULE_OPTIONS.contains(&schedule.value().as_str()) {
+                self.schedule = Some(schedule);
+                Ok(())
+            } else {
+                Err(meta.error(format!(
+                    "The schedule option is expecting one of the values: {:?}",
+                    VALID_SCHEDULE_OPTIONS
+                )))
+            }
+        } else if meta.path.is_ident("name") {
+            self.custom_name = Some(meta.value()?.parse()?);
+            Ok(())
+        } else {
+            Err(meta.error("Unsupported nif macro attribute. Expecting schedule or name."))
+        }
+    }
+}
+
+pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> TokenStream {
     let sig = &fun.sig;
     let name = &sig.ident;
     let inputs = &sig.inputs;
 
-    validate_attributes(args.clone());
-
-    let flags = schedule_flag(args.to_owned());
+    let flags = schedule_flag(nif_attributes.schedule);
     let function = fun.to_owned().into_token_stream();
     let arity = arity(inputs.clone());
     let decoded_terms = extract_inputs(inputs.clone());
     let argument_names = create_function_params(inputs.clone());
-    let erl_func_name = extract_attr_value(args, "name")
-        .map(|ref n| syn::Ident::new(n, Span::call_site()))
+    let erl_func_name = nif_attributes
+        .custom_name
+        .map(|n| syn::Ident::new(n.value().as_str(), Span::call_site()))
         .unwrap_or_else(|| name.clone());
 
     quote! {
@@ -71,40 +103,14 @@ pub fn transcoder_decorator(args: syn::AttributeArgs, fun: syn::ItemFn) -> Token
     }
 }
 
-fn schedule_flag(args: syn::AttributeArgs) -> TokenStream {
+fn schedule_flag(schedule: Option<LitStr>) -> TokenStream {
     let mut tokens = TokenStream::new();
 
-    let valid = ["DirtyCpu", "DirtyIo", "Normal"];
+    let flag = schedule.map_or("Normal".into(), |lit_str| lit_str.value());
+    let flag_ident = syn::Ident::new(&flag, Span::call_site());
 
-    let flag = match extract_attr_value(args, "schedule") {
-        Some(value) => {
-            if valid.contains(&value.as_str()) {
-                syn::Ident::new(value.as_str(), Span::call_site())
-            } else {
-                panic!("Invalid schedule option `{}`", value);
-            }
-        }
-        None => syn::Ident::new("Normal", Span::call_site()),
-    };
-
-    tokens.extend(quote! { rustler::SchedulerFlags::#flag });
+    tokens.extend(quote! { rustler::SchedulerFlags::#flag_ident });
     tokens
-}
-
-fn extract_attr_value(args: syn::AttributeArgs, name: &str) -> Option<String> {
-    use syn::{Lit, Meta, MetaNameValue, NestedMeta};
-
-    for arg in args.iter() {
-        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) = arg {
-            if path.is_ident(name) {
-                if let Lit::Str(lit) = lit {
-                    return Some(lit.value());
-                }
-            }
-        }
-    }
-
-    None
 }
 
 fn extract_inputs(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
@@ -152,6 +158,16 @@ fn extract_inputs(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
                             tokens.extend(decoder);
                         }
                     }
+                }
+                syn::Type::Tuple(typ) => {
+                    let decoder = quote! {
+                        let #name: #typ = match args[#idx].decode() {
+                            Ok(value) => value,
+                            Err(err) => return Err(err)
+                        };
+                    };
+
+                    tokens.extend(decoder);
                 }
                 other => {
                     panic!("unsupported input given: {:?}", other);
@@ -205,26 +221,4 @@ fn arity(inputs: Punctuated<syn::FnArg, Comma>) -> u32 {
     }
 
     arity
-}
-
-fn validate_attributes(args: syn::AttributeArgs) {
-    use syn::{Meta, MetaNameValue, NestedMeta};
-    let known_attrs = ["schedule", "name"];
-
-    for arg in args.iter() {
-        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, .. })) = arg {
-            if known_attrs.iter().all(|known| !path.is_ident(known)) {
-                match path.get_ident() {
-                    Some(path) => panic!(
-                        "Unknown attribute '{}'. Allowed attributes: {:?}",
-                        path, known_attrs
-                    ),
-                    None => panic!(
-                        "Cannot parse attribute. Allowed attributes: {:?}",
-                        known_attrs
-                    ),
-                }
-            }
-        }
-    }
 }
