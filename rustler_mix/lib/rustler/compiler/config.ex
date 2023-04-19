@@ -19,6 +19,7 @@ defmodule Rustler.Compiler.Config do
             features: [],
             lib: true,
             load_data: 0,
+            load_data_fun: nil,
             load_from: nil,
             mode: :release,
             otp_app: nil,
