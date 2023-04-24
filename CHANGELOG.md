@@ -9,6 +9,18 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+## [0.28.0] - 2023-04-24
+
+### Added
+
+* Support OTP 26 (#526, thanks @philss)
+* Support tuples in NIF macro (#520, #527, thanks @denumerate and @philss)
+* Supportfor `load_data_fun` to compute `load_data` at runtime (#413, thanks @kaaboaye)
+
+### Changed
+
+* Enhanced NIF macro error messages for invalid attributes (#525, thanks @philss)
+
 ## [0.27.0] - 2023-01-17
 
 ### BREAKING
