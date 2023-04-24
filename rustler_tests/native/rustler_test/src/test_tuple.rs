@@ -34,8 +34,11 @@ pub fn greeting_person_from_tuple(age_and_name: (u8, &str)) -> String {
     let (age, name) = age_and_name;
 
     if age > 18 {
-        format!("Hello, {name}! You are allowed in the bar area.")
+        format!("Hello, {}! You are allowed in the bar area.", name)
     } else {
-        format!("Hi, {name}! I'm sorry, but you are not allowed in the bar area.")
+        format!(
+            "Hi, {}! I'm sorry, but you are not allowed in the bar area.",
+            name
+        )
     }
 }
