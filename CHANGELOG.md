@@ -9,6 +9,11 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+### Changed
+
+* Use Cargo features to define the NIF version level (#537), deprecating
+  `RUSTLER_NIF_VERSION`
+
 ## [0.28.0] - 2023-04-24
 
 ### Added

@@ -57,14 +57,18 @@ Rustler aims to support the newest three major OTP versions as well as newest th
 
 #### Supported NIF version
 
-Rustler uses `erlang:system_info(nif_version)` to detect the supported NIF version of the Erlang/OTP
-system for which the NIF is to be compiled. It is possible to restrict the NIF version to an older
-version if the NIF is to be compiled for an older version of Erlang. For example, if the target NIF
-version should be `2.14` (Erlang/OTP 21), this can be defined using an environment variable:
+The minimal supported NIF version for a library should be defined via Cargo
+features. The default is currently `2.14` (Erlang/OTP 21). To use features from
+NIF version `2.16` (Erlang/OTP 24), the respective feature flag has to be
+enabled on the dependency:
 
+```toml
+[dependencies]
+rustler = { version = "...", features = ["nif_version_2_16"] }
 ```
-RUSTLER_NIF_VERSION=2.14 mix compile
-```
+
+For compatibility reasons, this can be defined (and overridden) by setting the
+`RUSTLER_NIF_VERSION` environment variable during build.
 
 #### Community
 
