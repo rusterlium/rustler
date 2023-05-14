@@ -14,7 +14,8 @@ use std::process::Command;
 use std::{env, fs};
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
-const SUPPORTED_VERSIONS: &[(u32, u32)] = &[(2, 14), (2, 15), (2, 16), (2, 17)];
+const MIN_SUPPORTED_VERSION: (u32, u32) = (2, 14);
+const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 17);
 
 trait ApiBuilder {
     fn func(&mut self, ret: &str, name: &str, args: &str);
@@ -919,7 +920,7 @@ fn erl_nif_version_or_latest() -> (u32, u32) {
             parse_nif_version(nif_version.as_str())
         }
         None => {
-            let latest_version: (u32, u32) = SUPPORTED_VERSIONS.last().unwrap().to_owned();
+            let latest_version: (u32, u32) = MAX_SUPPORTED_VERSION;
             eprintln!(
                 "RUSTLER_NIF_VERSION env var is not set and `erl` command is not found. Using version {}.{}",
                 latest_version.0, latest_version.1
@@ -930,16 +931,26 @@ fn erl_nif_version_or_latest() -> (u32, u32) {
 }
 
 fn main() {
-    let nif_version = match env::var("RUSTLER_NIF_VERSION") {
+    // TODO: This code will need adjustment if the Erlang developers ever decide to introduce
+    //       a new major NIF version.
+    let mut nif_version = match env::var("RUSTLER_NIF_VERSION") {
         Ok(val) => parse_nif_version(&val),
         Err(_err) => erl_nif_version_or_latest(),
     };
 
-    if !SUPPORTED_VERSIONS.contains(&nif_version) {
+    if nif_version < MIN_SUPPORTED_VERSION {
         panic!(
             "The NIF version given from RUSTLER_NIF_VERSION is not supported: {}.{}",
             nif_version.0, nif_version.1
         );
+    }
+
+    if nif_version > MAX_SUPPORTED_VERSION {
+        eprintln!(
+            "NIF version {}.{} is not yet supported, falling back to {}.{}",
+            nif_version.0, nif_version.1, MAX_SUPPORTED_VERSION.0, MAX_SUPPORTED_VERSION.1
+        );
+        nif_version = MAX_SUPPORTED_VERSION;
     }
 
     let target_pointer_width = env::var("CARGO_CFG_TARGET_POINTER_WIDTH");
@@ -984,4 +995,9 @@ fn main() {
     // The following lines are important to tell Cargo to recompile if something changes.
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=RUSTLER_NIF_VERSION");
+
+    // Activate all config flags for the supported NIF versions
+    for minor in 0..=nif_version.1 {
+        println!("cargo:rustc-cfg=nif_{}_{}", nif_version.0, minor);
+    }
 }
