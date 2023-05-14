@@ -10,12 +10,9 @@
 use regex::Regex;
 use std::fmt::Write;
 use std::path::Path;
-use std::process::Command;
 use std::{env, fs};
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
-const MIN_SUPPORTED_VERSION: (u32, u32) = (2, 14);
-const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 17);
 
 trait ApiBuilder {
     fn func(&mut self, ret: &str, name: &str, args: &str);
@@ -883,98 +880,45 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
     }
 }
 
-fn parse_nif_version(version: &str) -> (u32, u32) {
-    let parts: Vec<Result<_, _>> = version
-        .split('.')
-        .take(2)
-        .map(|n| n.parse::<u32>())
-        .collect();
+include!("build_common.rs");
+use common::*;
 
-    match &parts[..] {
-        [Ok(major), Ok(minor)] => (*major, *minor),
-        _other => panic!("The RUSTLER_NIF_VERSION is not a valid version"),
-    }
-}
-
-fn get_version_from_erl() -> Option<String> {
-    let args = vec![
-        "-noshell",
-        "-eval",
-        r#"io:format("~s~n", [erlang:system_info(nif_version)]), init:stop()."#,
-    ];
-
-    let version = Command::new("erl").args(args).output().ok()?.stdout;
-
-    let version = String::from_utf8(version).ok()?;
-
-    Some(version.trim().into())
-}
-
-fn erl_nif_version_or_latest() -> (u32, u32) {
-    match get_version_from_erl() {
-        Some(nif_version) => {
-            eprintln!(
-                "RUSTLER_NIF_VERSION env var is not set. Using version from Erlang: {}",
-                nif_version
-            );
-            parse_nif_version(nif_version.as_str())
-        }
-        None => {
-            let latest_version: (u32, u32) = MAX_SUPPORTED_VERSION;
-            eprintln!(
-                "RUSTLER_NIF_VERSION env var is not set and `erl` command is not found. Using version {}.{}",
-                latest_version.0, latest_version.1
-            );
-            latest_version
+fn get_nif_version_from_features() -> (u32, u32) {
+    for major in ((MIN_SUPPORTED_VERSION.0)..=(MAX_SUPPORTED_VERSION.0)).rev() {
+        for minor in ((MIN_SUPPORTED_VERSION.1)..=(MAX_SUPPORTED_VERSION.1)).rev() {
+            if env::var(format!("CARGO_FEATURE_NIF_VERSION_{}_{}", major, minor)).is_ok() {
+                return (major, minor);
+            }
         }
     }
+    panic!(
+        "At least the minimal feature nif_version_{}_{} has to be defined",
+        MIN_SUPPORTED_VERSION.0, MIN_SUPPORTED_VERSION.1
+    );
 }
 
 fn main() {
-    // TODO: This code will need adjustment if the Erlang developers ever decide to introduce
-    //       a new major NIF version.
-    let mut nif_version = match env::var("RUSTLER_NIF_VERSION") {
-        Ok(val) => parse_nif_version(&val),
-        Err(_err) => erl_nif_version_or_latest(),
+    let nif_version = handle_nif_version_from_env().unwrap_or_else(get_nif_version_from_features);
+
+    let target_family = if cfg!(target_family = "windows") {
+        OsFamily::Win
+    } else if cfg!(target_family = "unix") {
+        OsFamily::Unix
+    } else {
+        panic!("Unsupported Operational System Family")
     };
 
-    if nif_version < MIN_SUPPORTED_VERSION {
-        panic!(
-            "The NIF version given from RUSTLER_NIF_VERSION is not supported: {}.{}",
-            nif_version.0, nif_version.1
-        );
-    }
-
-    if nif_version > MAX_SUPPORTED_VERSION {
-        eprintln!(
-            "NIF version {}.{} is not yet supported, falling back to {}.{}",
-            nif_version.0, nif_version.1, MAX_SUPPORTED_VERSION.0, MAX_SUPPORTED_VERSION.1
-        );
-        nif_version = MAX_SUPPORTED_VERSION;
-    }
-
-    let target_pointer_width = env::var("CARGO_CFG_TARGET_POINTER_WIDTH");
-
-    // It's unlikely that we are going to cross compile to different OS,
-    // but this guarantees that we choose the correct OS APIs if we do so.
-    let target_family_or_current =
-        env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_else(|_| env::consts::FAMILY.to_string());
-
-    let target_family = match &target_family_or_current as &str {
-        "windows" => OsFamily::Win,
-        "unix" => OsFamily::Unix,
-        other => panic!("Unsupported Operational System Family: {}", other),
-    };
-
-    let ulong_size = match (target_pointer_width, target_family) {
-        (_, OsFamily::Win) => 4,
-        (Ok(ref val), _) if val == "32" => 4,
-        (Ok(ref val), _) if val == "64" => 8,
-        (Ok(ref val), _) => panic!("Unsupported target pointer width: {}", val),
-        (Err(err), _) => panic!(
-            "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
-            err
-        ),
+    let ulong_size = match target_family {
+        OsFamily::Win => 4,
+        OsFamily::Unix => {
+            if cfg!(target_pointer_width = "32") {
+                4
+            } else if cfg!(target_pointer_width = "64") {
+                8
+            } else {
+                panic!("Unsupported target pointer width")
+            }
+        }
     };
 
     let opts = GenerateOptions {
@@ -989,15 +933,8 @@ fn main() {
         .unwrap();
 
     let dest_path = Path::new(&out_dir).join(SNIPPET_NAME);
-
     fs::write(dest_path, api).unwrap();
 
     // The following lines are important to tell Cargo to recompile if something changes.
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-env-changed=RUSTLER_NIF_VERSION");
-
-    // Activate all config flags for the supported NIF versions
-    for minor in 0..=nif_version.1 {
-        println!("cargo:rustc-cfg=nif_{}_{}", nif_version.0, minor);
-    }
 }

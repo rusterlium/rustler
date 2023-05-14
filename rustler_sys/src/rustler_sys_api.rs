@@ -187,7 +187,7 @@ pub enum ErlNifResourceFlags {
 #[repr(C)]
 pub enum ErlNifCharEncoding {
     ERL_NIF_LATIN1 = 1,
-    #[cfg(nif_2_17)]
+    #[cfg(feature = "nif_version_2_17")]
     ERL_NIF_UTF8 = 2,
 }
 
@@ -331,7 +331,7 @@ pub enum ErlNifTermType {
 }
 
 /// See [ErlNifOption](http://www.erlang.org/doc/man/erl_nif.html#ErlNifOption) in the Erlang docs.
-#[cfg(nif_2_17)]
+#[cfg(feature = "nif_version_2_17")]
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifOption {
