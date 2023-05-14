@@ -121,6 +121,11 @@ impl<'a> Term<'a> {
                 as u32
         }
     }
+
+    #[cfg(feature = "nif_version_2_15")]
+    pub fn get_erl_type(&self) -> rustler_sys::ErlNifTermType {
+        unsafe { rustler_sys::enif_term_type(self.env.as_c_arg(), &self.as_c_arg()) }
+    }
 }
 
 impl<'a> PartialEq for Term<'a> {

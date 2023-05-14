@@ -307,6 +307,7 @@ pub enum ErlNifHash {
 }
 
 /// See [ErlNifTermType](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTermType) in the Erlang docs.
+#[cfg(feature = "nif_version_2_15")]
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub enum ErlNifTermType {

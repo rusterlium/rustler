@@ -11,7 +11,6 @@ macro_rules! impl_check_fun {
 impl_check_fun!(is_atom, rustler_sys::enif_is_atom);
 impl_check_fun!(is_binary, rustler_sys::enif_is_binary);
 impl_check_fun!(is_empty_list, rustler_sys::enif_is_empty_list);
-impl_check_fun!(is_exception, rustler_sys::enif_is_exception);
 impl_check_fun!(is_fun, rustler_sys::enif_is_fun);
 impl_check_fun!(is_list, rustler_sys::enif_is_list);
 impl_check_fun!(is_map, rustler_sys::enif_is_map);
