@@ -19,6 +19,17 @@ defmodule RustlerTest do
   def make_list(), do: err()
 
   def term_debug(_), do: err()
+
+  def term_debug_and_reparse(term) do
+    with debug_str <- term_debug(term),
+         debug_str <- :erlang.binary_to_list(debug_str) ++ '.',
+         {:ok, tokens, _} <- :erl_scan.string(debug_str),
+         {:ok, ast} <- :erl_parse.parse_exprs(tokens),
+         {:value, res, _} <- :erl_eval.exprs(ast, %{}) do
+      res
+    end
+  end
+
   def term_eq(_, _), do: err()
   def term_cmp(_, _), do: err()
   def term_internal_hash(_, _), do: err()
