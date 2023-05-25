@@ -9,6 +9,10 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+## Added
+
+* `ErlOption<T>` to provide an ergonomic option type for Erlang (#507, thanks @tatsuya6502)
+
 ### Changed
 
 * Use Cargo features to define the NIF version level (#537), deprecating
