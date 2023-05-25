@@ -2,6 +2,25 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.28 -> 0.29
+
+`RUSTLER_NIF_VERSION` is deprecated and will not be considered anymore for 0.30.
+The NIF version will also not be guessed anymore from a potentially available
+installed Erlang version. By default, NIF libraries will now be compiled against
+NIF version 2.14 which is compatible down to OTP21. The default will be adjusted
+along with the supported OTP versions.
+
+If additional features are required that use newer NIF versions, these can be
+included explicitly in the project's `Cargo.toml` as, e.g.
+
+```toml
+[dependencies]
+rustler = { version = "0.30", features = ["nif_version_2_17"] }
+```
+
+With this configuration, the resulting NIF library will only work from OTP26
+onwards, but will also have access to the largest feature set.
+
 ## 0.26 -> 0.27
 
 `MIX_ENV` is no longer considered for determining the build profile. Now, the

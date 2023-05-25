@@ -9,9 +9,13 @@ readme = "../README.md"
 edition = "2018"
 
 [features]
-default = ["derive"]
+default = ["derive", "nif_version_2_14"]
 derive = ["rustler_codegen"]
 alternative_nif_init_name = []
+nif_version_2_14 = ["rustler_sys/nif_version_2_14"]
+nif_version_2_15 = ["nif_version_2_14", "rustler_sys/nif_version_2_15"]
+nif_version_2_16 = ["nif_version_2_15", "rustler_sys/nif_version_2_16"]
+nif_version_2_17 = ["nif_version_2_16", "rustler_sys/nif_version_2_17"]
 
 [dependencies]
 lazy_static = "1.4"
