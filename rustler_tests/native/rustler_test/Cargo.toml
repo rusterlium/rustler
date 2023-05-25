@@ -13,6 +13,12 @@ crate-type = ["cdylib"]
 name = "hello_rust"
 path = "src/main.rs"
 
+[features]
+nif_version_2_14 = ["rustler/nif_version_2_14"]
+nif_version_2_15 = ["nif_version_2_14", "rustler/nif_version_2_15"]
+nif_version_2_16 = ["nif_version_2_15", "rustler/nif_version_2_16"]
+nif_version_2_17 = ["nif_version_2_16", "rustler/nif_version_2_17"]
+
 [dependencies]
 lazy_static = "1.4"
 rustler = { path = "../../../rustler" }
