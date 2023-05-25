@@ -271,6 +271,10 @@ atoms! {
     /// The `nil` atom.
     nil,
 
+    /// The `undefined` atom, commonly used in Erlang libraries to express the
+    /// absence of value.
+    undefined,
+
     /// The `ok` atom, commonly used in success tuples.
     ok,
 

@@ -37,6 +37,9 @@ pub mod truthy;
 
 pub mod elixir_struct;
 
+pub mod erlang_option;
+pub use self::erlang_option::ErlOption;
+
 pub trait Encoder {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a>;
 }
