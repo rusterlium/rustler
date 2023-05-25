@@ -92,18 +92,15 @@ jobs:
           - stable
           - nightly
         os:
-          - macos-11
-          - windows-latest
-          # TODO change this to ubuntu-latest after OTP 23 is deprecated, see
-          # https://github.com/erlef/setup-beam#compatibility-between-operating-system-and-erlangotp
-          # for compatibility
-          - ubuntu-20.04
+          - macos
+          - windows
+          - ubuntu
         exclude:
           # TODO Remove this once setup-beam is fixed to work around OTP26's
           # regression
-          - os: windows-latest
+          - os: windows
             pair: { erlang: "26", elixir: "1.14", latest: true }
-    runs-on: ${{matrix.os}}
+    runs-on: ${{matrix.os}}-latest
 
     steps:
       - name: Checkout sources
