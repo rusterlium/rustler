@@ -51,12 +51,15 @@ jobs:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: rustler
 
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
-    needs: [format, clippy]
+    # needs: [format, clippy]
     strategy:
       matrix:
         pair:
@@ -103,6 +106,9 @@ jobs:
           toolchain: ${{matrix.rust}}
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: rustler
 
       - run: cargo test
 
