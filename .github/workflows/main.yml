@@ -37,9 +37,31 @@ jobs:
         working-directory: rustler_tests
         run: mix format --check-formatted
 
+  build:
+    name: Build ${{matrix.os}} ${{matrix.toolchain}}
+    runs-on: ${{matrix.os}}-latest
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+        toolchain: [stable, nightly]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{matrix.toolchain}}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: rustler
+
+      - run: cargo build
+
   clippy:
     name: Clippy ${{matrix.os}}
     runs-on: ${{matrix.os}}-latest
+    needs: [build]
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
@@ -50,11 +72,16 @@ jobs:
         with:
           components: clippy
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rustler
+          save-if: false
+
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
-    needs: [format, clippy]
+    needs: [build]
     strategy:
       matrix:
         pair:
@@ -99,6 +126,11 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rustler
+          save-if: false
 
       - run: cargo test
 
