@@ -38,17 +38,18 @@ jobs:
         run: mix format --check-formatted
 
   build:
-    name: Build ${{matrix.os}}
+    name: Build ${{matrix.os}} ${{matrix.toolchain}}
     runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
+        toolchain: [stable, nightly]
     steps:
       - uses: actions/checkout@v3
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy
+          toolchain: ${{matrix.toolchain}}
 
       - uses: Swatinem/rust-cache@v2
         with:
