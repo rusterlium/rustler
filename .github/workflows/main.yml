@@ -50,6 +50,8 @@ jobs:
         with:
           components: clippy
 
+      - uses: Swatinem/rust-cache@v2
+
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
@@ -99,6 +101,8 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
+
+      - uses: Swatinem/rust-cache@v2
 
       - run: cargo test
 
