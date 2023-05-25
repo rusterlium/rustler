@@ -58,9 +58,9 @@ jobs:
     strategy:
       matrix:
         pair:
-          - { erlang: "25", elixir: "1.14", latest: true }
+          - { erlang: "26", elixir: "1.14", latest: true }
+          - { erlang: "25", elixir: "1.14" }
           - { erlang: "24", elixir: "1.13" }
-          - { erlang: "23", elixir: "1.12" }
         rust:
           - stable
           - nightly
@@ -71,6 +71,11 @@ jobs:
           # https://github.com/erlef/setup-beam#compatibility-between-operating-system-and-erlangotp
           # for compatibility
           - ubuntu-20.04
+        exclude:
+          # TODO Remove this once setup-beam is fixed to work around OTP26's
+          # regression
+          - os: windows-latest
+            pair: { erlang: "26", elixir: "1.14", latest: true }
     runs-on: ${{matrix.os}}
 
     steps:

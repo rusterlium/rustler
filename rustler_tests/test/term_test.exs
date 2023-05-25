@@ -9,22 +9,18 @@ defmodule RustlerTest.TermTest do
 
     range = 0..1000
 
-    # For Elixir >= v1.12, Range has a :step field.
-    if Map.has_key?(range, :step) do
-      assert RustlerTest.term_debug(range) ==
-               "\#{'__struct__'=>'Elixir.Range',first=>0,last=>1000,step=>1}"
-    else
-      assert RustlerTest.term_debug(range) ==
-               "\#{'__struct__'=>'Elixir.Range',first=>0,last=>1000}"
-    end
+    assert RustlerTest.term_debug_and_reparse(range) == range
 
     assert RustlerTest.term_debug(Enum.to_list(0..5)) == "[0,1,2,3,4,5]"
     assert RustlerTest.term_debug(Enum.to_list(0..1000)) == "[#{Enum.join(0..1000, ",")}]"
     assert RustlerTest.term_debug([[[[]], []], [[]], []]) == "[[[[]],[]],[[]],[]]"
 
     sues = Enum.map(1..500, fn i -> %{name: "Aunt Sue", id: i} end)
-    sue_strs = Enum.map(1..500, fn i -> "\#{id=>#{i},name=><<\"Aunt Sue\">>}" end)
-    assert RustlerTest.term_debug(sues) == "[#{Enum.join(sue_strs, ",")}]"
+
+    sues_debug =
+      Enum.map(1..500, fn i -> RustlerTest.term_debug_and_reparse(%{name: "Aunt Sue", id: i}) end)
+
+    assert sues == sues_debug
   end
 
   test "term equality" do
