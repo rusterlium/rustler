@@ -2,10 +2,22 @@ defmodule NifNotLoadedError do
   defexception message: "nif not loaded"
 end
 
+defmodule RustlerTest.Helper do
+  def nif_feature_from_running_version() do
+    [major, minor | _] =
+      :erlang.system_info(:nif_version)
+      |> to_string
+      |> String.split(".")
+
+    "nif_version_#{major}_#{minor}"
+  end
+end
+
 defmodule RustlerTest do
   use Rustler,
     otp_app: :rustler_test,
-    crate: :rustler_test
+    crate: :rustler_test,
+    features: [RustlerTest.Helper.nif_feature_from_running_version()]
 
   defp err, do: :erlang.nif_error(:nif_not_loaded)
 

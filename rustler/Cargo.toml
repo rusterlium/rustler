@@ -9,7 +9,7 @@ readme = "../README.md"
 edition = "2018"
 
 [features]
-default = ["derive", "nif_version_2_14"]
+default = ["derive", "nif_version_2_15"]
 derive = ["rustler_codegen"]
 alternative_nif_init_name = []
 nif_version_2_14 = ["rustler_sys/nif_version_2_14"]

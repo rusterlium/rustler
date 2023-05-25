@@ -35,8 +35,7 @@ build = "build.rs"
 categories = ["external-ffi-bindings"]
 
 [features]
-# Default version: 2.14
-default = ["nif_version_2_14"]
+default = ["nif_version_2_15"]
 nif_version_2_14 = []
 nif_version_2_15 = ["nif_version_2_14"]
 nif_version_2_16 = ["nif_version_2_15"]
