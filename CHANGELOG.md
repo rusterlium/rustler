@@ -9,6 +9,12 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+### Added
+
+### Changed
+
+* Dropped support for `RUSTLER_NIF_VERSION`
+
 ## [0.29.0] - 2023-06-22
 
 ### Added

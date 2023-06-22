@@ -67,9 +67,6 @@ enabled on the dependency:
 rustler = { version = "...", features = ["nif_version_2_16"] }
 ```
 
-For compatibility reasons, this can be defined (and overridden) by setting the
-`RUSTLER_NIF_VERSION` environment variable during build.
-
 #### Community
 
 You can find us in the `#rustler:matrix.org` channel on [Matrix](https://matrix.to/#/#rustler:matrix.org)
