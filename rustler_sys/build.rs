@@ -2,15 +2,14 @@
 //
 // Generate the NIF APIs that will be built in `src/rustler_sys_api.rs`.
 //
-// This script rely on the `RUSTLER_NIF_VERSION` environment variable
-// and will fallback to the installed OTP version to detect the version.
-// If none of them are available, then we are going to use the latest version.
-//
 
 use regex::Regex;
 use std::fmt::Write;
 use std::path::Path;
 use std::{env, fs};
+
+pub const MIN_SUPPORTED_VERSION: (u32, u32) = (2, 14);
+pub const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 17);
 
 const SNIPPET_NAME: &str = "nif_api.snippet";
 
@@ -880,9 +879,6 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
     }
 }
 
-include!("build_common.rs");
-use common::*;
-
 fn get_nif_version_from_features() -> (u32, u32) {
     for major in ((MIN_SUPPORTED_VERSION.0)..=(MAX_SUPPORTED_VERSION.0)).rev() {
         for minor in ((MIN_SUPPORTED_VERSION.1)..=(MAX_SUPPORTED_VERSION.1)).rev() {
@@ -898,7 +894,7 @@ fn get_nif_version_from_features() -> (u32, u32) {
 }
 
 fn main() {
-    let nif_version = handle_nif_version_from_env().unwrap_or_else(get_nif_version_from_features);
+    let nif_version = get_nif_version_from_features();
 
     let target_family = if cfg!(target_family = "windows") {
         OsFamily::Win
