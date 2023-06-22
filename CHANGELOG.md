@@ -9,6 +9,8 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [unreleased]
 
+## [0.29.0] - 2023-06-22
+
 ## Added
 
 * `ErlOption<T>` to provide an ergonomic option type for Erlang (#507, thanks @tatsuya6502)
