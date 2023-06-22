@@ -11,7 +11,7 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 ## [0.29.0] - 2023-06-22
 
-## Added
+### Added
 
 * `ErlOption<T>` to provide an ergonomic option type for Erlang (#507, thanks @tatsuya6502)
 
@@ -26,7 +26,7 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 
 * Support OTP 26 (#526, thanks @philss)
 * Support tuples in NIF macro (#520, #527, thanks @denumerate and @philss)
-* Supportfor `load_data_fun` to compute `load_data` at runtime (#413, thanks @kaaboaye)
+* Support for `load_data_fun` to compute `load_data` at runtime (#413, thanks @kaaboaye)
 
 ### Changed
 
