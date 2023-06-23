@@ -61,11 +61,11 @@ impl<'a> Term<'a> {
     /// ```
     pub fn map_from_iterables(
         env: Env<'a>,
-        keys: impl EncodeIterator<'a>,
-        values: impl EncodeIterator<'a>,
+        keys: impl EncoderIterable<'a>,
+        values: impl EncoderIterable<'a>,
     ) -> NifResult<Term<'a>> {
-        let keys: Vec<_> = keys.iter_terms(env).map(|t| t.as_c_arg()).collect();
-        let values: Vec<_> = values.iter_terms(env).map(|t| t.as_c_arg()).collect();
+        let keys: Vec<_> = keys.terms(env).into_iter().map(|t| t.as_c_arg()).collect();
+        let values: Vec<_> = values.terms(env).into_iter().map(|t| t.as_c_arg()).collect();
 
         if keys.len() == values.len() {
             unsafe {
@@ -268,35 +268,43 @@ where
     }
 }
 
-/// A trait for types that can be converted to an `Iterator<Item = Term>`
+/// A trait for types that can be converted to an iterable of terms
 /// using an `Env`.
 ///
-/// Used by [Term::map_from_iterables]
-pub trait EncodeIterator<'a> {
-    type IntoIter: Iterator<Item = Term<'a>>;
+/// Used by Term::map_from_iterables
+pub trait EncoderIterable<'a> {
+    type IntoIter: IntoIterator<Item = Term<'a>>;
 
-    fn iter_terms(&self, env: Env<'a>) -> Self::IntoIter;
+    fn terms(&self, env: Env<'a>) -> Self::IntoIter;
+}
+
+/// Helper macro that returns the number of comma-separated expressions passed to it.
+/// For example, `count!(a + b, c)` evaluates to `2`.
+macro_rules! count {
+    ( ) => ( 0 );
+    ( $blah:expr ) => ( 1 );
+    ( $blah:expr, $( $others:expr ),* ) => ( 1 + count!( $( $others ),* ) )
 }
 
 macro_rules! impl_encoder_args {
     ( $($index:tt : $tyvar:ident),* ) => (
         impl<'a, $( $tyvar: Encoder ),*>
-            EncodeIterator<'a> for ( $( $tyvar ),* ) {
+            EncoderIterable<'a> for ( $( $tyvar ),* ) {
 
-            type IntoIter = std::vec::IntoIter<Term<'a>>;
+            type IntoIter = [Term<'a>; count!( $( $tyvar ),* )];
 
-            fn iter_terms(&self, env: Env<'a>) -> Self::IntoIter {
-                vec![ $( Encoder::encode(&self.$index, env) ),* ].into_iter()
+            fn terms(&self, env: Env<'a>) -> Self::IntoIter {
+                [ $( Encoder::encode(&self.$index, env) ),* ]
             }
         }
     );
 }
 
-impl <'a, A:Encoder> EncodeIterator<'a> for (A,) {
-    type IntoIter = std::iter::Once<Term<'a>>;
+impl <'a, A:Encoder> EncoderIterable<'a> for (A,) {
+    type IntoIter = [Term<'a>; 1];
 
-    fn iter_terms(&self,env:Env<'a>) -> Self::IntoIter {
-        std::iter::once(Encoder::encode(&self.0, env))
+    fn terms(&self,env:Env<'a>) -> Self::IntoIter {
+        [Encoder::encode(&self.0, env)]
     }
 }
 impl_encoder_args!(0: A, 1: B);
