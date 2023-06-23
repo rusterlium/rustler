@@ -312,7 +312,7 @@ fn gen_named_encoder(
             }
         })
         .collect::<Vec<_>>();
-    let (keys, values): (Vec<_>, Vec<_>) = fields
+    let (pairs, field_defs): (Vec<_>, Vec<_>) = fields
         .named
         .iter()
         .map(|field| {
@@ -321,16 +321,42 @@ fn gen_named_encoder(
                 .as_ref()
                 .expect("Named fields must have an ident.");
             let atom_fun = Context::field_to_atom_fun(field);
-            (atom_fun, field_ident)
+            let field_put = quote_spanned! { field.span() =>
+                map = map.map_put(#atom_fun(), &#field_ident).unwrap();
+            };
+            ((atom_fun, field_ident), field_put)
         })
         .unzip();
-    quote! {
-        #enum_name :: #variant_ident{
-            #(#field_decls)*
-        } => {
-            let map = ::rustler::Term::map_from_arrays(env, &[#(#keys()),*], &[#(#values),*])
-                .expect("Failed to create map");
-            ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
+    let (keys, values): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
+    if keys.len() < 8 {
+        let key_tuple = match &keys[..] {
+            [] => panic!("{}", "Named fields can not be empty"),
+            [fn0] => quote! { (#fn0(),) },
+            _ => quote! { (#(#keys()),*) }
+        };
+        let value_tuple = match &values[..] {
+            [] => panic!("{}", "Named fields can not be empty"),
+            [v0] => quote! { (#v0,) },
+            _ => quote! { (#(#values),*) }
+        };
+        quote! {
+            #enum_name :: #variant_ident{
+                #(#field_decls)*
+            } => {
+                let map = ::rustler::Term::map_from_iterables(env, #key_tuple, #value_tuple)
+                    .expect("Failed to create map");
+                ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
+            }
+        }
+    } else {
+        quote! {
+            #enum_name :: #variant_ident{
+                #(#field_decls)*
+            } => {
+                let mut map = ::rustler::types::map::map_new(env);
+                #(#field_defs)*
+                ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
+            }
         }
     }
 }

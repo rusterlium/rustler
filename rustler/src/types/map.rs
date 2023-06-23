@@ -27,7 +27,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// keys = ["foo", "bar"]
     /// values = [1, 2]
-    /// List.zip(keys, values) |> Map.new()
+    /// Enum.zip(keys, values) |> Map.new()
     /// ```
     pub fn map_from_arrays(
         env: Env<'a>,
@@ -38,6 +38,36 @@ impl<'a> Term<'a> {
             let keys: Vec<_> = keys.iter().map(|k| k.encode(env).as_c_arg()).collect();
             let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
 
+            unsafe {
+                map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                    .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
+            }
+        } else {
+            Err(Error::BadArg)
+        }
+    }
+
+    /// Construct a new map from two iterables
+    ///
+    /// It is identical to map_from_arrays, but accepts tuples
+    /// instead of arrays to allow differing types within the
+    /// keys and values.
+    ///
+    /// ### Elixir equivalent
+    /// ```elixir
+    /// keys = ["foo", "bar"]
+    /// values = [1, true]
+    /// Enum.zip(values) |> Map.new()
+    /// ```
+    pub fn map_from_iterables(
+        env: Env<'a>,
+        keys: impl EncodeIterator<'a>,
+        values: impl EncodeIterator<'a>,
+    ) -> NifResult<Term<'a>> {
+        let keys: Vec<_> = keys.iter_terms(env).map(|t| t.as_c_arg()).collect();
+        let values: Vec<_> = values.iter_terms(env).map(|t| t.as_c_arg()).collect();
+
+        if keys.len() == values.len() {
             unsafe {
                 map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
                     .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
@@ -237,3 +267,41 @@ where
         Ok(first..=last)
     }
 }
+
+/// A trait for types that can be converted to an `Iterator<Item = Term>`
+/// using an `Env`.
+///
+/// Used by [Term::map_from_iterables]
+pub trait EncodeIterator<'a> {
+    type IntoIter: Iterator<Item = Term<'a>>;
+
+    fn iter_terms(&self, env: Env<'a>) -> Self::IntoIter;
+}
+
+macro_rules! impl_encoder_args {
+    ( $($index:tt : $tyvar:ident),* ) => (
+        impl<'a, $( $tyvar: Encoder ),*>
+            EncodeIterator<'a> for ( $( $tyvar ),* ) {
+
+            type IntoIter = std::vec::IntoIter<Term<'a>>;
+
+            fn iter_terms(&self, env: Env<'a>) -> Self::IntoIter {
+                vec![ $( Encoder::encode(&self.$index, env) ),* ].into_iter()
+            }
+        }
+    );
+}
+
+impl <'a, A:Encoder> EncodeIterator<'a> for (A,) {
+    type IntoIter = std::iter::Once<Term<'a>>;
+
+    fn iter_terms(&self,env:Env<'a>) -> Self::IntoIter {
+        std::iter::once(Encoder::encode(&self.0, env))
+    }
+}
+impl_encoder_args!(0: A, 1: B);
+impl_encoder_args!(0: A, 1: B, 2: C);
+impl_encoder_args!(0: A, 1: B, 2: C, 3: D);
+impl_encoder_args!(0: A, 1: B, 2: C, 3: D, 4: E);
+impl_encoder_args!(0: A, 1: B, 2: C, 3: D, 4: E, 5: F);
+impl_encoder_args!(0: A, 1: B, 2: C, 3: D, 4: E, 5: F, 6: G);

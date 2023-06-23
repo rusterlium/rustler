@@ -288,6 +288,11 @@ defmodule RustlerTest.CodegenTest do
     assert {:named, %{filename: "\u2200", size: 123}} ==
              RustlerTest.tagged_enum_4_echo({:named, %{filename: "\u2200", size: 123}})
 
+    long_map = %{f0: true, f1: 8, f2: 5, f3: 12, f4: 12, f5: 15,
+                 f6: nil, f7: nil, f8: nil}
+    assert {:long, long_map} ==
+              RustlerTest.tagged_enum_4_echo({:long, long_map})
+
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_4_echo(:unnamed)

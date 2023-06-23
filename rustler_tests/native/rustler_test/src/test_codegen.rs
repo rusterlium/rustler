@@ -130,6 +130,17 @@ pub enum TaggedEnum4 {
     Unit,
     Unnamed(u64, bool),
     Named { size: u64, filename: String },
+    Long {
+        f0: bool,
+        f1: u8,
+        f2: u8,
+        f3: u8,
+        f4: u8,
+        f5: Option<i32>,
+        f6: Option<i32>,
+        f7: Option<i32>,
+        f8: Option<i32>,
+    }
 }
 
 #[rustler::nif]
