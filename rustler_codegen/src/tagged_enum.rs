@@ -332,12 +332,12 @@ fn gen_named_encoder(
         let key_tuple = match &keys[..] {
             [] => panic!("{}", "Named fields can not be empty"),
             [fn0] => quote! { (#fn0(),) },
-            _ => quote! { (#(#keys()),*) }
+            _ => quote! { (#(#keys()),*) },
         };
         let value_tuple = match &values[..] {
             [] => panic!("{}", "Named fields can not be empty"),
             [v0] => quote! { (#v0,) },
-            _ => quote! { (#(#values),*) }
+            _ => quote! { (#(#values),*) },
         };
         quote! {
             #enum_name :: #variant_ident{

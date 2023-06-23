@@ -65,7 +65,11 @@ impl<'a> Term<'a> {
         values: impl EncoderIterable<'a>,
     ) -> NifResult<Term<'a>> {
         let keys: Vec<_> = keys.terms(env).into_iter().map(|t| t.as_c_arg()).collect();
-        let values: Vec<_> = values.terms(env).into_iter().map(|t| t.as_c_arg()).collect();
+        let values: Vec<_> = values
+            .terms(env)
+            .into_iter()
+            .map(|t| t.as_c_arg())
+            .collect();
 
         if keys.len() == values.len() {
             unsafe {
@@ -300,10 +304,10 @@ macro_rules! impl_encoder_args {
     );
 }
 
-impl <'a, A:Encoder> EncoderIterable<'a> for (A,) {
+impl<'a, A: Encoder> EncoderIterable<'a> for (A,) {
     type IntoIter = [Term<'a>; 1];
 
-    fn terms(&self,env:Env<'a>) -> Self::IntoIter {
+    fn terms(&self, env: Env<'a>) -> Self::IntoIter {
         [Encoder::encode(&self.0, env)]
     }
 }
