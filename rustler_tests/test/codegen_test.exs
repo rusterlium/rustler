@@ -290,17 +290,22 @@ defmodule RustlerTest.CodegenTest do
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_4_echo({})
+               RustlerTest.tagged_enum_4_echo(:unnamed)
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_4_echo(%{})
+               RustlerTest.tagged_enum_4_echo({:unit, 2, false})
              end)
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
-               RustlerTest.tagged_enum_4_echo({nil})
+               RustlerTest.tagged_enum_4_echo({:named, "@", 45})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo(nil)
              end)
   end
 
