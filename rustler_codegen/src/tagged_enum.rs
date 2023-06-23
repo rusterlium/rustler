@@ -312,7 +312,7 @@ fn gen_named_encoder(
             }
         })
         .collect::<Vec<_>>();
-    let (keys, values): (Vec<_>, Vec<_>) = fields
+    let field_defs: Vec<_> = fields
         .named
         .iter()
         .map(|field| {
@@ -321,15 +321,17 @@ fn gen_named_encoder(
                 .as_ref()
                 .expect("Named fields must have an ident.");
             let atom_fun = Context::field_to_atom_fun(field);
-            (atom_fun, field_ident)
+            quote_spanned! { field.span() =>
+                map = map.map_put(#atom_fun(), &#field_ident).unwrap();
+            }
         })
-        .unzip();
+        .collect();
     quote! {
         #enum_name :: #variant_ident{
             #(#field_decls)*
         } => {
-            let map = ::rustler::Term::map_from_arrays(env, &[#(#keys()),*], &[#(#values),*])
-                .expect("Failed to create map");
+            let mut map = ::rustler::types::map::map_new(env);
+            #(#field_defs)*
             ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
         }
     }

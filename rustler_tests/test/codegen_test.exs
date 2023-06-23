@@ -279,6 +279,31 @@ defmodule RustlerTest.CodegenTest do
              end)
   end
 
+  test "tagged enum transcoder 4" do
+    assert :unit == RustlerTest.tagged_enum_4_echo(:unit)
+
+    assert {:unnamed, 10_000_000_000, true} ==
+             RustlerTest.tagged_enum_4_echo({:unnamed, 10_000_000_000, true})
+
+    assert {:named, %{filename: "\u2200", size: 123}} ==
+             RustlerTest.tagged_enum_4_echo({:named, %{filename: "\u2200", size: 123}})
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo({})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo(%{})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo({nil})
+             end)
+  end
+
   test "untagged enum transcoder" do
     assert 123 == RustlerTest.untagged_enum_echo(123)
     assert "Hello" == RustlerTest.untagged_enum_echo("Hello")

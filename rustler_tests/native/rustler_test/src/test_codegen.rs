@@ -125,6 +125,18 @@ pub fn tagged_enum_3_echo(tagged_enum: TaggedEnum3) -> TaggedEnum3 {
     tagged_enum
 }
 
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum4 {
+    Unit,
+    Unnamed(u64, bool),
+    Named { size: u64, filename: String },
+}
+
+#[rustler::nif]
+pub fn tagged_enum_4_echo(tagged_enum: TaggedEnum4) -> TaggedEnum4 {
+    tagged_enum
+}
+
 #[derive(NifUntaggedEnum)]
 pub enum UntaggedEnum {
     Foo(u32),
