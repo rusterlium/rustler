@@ -48,7 +48,7 @@ impl<'a> Term<'a> {
     }
 
     /// Construct a new map from two vectors of terms.
-    /// 
+    ///
     /// It is identical to map_from_arrays, but requires the keys and values to
     /// be encoded already - this is useful for constructing maps whose values
     /// or keys are different Rust types, with the same performance as map_from_arrays.

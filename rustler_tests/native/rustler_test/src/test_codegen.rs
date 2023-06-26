@@ -132,7 +132,10 @@ pub fn tagged_enum_3_echo(tagged_enum: TaggedEnum3) -> TaggedEnum3 {
 pub enum TaggedEnum4 {
     Unit,
     Unnamed(u64, bool),
-    Named { size: u64, filename: String },
+    Named {
+        size: u64,
+        filename: String,
+    },
     Long {
         f0: bool,
         f1: u8,
@@ -143,7 +146,7 @@ pub enum TaggedEnum4 {
         f6: Option<i32>,
         f7: Option<i32>,
         f8: Option<i32>,
-    }
+    },
 }
 
 #[rustler::nif]
