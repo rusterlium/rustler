@@ -1,9 +1,9 @@
 defmodule AddStruct do
-  defstruct lhs: 0, rhs: 0
+  defstruct lhs: 0, rhs: 0, loc: {1, 1}
 end
 
 defmodule AddException do
-  defexception message: ""
+  defexception message: "", loc: {1, 1}
 end
 
 defmodule AddRecord do
@@ -40,14 +40,13 @@ defmodule RustlerTest.CodegenTest do
   end
 
   describe "map" do
-    test "transcoder" do
-      value = %{lhs: 1, rhs: 2}
+    test "transcoder 1" do
+      value = %{lhs: 1, rhs: 2, loc: {52, 15}}
       assert value == RustlerTest.map_echo(value)
     end
 
     test "with invalid map" do
-      value = %{lhs: "invalid", rhs: 2}
-
+      value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
         assert value == RustlerTest.map_echo(value)
       end
@@ -56,7 +55,7 @@ defmodule RustlerTest.CodegenTest do
 
   describe "struct" do
     test "transcoder" do
-      value = %AddStruct{lhs: 45, rhs: 123}
+      value = %AddStruct{lhs: 45, rhs: 123, loc: {66, 15}}
       assert value == RustlerTest.struct_echo(value)
 
       assert %ErlangError{original: :invalid_struct} ==
@@ -66,19 +65,27 @@ defmodule RustlerTest.CodegenTest do
     end
 
     test "with invalid struct" do
-      value = %AddStruct{lhs: "lhs", rhs: 123}
+      value = %AddStruct{lhs: "lhs", rhs: 123, loc: {76, 15}}
 
       assert_raise ErlangError,
                    "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"",
                    fn ->
                      RustlerTest.struct_echo(value)
                    end
+
+      value = %AddStruct{lhs: 45, rhs: 123, loc: {-76, -15}}
+
+      assert_raise ErlangError,
+                  "Erlang error: \"Could not decode field :loc on %AddStruct{}\"",
+                  fn ->
+                    RustlerTest.struct_echo(value)
+                  end
     end
   end
 
   describe "exception" do
     test "transcoder" do
-      value = %AddException{message: "testing"}
+      value = %AddException{message: "testing", loc: {96, 15}}
       assert value == RustlerTest.exception_echo(value)
 
       assert %ErlangError{original: :invalid_struct} ==
@@ -88,13 +95,21 @@ defmodule RustlerTest.CodegenTest do
     end
 
     test "with invalid struct" do
-      value = %AddException{message: 'this is a charlist'}
+      value = %AddException{message: 'this is a charlist', loc: {106, 15}}
 
       assert_raise ErlangError,
                    "Erlang error: \"Could not decode field :message on %AddException{}\"",
                    fn ->
                      RustlerTest.exception_echo(value)
                    end
+
+      value = %AddException{message: "testing", loc: %{line: 114, col: 15}}
+
+      assert_raise ErlangError,
+                  "Erlang error: \"Could not decode field :loc on %AddException{}\"",
+                  fn ->
+                    RustlerTest.exception_echo(value)
+                  end
     end
   end
 

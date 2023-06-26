@@ -44,6 +44,7 @@ pub fn record_echo(record: AddRecord) -> AddRecord {
 pub struct AddMap {
     lhs: i32,
     rhs: i32,
+    loc: (u32, u32),
 }
 
 #[rustler::nif]
@@ -57,12 +58,14 @@ pub fn map_echo(map: AddMap) -> AddMap {
 pub struct AddStruct {
     lhs: i32,
     rhs: i32,
+    loc: (u32, u32),
 }
 
 #[derive(Debug, NifException)]
 #[module = "AddException"]
 pub struct AddException {
     message: String,
+    loc: (u32, u32),
 }
 
 #[rustler::nif]

@@ -136,34 +136,31 @@ fn gen_encoder(
     atoms_module_name: &Ident,
     add_exception: bool,
 ) -> TokenStream {
-    let field_defs: Vec<TokenStream> = fields
+    let mut keys = vec![quote! { ::rustler::Encoder::encode(&atom_struct(), env) }];
+    let mut values = vec![quote! { ::rustler::Encoder::encode(&atom_module(), env) }];
+    if add_exception {
+        keys.push(quote! { ::rustler::Encoder::encode(&atom_exception(), env) });
+        values.push(quote! { ::rustler::Encoder::encode(&true, env) });
+    }
+    let (mut data_keys, mut data_values): (Vec<_>, Vec<_>) = fields
         .iter()
         .map(|field| {
             let field_ident = field.ident.as_ref().unwrap();
             let atom_fun = Context::field_to_atom_fun(field);
-            quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun(), &self.#field_ident).unwrap();
-            }
+            (
+                quote! { ::rustler::Encoder::encode(&#atom_fun(), env) },
+                quote! { ::rustler::Encoder::encode(&self.#field_ident, env) },
+            )
         })
-        .collect();
-
-    let exception_field = if add_exception {
-        quote! {
-            map = map.map_put(atom_exception(), true).unwrap();
-        }
-    } else {
-        quote! {}
-    };
+        .unzip();
+    keys.append(&mut data_keys);
+    values.append(&mut data_values);
 
     super::encode_decode_templates::encoder(
         ctx,
         quote! {
             use #atoms_module_name::*;
-            let mut map = ::rustler::types::map::map_new(env);
-            map = map.map_put(atom_struct(), atom_module()).unwrap();
-            #exception_field
-            #(#field_defs)*
-            map
+            ::rustler::Term::map_from_term_arrays(env, &[#(#keys),*], &[#(#values),*]).unwrap()
         },
     )
 }
