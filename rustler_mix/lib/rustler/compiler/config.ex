@@ -105,7 +105,7 @@ defmodule Rustler.Compiler.Config do
     path
     |> Path.join("**/*")
     |> Path.wildcard()
-    |> Enum.reject(&String.starts_with?(&1, "#{path}/target/"))
+    |> Enum.reject(&(String.starts_with?(&1, "#{path}/target/") or File.dir?(&1)))
   end
 
   defp local_crate?(package) do
