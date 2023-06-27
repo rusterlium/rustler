@@ -4,9 +4,8 @@ defmodule Rustler.Compiler do
   alias Rustler.Compiler.{Config, Messages, Rustup}
 
   @doc false
-  def compile_crate(module, opts) do
-    otp_app = Keyword.fetch!(opts, :otp_app)
-    config = Config.from(otp_app, module, opts)
+  def compile_crate(otp_app, module, config, opts) do
+    config = Config.from(otp_app, module, config, opts)
 
     unless config.skip_compilation? do
       crate_full_path = Path.expand(config.path, File.cwd!())

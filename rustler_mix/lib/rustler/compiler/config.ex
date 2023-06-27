@@ -32,13 +32,18 @@ defmodule Rustler.Compiler.Config do
 
   alias Rustler.Compiler.Config
 
-  def from(otp_app, module, opts) do
-    config = Application.get_env(otp_app, module, [])
-
+  def from(otp_app, module, config, opts) do
     crate = config[:crate] || opts[:crate] || otp_app
 
     # TODO: Remove in 1.0
-    rustler_crates = Mix.Project.config()[:rustler_crates] || []
+    rustler_crates =
+      if mix_config = Mix.Project.config()[:rustler_crates] do
+        mix_config
+      else
+        IO.warn(":rustler_crates in mix.exs is deprecated, please use config instead")
+        []
+      end
+
     legacy_config = rustler_crates[to_atom(crate)] || []
 
     defaults = %Config{

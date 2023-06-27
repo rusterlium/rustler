@@ -51,15 +51,15 @@ defmodule Rustler do
 
       Example
 
-        defmodule NIF do
-          use Rustler, load_data_fun: {Deployment, :nif_data}
-        end
-
-        defmodule Deployment do
-          def nif_data do
-            :code.priv_dir(:otp_app) |> IO.iodata_to_binary()
+          defmodule NIF do
+            use Rustler, load_data_fun: {Deployment, :nif_data}
           end
-        end
+
+          defmodule Deployment do
+            def nif_data do
+              :code.priv_dir(:otp_app) |> IO.iodata_to_binary()
+            end
+          end
 
     * `:load_from` - This option allows control over where the final artifact should be
       loaded from at runtime. By default the compiled artifact is loaded from the
@@ -79,7 +79,7 @@ defmodule Rustler do
 
     * `:target` - Specify a compile [target] triple.
 
-    * `:target_dir`: Override the compiler output directory.
+    * `:target_dir` - Override the compiler output directory.
 
   Any of the above options can be passed directly into the `use` macro like so:
 
@@ -95,7 +95,9 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      config = Rustler.Compiler.compile_crate(__MODULE__, opts)
+      otp_app = Keyword.fetch!(opts, :otp_app)
+      env = Application.compile_env(otp_app, __MODULE__, [])
+      config = Rustler.Compiler.compile_crate(otp_app, __MODULE__, env, opts)
 
       for resource <- config.external_resources do
         @external_resource resource
@@ -170,8 +172,8 @@ defmodule Rustler do
   """
   def nif_versions,
     do: [
-      '2.14',
-      '2.15',
-      '2.16'
+      ~c"2.14",
+      ~c"2.15",
+      ~c"2.16"
     ]
 end
