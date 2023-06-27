@@ -47,6 +47,7 @@ defmodule RustlerTest.CodegenTest do
 
     test "with invalid map" do
       value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
+
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
         assert value == RustlerTest.map_echo(value)
       end
@@ -76,10 +77,10 @@ defmodule RustlerTest.CodegenTest do
       value = %AddStruct{lhs: 45, rhs: 123, loc: {-76, -15}}
 
       assert_raise ErlangError,
-                  "Erlang error: \"Could not decode field :loc on %AddStruct{}\"",
-                  fn ->
-                    RustlerTest.struct_echo(value)
-                  end
+                   "Erlang error: \"Could not decode field :loc on %AddStruct{}\"",
+                   fn ->
+                     RustlerTest.struct_echo(value)
+                   end
     end
   end
 
@@ -106,10 +107,10 @@ defmodule RustlerTest.CodegenTest do
       value = %AddException{message: "testing", loc: %{line: 114, col: 15}}
 
       assert_raise ErlangError,
-                  "Erlang error: \"Could not decode field :loc on %AddException{}\"",
-                  fn ->
-                    RustlerTest.exception_echo(value)
-                  end
+                   "Erlang error: \"Could not decode field :loc on %AddException{}\"",
+                   fn ->
+                     RustlerTest.exception_echo(value)
+                   end
     end
   end
 
@@ -303,10 +304,10 @@ defmodule RustlerTest.CodegenTest do
     assert {:named, %{filename: "\u2200", size: 123}} ==
              RustlerTest.tagged_enum_4_echo({:named, %{filename: "\u2200", size: 123}})
 
-    long_map = %{f0: true, f1: 8, f2: 5, f3: 12, f4: 12, f5: 15,
-                 f6: nil, f7: nil, f8: nil}
+    long_map = %{f0: true, f1: 8, f2: 5, f3: 12, f4: 12, f5: 15, f6: nil, f7: nil, f8: nil}
+
     assert {:long, long_map} ==
-              RustlerTest.tagged_enum_4_echo({:long, long_map})
+             RustlerTest.tagged_enum_4_echo({:long, long_map})
 
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
