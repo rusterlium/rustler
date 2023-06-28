@@ -27,7 +27,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// keys = ["foo", "bar"]
     /// values = [1, 2]
-    /// List.zip(keys, values) |> Map.new()
+    /// Enum.zip(keys, values) |> Map.new()
     /// ```
     pub fn map_from_arrays(
         env: Env<'a>,
@@ -37,6 +37,29 @@ impl<'a> Term<'a> {
         if keys.len() == values.len() {
             let keys: Vec<_> = keys.iter().map(|k| k.encode(env).as_c_arg()).collect();
             let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
+
+            unsafe {
+                map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                    .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
+            }
+        } else {
+            Err(Error::BadArg)
+        }
+    }
+
+    /// Construct a new map from two vectors of terms.
+    ///
+    /// It is identical to map_from_arrays, but requires the keys and values to
+    /// be encoded already - this is useful for constructing maps whose values
+    /// or keys are different Rust types, with the same performance as map_from_arrays.
+    pub fn map_from_term_arrays(
+        env: Env<'a>,
+        keys: &[Term<'a>],
+        values: &[Term<'a>],
+    ) -> NifResult<Term<'a>> {
+        if keys.len() == values.len() {
+            let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
+            let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
 
             unsafe {
                 map::make_map_from_arrays(env.as_c_arg(), &keys, &values)

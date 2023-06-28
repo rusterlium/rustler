@@ -321,14 +321,17 @@ fn gen_named_encoder(
                 .as_ref()
                 .expect("Named fields must have an ident.");
             let atom_fun = Context::field_to_atom_fun(field);
-            (atom_fun, field_ident)
+            (
+                quote! { ::rustler::Encoder::encode(&#atom_fun(), env) },
+                quote! { ::rustler::Encoder::encode(&#field_ident, env) },
+            )
         })
         .unzip();
     quote! {
         #enum_name :: #variant_ident{
             #(#field_decls)*
         } => {
-            let map = ::rustler::Term::map_from_arrays(env, &[#(#keys()),*], &[#(#values),*])
+            let map = ::rustler::Term::map_from_term_arrays(env, &[#(#keys),*], &[#(#values),*])
                 .expect("Failed to create map");
             ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
         }
