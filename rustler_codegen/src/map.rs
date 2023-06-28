@@ -107,26 +107,23 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 }
 
 fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
-    let field_defs: Vec<TokenStream> = fields
+    let (keys, values): (Vec<_>, Vec<_>) = fields
         .iter()
         .map(|field| {
             let field_ident = field.ident.as_ref().unwrap();
             let atom_fun = Context::field_to_atom_fun(field);
-
-            quote_spanned! { field.span() =>
-                map = map.map_put(#atom_fun(), &self.#field_ident).unwrap();
-            }
+            (
+                quote! { ::rustler::Encoder::encode(&#atom_fun(), env) },
+                quote! { ::rustler::Encoder::encode(&self.#field_ident, env) },
+            )
         })
-        .collect();
+        .unzip();
 
     super::encode_decode_templates::encoder(
         ctx,
         quote! {
             use #atoms_module_name::*;
-
-            let mut map = ::rustler::types::map::map_new(env);
-            #(#field_defs)*
-            map
+            ::rustler::Term::map_from_term_arrays(env, &[#(#keys),*], &[#(#values),*]).unwrap()
         },
     )
 }

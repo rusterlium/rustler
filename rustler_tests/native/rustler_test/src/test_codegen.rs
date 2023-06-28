@@ -44,6 +44,7 @@ pub fn record_echo(record: AddRecord) -> AddRecord {
 pub struct AddMap {
     lhs: i32,
     rhs: i32,
+    loc: (u32, u32),
 }
 
 #[rustler::nif]
@@ -57,12 +58,14 @@ pub fn map_echo(map: AddMap) -> AddMap {
 pub struct AddStruct {
     lhs: i32,
     rhs: i32,
+    loc: (u32, u32),
 }
 
 #[derive(Debug, NifException)]
 #[module = "AddException"]
 pub struct AddException {
     message: String,
+    loc: (u32, u32),
 }
 
 #[rustler::nif]
@@ -122,6 +125,32 @@ pub enum TaggedEnum3 {
 
 #[rustler::nif]
 pub fn tagged_enum_3_echo(tagged_enum: TaggedEnum3) -> TaggedEnum3 {
+    tagged_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum TaggedEnum4 {
+    Unit,
+    Unnamed(u64, bool),
+    Named {
+        size: u64,
+        filename: String,
+    },
+    Long {
+        f0: bool,
+        f1: u8,
+        f2: u8,
+        f3: u8,
+        f4: u8,
+        f5: Option<i32>,
+        f6: Option<i32>,
+        f7: Option<i32>,
+        f8: Option<i32>,
+    },
+}
+
+#[rustler::nif]
+pub fn tagged_enum_4_echo(tagged_enum: TaggedEnum4) -> TaggedEnum4 {
     tagged_enum
 }
 

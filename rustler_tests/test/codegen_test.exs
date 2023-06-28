@@ -1,9 +1,9 @@
 defmodule AddStruct do
-  defstruct lhs: 0, rhs: 0
+  defstruct lhs: 0, rhs: 0, loc: {1, 1}
 end
 
 defmodule AddException do
-  defexception message: ""
+  defexception message: "", loc: {1, 1}
 end
 
 defmodule AddRecord do
@@ -40,13 +40,13 @@ defmodule RustlerTest.CodegenTest do
   end
 
   describe "map" do
-    test "transcoder" do
-      value = %{lhs: 1, rhs: 2}
+    test "transcoder 1" do
+      value = %{lhs: 1, rhs: 2, loc: {52, 15}}
       assert value == RustlerTest.map_echo(value)
     end
 
     test "with invalid map" do
-      value = %{lhs: "invalid", rhs: 2}
+      value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
 
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
         assert value == RustlerTest.map_echo(value)
@@ -56,7 +56,7 @@ defmodule RustlerTest.CodegenTest do
 
   describe "struct" do
     test "transcoder" do
-      value = %AddStruct{lhs: 45, rhs: 123}
+      value = %AddStruct{lhs: 45, rhs: 123, loc: {66, 15}}
       assert value == RustlerTest.struct_echo(value)
 
       assert %ErlangError{original: :invalid_struct} ==
@@ -66,10 +66,18 @@ defmodule RustlerTest.CodegenTest do
     end
 
     test "with invalid struct" do
-      value = %AddStruct{lhs: "lhs", rhs: 123}
+      value = %AddStruct{lhs: "lhs", rhs: 123, loc: {76, 15}}
 
       assert_raise ErlangError,
                    "Erlang error: \"Could not decode field :lhs on %AddStruct{}\"",
+                   fn ->
+                     RustlerTest.struct_echo(value)
+                   end
+
+      value = %AddStruct{lhs: 45, rhs: 123, loc: {-76, -15}}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :loc on %AddStruct{}\"",
                    fn ->
                      RustlerTest.struct_echo(value)
                    end
@@ -78,7 +86,7 @@ defmodule RustlerTest.CodegenTest do
 
   describe "exception" do
     test "transcoder" do
-      value = %AddException{message: "testing"}
+      value = %AddException{message: "testing", loc: {96, 15}}
       assert value == RustlerTest.exception_echo(value)
 
       assert %ErlangError{original: :invalid_struct} ==
@@ -88,10 +96,18 @@ defmodule RustlerTest.CodegenTest do
     end
 
     test "with invalid struct" do
-      value = %AddException{message: 'this is a charlist'}
+      value = %AddException{message: 'this is a charlist', loc: {106, 15}}
 
       assert_raise ErlangError,
                    "Erlang error: \"Could not decode field :message on %AddException{}\"",
+                   fn ->
+                     RustlerTest.exception_echo(value)
+                   end
+
+      value = %AddException{message: "testing", loc: %{line: 114, col: 15}}
+
+      assert_raise ErlangError,
+                   "Erlang error: \"Could not decode field :loc on %AddException{}\"",
                    fn ->
                      RustlerTest.exception_echo(value)
                    end
@@ -276,6 +292,41 @@ defmodule RustlerTest.CodegenTest do
     assert %ErlangError{original: :invalid_variant} ==
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_3_echo({nil})
+             end)
+  end
+
+  test "tagged enum transcoder 4" do
+    assert :unit == RustlerTest.tagged_enum_4_echo(:unit)
+
+    assert {:unnamed, 10_000_000_000, true} ==
+             RustlerTest.tagged_enum_4_echo({:unnamed, 10_000_000_000, true})
+
+    assert {:named, %{filename: "\u2200", size: 123}} ==
+             RustlerTest.tagged_enum_4_echo({:named, %{filename: "\u2200", size: 123}})
+
+    long_map = %{f0: true, f1: 8, f2: 5, f3: 12, f4: 12, f5: 15, f6: nil, f7: nil, f8: nil}
+
+    assert {:long, long_map} ==
+             RustlerTest.tagged_enum_4_echo({:long, long_map})
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo(:unnamed)
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo({:unit, 2, false})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo({:named, "@", 45})
+             end)
+
+    assert %ErlangError{original: :invalid_variant} ==
+             assert_raise(ErlangError, fn ->
+               RustlerTest.tagged_enum_4_echo(nil)
              end)
   end
 

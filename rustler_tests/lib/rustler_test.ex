@@ -95,6 +95,7 @@ defmodule RustlerTest do
   def tagged_enum_1_echo(_), do: err()
   def tagged_enum_2_echo(_), do: err()
   def tagged_enum_3_echo(_), do: err()
+  def tagged_enum_4_echo(_), do: err()
   def untagged_enum_echo(_), do: err()
   def untagged_enum_with_truthy(_), do: err()
   def untagged_enum_for_issue_370(_), do: err()
