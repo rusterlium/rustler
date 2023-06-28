@@ -2,6 +2,12 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.29 -> ...
+
+`rustler_crates` configuration is deprecated in favor of explicitly passing
+options on `use Rustler` or configuring the module in your `config/*.exs`
+files.
+
 ## 0.28 -> 0.29
 
 `RUSTLER_NIF_VERSION` is deprecated and will not be considered anymore for 0.30.

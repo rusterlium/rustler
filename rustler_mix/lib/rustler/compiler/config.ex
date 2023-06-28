@@ -40,7 +40,10 @@ defmodule Rustler.Compiler.Config do
       if mix_config = Mix.Project.config()[:rustler_crates] do
         mix_config
       else
-        IO.warn(":rustler_crates in mix.exs is deprecated, please use config instead")
+        IO.warn(
+          ":rustler_crates in mix.exs is deprecated, please explicitly pass options on `use Rustler` or configure the module in your `config/*.exs` files"
+        )
+
         []
       end
 
