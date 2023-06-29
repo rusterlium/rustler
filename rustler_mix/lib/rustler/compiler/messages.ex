@@ -24,22 +24,6 @@ defmodule Rustler.Compiler.Messages do
     """
   end
 
-  def message(:no_crates_property) do
-    """
-    No NIF crates listed in project definition.
-    Add some crate directories under :rustler_crates in the mix.exs project definition to compile them.
-
-    Example:
-    rustler_crates: ["/native/my_nif_crate"]
-    """
-  end
-
-  def message(:no_config) do
-    """
-    Add your crate to the 'rustler_crates' attribute in the project function.
-    """
-  end
-
   def message({:differing_versions, crate, rustler_version, codegen_version}) do
     """
     The '#{crate}' crate should have the same rustler and rustler_codegen version in its Cargo.toml:
@@ -75,12 +59,6 @@ defmodule Rustler.Compiler.Messages do
     > rustler_codegen = #{version}
 
     Note: You should already have this if you made your project with the project generator.
-    """
-  end
-
-  def message({:cargo_no_name, crate}) do
-    """
-    No library or binary with name listed in Cargo.toml of crate '#{crate}'.
     """
   end
 
