@@ -899,8 +899,10 @@ fn get_nif_version_from_features() -> (u32, u32) {
 
 fn main() {
     let nif_version = handle_nif_version_from_env().unwrap_or_else(get_nif_version_from_features);
+    let target_family_or_current =
+        env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_else(|_| env::consts::FAMILY.to_string());
 
-    let target_family = if cfg!(target_family = "windows") {
+    let target_family = if target_family_or_current == "windows" {
         OsFamily::Win
     } else if cfg!(target_family = "unix") {
         OsFamily::Unix
@@ -908,12 +910,20 @@ fn main() {
         panic!("Unsupported Operational System Family")
     };
 
+    let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
+       Ok(target_pointer_width) => target_pointer_width,
+         Err(err) => panic!(
+            "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
+            err
+        )
+    };
+
     let ulong_size = match target_family {
         OsFamily::Win => 4,
         OsFamily::Unix => {
-            if cfg!(target_pointer_width = "32") {
+            if target_pointer_width == "32" {
                 4
-            } else if cfg!(target_pointer_width = "64") {
+            } else if target_pointer_width == "64" {
                 8
             } else {
                 panic!("Unsupported target pointer width")
