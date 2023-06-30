@@ -11,4 +11,4 @@ keywords = ["bigint", "Erlang", "Elixir"]
 
 [dependencies]
 num-bigint = {version = "0.4"}
-rustler = {path = "../rustler", version = "0.29.0"}
+rustler = {path = "../rustler", version = "0.29.1"}
