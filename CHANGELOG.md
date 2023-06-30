@@ -17,6 +17,17 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 * Deprecated `:rustler_crates` project configuration
 * Mark `use Rustler` module configuration as compile-time
 
+## [0.29.1] - 2023-06-30
+
+### Fixed
+
+* Exclude directories from external resources for compatibility with Elixir 1.15
+  (#548, thanks @adrienmo)
+* Fix `NifTaggedEnum` derived `Encoder` impl for named-field variants (#547,
+  thanks @dylanburati)
+* Remove `cfg!` directives in build.rs causing cross-compilation to fail (#555,
+  thanks @fabriziosestito)
+
 ## [0.29.0] - 2023-06-22
 
 ### Added
