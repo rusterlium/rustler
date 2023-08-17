@@ -47,7 +47,7 @@ defmodule TestRustlerMix.MixProject do
 
   def application, do: [ ]
 
-  defp deps, do: [ {:rustler, path: "$rustler_mix"} ]
+  defp deps, do: [ {:rustler, path: "$rustler_mix", runtime: false} ]
 end
 EOF
 
