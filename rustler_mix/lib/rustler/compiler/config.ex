@@ -32,7 +32,7 @@ defmodule Rustler.Compiler.Config do
 
   alias Rustler.Compiler.Config
 
-  def from(otp_app, module, config, opts) do
+  def from(otp_app, config, opts) do
     crate = config[:crate] || opts[:crate] || otp_app
 
     # TODO: Remove in 1.0
