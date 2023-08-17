@@ -97,7 +97,7 @@ defmodule Rustler do
     quote bind_quoted: [opts: opts] do
       otp_app = Keyword.fetch!(opts, :otp_app)
       env = Application.compile_env(otp_app, __MODULE__, [])
-      config = Rustler.Compiler.compile_crate(otp_app, __MODULE__, env, opts)
+      config = Rustler.Compiler.compile_crate(otp_app, env, opts)
 
       for resource <- config.external_resources do
         @external_resource resource
