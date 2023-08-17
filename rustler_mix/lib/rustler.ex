@@ -65,9 +65,18 @@ defmodule Rustler do
       loaded from at runtime. By default the compiled artifact is loaded from the
       owning `:otp_app`'s `priv/native` directory. This option comes in handy in
       combination with the `:skip_compilation?` option in order to load pre-compiled
-      artifacts. To override the default behaviour specify a tuple:
-      `{:my_app, "priv/native/<artifact>"}`. Due to the way `:erlang.load_nif/2`
-      works, the artifact should not include the file extension (i.e. `.so`, `.dll`).
+      artifacts. The configuration format:
+
+      ```
+      {otp_app :: atom(), path :: String.t()} | abspath :: String.t()}
+      ```
+
+      The tuple version defines that the artifact shall be found relative to `otp_app`,
+      for example `{:my_app, "priv/native/<artifact>"}`. The non-tuple alternative requires
+      an absolute path.
+
+      Due to the way `:erlang.load_nif/2` works, the artifact should not
+      include the file extension (i.e. `.so`, `.dll`).
 
     * `:mode` - Specify which mode to compile the crate with (default: `:release`)
 
@@ -123,12 +132,16 @@ defmodule Rustler do
         # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
 
-        {otp_app, path} = @load_from
-
         load_path =
-          otp_app
-          |> Application.app_dir(path)
-          |> to_charlist()
+          case @load_from do
+            {otp_app, path} ->
+              otp_app
+              |> Application.app_dir(path)
+              |> to_charlist()
+
+            path ->
+              to_charlist(path)
+          end
 
         load_data = Rustler.construct_load_data(@load_data, @load_data_fun)
 
