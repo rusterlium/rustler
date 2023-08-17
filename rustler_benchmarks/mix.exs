@@ -22,7 +22,7 @@ defmodule RustlerBenchmarks.MixProject do
   defp deps do
     [
       {:benchee, "~> 1.0"},
-      {:rustler, path: "../rustler_mix"}
+      {:rustler, path: "../rustler_mix", runtime: false}
     ]
   end
 end
