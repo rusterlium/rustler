@@ -1,3 +1,6 @@
+#[cfg(feature = "nif_version_2_15")]
+use rustler_sys::ErlNifTermType;
+
 use crate::wrapper::check;
 use crate::Term;
 
@@ -5,12 +8,11 @@ use crate::Term;
 pub enum TermType {
     Atom,
     Binary,
-    EmptyList,
-    Exception,
     Fun,
     List,
     Map,
-    Number,
+    Integer,
+    Float,
     Pid,
     Port,
     Ref,
@@ -18,23 +20,43 @@ pub enum TermType {
     Unknown,
 }
 
+#[cfg(feature = "nif_version_2_15")]
+impl From<ErlNifTermType> for TermType {
+    fn from(term_type: ErlNifTermType) -> Self {
+        use ErlNifTermType::*;
+        use TermType::*;
+        match term_type {
+            ERL_NIF_TERM_TYPE_ATOM => Atom,
+            ERL_NIF_TERM_TYPE_BITSTRING => Binary,
+            ERL_NIF_TERM_TYPE_FLOAT => Float,
+            ERL_NIF_TERM_TYPE_FUN => Fun,
+            ERL_NIF_TERM_TYPE_INTEGER => Integer,
+            ERL_NIF_TERM_TYPE_LIST => List,
+            ERL_NIF_TERM_TYPE_MAP => Map,
+            ERL_NIF_TERM_TYPE_PID => Pid,
+            ERL_NIF_TERM_TYPE_PORT => Port,
+            ERL_NIF_TERM_TYPE_REFERENCE => Ref,
+            ERL_NIF_TERM_TYPE_TUPLE => Tuple,
+            _ => Unknown,
+        }
+    }
+}
+
 pub fn get_type(term: Term) -> TermType {
-    if term.is_atom() {
+    if cfg!(nif_version_2_15) {
+        term.get_erl_type().into()
+    } else if term.is_atom() {
         TermType::Atom
     } else if term.is_binary() {
         TermType::Binary
-    } else if term.is_empty_list() {
-        TermType::EmptyList
-    } else if term.is_exception() {
-        TermType::Exception
     } else if term.is_fun() {
         TermType::Fun
-    } else if term.is_list() {
+    } else if term.is_list() || term.is_empty_list() {
         TermType::List
     } else if term.is_map() {
         TermType::Map
     } else if term.is_number() {
-        TermType::Number
+        TermType::Float
     } else if term.is_pid() {
         TermType::Pid
     } else if term.is_port() {
@@ -68,7 +90,6 @@ impl<'a> Term<'a> {
     impl_check!(is_atom);
     impl_check!(is_binary);
     impl_check!(is_empty_list);
-    impl_check!(is_exception);
     impl_check!(is_fun);
     impl_check!(is_list);
     impl_check!(is_map);

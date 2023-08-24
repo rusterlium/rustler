@@ -44,7 +44,7 @@ pub struct ListIterator<'a> {
 
 impl<'a> ListIterator<'a> {
     fn new(term: Term<'a>) -> Option<Self> {
-        if term.is_list() || term.is_empty_list() {
+        if term.is_list() {
             let iter = ListIterator { term };
             Some(iter)
         } else {
