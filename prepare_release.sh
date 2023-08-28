@@ -41,7 +41,7 @@ sed -i "s/^version = \"[^\"]*\" # rustler_codegen version$/version = \"$VERSION\
 sed -i "s/^rustler.*$/rustler = {path = \"..\/rustler\", version = \"$VERSION\"}/" rustler_bigint/Cargo.toml
 sed -i "s/def rustler_version, do: \"[^\"]*\"$/def rustler_version, do: \"$VERSION\"/" rustler_mix/mix.exs rustler_mix/lib/rustler.ex
 sed -i "s/@version .*$/@version \"$VERSION\"/" rustler_mix/mix.exs
-sed -i "s/{:rustler, \".*\"}/{:rustler, \"~> $VERSION\"}/" rustler_mix/README.md
+sed -i "s/{:rustler, \".*\"/{:rustler, \"~> $VERSION\"/" rustler_mix/README.md
 
 echo "Committing version.."
 git commit -m "(release) $VERSION" \
