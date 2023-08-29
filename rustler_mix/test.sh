@@ -47,7 +47,7 @@ defmodule TestRustlerMix.MixProject do
 
   def application, do: [ ]
 
-  defp deps, do: [ {:rustler, path: "$rustler_mix"} ]
+  defp deps, do: [ {:rustler, path: "$rustler_mix", runtime: false} ]
 end
 EOF
 
@@ -89,6 +89,11 @@ end
 EOF
 
 mix test
+
+# See https://github.com/rusterlium/rustler/issues/516, we also need to verify that everything
+# we need is part of a release.
+mix release
+_build/dev/rel/test_rustler_mix/bin/test_rustler_mix eval 'RustlerMixTest.add(1, 2)'
 
 echo "Done; cleaning up"
 rm -r $tmp

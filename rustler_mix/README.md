@@ -15,7 +15,7 @@ This package is available on [Hex.pm](https://hex.pm/packages/rustler). To insta
 ```elixir
 def deps do
   [
-    {:rustler, "~> 0.29.1"}
+    {:rustler, "~> 0.29.1", runtime: false}
   ]
 end
 ```

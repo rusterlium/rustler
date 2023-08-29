@@ -114,6 +114,9 @@ defmodule Rustler do
   end
 
   defmacro __before_compile__(_env) do
+    default_load_data_value = %Rustler.Compiler.Config{}.load_data
+    default_fun_value = %Rustler.Compiler.Config{}.load_data_fun
+
     quote do
       @on_load :rustler_init
 
@@ -130,37 +133,37 @@ defmodule Rustler do
           |> Application.app_dir(path)
           |> to_charlist()
 
-        load_data = Rustler.construct_load_data(@load_data, @load_data_fun)
+        load_data = _construct_load_data(@load_data, @load_data_fun)
 
         :erlang.load_nif(load_path, load_data)
       end
-    end
-  end
 
-  def construct_load_data(load_data, load_data_fun) do
-    default_load_data_value = %Rustler.Compiler.Config{}.load_data
-    default_fun_value = %Rustler.Compiler.Config{}.load_data_fun
+      defp _construct_load_data(load_data, load_data_fun) do
+        default_load_data_value = unquote(default_load_data_value)
+        default_fun_value = unquote(default_fun_value)
 
-    case {load_data, load_data_fun} do
-      {load_data, ^default_fun_value} ->
-        load_data
+        case {load_data, load_data_fun} do
+          {load_data, ^default_fun_value} ->
+            load_data
 
-      {^default_load_data_value, {module, function}}
-      when is_atom(module) and is_atom(function) ->
-        apply(module, function, [])
+          {^default_load_data_value, {module, function}}
+          when is_atom(module) and is_atom(function) ->
+            apply(module, function, [])
 
-      {^default_load_data_value, provided_value} ->
-        raise """
-        `load_data` has to be `{Module, :function}`.
-        Instead received: #{inspect(provided_value)}
-        """
+          {^default_load_data_value, provided_value} ->
+            raise """
+            `load_data` has to be `{Module, :function}`.
+            Instead received: #{inspect(provided_value)}
+            """
 
-      {load_data, load_data_fun} ->
-        raise """
-        Only `load_data` or `load_data_fun` can be provided. Instead received:
-        >>> load_data: #{inspect(load_data)}
-        >>> load_data_fun: #{inspect(load_data_fun)}
-        """
+          {load_data, load_data_fun} ->
+            raise """
+            Only `load_data` or `load_data_fun` can be provided. Instead received:
+            >>> load_data: #{inspect(load_data)}
+            >>> load_data_fun: #{inspect(load_data_fun)}
+            """
+        end
+      end
     end
   end
 

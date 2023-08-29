@@ -17,6 +17,7 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 * Deprecated `:rustler_crates` project configuration
 * Mark `use Rustler` module configuration as compile-time
 * Bump Rust edition to 2021
+* Make `:rustler` a compile-time-only dependency (#516, #559)
 
 ## [0.29.1] - 2023-06-30
 
