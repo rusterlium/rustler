@@ -77,7 +77,7 @@ impl NifReturned {
                 flags as i32,
                 fun,
                 args.len() as i32,
-                args.as_ptr() as *const usize,
+                args.as_ptr(),
             ),
         }
     }

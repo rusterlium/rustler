@@ -177,6 +177,7 @@ unsafe impl Send for OwnedEnv {}
 
 impl OwnedEnv {
     /// Allocates a new process-independent environment.
+    #[allow(clippy::arc_with_non_send_sync)] // Likely false negative, see https://github.com/rust-lang/rust-clippy/issues/11382
     pub fn new() -> OwnedEnv {
         OwnedEnv {
             env: Arc::new(unsafe { rustler_sys::enif_alloc_env() }),
@@ -228,6 +229,7 @@ impl OwnedEnv {
     /// Unless you call this method after a call to `run()`, all terms created within the
     /// environment hang around in memory until the `OwnedEnv` is dropped: garbage collection does
     /// not continually happen as needed in a NIF environment.
+    #[allow(clippy::arc_with_non_send_sync)] // Likely false negative, see https://github.com/rust-lang/rust-clippy/issues/11382
     pub fn clear(&mut self) {
         let c_env = *self.env;
         self.env = Arc::new(c_env);

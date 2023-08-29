@@ -26,11 +26,11 @@ macro_rules! nif_init {
 /// users of `erlang_nif-sys`.  See implementation of `nif_init!` for usage.
 #[macro_export]
 macro_rules! platform_nif_init {
-    ($get_entry:expr) => {
+    ($entry:expr) => {
         #[cfg(unix)]
         #[no_mangle]
         pub extern "C" fn nif_init() -> *const $crate::rustler_sys_api::ErlNifEntry {
-            $get_entry()
+            $entry
         }
 
         #[cfg(windows)]
@@ -42,7 +42,7 @@ macro_rules! platform_nif_init {
                 WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
             }
             //std::ptr::copy_nonoverlapping(callbacks, &WinDynNifCallbacks, std::mem::size_of<TWinDynNifCallbacks>());
-            $get_entry()
+            $entry
         }
     };
 }
@@ -101,7 +101,7 @@ macro_rules! get_entry {
     ( $module:expr, [$($funcs:tt),+,], $inits_tt:tt ) => ( get_entry!($module, [$($funcs),*], $inits_tt) );
 
     ( $module:expr, [$($funcs:tt),*], {$($inits:tt)*} ) => (
-        || { // start closure
+        { // start closure
             use $crate::rustler_sys_api as ens;
             const FUNCS: &'static [ens::ErlNifFunc] = &[$(make_func_entry!($funcs)),*];
 
@@ -135,7 +135,7 @@ macro_rules! get_entry {
 
     // For legacy nif_init!() invocation, deprecated
     ($module:expr, $load:expr, $reload:expr, $upgrade:expr, $unload:expr, $($func:expr),* ) => (
-        || { // start closure
+        { // start closure
             use $crate::rustler_sys_api as ens;
             const FUNCS: &'static [ens::ErlNifFunc] = &[$($func),*];
             static mut ENTRY: ens::ErlNifEntry = ens::ErlNifEntry{
@@ -198,7 +198,8 @@ macro_rules! make_func_entry {
                     argc: ens::c_int,
                     args: *const ens::ERL_NIF_TERM,
                 ) -> ens::ERL_NIF_TERM {
-                    $function(env, argc, args)
+                    let func = $function;
+                    func(env, argc, args)
                 }
                 wrapper
             },
@@ -236,7 +237,8 @@ macro_rules! set_optional {
             priv_data: *mut *mut ens::c_void,
             load_info: ens::ERL_NIF_TERM,
         ) -> ens::c_int {
-            $val(env, priv_data, load_info)
+            let func = $val;
+            func(env, priv_data, load_info)
         }
         $entry.load = Some(wrapper);
     }};
@@ -270,6 +272,7 @@ macro_rules! set_optional {
 }
 
 #[cfg(test)]
+#[allow(clippy::redundant_closure_call)]
 mod initmacro_namespace_tests {
 
     // explicitly disable for this test:
@@ -308,7 +311,7 @@ mod initmacro_namespace_tests {
 
     #[test]
     fn opt_some2() {
-        let entry = get_entry!("empty", [], {load: load, unload:unload})();
+        let entry = get_entry!("empty", [], {load: load, unload:unload});
         assert_eq!(0, entry.num_of_funcs);
         assert_eq!(14, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
@@ -320,7 +323,7 @@ mod initmacro_namespace_tests {
 
     #[test]
     fn nif1() {
-        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1)])();
+        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1)]);
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
@@ -335,7 +338,7 @@ mod initmacro_namespace_tests {
 
     #[test]
     fn nif_wrapped() {
-        let entry = get_entry!("nifs", [("sliced", 6, slice_args!(slice_nif))])();
+        let entry = get_entry!("nifs", [("sliced", 6, slice_args!(slice_nif))]);
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe {
@@ -413,7 +416,7 @@ mod initmacro_tests {
 
     #[test]
     fn opt_empty() {
-        let entry = get_entry!("empty", [])();
+        let entry = get_entry!("empty", []);
         assert_eq!(0, entry.num_of_funcs);
         assert_eq!(None, entry.load);
         assert_eq!(None, entry.reload);
@@ -423,7 +426,7 @@ mod initmacro_tests {
 
     #[test]
     fn opt_some1() {
-        let entry = get_entry!("empty", [], { load: load })();
+        let entry = get_entry!("empty", [], { load: load });
         assert_eq!(0, entry.num_of_funcs);
         assert_eq!(14, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
@@ -435,7 +438,7 @@ mod initmacro_tests {
 
     #[test]
     fn opt_some2() {
-        let entry = get_entry!("empty", [], {load: load, unload:unload})();
+        let entry = get_entry!("empty", [], {load: load, unload:unload});
         assert_eq!(0, entry.num_of_funcs);
         assert_eq!(14, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
@@ -448,7 +451,7 @@ mod initmacro_tests {
     #[test]
     fn opt_some2b() {
         // optionals in different order as opt_some2
-        let entry = get_entry!("empty", [], {unload:unload, load: load})();
+        let entry = get_entry!("empty", [], {unload:unload, load: load});
         assert_eq!(0, entry.num_of_funcs);
         assert_eq!(14, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
@@ -461,7 +464,7 @@ mod initmacro_tests {
     #[test]
     fn opt_closure() {
         // optionals in different order as opt_some2
-        let entry = get_entry!("empty", [], {load: |_,_,_|15})();
+        let entry = get_entry!("empty", [], {load: |_,_,_|15});
         assert_eq!(15, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
         });
@@ -469,7 +472,7 @@ mod initmacro_tests {
 
     #[test]
     fn modname() {
-        let entry = get_entry!("bananas", [])();
+        let entry = get_entry!("bananas", []);
         assert_eq!(CString::new("bananas").unwrap().as_ref(), unsafe {
             CStr::from_ptr(entry.name as *const i8)
         });
@@ -477,7 +480,7 @@ mod initmacro_tests {
 
     #[test]
     fn nif1() {
-        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1)])();
+        let entry = get_entry!("nifs", [("raw1", 3, raw_nif1)]);
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
@@ -498,7 +501,7 @@ mod initmacro_tests {
                 ("raw1", 3, raw_nif1),
                 ("raw2", 33, raw_nif2, ERL_NIF_DIRTY_JOB_IO_BOUND)
             ]
-        )();
+        );
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(2, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
@@ -521,7 +524,7 @@ mod initmacro_tests {
 
     #[test]
     fn nif_closure() {
-        let entry = get_entry!("nifs", [("closure", 5, |_, argc, _| (argc * 13) as usize)])();
+        let entry = get_entry!("nifs", [("closure", 5, |_, argc, _| (argc * 13) as usize)]);
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("closure").unwrap().as_ref(), unsafe {
@@ -536,7 +539,7 @@ mod initmacro_tests {
 
     #[test]
     fn nif_wrapped() {
-        let entry = get_entry!("nifs", [("sliced", 6, slice_args!(slice_nif))])();
+        let entry = get_entry!("nifs", [("sliced", 6, slice_args!(slice_nif))]);
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe {
@@ -559,7 +562,7 @@ mod initmacro_tests {
             Some(c_unload),
             nif!(b"cnif_1\0", 7, c_nif1, ERL_NIF_DIRTY_JOB_IO_BOUND),
             nif!(b"cnif_2\0", 8, c_nif1)
-        )();
+        );
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
 
         assert_eq!(CString::new("legacymod").unwrap().as_ref(), unsafe {
@@ -604,14 +607,14 @@ mod initmacro_tests {
         {
             unload: unload,
             load: load,    // <- trailing comma
-        })();
+        });
     }
 
     #[test]
     fn unsafe_callbacks() {
         let entry = get_entry!("unsafe_nifs", [("unsafe_nif", 3, unsafe_nif)], {
             load: unsafe_load
-        })();
+        });
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(15, unsafe {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
