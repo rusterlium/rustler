@@ -8,6 +8,16 @@ This document is intended to simplify upgrading to newer versions by extending t
 options on `use Rustler` or configuring the module in your `config/*.exs`
 files.
 
+Additionally, `Env::send` and `OwnedEnv::send_and_clear` will now return a
+`Result`. Updating will thus introduce warnings about unused `Result`s. To
+remove the warnings without changing behaviour, the `Result`s can be "used" as
+```rust
+let _ = env.send(...)
+```
+Neither the `Ok` nor the `Err` case carry additional information so far. An
+error is returned if either the receiving or the sending process is dead. See
+also [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
+
 ## 0.28 -> 0.29
 
 `RUSTLER_NIF_VERSION` is deprecated and will not be considered anymore for 0.30.

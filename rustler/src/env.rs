@@ -30,6 +30,10 @@ impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
     }
 }
 
+///
+#[derive(Clone, Copy, Debug)]
+pub struct SendError;
+
 impl<'a> Env<'a> {
     /// Create a new Env. For the `_lifetime_marker` argument, pass a
     /// reference to any local variable that has its own lifetime, different
@@ -71,12 +75,15 @@ impl<'a> Env<'a> {
     ///
     /// *   The current thread is *not* managed by the Erlang VM.
     ///
+    /// The result indicates whether the send was successful, see also
+    /// [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
+    ///
     /// # Panics
     ///
     /// Panics if the above rules are broken (by trying to send a message from
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
-    pub fn send(self, pid: &LocalPid, message: Term<'a>) {
+    pub fn send(self, pid: &LocalPid, message: Term<'a>) -> Result<(), SendError> {
         let thread_type = unsafe { rustler_sys::enif_thread_type() };
         let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
             ptr::null_mut()
@@ -93,78 +100,15 @@ impl<'a> Env<'a> {
         };
 
         // Send the message.
-        unsafe {
-            rustler_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg());
-        }
-    }
-
-    /// Send a message to a process, returning an `i32` result.
-    ///
-    /// ## See also
-    ///
-    /// - `send()`
-    /// - [OTP docs:
-    /// `enif_send`](https://www.erlang.org/doc/man/erl_nif#enif_send)
-    pub fn send_returning_i32(self, pid: &LocalPid, message: Term<'a>) -> i32 {
-        let thread_type = unsafe { rustler_sys::enif_thread_type() };
-        let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
-            ptr::null_mut()
-        } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
-        {
-            // Panic if `self` is not the environment of the calling process.
-            self.pid();
-
-            self.as_c_arg()
-        } else {
-            panic!("Env::send(): unrecognized calling thread type");
+        let res = unsafe {
+            rustler_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg())
         };
 
-        // Send the message.
-        unsafe { rustler_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg()) }
-    }
-
-    /// Send a message to a process, returning a boolean result, `true` if the
-    /// send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_returning_i32()`
-    /// - `send()`
-    pub fn send_returning_i32_result(self, pid: &LocalPid, message: Term<'a>) -> Result<(), i32> {
-        let res = self.send_returning_i32(pid, message);
-        if 1 == res {
+        if res == 1 {
             Ok(())
         } else {
-            Err(res)
+            Err(SendError)
         }
-    }
-
-    /// Send a message to a process, returning a boolean result, `true` if the
-    /// send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_returning_i32()`
-    /// - `send()`
-    pub fn send_returning_result(self, pid: &LocalPid, message: Term<'a>) -> Result<(), ()> {
-        if 1 == self.send_returning_i32(pid, message) {
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
-
-    /// Send a message to a process, returning a boolean result, `true` if the
-    /// send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_returning_i32()`
-    /// - `send()`
-    pub fn send_returning_bool(self, pid: &LocalPid, message: Term<'a>) -> bool {
-        1 == self.send_returning_i32(pid, message)
     }
 
     /// Attempts to find the PID of a process registered by `name_or_pid`
@@ -233,7 +177,7 @@ impl<'a> Env<'a> {
 ///
 ///     fn send_string_to_pid(data: &str, pid: &LocalPid) {
 ///         let mut msg_env = OwnedEnv::new();
-///         msg_env.send_and_clear(pid, |env| data.encode(env));
+///         let _ = msg_env.send_and_clear(pid, |env| data.encode(env));
 ///     }
 ///
 /// There's no way to run Erlang code in an `OwnedEnv`. It's not a process. It's just a workspace
@@ -267,38 +211,15 @@ impl OwnedEnv {
     /// The environment is cleared as though by calling the `.clear()` method.
     /// To avoid that, use `env.send(pid, term)` instead.
     ///
+    /// The result is the same as what `Env::send` would return.
+    ///
     /// # Panics
     ///
     /// Panics if called from a thread that is managed by the Erlang VM. You
     /// can only use this method on a thread that was created by other
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
-    pub fn send_and_clear<F>(&mut self, recipient: &LocalPid, closure: F)
-    where
-        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
-    {
-        if unsafe { rustler_sys::enif_thread_type() } != rustler_sys::ERL_NIF_THR_UNDEFINED {
-            panic!("send_and_clear: current thread is managed");
-        }
-
-        let message = self.run(|env| closure(env).as_c_arg());
-
-        unsafe {
-            rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), *self.env, message);
-        }
-
-        self.clear();
-    }
-
-    /// Send a message from a Rust thread to an Erlang process, returning an
-    /// `i32` result.
-    ///
-    /// ## See also
-    ///
-    /// - `send_and_clear()`
-    /// - [OTP docs:
-    /// `enif_send`](https://www.erlang.org/doc/man/erl_nif#enif_send)
-    pub fn send_and_clear_returning_i32<F>(&mut self, recipient: &LocalPid, closure: F) -> i32
+    pub fn send_and_clear<F>(&mut self, recipient: &LocalPid, closure: F) -> Result<(), SendError>
     where
         F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
     {
@@ -314,66 +235,11 @@ impl OwnedEnv {
 
         self.clear();
 
-        res
-    }
-
-    /// Send a message from a Rust thread to an Erlang process, returning a
-    /// boolean result, `true` if the send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_and_clear_returning_i32()`
-    /// - `send()`
-    pub fn send_and_clear_returning_i32_result<F>(
-        &mut self,
-        recipient: &LocalPid,
-        closure: F,
-    ) -> Result<(), i32>
-    where
-        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
-    {
-        let res = self.send_and_clear_returning_i32(recipient, closure);
-        if 1 == res {
+        if res == 1 {
             Ok(())
         } else {
-            Err(res)
+            Err(SendError)
         }
-    }
-
-    /// Send a message from a Rust thread to an Erlang process, returning a
-    /// boolean result, `true` if the send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_and_clear_returning_i32()`
-    /// - `send()`
-    pub fn send_and_clear_returning_result<F>(
-        &mut self,
-        recipient: &LocalPid,
-        closure: F,
-    ) -> Result<(), ()>
-    where
-        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
-    {
-        if 1 == self.send_and_clear_returning_i32(recipient, closure) {
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
-
-    /// Send a message from a Rust thread to an Erlang process, returning a
-    /// boolean result, `true` if the send succeeds, otherwise `false`.
-    ///
-    /// ## See also
-    ///
-    /// - `send_and_clear_returning_i32()`
-    /// - `send()`
-    pub fn send_and_clear_returning_bool<F>(&mut self, recipient: &LocalPid, closure: F) -> bool
-    where
-        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
-    {
-        1 == self.send_and_clear_returning_i32(recipient, closure)
     }
 
     /// Free all terms in this environment and clear it for reuse.
