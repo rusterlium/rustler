@@ -1,5 +1,5 @@
 use rustler::{Binary, Env, LocalPid, Monitor, MonitorResource, ResourceArc, ResourceArcMonitor};
-use std::sync::{RwLock, Mutex};
+use std::sync::{Mutex, RwLock};
 
 pub struct TestResource {
     test_field: RwLock<i32>,
@@ -103,6 +103,7 @@ pub fn resource_make_with_binaries() -> ResourceArc<WithBinaries> {
     })
 }
 
+#[rustler::nif]
 pub fn monitor_resource_make() -> ResourceArc<TestMonitorResource> {
     ResourceArc::new(TestMonitorResource {
         inner: Mutex::new(TestMonitorResourceInner {
@@ -137,7 +138,11 @@ pub fn resource_make_binary_from_vec(env: Env, resource: ResourceArc<WithBinarie
 }
 
 #[rustler::nif]
-pub fn monitor_resource_monitor(env: Env, resource: ResourceArc<TestMonitorResource>, pid: LocalPid) {
+pub fn monitor_resource_monitor(
+    env: Env,
+    resource: ResourceArc<TestMonitorResource>,
+    pid: LocalPid,
+) {
     let mut inner = resource.inner.lock().unwrap();
     inner.mon = resource.monitor(Some(&env), &pid);
     assert!(inner.mon.is_some());

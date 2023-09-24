@@ -11,11 +11,11 @@ use std::{marker::PhantomData, mem::MaybeUninit};
 
 use rustler_sys::{ErlNifMonitor, ErlNifPid, ErlNifResourceDown};
 
-use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
+use super::{Binary, Decoder, Encoder, Env, Error, LocalPid, Term};
 use crate::wrapper::{
     c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
-    LocalPid,
 };
+use crate::NifResult;
 
 /// Re-export a type used by the `resource!` macro.
 #[doc(hidden)]
