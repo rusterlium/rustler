@@ -38,12 +38,12 @@ defmodule Rustler.Compiler.Config do
     # TODO: Remove in 1.0
     rustler_crates =
       if mix_config = Mix.Project.config()[:rustler_crates] do
-        mix_config
-      else
         IO.warn(
           ":rustler_crates in mix.exs is deprecated, please explicitly pass options on `use Rustler` or configure the module in your `config/*.exs` files"
         )
 
+        mix_config
+      else
         []
       end
 
