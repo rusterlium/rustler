@@ -18,6 +18,7 @@ See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer ver
 * Mark `use Rustler` module configuration as compile-time
 * Bump Rust edition to 2021
 * Make `:rustler` a compile-time-only dependency (#516, #559)
+* Return `Result<(), SendError>` from all `send` functions (#239, #563)
 
 ## [0.29.1] - 2023-06-30
 
