@@ -50,7 +50,7 @@ pub enum TaggedEnum {
 }
 
 #[rustler::nif]
-pub fn decode_term(_input: Term<>) -> NifResult<bool> {
+pub fn decode_term(_input: Term) -> NifResult<bool> {
     Ok(true)
 }
 
