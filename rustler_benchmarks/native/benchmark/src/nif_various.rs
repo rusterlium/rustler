@@ -50,38 +50,28 @@ pub enum TaggedEnum {
 }
 
 #[rustler::nif]
-pub fn decode_term<'a>(input: Term<'a>) -> NifResult<bool> {
-    match input {
-        _ => Ok(true),
-    }
+pub fn decode_term(_input: Term<>) -> NifResult<bool> {
+    Ok(true)
 }
 
 #[rustler::nif]
-pub fn decode_string(input: String) -> NifResult<bool> {
-    match input {
-        _ => Ok(true),
-    }
+pub fn decode_string(_input: String) -> NifResult<bool> {
+    Ok(true)
 }
 
 #[rustler::nif]
-pub fn decode_struct_string(input: TestStructString) -> NifResult<bool> {
-    match input {
-        _ => Ok(true),
-    }
+pub fn decode_struct_string(_input: TestStructString) -> NifResult<bool> {
+    Ok(true)
 }
 
 #[rustler::nif]
-pub fn decode_struct(input: TestStruct) -> NifResult<bool> {
-    match input {
-        _ => Ok(true),
-    }
+pub fn decode_struct(_input: TestStruct) -> NifResult<bool> {
+    Ok(true)
 }
 
 #[rustler::nif]
-pub fn decode_tagged_enum(input: TaggedEnum) -> NifResult<bool> {
-    match input {
-        _ => Ok(true),
-    }
+pub fn decode_tagged_enum(_input: TaggedEnum) -> NifResult<bool> {
+    Ok(true)
 }
 
 #[rustler::nif]
@@ -95,7 +85,7 @@ pub fn encode_tagged_enum() -> TaggedEnum {
 }
 
 #[rustler::nif]
-pub fn void() -> () {}
+pub fn void() {}
 
 #[rustler::nif]
 pub fn encode_atom() -> Atom {
@@ -113,5 +103,5 @@ pub fn compare_atom(a: Atom) -> Atom {
     if a == test_a() {
         return test_a();
     }
-    return a;
+    a
 }
