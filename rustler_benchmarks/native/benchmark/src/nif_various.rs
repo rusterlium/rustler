@@ -50,28 +50,31 @@ pub enum TaggedEnum {
 }
 
 #[rustler::nif]
-pub fn decode_term(_input: Term) -> NifResult<bool> {
-    Ok(true)
+pub fn decode_term(input: Term) -> NifResult<bool> {
+    Ok(!input.is_atom())
 }
 
 #[rustler::nif]
-pub fn decode_string(_input: String) -> NifResult<bool> {
-    Ok(true)
+pub fn decode_string(input: String) -> NifResult<bool> {
+    Ok(!input.is_empty())
 }
 
 #[rustler::nif]
-pub fn decode_struct_string(_input: TestStructString) -> NifResult<bool> {
-    Ok(true)
+pub fn decode_struct_string(input: TestStructString) -> NifResult<bool> {
+    Ok(!input.a.is_empty())
 }
 
 #[rustler::nif]
-pub fn decode_struct(_input: TestStruct) -> NifResult<bool> {
-    Ok(true)
+pub fn decode_struct(input: TestStruct) -> NifResult<bool> {
+    Ok(input.d)
 }
 
 #[rustler::nif]
-pub fn decode_tagged_enum(_input: TaggedEnum) -> NifResult<bool> {
-    Ok(true)
+pub fn decode_tagged_enum(input: TaggedEnum) -> NifResult<bool> {
+    match input {
+        TaggedEnum::UnitA => Ok(true),
+        _ => Ok(false),
+    }
 }
 
 #[rustler::nif]
