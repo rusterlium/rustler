@@ -151,7 +151,7 @@ impl<'a> Ord for Term<'a> {
 }
 impl<'a> PartialOrd for Term<'a> {
     fn partial_cmp(&self, other: &Term<'a>) -> Option<Ordering> {
-        Some(cmp(self, other))
+        Some(self.cmp(other))
     }
 }
 
