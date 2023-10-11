@@ -47,6 +47,7 @@ defmodule Rustler.Mixfile do
     [
       extras: [
         "../CHANGELOG.md",
+        "../UPGRADE.md",
         {:"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
         {:"../LICENSE-MIT", [title: "License (MIT)"]},
         "README.md"
