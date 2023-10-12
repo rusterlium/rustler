@@ -37,7 +37,7 @@ impl<'a> Term<'a> {
         self.term
     }
 
-    pub fn get_env(&self) -> Env<'a> {
+    pub fn get_env(self) -> Env<'a> {
         self.env
     }
 

@@ -1,6 +1,5 @@
 use crate::env::OwnedEnv;
-use crate::types::atom::Atom;
-use crate::{Encoder, Env, Term};
+use crate::{Atom, Encoder, Env, Term};
 use std::panic;
 use std::thread;
 

@@ -56,10 +56,7 @@ impl<'a> Env<'a> {
     }
 
     /// Convenience method for building a tuple `{error, Reason}`.
-    pub fn error_tuple<T>(self, reason: T) -> Term<'a>
-    where
-        T: Encoder,
-    {
+    pub fn error_tuple(self, reason: impl Encoder) -> Term<'a> {
         let error = crate::types::atom::error().to_term(self);
         (error, reason).encode(self)
     }
@@ -83,7 +80,7 @@ impl<'a> Env<'a> {
     /// Panics if the above rules are broken (by trying to send a message from
     /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
     ///
-    pub fn send(self, pid: &LocalPid, message: Term<'a>) -> Result<(), SendError> {
+    pub fn send(self, pid: &LocalPid, message: impl Encoder) -> Result<(), SendError> {
         let thread_type = unsafe { rustler_sys::enif_thread_type() };
         let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
             ptr::null_mut()
@@ -98,6 +95,8 @@ impl<'a> Env<'a> {
         } else {
             panic!("Env::send(): unrecognized calling thread type");
         };
+
+        let message = message.encode(self);
 
         // Send the message.
         let res = unsafe {
@@ -120,7 +119,8 @@ impl<'a> Env<'a> {
     /// - `Some(pid)` if `name_or_pid` is an atom and an alive process is currently registered under the given name.
     /// - `None` if `name_or_pid` is an atom but there is no alive process registered under this name.
     /// - `None` if `name_or_pid` is not a PID or atom.
-    pub fn whereis_pid(&self, name_or_pid: Term<'a>) -> Option<LocalPid> {
+    pub fn whereis_pid(self, name_or_pid: impl Encoder) -> Option<LocalPid> {
+        let name_or_pid = name_or_pid.encode(self);
         if name_or_pid.is_pid() {
             return Some(name_or_pid.decode().unwrap());
         }
@@ -198,9 +198,9 @@ impl OwnedEnv {
     }
 
     /// Run some code in this environment.
-    pub fn run<F, R>(&self, closure: F) -> R
+    pub fn run<'a, F, R>(&self, closure: F) -> R
     where
-        F: for<'a> FnOnce(Env<'a>) -> R,
+        F: FnOnce(Env<'a>) -> R,
     {
         let env = unsafe { Env::new(&(), *self.env) };
         closure(env)
@@ -219,15 +219,20 @@ impl OwnedEnv {
     /// can only use this method on a thread that was created by other
     /// means. (This curious restriction is imposed by the Erlang VM.)
     ///
-    pub fn send_and_clear<F>(&mut self, recipient: &LocalPid, closure: F) -> Result<(), SendError>
+    pub fn send_and_clear<'a, F, T>(
+        &mut self,
+        recipient: &LocalPid,
+        closure: F,
+    ) -> Result<(), SendError>
     where
-        F: for<'a> FnOnce(Env<'a>) -> Term<'a>,
+        F: FnOnce(Env<'a>) -> T,
+        T: Encoder,
     {
         if unsafe { rustler_sys::enif_thread_type() } != rustler_sys::ERL_NIF_THR_UNDEFINED {
             panic!("send_and_clear: current thread is managed");
         }
 
-        let message = self.run(|env| closure(env).as_c_arg());
+        let message = self.run(|env| closure(env).encode(env).as_c_arg());
 
         let res = unsafe {
             rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), *self.env, message)
@@ -287,9 +292,9 @@ impl OwnedEnv {
     ///
     /// **Note: There is no way to save terms across `OwnedEnv::send()` or `clear()`.**
     /// If you try, the `.load()` call will panic.
-    pub fn save(&self, term: Term) -> SavedTerm {
+    pub fn save(&self, term: impl Encoder) -> SavedTerm {
         SavedTerm {
-            term: self.run(|env| term.in_env(env).as_c_arg()),
+            term: self.run(|env| term.encode(env).as_c_arg()),
             env_generation: Arc::downgrade(&self.env),
         }
     }
