@@ -1,5 +1,11 @@
 defmodule Benchmark do
-  use Rustler, otp_app: :rustler_benchmarks, crate: "benchmark", mode: :release
+  use Rustler,
+      otp_app: :rustler_benchmarks,
+      crate: "benchmark",
+      mode: :release,
+      pgo_commands: [
+          ["mix", "run", "-e", "Benchmark.NifStruct.run"]
+      ]
 
   def nifstruct_benchmark(_input, _operation), do: error()
   def nifrecord_benchmark(_input, _operation), do: error()

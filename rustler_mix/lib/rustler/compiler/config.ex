@@ -10,6 +10,7 @@ defmodule Rustler.Compiler.Config do
   @type mode :: :debug | :release
   @type load_data :: term()
   @type path :: Path.t()
+  @type pgo_commands :: list(list(String.t())) | nil
 
   defstruct cargo: :system,
             crate: nil,
@@ -24,6 +25,7 @@ defmodule Rustler.Compiler.Config do
             mode: :release,
             otp_app: nil,
             path: "",
+            pgo_commands: nil,
             priv_dir: "",
             skip_compilation?: false,
             target: nil,
