@@ -35,7 +35,7 @@ defmodule RustlerTest do
 
   def term_debug_and_reparse(term) do
     with debug_str <- term_debug(term),
-         debug_str <- :erlang.binary_to_list(debug_str) ++ '.',
+         debug_str <- :erlang.binary_to_list(debug_str) ++ ~c".",
          {:ok, tokens, _} <- :erl_scan.string(debug_str),
          {:ok, ast} <- :erl_parse.parse_exprs(tokens),
          {:value, res, _} <- :erl_eval.exprs(ast, %{}) do
