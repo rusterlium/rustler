@@ -24,7 +24,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: "25"
-          elixir-version: "1.14"
+          elixir-version: "1.15"
 
       - name: Check cargo fmt
         run: cargo fmt --all -- --check
@@ -85,6 +85,7 @@ jobs:
     strategy:
       matrix:
         pair:
+          - { erlang: "26", elixir: "1.15", latest: true }
           - { erlang: "26", elixir: "1.14", latest: true }
           - { erlang: "25", elixir: "1.14" }
           - { erlang: "24", elixir: "1.13" }
