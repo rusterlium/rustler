@@ -23,7 +23,7 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "25"
+          otp-version: "26"
           elixir-version: "1.15"
 
       - name: Check cargo fmt
@@ -86,7 +86,7 @@ jobs:
       matrix:
         pair:
           - { erlang: "26", elixir: "1.15", latest: true }
-          - { erlang: "26", elixir: "1.14", latest: true }
+          - { erlang: "26", elixir: "1.14" }
           - { erlang: "25", elixir: "1.14" }
           - { erlang: "24", elixir: "1.13" }
         rust:
@@ -96,11 +96,6 @@ jobs:
           - macos
           - windows
           - ubuntu
-        exclude:
-          # TODO Remove this once setup-beam is fixed to work around OTP26's
-          # regression
-          - os: windows
-            pair: { erlang: "26", elixir: "1.14", latest: true }
     runs-on: ${{matrix.os}}-latest
 
     steps:
