@@ -53,6 +53,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> Toke
     };
 
     let gen = quote! {
+        #[allow(non_snake_case)]
         mod #atoms_module_name {
             #atom_defs
         }
