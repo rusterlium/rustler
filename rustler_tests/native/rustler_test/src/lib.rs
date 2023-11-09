@@ -95,7 +95,9 @@ rustler::init!(
         test_tuple::maybe_add_one_to_tuple,
         test_tuple::add_i32_from_tuple,
         test_tuple::greeting_person_from_tuple,
-        test_codegen::reserved_keywords::reserved_keywords_type_echo
+        test_codegen::reserved_keywords::reserved_keywords_type_echo,
+        test_codegen::generic_types::generic_struct_echo,
+        test_codegen::generic_types::mk_generic_map,
     ],
     load = load
 );
