@@ -31,25 +31,25 @@ pub(crate) fn decoder(ctx: &Context, inner: TokenStream) -> TokenStream {
         let where_clause = impl_generics.make_where_clause();
 
         for lifetime in lifetimes {
-            let mut puncated = syn::punctuated::Punctuated::new();
-            puncated.push(lifetime.clone());
+            let mut punctuated = syn::punctuated::Punctuated::new();
+            punctuated.push(lifetime.clone());
             let predicate = syn::PredicateLifetime {
                 lifetime: decode_lifetime.clone(),
                 colon_token: syn::token::Colon {
                     spans: [Span::call_site()],
                 },
-                bounds: puncated,
+                bounds: punctuated,
             };
             where_clause.predicates.push(predicate.into());
 
-            let mut puncated = syn::punctuated::Punctuated::new();
-            puncated.push(decode_lifetime.clone());
+            let mut punctuated = syn::punctuated::Punctuated::new();
+            punctuated.push(decode_lifetime.clone());
             let predicate = syn::PredicateLifetime {
                 lifetime: lifetime.clone(),
                 colon_token: syn::token::Colon {
                     spans: [Span::call_site()],
                 },
-                bounds: puncated,
+                bounds: punctuated,
             };
             where_clause.predicates.push(predicate.into());
         }
