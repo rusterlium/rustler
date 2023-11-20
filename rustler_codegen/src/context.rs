@@ -1,7 +1,7 @@
 use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{Data, Field, Fields, Ident, Lit, Meta, Variant};
+use syn::{Data, Field, Fields, Ident, Lifetime, Lit, Meta, TypeParam, Variant};
 
 use super::RustlerAttr;
 
@@ -14,6 +14,8 @@ pub(crate) struct Context<'a> {
     pub attrs: Vec<RustlerAttr>,
     pub ident: &'a proc_macro2::Ident,
     pub generics: &'a syn::Generics,
+    pub lifetimes: Vec<Lifetime>,
+    pub type_parameters: Vec<TypeParam>,
     pub variants: Option<Vec<&'a Variant>>,
     pub struct_fields: Option<Vec<&'a Field>>,
     pub is_tuple_struct: bool,
@@ -50,10 +52,33 @@ impl<'a> Context<'a> {
             _ => false,
         };
 
+        let lifetimes: Vec<_> = ast
+            .generics
+            .params
+            .iter()
+            .filter_map(|g| match g {
+                syn::GenericParam::Lifetime(l) => Some(l.lifetime.clone()),
+                _ => None,
+            })
+            .collect();
+
+        let type_parameters: Vec<_> = ast
+            .generics
+            .params
+            .iter()
+            .filter_map(|g| match g {
+                syn::GenericParam::Type(t) => Some(t.clone()),
+                // Don't keep lifetimes or generic constants
+                _ => None,
+            })
+            .collect();
+
         Self {
             attrs,
             ident: &ast.ident,
             generics: &ast.generics,
+            lifetimes,
+            type_parameters,
             variants,
             struct_fields,
             is_tuple_struct,
