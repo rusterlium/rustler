@@ -139,7 +139,7 @@ defmodule Rustler.Compiler.Config do
       |> MapSet.new(& &1["name"])
       |> MapSet.union(visited)
 
-    gather_local_crates(packages, as_specs ++ rest, paths, visited)
+    gather_local_crates(packages, Enum.filter(as_specs ++ rest, & &1), paths, visited)
   end
 
   defp get_spec(packages, name) do
