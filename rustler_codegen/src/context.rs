@@ -187,7 +187,7 @@ impl<'a> Context<'a> {
                 }
             }
         }
-        panic!("Cannot parse module")
+        panic!("Cannot parse tag")
     }
 
     fn try_parse_module(meta: &Meta) -> Option<Vec<RustlerAttr>> {
@@ -201,6 +201,6 @@ impl<'a> Context<'a> {
                 }
             }
         }
-        panic!("Cannot parse tag")
+        panic!("Cannot parse module")
     }
 }
