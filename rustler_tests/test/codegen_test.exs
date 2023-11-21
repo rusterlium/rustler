@@ -434,4 +434,16 @@ defmodule RustlerTest.CodegenTest do
     assert {1} == RustlerTest.reserved_keywords_type_echo({1})
     assert {:record, 1} == RustlerTest.reserved_keywords_type_echo({:record, 1})
   end
+
+  describe "generic types" do
+    test "generic struct" do
+      assert %{__struct__: GenericStruct, t: 1} ==
+               RustlerTest.generic_struct_echo(%{__struct__: GenericStruct, t: 1})
+    end
+
+    test "generic map" do
+      assert %{a: "hello", b: "hello"} ==
+               RustlerTest.mk_generic_map("hello")
+    end
+  end
 end
