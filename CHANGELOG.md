@@ -11,6 +11,10 @@ versions.
 ## [unreleased]
 
 ### Added
+
+- Add optional support for using Erlang's allocator as Rust's global allocator
+  (#580).
+
 ### Fixed
 ### Changed
 
