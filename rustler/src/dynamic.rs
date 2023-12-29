@@ -43,7 +43,7 @@ impl From<ErlNifTermType> for TermType {
 }
 
 pub fn get_type(term: Term) -> TermType {
-    if cfg!(nif_version_2_15) {
+    if cfg!(feature = "nif_version_2_15") {
         term.get_erl_type().into()
     } else if term.is_atom() {
         TermType::Atom

@@ -848,7 +848,7 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
         b.func(
             "ErlNifTermType",
             "enif_term_type",
-            "env: *mut ErlNifEnv, term: *const ERL_NIF_TERM",
+            "env: *mut ErlNifEnv, term: ERL_NIF_TERM",
         );
 
         b.func("c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid");

@@ -7,6 +7,19 @@ mod atoms {
         equal,
         less,
         greater,
+        // Term types
+        atom,
+        binary,
+        float,
+        fun,
+        integer,
+        list,
+        map,
+        pid,
+        port,
+        reference,
+        tuple,
+        unknown,
     }
 }
 
@@ -39,4 +52,22 @@ pub fn term_internal_hash(term: Term, salt: u32) -> u32 {
 #[rustler::nif]
 pub fn term_phash2_hash(term: Term) -> u32 {
     term.hash_phash2()
+}
+
+#[rustler::nif]
+pub fn term_type(term: Term) -> Atom {
+    match term.get_type() {
+        rustler::TermType::Atom => atoms::atom(),
+        rustler::TermType::Binary => atoms::binary(),
+        rustler::TermType::Fun => atoms::fun(),
+        rustler::TermType::List => atoms::list(),
+        rustler::TermType::Map => atoms::map(),
+        rustler::TermType::Integer => atoms::integer(),
+        rustler::TermType::Float => atoms::float(),
+        rustler::TermType::Pid => atoms::pid(),
+        rustler::TermType::Port => atoms::port(),
+        rustler::TermType::Ref => atoms::reference(),
+        rustler::TermType::Tuple => atoms::tuple(),
+        rustler::TermType::Unknown => atoms::unknown(),
+    }
 }
