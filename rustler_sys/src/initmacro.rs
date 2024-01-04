@@ -279,7 +279,7 @@ mod initmacro_namespace_tests {
     // use rustler_sys_api::*;
     use crate::rustler_sys_api;
 
-    use std::ffi::{CStr, CString};
+    use std::ffi::{c_char, CStr, CString};
     use std::ptr;
     use std::slice;
 
@@ -327,7 +327,7 @@ mod initmacro_namespace_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(3, funcs[0].arity);
         assert_eq!(28, unsafe {
@@ -342,7 +342,7 @@ mod initmacro_namespace_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(6, funcs[0].arity);
         assert_eq!(34, unsafe {
@@ -474,7 +474,7 @@ mod initmacro_tests {
     fn modname() {
         let entry = get_entry!("bananas", []);
         assert_eq!(CString::new("bananas").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(entry.name as *const i8)
+            CStr::from_ptr(entry.name as *const c_char)
         });
     }
 
@@ -484,7 +484,7 @@ mod initmacro_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(3, funcs[0].arity);
         assert_eq!(28, unsafe {
@@ -505,7 +505,7 @@ mod initmacro_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(2, funcs.len());
         assert_eq!(CString::new("raw1").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(3, funcs[0].arity);
         assert_eq!(28, unsafe {
@@ -513,7 +513,7 @@ mod initmacro_tests {
         });
         assert_eq!(0, funcs[0].flags);
         assert_eq!(CString::new("raw2").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[1].name as *const i8)
+            CStr::from_ptr(funcs[1].name as *const c_char)
         });
         assert_eq!(33, funcs[1].arity);
         assert_eq!(44, unsafe {
@@ -528,7 +528,7 @@ mod initmacro_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("closure").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(5, funcs[0].arity);
         assert_eq!(52, unsafe {
@@ -543,7 +543,7 @@ mod initmacro_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
         assert_eq!(1, funcs.len());
         assert_eq!(CString::new("sliced").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(6, funcs[0].arity);
         assert_eq!(34, unsafe {
@@ -566,7 +566,7 @@ mod initmacro_tests {
         let funcs = unsafe { slice::from_raw_parts(entry.funcs, entry.num_of_funcs as usize) };
 
         assert_eq!(CString::new("legacymod").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(entry.name as *const i8)
+            CStr::from_ptr(entry.name as *const c_char)
         });
 
         assert_eq!(114, unsafe {
@@ -579,7 +579,7 @@ mod initmacro_tests {
         assert_eq!(2, funcs.len());
 
         assert_eq!(CString::new("cnif_1").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(7, funcs[0].arity);
         assert_eq!(38, unsafe {
@@ -588,7 +588,7 @@ mod initmacro_tests {
         assert_eq!(ERL_NIF_DIRTY_JOB_IO_BOUND, funcs[0].flags);
 
         assert_eq!(CString::new("cnif_2").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[1].name as *const i8)
+            CStr::from_ptr(funcs[1].name as *const c_char)
         });
         assert_eq!(8, funcs[1].arity);
         assert_eq!(57, unsafe {
@@ -620,7 +620,7 @@ mod initmacro_tests {
             entry.load.unwrap()(ptr::null_mut(), ptr::null_mut(), 0)
         });
         assert_eq!(CString::new("unsafe_nif").unwrap().as_ref(), unsafe {
-            CStr::from_ptr(funcs[0].name as *const i8)
+            CStr::from_ptr(funcs[0].name as *const c_char)
         });
         assert_eq!(3, funcs[0].arity);
         assert_eq!(46, unsafe {
