@@ -551,6 +551,7 @@ where
 
 /// EnumDeserializerType
 pub enum EnumDeserializerType {
+    #[allow(dead_code)]
     Any,
     Unit,
     Newtype,

@@ -80,7 +80,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
     #[inline]
     fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        (v as i16).serialize(self)
+        v.serialize(self)
     }
 
     #[inline]
