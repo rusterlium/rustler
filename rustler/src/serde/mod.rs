@@ -8,7 +8,7 @@ pub use de::{from_term, Deserializer};
 pub use error::Error;
 pub use ser::{to_term, Serializer};
 
-use crate::{Term, Encoder, Env, Decoder, NifResult};
+use crate::{Decoder, Encoder, Env, NifResult, Term};
 
 /* impl<T: ?Sized> crate::Encoder for T where T: serde::Serialize {
     fn encode<'a>(&self, env: crate::Env<'a>) -> crate::Term<'a> {

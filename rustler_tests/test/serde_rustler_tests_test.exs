@@ -207,8 +207,8 @@ defmodule SerdeRustlerTests.NifTest do
     end
 
     test "chars", ctx do
-      run_tests("char (ascii)", 'A', ctx)
-      run_tests("char (replacement)", '�', ctx)
+      run_tests("char (ascii)", ~c"A", ctx)
+      run_tests("char (replacement)", ~c"�", ctx)
     end
 
     test "strings", ctx do

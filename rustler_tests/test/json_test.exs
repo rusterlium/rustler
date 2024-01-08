@@ -11,6 +11,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -22,6 +23,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -33,6 +35,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -44,6 +47,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -55,6 +59,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -66,6 +71,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -77,6 +83,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -88,6 +95,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -99,6 +107,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end
@@ -110,6 +119,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
     test "decode", ctx do
       run_decode(ctx)
     end
+
     test "encode", ctx do
       run_encode(ctx)
     end

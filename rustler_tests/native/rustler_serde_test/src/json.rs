@@ -1,6 +1,6 @@
-use rustler::{Env, Error as NifError, NifResult, Term, Binary};
-use serde_bytes::Bytes;
 use rustler::serde::{to_term, Deserializer, Serializer};
+use rustler::{Binary, Env, Error as NifError, NifResult, Term};
+use serde_bytes::Bytes;
 use serde_transcode::transcode;
 
 #[nif]

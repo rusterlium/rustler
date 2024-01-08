@@ -5,15 +5,20 @@ use crate::{
         UnitVariant,
     },
 };
+use rustler::serde::{atoms, from_term, to_term};
 use rustler::{Encoder, Env, NifResult, Term};
 use serde::{Deserialize, Serialize};
 use serde_bytes::Bytes;
-use rustler::serde::{atoms, from_term, to_term};
 use std::{collections::HashMap, fmt::Debug};
 
 /// Serializes or deserializes a known Elixir term to/from a known Rust value, asserts that the resulting is equivalent to known term/value.
 #[nif]
-pub fn test<'a>(env: Env<'a>, test_type: &str, test_name: &str, expected_term: Term<'a>) -> NifResult<Term<'a>> {
+pub fn test<'a>(
+    env: Env<'a>,
+    test_type: &str,
+    test_name: &str,
+    expected_term: Term<'a>,
+) -> NifResult<Term<'a>> {
     macro_rules! run_test {
         ($actual:expr) => {
             run_test(env, test_type, $actual, expected_term)

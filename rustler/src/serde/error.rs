@@ -56,8 +56,7 @@ impl From<Error> for NifError {
     }
 }
 
-impl std::error::Error for Error {
-}
+impl std::error::Error for Error {}
 
 impl ser::Error for Error {
     fn custom<T: Display>(msg: T) -> Error {

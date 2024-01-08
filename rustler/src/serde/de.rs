@@ -65,12 +65,12 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
                 try_parse_number!(self.term, i64, visitor, visit_i64);
 
                 Err(Error::ExpectedNumber)
-            },
+            }
             TermType::Float => {
                 try_parse_number!(self.term, f64, visitor, visit_f64);
 
                 Err(Error::ExpectedNumber)
-            },
+            }
             // char
             // string
             // byte array

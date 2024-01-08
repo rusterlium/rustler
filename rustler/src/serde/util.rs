@@ -1,5 +1,5 @@
 use crate::serde::{atoms, Error};
-use crate::{types::tuple, Binary, Decoder, Env, Term, Encoder};
+use crate::{types::tuple, Binary, Decoder, Encoder, Env, Term};
 
 /// Converts an `&str` to either an existing atom or an Elixir bitstring.
 pub fn str_to_term<'a>(env: &Env<'a>, string: &str) -> Result<Term<'a>, Error> {

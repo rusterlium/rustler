@@ -10,8 +10,8 @@ mod test;
 mod types;
 
 use crate::types::Animal;
-use rustler::{types::tuple, Encoder, Env, NifResult, Term};
 use rustler::serde::{atoms, from_term, to_term, Deserializer, Error, Serializer};
+use rustler::{types::tuple, Encoder, Env, NifResult, Term};
 
 init! {
     "Elixir.SerdeRustlerTests",
