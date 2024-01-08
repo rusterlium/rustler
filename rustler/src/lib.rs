@@ -77,3 +77,9 @@ pub use rustler_codegen::{
     init, nif, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
     NifUntaggedEnum,
 };
+
+#[cfg(feature = "serde")]
+pub mod serde;
+
+#[cfg(feature = "serde")]
+pub use crate::serde::SerdeTerm;
