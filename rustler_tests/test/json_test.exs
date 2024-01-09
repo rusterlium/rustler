@@ -139,8 +139,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
 
     assert expected == actual, ~s"""
       DECODING ERROR :: #{ctx[:filename]}
-      expected: #{inspect(expected)}
-      actual: #{inspect(actual)}
+      diff: #{diff(actual, expected)}
     """
   end
 
@@ -150,8 +149,18 @@ defmodule SerdeRustlerTests.Json.JsonTest do
 
     assert expected == actual, ~s"""
       ENCODING ERROR :: #{ctx[:filename]}
-      expected: #{inspect(expected)}
-      actual: #{inspect(actual)}
+      diff: #{diff(actual, expected)}
     """
+  end
+
+  defp diff([actual | _], [expected | _]) do
+    diff(actual, expected)
+  end
+
+  defp diff(actual, expected) do
+    MapDiff.diff(expected, actual)
+    |> Map.delete(:value)
+    |> Enum.map(fn {k, v} -> "#{Atom.to_string(k)}: #{inspect(v)}" end)
+    |> Enum.join("\n")
   end
 end

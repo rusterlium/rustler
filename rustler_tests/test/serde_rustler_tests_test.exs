@@ -223,11 +223,11 @@ defmodule SerdeRustlerTests.NifTest do
 
   describe "Unit Types:" do
     test "unit", ctx do
-      run_tests("unit", {}, ctx)
+      run_tests("unit", nil, ctx)
     end
 
     test "unit struct", ctx do
-      run_tests("unit struct", {}, ctx)
+      run_tests("unit struct", nil, ctx)
     end
 
     test "unit variant", ctx do

@@ -17,6 +17,9 @@ defmodule RustlerTest.Mixfile do
   end
 
   defp deps do
-    [{:rustler, path: "../rustler_mix", runtime: false}]
+    [
+      {:rustler, path: "../rustler_mix", runtime: false},
+      {:map_diff, version: "~> 1.3"}
+    ]
   end
 end

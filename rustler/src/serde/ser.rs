@@ -192,12 +192,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
     /// Serializes unit (empty tuple) as `nil`.
     #[inline]
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-        Ok(unsafe {
-            Term::new(
-                self.env,
-                rustler_sys::enif_make_tuple!(self.env.as_c_arg(), 0),
-            )
-        })
+        Ok(atoms::nil().to_term(self.env))
     }
 
     #[inline]

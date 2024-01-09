@@ -11,6 +11,7 @@ mod types;
 
 use crate::types::Animal;
 use rustler::serde::{atoms, from_term, to_term, Deserializer, Error, Serializer};
+use rustler::SerdeTerm;
 use rustler::{types::tuple, Encoder, Env, NifResult, Term};
 
 init! {
@@ -34,9 +35,8 @@ init! {
 
 /// Implements the README example.
 #[nif]
-pub fn readme<'a>(env: Env<'a>, arg: Term<'a>) -> NifResult<Term<'a>> {
-    let animal: Animal = from_term(arg)?;
-    println!("\n deserialized animal from README example: {:?}", animal);
+pub fn readme<'a>(env: Env<'a>, SerdeTerm(animal): SerdeTerm<Animal>) -> NifResult<Term<'a>> {
+    // println!("\n deserialized animal from README example: {:?}", animal);
     to_term(env, animal).map_err(|err| err.into())
 }
 
