@@ -10,9 +10,8 @@ mod test;
 mod types;
 
 use crate::types::Animal;
-use rustler::serde::{atoms, from_term, to_term, Deserializer, Error, Serializer};
-use rustler::SerdeTerm;
-use rustler::{types::tuple, Encoder, Env, NifResult, Term};
+use rustler::serde::{atoms, Deserializer, Error, Serializer};
+use rustler::{types::tuple, Encoder, Env, NifResult, SerdeTerm, Term};
 
 init! {
     "Elixir.SerdeRustlerTests",
@@ -35,9 +34,9 @@ init! {
 
 /// Implements the README example.
 #[nif]
-pub fn readme<'a>(env: Env<'a>, SerdeTerm(animal): SerdeTerm<Animal>) -> NifResult<Term<'a>> {
+pub fn readme(SerdeTerm(animal): SerdeTerm<Animal>) -> SerdeTerm<Animal> {
     // println!("\n deserialized animal from README example: {:?}", animal);
-    to_term(env, animal).map_err(|err| err.into())
+    SerdeTerm(animal)
 }
 
 /// Deserializes anything from an Elixir term and subsequently serializes the result back into an Elixir term, returning it.
