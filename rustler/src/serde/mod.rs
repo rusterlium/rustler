@@ -10,12 +10,6 @@ pub use ser::{to_term, Serializer};
 
 use crate::{Decoder, Encoder, Env, NifResult, Term};
 
-/* impl<T: ?Sized> crate::Encoder for T where T: serde::Serialize {
-    fn encode<'a>(&self, env: crate::Env<'a>) -> crate::Term<'a> {
-        to_term(env, self).unwrap()
-    }
-} */
-
 pub struct SerdeTerm<T>(pub T);
 
 impl<T: serde::Serialize> Encoder for SerdeTerm<T> {
