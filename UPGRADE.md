@@ -19,8 +19,9 @@ This document is intended to simplify upgrading to newer versions by extending t
    See also
    [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
 
-3. As `Term::get_type` is now implemented using `enif_get_type`, some cases of
-   the `TermType` `enum` are changed, removed, or added:
+3. As `Term::get_type` is now implemented using `enif_get_type` on all
+   non-Windows systems, some cases of the `TermType` `enum` are changed,
+   removed, or added:
    1. `EmptyList` is dropped, `List` is returned for both empty and non-empty
       lists
    2. `Exception` is dropped
