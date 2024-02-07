@@ -21,7 +21,7 @@ This document is intended to simplify upgrading to newer versions by extending t
 
 3. As `Term::get_type` is now implemented using `enif_get_type` on all
    non-Windows systems, some cases of the `TermType` `enum` are changed,
-   removed, or added:
+   removed, or added (on all systems):
    1. `EmptyList` is dropped, `List` is returned for both empty and non-empty
       lists
    2. `Exception` is dropped
