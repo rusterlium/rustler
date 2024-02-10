@@ -77,7 +77,7 @@ defmodule RustlerTest.TermTest do
     assert RustlerTest.term_type([]) == :list
     assert RustlerTest.term_type({:ok, 42}) == :tuple
     assert RustlerTest.term_type(self()) == :pid
-    assert RustlerTest.term_type(&Function.identity/1) == :fun
+    assert RustlerTest.term_type(& &1) == :fun
     assert RustlerTest.term_type(make_ref()) == :reference
   end
 end
