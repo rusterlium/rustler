@@ -5,6 +5,7 @@ use rustler::{
 };
 
 /// A trait for testing the ambiguity of `encode` and `decode`.
+#[allow(dead_code)]
 pub trait EmptyTranscoder {
     fn encode(&self);
     fn decode();
