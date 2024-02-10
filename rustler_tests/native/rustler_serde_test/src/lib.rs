@@ -34,7 +34,7 @@ init! {
 
 /// Implements the README example.
 #[nif]
-pub fn readme(SerdeTerm(animal): SerdeTerm<Animal>) -> SerdeTerm<Animal> {
+pub fn readme(SerdeTerm(animal): SerdeTerm<Animal>) -> impl Encoder {
     // println!("\n deserialized animal from README example: {:?}", animal);
     SerdeTerm(animal)
 }
