@@ -86,7 +86,10 @@ impl<'a> Context<'a> {
     }
 
     pub fn atoms_module_name(&self, span: Span) -> Ident {
-        Ident::new(&format!("RUSTLER_ATOMS_{}", self.ident), span)
+        Ident::new(
+            &format!("rustler_atoms_{}", self.ident).to_snake_case(),
+            span,
+        )
     }
 
     pub fn encode(&self) -> bool {
