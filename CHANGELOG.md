@@ -12,6 +12,16 @@ versions.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Removed
+
+## [0.31.0] - 2024-02-13
+
+### Added
+
 - Support for generic types in derive macros (#574)
 - New `is_float` and `is_integer` methods on terms (#581)
 
@@ -30,8 +40,7 @@ versions.
 
 ### Removed
 
-- Support for `initmacro` in `rustler-sys` (will only be released on the next
-  bump of `rustler-sys` itself, #589)
+- Support for `initmacro` in `rustler-sys` (v2.3.2, #589)
 
 ## [0.30.0] - 2023-10-11
 
