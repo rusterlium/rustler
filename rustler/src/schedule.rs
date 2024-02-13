@@ -71,6 +71,7 @@ macro_rules! impls {
     ($($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*);)*) => {
         impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
             $(#[allow(clippy::many_single_char_names)]
+            #[allow(clippy::too_many_arguments)]
             #[inline]
             pub fn $func_name(flags: SchedulerFlags, $($arg: $ty),*) -> Self {
                 Self::$variant(PhantomData, flags, $($arg),*)
