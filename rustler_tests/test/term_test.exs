@@ -67,4 +67,17 @@ defmodule RustlerTest.TermTest do
 
     assert unique > 50
   end
+
+  test "term type" do
+    assert RustlerTest.term_type(:foo) == :atom
+    assert RustlerTest.term_type("foo") == :binary
+    assert RustlerTest.term_type(42.2) == :float
+    assert RustlerTest.term_type(42) == :integer
+    assert RustlerTest.term_type(%{}) == :map
+    assert RustlerTest.term_type([]) == :list
+    assert RustlerTest.term_type({:ok, 42}) == :tuple
+    assert RustlerTest.term_type(self()) == :pid
+    assert RustlerTest.term_type(& &1) == :fun
+    assert RustlerTest.term_type(make_ref()) == :reference
+  end
 end

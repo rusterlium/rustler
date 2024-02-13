@@ -1,3 +1,5 @@
+use std::ffi::c_double;
+
 #[cfg(feature = "nif_version_2_15")]
 use rustler_sys::ErlNifTermType;
 
@@ -43,7 +45,7 @@ impl From<ErlNifTermType> for TermType {
 }
 
 pub fn get_type(term: Term) -> TermType {
-    if cfg!(nif_version_2_15) {
+    if cfg!(feature = "nif_version_2_15") && !cfg!(target_family = "windows") {
         term.get_erl_type().into()
     } else if term.is_atom() {
         TermType::Atom
@@ -56,7 +58,11 @@ pub fn get_type(term: Term) -> TermType {
     } else if term.is_map() {
         TermType::Map
     } else if term.is_number() {
-        TermType::Float
+        if term.is_float() {
+            TermType::Float
+        } else {
+            TermType::Integer
+        }
     } else if term.is_pid() {
         TermType::Pid
     } else if term.is_port() {
@@ -98,4 +104,15 @@ impl<'a> Term<'a> {
     impl_check!(is_port);
     impl_check!(is_ref);
     impl_check!(is_tuple);
+
+    pub fn is_float(self) -> bool {
+        let mut val: c_double = 0.0;
+        unsafe {
+            rustler_sys::enif_get_double(self.get_env().as_c_arg(), self.as_c_arg(), &mut val) == 1
+        }
+    }
+
+    pub fn is_integer(self) -> bool {
+        self.is_number() && !self.is_float()
+    }
 }
