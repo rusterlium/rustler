@@ -193,8 +193,9 @@ impl<'a> Term<'a> {
     }
 
     /// Adds `head` in a list cell with `self` as tail.
-    pub fn list_prepend(self, head: Term<'a>) -> Term<'a> {
+    pub fn list_prepend(self, head: impl Encoder) -> Term<'a> {
         let env = self.get_env();
+        let head = head.encode(env);
         unsafe {
             let term = list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
             Term::new(env, term)

@@ -1,4 +1,4 @@
-use rustler::env::{OwnedEnv, SavedTerm};
+use rustler::env::{OwnedEnv, SavedTerm, SendError};
 use rustler::types::atom;
 use rustler::types::list::ListIterator;
 use rustler::types::LocalPid;
@@ -9,10 +9,18 @@ use std::thread;
 #[rustler::nif]
 pub fn send_all<'a>(env: Env<'a>, pids: Vec<LocalPid>, msg: Term<'a>) -> Term<'a> {
     for pid in pids {
-        env.send(&pid, msg);
+        let _ = env.send(&pid, msg);
     }
 
     msg
+}
+
+#[rustler::nif]
+pub fn send<'a>(env: Env<'a>, pid: LocalPid, msg: Term<'a>) -> Atom {
+    match env.send(&pid, msg) {
+        Ok(()) => atom::ok(),
+        Err(SendError) => atom::error(),
+    }
 }
 
 #[rustler::nif]
@@ -45,7 +53,7 @@ pub fn sublists<'a>(env: Env<'a>, list: Term<'a>) -> NifResult<Atom> {
     thread::spawn(move || {
         // Use `.send()` to get a `Env` from our `OwnedEnv`,
         // run some rust code, and finally send the result back to `pid`.
-        owned_env.send_and_clear(&pid, |env| {
+        let _ = owned_env.send_and_clear(&pid, |env| {
             let result: NifResult<Term> = (|| {
                 let reversed_list = saved_reversed_list.load(env);
                 let iter: ListIterator = reversed_list.decode()?;

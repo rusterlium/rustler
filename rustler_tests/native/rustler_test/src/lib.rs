@@ -30,6 +30,7 @@ rustler::init!(
         test_term::term_cmp,
         test_term::term_internal_hash,
         test_term::term_phash2_hash,
+        test_term::term_type,
         test_map::sum_map_values,
         test_map::map_entries_sorted,
         test_map::map_from_arrays,
@@ -63,6 +64,7 @@ rustler::init!(
         test_thread::threaded_fac,
         test_thread::threaded_sleep,
         test_env::send_all,
+        test_env::send,
         test_env::whereis_pid,
         test_env::sublists,
         test_codegen::tuple_echo,
@@ -98,7 +100,9 @@ rustler::init!(
         test_tuple::maybe_add_one_to_tuple,
         test_tuple::add_i32_from_tuple,
         test_tuple::greeting_person_from_tuple,
-        test_codegen::reserved_keywords::reserved_keywords_type_echo
+        test_codegen::reserved_keywords::reserved_keywords_type_echo,
+        test_codegen::generic_types::generic_struct_echo,
+        test_codegen::generic_types::mk_generic_map,
     ],
     load = load
 );

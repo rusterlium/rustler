@@ -1,6 +1,5 @@
 use crate::env::OwnedEnv;
-use crate::types::atom::Atom;
-use crate::{Encoder, Env, Term};
+use crate::{Atom, Encoder, Env, Term};
 use std::panic;
 use std::thread;
 
@@ -41,7 +40,7 @@ where
 {
     let pid = env.pid();
     S::spawn(move || {
-        OwnedEnv::new().send_and_clear(&pid, |env| {
+        let _ = OwnedEnv::new().send_and_clear(&pid, |env| {
             match panic::catch_unwind(|| thread_fn(env)) {
                 Ok(term) => term,
                 Err(err) => {

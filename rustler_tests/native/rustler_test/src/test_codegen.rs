@@ -5,6 +5,7 @@ use rustler::{
 };
 
 /// A trait for testing the ambiguity of `encode` and `decode`.
+#[allow(dead_code)]
 pub trait EmptyTranscoder {
     fn encode(&self);
     fn decode();
@@ -260,5 +261,30 @@ pub mod reserved_keywords {
     #[rustler::nif]
     pub fn reserved_keywords_type_echo(reserved: ReservedKeywords) -> ReservedKeywords {
         reserved
+    }
+}
+
+pub mod generic_types {
+    use rustler::{NifMap, NifStruct};
+    #[derive(NifStruct)]
+    #[module = "GenericStruct"]
+    pub struct GenericStruct<T> {
+        t: T,
+    }
+
+    #[rustler::nif]
+    pub fn generic_struct_echo(value: GenericStruct<i32>) -> GenericStruct<i32> {
+        value
+    }
+
+    #[derive(NifMap)]
+    pub struct GenericMap<T> {
+        a: T,
+        b: T,
+    }
+
+    #[rustler::nif]
+    pub fn mk_generic_map(value: &str) -> GenericMap<&str> {
+        GenericMap { a: value, b: value }
     }
 }

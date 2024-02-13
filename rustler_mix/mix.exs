@@ -2,7 +2,7 @@ defmodule Rustler.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/rusterlium/rustler"
-  @version "0.29.1"
+  @version "0.31.0"
 
   def project do
     [
@@ -47,6 +47,7 @@ defmodule Rustler.Mixfile do
     [
       extras: [
         "../CHANGELOG.md",
+        "../UPGRADE.md",
         {:"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
         {:"../LICENSE-MIT", [title: "License (MIT)"]},
         "README.md"

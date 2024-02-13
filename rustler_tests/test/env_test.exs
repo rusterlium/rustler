@@ -67,4 +67,23 @@ defmodule RustlerTest.EnvTest do
     assert nil == RustlerTest.whereis_pid("not a PID")
     assert nil == RustlerTest.whereis_pid(:not_a_registered_name)
   end
+
+  test "send_error" do
+    task =
+      Task.async(fn ->
+        receive do
+          :exit -> :ok
+        end
+      end)
+
+    # A send to an alive process from an alive process should not return an
+    # error
+    assert :ok == RustlerTest.send(task.pid, :msg)
+    assert :ok == RustlerTest.send(task.pid, :exit)
+    Task.await(task)
+
+    # Once the target process is down, sends should error
+    assert :error == RustlerTest.send(task.pid, :msg)
+    assert :error == RustlerTest.send(task.pid, :msg)
+  end
 end

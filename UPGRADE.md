@@ -2,11 +2,42 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
-## 0.29 -> ...
+## 0.29 -> 0.30
 
-`rustler_crates` configuration is deprecated in favor of explicitly passing
-options on `use Rustler` or configuring the module in your `config/*.exs`
-files.
+1. `rustler_crates` configuration is deprecated in favor of explicitly passing
+   options on `use Rustler` or configuring the module in your `config/*.exs`
+   files.
+
+2. `Env::send` and `OwnedEnv::send_and_clear` will now return a `Result`.
+   Updating will thus introduce warnings about unused `Result`s. To remove the
+   warnings without changing behaviour, the `Result`s can be "used" as
+   ```rust
+   let _ = env.send(...)
+   ```
+   Neither the `Ok` nor the `Err` case carry additional information so far. An
+   error is returned if either the receiving or the sending process is dead.
+   See also
+   [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
+
+3. As `Term::get_type` is now implemented using `enif_get_type` on all
+   non-Windows systems, some cases of the `TermType` `enum` are changed,
+   removed, or added (on all systems):
+   1. `EmptyList` is dropped, `List` is returned for both empty and non-empty
+      lists
+   2. `Exception` is dropped
+   3. `Number` is split into `Integer` and `Float` (if NIF 2.14 support is
+      explicitly enforced, only `Float` is returned)
+
+4. The default NIF version is raised to 2.15 to make use of `enif_get_type`. To
+   use a compiled NIF with an older version than OTP22, disable the default
+   features and expliictly use the `nif_version_2_14` feature in the library's
+   `Cargo.toml`:
+   ```toml
+   rustler = { version = "0.30", default-features = false, features = ["derive", "nif_version_2_14"] }
+   ```
+
+5. As noted for the `0.28 -> 0.29` transition below, the environment variable
+   `RUSTLER_NIF_VERSION` will not be considered anymore from 0.30 onwards.
 
 ## 0.28 -> 0.29
 

@@ -120,35 +120,21 @@ defmodule Rustler do
     quote do
       @on_load :rustler_init
 
-      @doc false
-      def rustler_init do
-        # Remove any old modules that may be loaded so we don't get
-        # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
-        :code.purge(__MODULE__)
-
-        {otp_app, path} = @load_from
-
-        load_path =
-          otp_app
-          |> Application.app_dir(path)
-          |> to_charlist()
-
-        load_data = _construct_load_data(@load_data, @load_data_fun)
-
-        :erlang.load_nif(load_path, load_data)
-      end
-
-      defp _construct_load_data(load_data, load_data_fun) do
+      defmacrop _construct_load_data do
         default_load_data_value = unquote(default_load_data_value)
         default_fun_value = unquote(default_fun_value)
 
-        case {load_data, load_data_fun} do
+        case {@load_data, @load_data_fun} do
           {load_data, ^default_fun_value} ->
-            load_data
+            quote do
+              unquote(load_data)
+            end
 
           {^default_load_data_value, {module, function}}
           when is_atom(module) and is_atom(function) ->
-            apply(module, function, [])
+            quote do
+              apply(unquote(module), unquote(function), [])
+            end
 
           {^default_load_data_value, provided_value} ->
             raise """
@@ -164,11 +150,27 @@ defmodule Rustler do
             """
         end
       end
+
+      @doc false
+      def rustler_init do
+        # Remove any old modules that may be loaded so we don't get
+        # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
+        :code.purge(__MODULE__)
+
+        {otp_app, path} = @load_from
+
+        load_path =
+          otp_app
+          |> Application.app_dir(path)
+          |> to_charlist()
+
+        :erlang.load_nif(load_path, _construct_load_data())
+      end
     end
   end
 
   @doc false
-  def rustler_version, do: "0.29.1"
+  def rustler_version, do: "0.31.0"
 
   @doc """
   Supported NIF API versions.

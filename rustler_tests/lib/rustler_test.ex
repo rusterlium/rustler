@@ -35,7 +35,7 @@ defmodule RustlerTest do
 
   def term_debug_and_reparse(term) do
     with debug_str <- term_debug(term),
-         debug_str <- :erlang.binary_to_list(debug_str) ++ '.',
+         debug_str <- :erlang.binary_to_list(debug_str) ++ ~c".",
          {:ok, tokens, _} <- :erl_scan.string(debug_str),
          {:ok, ast} <- :erl_parse.parse_exprs(tokens),
          {:value, res, _} <- :erl_eval.exprs(ast, %{}) do
@@ -47,6 +47,7 @@ defmodule RustlerTest do
   def term_cmp(_, _), do: err()
   def term_internal_hash(_, _), do: err()
   def term_phash2_hash(_), do: err()
+  def term_type(_term), do: err()
 
   def sum_map_values(_), do: err()
   def map_entries_sorted(_), do: err()
@@ -87,6 +88,7 @@ defmodule RustlerTest do
   def threaded_sleep(_), do: err()
 
   def send_all(_, _), do: err()
+  def send(_, _), do: err()
   def whereis_pid(_), do: err()
   def sublists(_), do: err()
 
@@ -108,6 +110,8 @@ defmodule RustlerTest do
   def newtype_record_echo(_), do: err()
   def tuplestruct_record_echo(_), do: err()
   def reserved_keywords_type_echo(_), do: err()
+  def generic_struct_echo(_), do: err()
+  def mk_generic_map(_), do: err()
 
   def dirty_io(), do: err()
   def dirty_cpu(), do: err()
