@@ -4,15 +4,18 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
 use std::ptr;
+use std::{marker::PhantomData, mem::MaybeUninit};
 
-use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
+use rustler_sys::{ErlNifMonitor, ErlNifPid, ErlNifResourceDown};
+
+use super::{Binary, Decoder, Encoder, Env, Error, LocalPid, Term};
 use crate::wrapper::{
     c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
+use crate::NifResult;
 
 /// Re-export a type used by the `resource!` macro.
 #[doc(hidden)]
@@ -36,6 +39,27 @@ pub struct ResourceType<T> {
 #[doc(hidden)]
 pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
     fn get_type() -> &'static ResourceType<Self>;
+}
+
+#[derive(Clone)]
+pub struct Monitor {
+    inner: ErlNifMonitor,
+}
+
+impl Monitor {
+    fn from_raw(inner: ErlNifMonitor) -> Monitor {
+        Monitor { inner }
+    }
+}
+
+impl PartialEq for Monitor {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { rustler_sys::enif_compare_monitors(&self.inner, &other.inner) == 0 }
+    }
+}
+
+pub trait MonitorResource: ResourceTypeProvider {
+    fn down(resource: ResourceArc<Self>, pid: LocalPid, mon: Monitor);
 }
 
 impl<T> Encoder for ResourceArc<T>
@@ -65,6 +89,27 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
     }
 }
 
+/// Notity that resource that a monitored object is down (erlang_nif-sys
+/// requires us to declare this function safe, but it is of course thoroughly
+/// unsafe!)
+extern "C" fn resource_down<T: MonitorResource>(
+    _env: NIF_ENV,
+    handle: MUTABLE_NIF_RESOURCE_HANDLE,
+    pid: *const ErlNifPid,
+    mon: *const ErlNifMonitor,
+) {
+    unsafe {
+        let pid = LocalPid::from_raw(*pid);
+        let mon = Monitor::from_raw(*mon);
+        crate::wrapper::resource::keep_resource(handle);
+        let resource = ResourceArc {
+            inner: align_alloced_mem_for_struct::<T>(handle) as *mut T,
+            raw: handle,
+        };
+        T::down(resource, pid, mon);
+    }
+}
+
 /// This is the function that gets called from resource! in on_load to create a new
 /// resource type.
 ///
@@ -75,6 +120,7 @@ extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE
 pub fn open_struct_resource_type<T: ResourceTypeProvider>(
     env: Env,
     name: &str,
+    down: Option<ErlNifResourceDown>,
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {
     let res: Option<NIF_RESOURCE_TYPE> = unsafe {
@@ -82,6 +128,7 @@ pub fn open_struct_resource_type<T: ResourceTypeProvider>(
             env.as_c_arg(),
             name.as_bytes(),
             Some(resource_destructor::<T>),
+            down,
             flags,
         )
     };
@@ -261,6 +308,48 @@ where
     }
 }
 
+pub trait ResourceArcMonitor {
+    fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor>;
+    fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool;
+}
+
+impl<T: MonitorResource> ResourceArcMonitor for ResourceArc<T> {
+    fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor> {
+        let env = maybe_env(caller_env);
+        let mut mon = MaybeUninit::uninit();
+        let res = unsafe {
+            rustler_sys::enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0
+        };
+        if res {
+            Some(Monitor {
+                inner: unsafe { mon.assume_init() },
+            })
+        } else {
+            None
+        }
+    }
+
+    fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool {
+        let env = maybe_env(caller_env);
+        unsafe { rustler_sys::enif_demonitor_process(env, self.raw, &mon.inner) == 0 }
+    }
+}
+
+fn maybe_env(env: Option<&Env>) -> NIF_ENV {
+    if crate::env::is_scheduler_thread() {
+        let env = env.expect("Env required when calling from a scheduler thread");
+        // Panic if `env` is not the environment of the calling process.
+        env.pid();
+        env.as_c_arg()
+    } else {
+        assert!(
+            env.is_none(),
+            "Env provided when not calling from a scheduler thread"
+        );
+        ptr::null_mut()
+    }
+}
+
 #[macro_export]
 #[deprecated(since = "0.22.0", note = "Please use `resource!` instead.")]
 macro_rules! resource_struct_init {
@@ -269,16 +358,40 @@ macro_rules! resource_struct_init {
     };
 }
 
+/// Used by the resource! macro to pass the unsafe `resource_down` callback in a
+/// safe way (because `resource_down` cannot be accessed outside of this module)
+#[doc(hidden)]
+pub trait ResourceDownProvider {
+    fn down_callback() -> Option<ErlNifResourceDown>;
+}
+
+impl ResourceDownProvider for () {
+    fn down_callback() -> Option<ErlNifResourceDown> {
+        None
+    }
+}
+
+impl<T: MonitorResource> ResourceDownProvider for T {
+    fn down_callback() -> Option<ErlNifResourceDown> {
+        Some(resource_down::<T>)
+    }
+}
+
 #[macro_export]
 macro_rules! resource {
     ($struct_name:ty, $env: ident) => {
+        $crate::resource!($struct_name, $env, ())
+    };
+    ($struct_name:ty, $env: ident, $down: ty) => {
         {
+            use $crate::resource::ResourceDownProvider;
             static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
 
             let temp_struct_type =
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
                     concat!(stringify!($struct_name), "\x00"),
+                    <$down>::down_callback(),
                     $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,
@@ -297,4 +410,11 @@ macro_rules! resource {
             }
         }
     }
+}
+
+#[macro_export]
+macro_rules! monitor_resource {
+    ($struct_name:ty, $env: ident) => {
+        $crate::resource!($struct_name, $env, $struct_name)
+    };
 }
