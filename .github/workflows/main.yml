@@ -85,10 +85,10 @@ jobs:
     strategy:
       matrix:
         pair:
-          - { erlang: "26", elixir: "1.15", latest: true }
-          - { erlang: "26", elixir: "1.14" }
-          - { erlang: "25", elixir: "1.14" }
-          - { erlang: "24", elixir: "1.13" }
+          - { erlang: "26", elixir: "1.16", latest: true }
+          - { erlang: "26", elixir: "1.15" }
+          - { erlang: "25", elixir: "1.15" }
+          - { erlang: "24", elixir: "1.14" }
         rust:
           - stable
           - nightly
