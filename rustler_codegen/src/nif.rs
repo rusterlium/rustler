@@ -48,15 +48,19 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
     let argument_names = create_function_params(inputs.clone());
     let erl_func_name = nif_attributes
         .custom_name
-        .map(|n| syn::Ident::new(n.value().as_str(), Span::call_site()))
-        .unwrap_or_else(|| name.clone());
+        .map(|n| n.value().to_string())
+        .unwrap_or_else(|| name.clone().to_string());
+
+    if !erl_func_name.is_ascii() {
+        panic!("Only ASCII strings are supported as function names");
+    }
 
     quote! {
         #[allow(non_camel_case_types)]
         pub struct #name;
 
         impl rustler::Nif for #name {
-            const NAME: *const rustler::codegen_runtime::c_char = concat!(stringify!(#erl_func_name), "\0").as_ptr() as *const rustler::codegen_runtime::c_char;
+            const NAME: *const rustler::codegen_runtime::c_char = concat!(#erl_func_name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char;
             const ARITY: rustler::codegen_runtime::c_uint = #arity;
             const FLAGS: rustler::codegen_runtime::c_uint = #flags as rustler::codegen_runtime::c_uint;
             const RAW_FUNC: unsafe extern "C" fn(
