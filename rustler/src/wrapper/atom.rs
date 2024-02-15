@@ -1,16 +1,16 @@
-use crate::wrapper::{c_uint, NIF_ENV, NIF_TERM};
+use crate::wrapper::{c_char, c_uint, NIF_ENV, NIF_TERM};
 use crate::Error;
 use rustler_sys::ErlNifCharEncoding::ERL_NIF_LATIN1;
 
 pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
-    rustler_sys::enif_make_atom_len(env, name.as_ptr(), name.len())
+    rustler_sys::enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len())
 }
 
 pub unsafe fn make_existing_atom(env: NIF_ENV, name: &[u8]) -> Option<NIF_TERM> {
     let mut atom_out: NIF_TERM = 0;
     let success = rustler_sys::enif_make_existing_atom_len(
         env,
-        name.as_ptr(),
+        name.as_ptr() as *const c_char,
         name.len(),
         &mut atom_out as *mut NIF_TERM,
         ERL_NIF_LATIN1,

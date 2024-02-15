@@ -2,6 +2,7 @@ use crate::wrapper::{
     NifResourceDtor, NifResourceFlags, NIF_ENV, NIF_RESOURCE_HANDLE, NIF_RESOURCE_TYPE, NIF_TERM,
 };
 
+use rustler_sys::c_char;
 pub use rustler_sys::{
     enif_alloc_resource as alloc_resource, enif_keep_resource as keep_resource,
     enif_make_resource as make_resource, enif_release_resource as release_resource,
@@ -20,8 +21,8 @@ pub unsafe fn open_resource_type(
     assert_eq!(name.last().cloned(), Some(0u8));
 
     // Currently unused as per erlang nif documentation
-    let module_p: *const u8 = ptr::null();
-    let name_p = name.as_ptr();
+    let module_p: *const c_char = ptr::null();
+    let name_p = name.as_ptr() as *const c_char;
     let res = {
         let mut tried = MaybeUninit::uninit();
         rustler_sys::enif_open_resource_type(env, module_p, name_p, dtor, flags, tried.as_mut_ptr())

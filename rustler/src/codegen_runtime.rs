@@ -8,7 +8,7 @@ use crate::{Encoder, Env, OwnedBinary, Term};
 // Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
-    c_int, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
+    c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
     MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
@@ -73,7 +73,7 @@ impl NifReturned {
                 args,
             } => rustler_sys::enif_schedule_nif(
                 env.as_c_arg(),
-                fun_name.as_ptr() as *const u8,
+                fun_name.as_ptr() as *const c_char,
                 flags as i32,
                 fun,
                 args.len() as i32,

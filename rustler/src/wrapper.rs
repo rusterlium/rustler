@@ -26,7 +26,7 @@ pub use rustler_sys::{
     ERL_NIF_THR_DIRTY_IO_SCHEDULER, ERL_NIF_THR_NORMAL_SCHEDULER, ERL_NIF_THR_UNDEFINED,
 };
 
-pub use std::os::raw::{c_double, c_int, c_uchar, c_uint, c_void};
+pub use rustler_sys::{c_char, c_double, c_int, c_uchar, c_uint, c_void};
 pub type size_t = usize;
 
 pub type NIF_ENV = *mut rustler_sys::ErlNifEnv;

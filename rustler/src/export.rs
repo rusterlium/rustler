@@ -44,14 +44,14 @@ macro_rules! rustler_export_nifs {
             let entry = $crate::codegen_runtime::DEF_NIF_ENTRY {
                 major: $crate::codegen_runtime::NIF_MAJOR_VERSION,
                 minor: $crate::codegen_runtime::NIF_MINOR_VERSION,
-                name: concat!($name, "\x00") as *const str as *const u8,
+                name: concat!($name, "\x00") as *const str as *const $crate::codegen_runtime::c_char,
                 num_of_funcs: FUN_ENTRIES.len() as $crate::codegen_runtime::c_int,
                 funcs: FUN_ENTRIES.as_ptr(),
                 load: Some(nif_load),
                 reload: None,
                 upgrade: None,
                 unload: None,
-                vm_variant: b"beam.vanilla\x00".as_ptr(),
+                vm_variant: b"beam.vanilla\x00".as_ptr() as *const $crate::codegen_runtime::c_char,
                 options: 0,
                 sizeof_ErlNifResourceTypeInit: $crate::codegen_runtime::get_nif_resource_type_init_size(),
             };
@@ -66,7 +66,7 @@ macro_rules! rustler_export_nifs {
     };
     (internal_item_init, ($nif_name:expr, $nif_arity:expr, $nif_fun:path, $nif_flag:expr)) => {
         $crate::codegen_runtime::DEF_NIF_FUNC {
-            name: concat!($nif_name, "\x00") as *const str as *const u8,
+            name: concat!($nif_name, "\x00") as *const str as *const $crate::codegen_runtime::c_char,
             arity: $nif_arity,
             function: {
                 extern "C" fn nif_func(
