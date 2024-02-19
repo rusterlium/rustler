@@ -56,9 +56,9 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
         pub struct #name;
 
         impl rustler::Nif for #name {
-            const NAME: *const u8 = concat!(stringify!(#erl_func_name), "\0").as_ptr() as *const u8;
-            const ARITY: u32 = #arity;
-            const FLAGS: u32 = #flags as u32;
+            const NAME: *const rustler::codegen_runtime::c_char = concat!(stringify!(#erl_func_name), "\0").as_ptr() as *const rustler::codegen_runtime::c_char;
+            const ARITY: rustler::codegen_runtime::c_uint = #arity;
+            const FLAGS: rustler::codegen_runtime::c_uint = #flags as rustler::codegen_runtime::c_uint;
             const RAW_FUNC: unsafe extern "C" fn(
                 nif_env: rustler::codegen_runtime::NIF_ENV,
                 argc: rustler::codegen_runtime::c_int,

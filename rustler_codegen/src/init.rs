@@ -66,7 +66,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             let entry = rustler::codegen_runtime::DEF_NIF_ENTRY {
                 major: rustler::codegen_runtime::NIF_MAJOR_VERSION,
                 minor: rustler::codegen_runtime::NIF_MINOR_VERSION,
-                name: concat!(#name, "\0").as_ptr() as *const u8,
+                name: concat!(#name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char,
                 num_of_funcs: #num_of_funcs as rustler::codegen_runtime::c_int,
                 funcs: [#funcs].as_ptr(),
                 load: {
@@ -85,7 +85,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 reload: None,
                 upgrade: None,
                 unload: None,
-                vm_variant: b"beam.vanilla\0".as_ptr(),
+                vm_variant: b"beam.vanilla\0".as_ptr() as *const rustler::codegen_runtime::c_char,
                 options: 0,
                 sizeof_ErlNifResourceTypeInit: rustler::codegen_runtime::get_nif_resource_type_init_size(),
             };

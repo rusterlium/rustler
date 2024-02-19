@@ -4,7 +4,7 @@
 #[cfg(windows)]
 use unreachable::UncheckedOptionExt; // unchecked unwrap used in generated Windows code
 
-pub use std::os::raw::{c_char, c_double, c_int, c_long, c_uchar, c_uint, c_ulong, c_void};
+pub use std::ffi::{c_char, c_double, c_int, c_long, c_uchar, c_uint, c_ulong, c_void};
 
 use std::os;
 
@@ -41,7 +41,7 @@ unsafe impl Send for ErlNifEnv {}
 // #[allow(missing_copy_implementations)]
 #[repr(C)]
 pub struct ErlNifFunc {
-    pub name: *const u8,
+    pub name: *const c_char,
     pub arity: c_uint,
     pub function: unsafe extern "C" fn(
         env: *mut ErlNifEnv,
@@ -59,7 +59,7 @@ pub struct ErlNifFunc {
 pub struct ErlNifEntry {
     pub major: c_int,
     pub minor: c_int,
-    pub name: *const u8,
+    pub name: *const c_char,
     pub num_of_funcs: c_int,
     pub funcs: *const ErlNifFunc,
     pub load: Option<
@@ -85,7 +85,7 @@ pub struct ErlNifEntry {
         ) -> c_int,
     >,
     pub unload: Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
-    pub vm_variant: *const u8,
+    pub vm_variant: *const c_char,
     pub options: c_uint,                      // added in 2.7
     pub sizeof_ErlNifResourceTypeInit: usize, // added in 2.12
 }
@@ -98,7 +98,7 @@ pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
 #[repr(C)]
 pub struct ErlNifBinary {
     pub size: size_t,
-    pub data: *mut u8,
+    pub data: *mut c_uchar,
     ref_bin: *mut c_void,
     _spare: [*mut c_void; 2],
 }
