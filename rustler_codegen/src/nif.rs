@@ -48,11 +48,10 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
     let argument_names = create_function_params(inputs.clone());
     let erl_func_name = nif_attributes
         .custom_name
-        .map(|n| n.value().to_string())
-        .unwrap_or_else(|| name.clone().to_string());
+        .map_or_else(|| name.to_string(), |n| n.value().to_string());
 
-    if !erl_func_name.is_ascii() {
-        panic!("Only ASCII strings are supported as function names");
+    if !erl_func_name.is_ascii() || erl_func_name.chars().any(|x| x.is_ascii_control()) {
+        panic!("Only non-Control ASCII strings are supported as function names");
     }
 
     quote! {
