@@ -16,6 +16,10 @@ versions.
 
 ### Changed
 
+- Adjust C char types to use the proper FFI type (#592)
+- Allow arbitrary (ASCII) NIF function names (#593, idea and initial
+  implementation by @KoviRobi)
+
 ### Removed
 
 ## [0.31.0] - 2024-02-13

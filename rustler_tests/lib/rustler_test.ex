@@ -121,7 +121,7 @@ defmodule RustlerTest do
   def raise_term_with_atom_error(), do: err()
   def term_with_tuple_error(), do: err()
 
-  def nif_attrs_can_rename(), do: err()
+  def nif_attrs_can_rename!(), do: err()
 
   def add_from_tuple(_tuple), do: err()
   def add_one_to_tuple(_tuple), do: err()
