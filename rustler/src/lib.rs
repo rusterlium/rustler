@@ -63,7 +63,7 @@ pub mod r#return;
 pub use crate::r#return::Return;
 
 pub mod r#yield;
-pub use crate::r#yield::Yield;
+pub use crate::r#yield::{Branch, Yield};
 
 #[doc(hidden)]
 mod nif;

@@ -58,3 +58,20 @@ unsafe impl<'a> NifReturnable for Yield<'a> {
         }
     }
 }
+
+pub enum Branch<'a, T> {
+    Yield(Yield<'a>),
+    Stop(T),
+}
+
+unsafe impl<'a, T> NifReturnable for Branch<'a, T>
+where
+    T: NifReturnable,
+{
+    unsafe fn into_returned(self, env: Env) -> NifReturned {
+        match self {
+            Self::Yield(inner) => inner.into_returned(env),
+            Self::Stop(inner) => inner.into_returned(env),
+        }
+    }
+}
