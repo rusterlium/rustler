@@ -82,6 +82,7 @@ rustler::init!(
         test_codegen::tuplestruct_record_echo,
         test_dirty::dirty_cpu,
         test_dirty::dirty_io,
+        test_dirty::yields,
         test_range::sum_range,
         test_error::bad_arg_error,
         test_error::atom_str_error,
