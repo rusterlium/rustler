@@ -11,14 +11,28 @@ pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
 }
 
 #[rustler::nif]
-pub fn map_entries_sorted<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+pub fn map_entries<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
     let mut vec = vec![];
     for (key, value) in iter {
         let key_string = key.decode::<String>()?;
         vec.push((key_string, value));
     }
 
-    vec.sort_by_key(|pair| pair.0.clone());
+    let erlang_pairs: Vec<Term> = vec
+        .into_iter()
+        .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))
+        .collect();
+    Ok(erlang_pairs)
+}
+
+#[rustler::nif]
+pub fn map_entries_reversed<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+    let mut vec = vec![];
+    for (key, value) in iter.rev() {
+        let key_string = key.decode::<String>()?;
+        vec.push((key_string, value));
+    }
+
     let erlang_pairs: Vec<Term> = vec
         .into_iter()
         .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))

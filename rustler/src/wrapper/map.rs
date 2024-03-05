@@ -66,13 +66,26 @@ pub unsafe fn map_update(
     Some(result.assume_init())
 }
 
-pub unsafe fn map_iterator_create(env: NIF_ENV, map: NIF_TERM) -> Option<ErlNifMapIterator> {
+#[derive(Clone, Copy, Debug)]
+pub enum MapIteratorEntry {
+    First,
+    Last,
+}
+
+pub unsafe fn map_iterator_create(
+    env: NIF_ENV,
+    map: NIF_TERM,
+    entry: MapIteratorEntry,
+) -> Option<ErlNifMapIterator> {
     let mut iter = MaybeUninit::uninit();
     let success = rustler_sys::enif_map_iterator_create(
         env,
         map,
         iter.as_mut_ptr(),
-        ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_HEAD,
+        match entry {
+            MapIteratorEntry::First => ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_HEAD,
+            MapIteratorEntry::Last => ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_TAIL,
+        },
     );
     if success == 0 {
         None
@@ -101,6 +114,10 @@ pub unsafe fn map_iterator_get_pair(
 
 pub unsafe fn map_iterator_next(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
     rustler_sys::enif_map_iterator_next(env, iter);
+}
+
+pub unsafe fn map_iterator_prev(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
+    rustler_sys::enif_map_iterator_prev(env, iter);
 }
 
 pub unsafe fn make_map_from_arrays(
