@@ -7,8 +7,13 @@ defmodule RustlerTest.MapTest do
   end
 
   test "map iteration with keys" do
+    entries = RustlerTest.map_entries(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
+
     assert [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, {"e", 4}] ==
-             RustlerTest.map_entries_sorted(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
+             Enum.sort_by(entries, &elem(&1, 0))
+
+    assert Enum.reverse(entries) ==
+             RustlerTest.map_entries_reversed(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
   end
 
   test "map from arrays" do

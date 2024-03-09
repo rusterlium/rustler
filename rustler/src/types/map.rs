@@ -193,23 +193,108 @@ impl<'a> Term<'a> {
     }
 }
 
+struct SimpleMapIterator<'a> {
+    map: Term<'a>,
+    entry: map::MapIteratorEntry,
+    iter: Option<map::ErlNifMapIterator>,
+    last_key: Option<Term<'a>>,
+    done: bool,
+}
+
+impl<'a> SimpleMapIterator<'a> {
+    fn next(&mut self) -> Option<(Term<'a>, Term<'a>)> {
+        if self.done {
+            return None;
+        }
+
+        let iter = loop {
+            match self.iter.as_mut() {
+                None => {
+                    match unsafe {
+                        map::map_iterator_create(
+                            self.map.get_env().as_c_arg(),
+                            self.map.as_c_arg(),
+                            self.entry,
+                        )
+                    } {
+                        Some(iter) => {
+                            self.iter = Some(iter);
+                            continue;
+                        }
+                        None => {
+                            self.done = true;
+                            return None;
+                        }
+                    }
+                }
+                Some(iter) => {
+                    break iter;
+                }
+            }
+        };
+
+        let env = self.map.get_env();
+
+        unsafe {
+            match map::map_iterator_get_pair(env.as_c_arg(), iter) {
+                Some((key, value)) => {
+                    match self.entry {
+                        map::MapIteratorEntry::First => {
+                            map::map_iterator_next(env.as_c_arg(), iter);
+                        }
+                        map::MapIteratorEntry::Last => {
+                            map::map_iterator_prev(env.as_c_arg(), iter);
+                        }
+                    }
+                    let key = Term::new(env, key);
+                    self.last_key = Some(key);
+                    Some((key, Term::new(env, value)))
+                }
+                None => {
+                    self.done = true;
+                    None
+                }
+            }
+        }
+    }
+}
+
+impl<'a> Drop for SimpleMapIterator<'a> {
+    fn drop(&mut self) {
+        if let Some(iter) = self.iter.as_mut() {
+            unsafe {
+                map::map_iterator_destroy(self.map.get_env().as_c_arg(), iter);
+            }
+        }
+    }
+}
+
 pub struct MapIterator<'a> {
-    env: Env<'a>,
-    iter: map::ErlNifMapIterator,
+    forward: SimpleMapIterator<'a>,
+    reverse: SimpleMapIterator<'a>,
 }
 
 impl<'a> MapIterator<'a> {
     pub fn new(map: Term<'a>) -> Option<MapIterator<'a>> {
-        let env = map.get_env();
-        unsafe { map::map_iterator_create(env.as_c_arg(), map.as_c_arg()) }
-            .map(|iter| MapIterator { env, iter })
-    }
-}
-
-impl<'a> Drop for MapIterator<'a> {
-    fn drop(&mut self) {
-        unsafe {
-            map::map_iterator_destroy(self.env.as_c_arg(), &mut self.iter);
+        if map.is_map() {
+            Some(MapIterator {
+                forward: SimpleMapIterator {
+                    map,
+                    entry: map::MapIteratorEntry::First,
+                    iter: None,
+                    last_key: None,
+                    done: false,
+                },
+                reverse: SimpleMapIterator {
+                    map,
+                    entry: map::MapIteratorEntry::Last,
+                    iter: None,
+                    last_key: None,
+                    done: false,
+                },
+            })
+        } else {
+            None
         }
     }
 }
@@ -217,13 +302,28 @@ impl<'a> Drop for MapIterator<'a> {
 impl<'a> Iterator for MapIterator<'a> {
     type Item = (Term<'a>, Term<'a>);
 
-    fn next(&mut self) -> Option<(Term<'a>, Term<'a>)> {
-        unsafe {
-            map::map_iterator_get_pair(self.env.as_c_arg(), &mut self.iter).map(|(key, value)| {
-                map::map_iterator_next(self.env.as_c_arg(), &mut self.iter);
-                (Term::new(self.env, key), Term::new(self.env, value))
-            })
-        }
+    fn next(&mut self) -> Option<Self::Item> {
+        self.forward.next().and_then(|(key, value)| {
+            if self.reverse.last_key == Some(key) {
+                self.forward.done = true;
+                self.reverse.done = true;
+                return None;
+            }
+            Some((key, value))
+        })
+    }
+}
+
+impl<'a> DoubleEndedIterator for MapIterator<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.reverse.next().and_then(|(key, value)| {
+            if self.forward.last_key == Some(key) {
+                self.forward.done = true;
+                self.reverse.done = true;
+                return None;
+            }
+            Some((key, value))
+        })
     }
 }
 
