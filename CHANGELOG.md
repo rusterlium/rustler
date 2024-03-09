@@ -12,6 +12,9 @@ versions.
 
 ### Added
 
+- Map iterators are now [DoubleEndedIterators](https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html)
+  (#598), thus allowing being iterated in reverse using `.rev()`
+
 ### Fixed
 
 ### Changed
