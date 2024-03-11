@@ -15,6 +15,11 @@ impl LocalPid {
     pub fn from_c_arg(erl_nif_pid: ErlNifPid) -> Self {
         LocalPid { c: erl_nif_pid }
     }
+
+    /// Check whether the given process is alive
+    pub fn is_alive(self, env: Env) -> bool {
+        env.is_process_alive(self)
+    }
 }
 
 impl<'a> Decoder<'a> for LocalPid {
@@ -47,5 +52,11 @@ impl<'a> Env<'a> {
         LocalPid {
             c: unsafe { pid.assume_init() },
         }
+    }
+
+    /// Checks whether the given process is alive
+    pub fn is_process_alive(self, pid: LocalPid) -> bool {
+        let res = unsafe { rustler_sys::enif_is_process_alive(self.as_c_arg(), pid.as_c_arg()) };
+        res != 0
     }
 }

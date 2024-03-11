@@ -24,9 +24,13 @@ pub fn send<'a>(env: Env<'a>, pid: LocalPid, msg: Term<'a>) -> Atom {
 }
 
 #[rustler::nif]
-pub fn whereis_pid<'a>(env: Env<'a>, term: Term<'a>) -> Term<'a> {
-    let result = env.whereis_pid(term);
-    result.encode(env)
+pub fn whereis_pid<'a>(env: Env<'a>, term: Term<'a>) -> Option<LocalPid> {
+    env.whereis_pid(term)
+}
+
+#[rustler::nif]
+pub fn is_process_alive(env: Env, pid: LocalPid) -> bool {
+    env.is_process_alive(pid)
 }
 
 #[rustler::nif]

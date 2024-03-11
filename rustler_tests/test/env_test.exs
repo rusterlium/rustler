@@ -68,6 +68,24 @@ defmodule RustlerTest.EnvTest do
     assert nil == RustlerTest.whereis_pid(:not_a_registered_name)
   end
 
+  test "is_process_alive" do
+    assert true == RustlerTest.is_process_alive(self())
+
+    task =
+      Task.async(fn ->
+        receive do
+          :exit -> :ok
+        end
+      end)
+
+    assert true == RustlerTest.is_process_alive(task.pid)
+
+    send(task.pid, :exit)
+    Task.await(task)
+
+    assert false == RustlerTest.is_process_alive(task.pid)
+  end
+
   test "send_error" do
     task =
       Task.async(fn ->
