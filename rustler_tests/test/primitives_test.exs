@@ -32,4 +32,35 @@ defmodule RustlerTest.PrimitivesTest do
     assert {:error, "watwat"} == RustlerTest.result_to_int({:error, "wat"})
     assert_raise ArgumentError, fn -> RustlerTest.result_to_int({:great, true}) end
   end
+
+  test "i128 support" do
+    import Bitwise
+
+    i = 1 <<< 62
+    assert i == RustlerTest.echo_i128(i)
+    assert -i == RustlerTest.echo_i128(-i)
+
+    i = 1 <<< 126
+    assert i == RustlerTest.echo_i128(i)
+    assert -i == RustlerTest.echo_i128(-i)
+
+    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(:non_int) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(123.45) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(1 <<< 127) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(1 <<< 128) end
+  end
+
+  test "u128 support" do
+    import Bitwise
+
+    i = 1 <<< 63
+    assert i == RustlerTest.echo_u128(i)
+
+    i = 1 <<< 127
+    assert i == RustlerTest.echo_u128(i)
+
+    assert_raise ArgumentError, fn -> RustlerTest.echo_u128(:non_int) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_u128(123.45) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(1 <<< 128) end
+  end
 end
