@@ -71,16 +71,18 @@ impl<'a> Decoder<'a> for i128 {
             return Err(Error::BadArg);
         }
 
-        let mut res = [0u8; 16];
-        res[16 - n..].copy_from_slice(&input[4..4 + n]);
-        let res = i128::from_le_bytes(res);
-        if res < 0 {
-            // The stored data is supposed to be unsigned, so if we interpret it as negative here,
-            // it was too large.
+        let is_pos = input[3] == 0;
+
+        let mut res = [0; 16];
+        res[..n].copy_from_slice(&input[4..4 + n]);
+
+        if res[15] >= 128 && is_pos {
+            // Value is too large for i128
             return Err(Error::BadArg);
         }
 
-        if input[3] == 0 {
+        let res = i128::from_le_bytes(res);
+        if is_pos {
             Ok(res)
         } else {
             Ok(-res)
