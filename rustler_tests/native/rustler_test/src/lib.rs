@@ -23,6 +23,8 @@ rustler::init!(
         test_primitives::option_inc,
         test_primitives::erlang_option_inc,
         test_primitives::result_to_int,
+        test_primitives::echo_u128,
+        test_primitives::echo_i128,
         test_list::sum_list,
         test_list::make_list,
         test_term::term_debug,

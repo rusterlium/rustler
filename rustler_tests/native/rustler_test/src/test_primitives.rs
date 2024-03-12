@@ -33,3 +33,13 @@ pub fn result_to_int(res: Result<bool, &str>) -> Result<usize, String> {
         Err(errstr) => Err(format!("{}{}", errstr, errstr)),
     }
 }
+
+#[rustler::nif]
+pub fn echo_u128(n: u128) -> u128 {
+    n
+}
+
+#[rustler::nif]
+pub fn echo_i128(n: i128) -> i128 {
+    n
+}
