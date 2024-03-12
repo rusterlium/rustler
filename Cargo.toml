@@ -2,7 +2,6 @@
 resolver = "2"
 members = [
   "rustler",
-  "rustler_bigint",
   "rustler_codegen",
   "rustler_sys",
   "rustler_tests/native/binary_example",

@@ -16,6 +16,7 @@ versions.
   (#598), thus allowing being iterated in reverse using `.rev()`
 - `Env::is_process_alive` and `LocalPid::is_alive` (#599)
 - Encoding and decoding of 128 bit integers (#600)
+- Optional codec for `num_bigint::BigInt` using the `big_integer` feature (#601)
 
 ### Fixed
 
@@ -26,6 +27,9 @@ versions.
   implementation by @KoviRobi)
 
 ### Removed
+
+- `rustler_bigint` is replaced by a feature flag and the wrapper is not
+  necessary anymore (#601)
 
 ## [0.31.0] - 2024-02-13
 
