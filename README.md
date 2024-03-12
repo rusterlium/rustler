@@ -16,22 +16,34 @@ they unwind into C.
 The library provides functionality for both Erlang and Elixir, however Elixir
 is favored as of now.
 
-#### Features:
+#### Features
 
-- Safety - The code you write in a Rust NIF should never be able to crash the BEAM.
-- Interop - Decoding and encoding rust values into Erlang terms is as easy as a function call.
-- Type composition - Making a Rust struct encodable and decodable to Erlang or Elixir can be done with a single attribute.
-- Resource objects - Enables you to safely pass a reference to a Rust struct into Erlang code. The struct will be automatically dropped when it's no longer referenced.
+Safety
+: The code you write in a Rust NIF should never be able to crash the BEAM.
+
+Interop
+: Decoding and encoding rust values into Erlang terms is as easy as a function
+: call.
+
+Type composition
+: Making a Rust struct encodable and decodable to Erlang or Elixir can be done
+: with a single attribute.
+
+Resource objects
+: Enables you to safely pass a reference to a Rust struct into Erlang code. The
+: struct will be automatically dropped when it's no longer referenced.
 
 #### Getting started
 
-The easiest way of getting started is the [rustler elixir library](https://hex.pm/packages/rustler).
+The easiest way of getting started is the [rustler Elixir library](https://hex.pm/packages/rustler).
 
-- Add the [rustler elixir library](https://hex.pm/packages/rustler) as a dependency of your project.
-- Run `mix rustler.new` to generate a new NIF in your project. Follow the instructions.
-- If you're already using [`serde`](https://serde.rs), consider using [`serde_rustler`](https://github.com/sunny-g/serde_rustler/tree/master/serde_rustler) to easily encode and decode your data types into and from Elixir terms.
-
-NOTE: If you have previously used Rustler, you need to run `mix archive.uninstall rustler_installer.ez` to remove it before generating the NIF.
+- Add the [rustler Elixir library](https://hex.pm/packages/rustler) as a
+  dependency of your project.
+- Run `mix rustler.new` to generate a new NIF in your project. Follow the
+  instructions.
+- If you are already using [`serde`](https://serde.rs) and/or have been using
+  `serde_rustler` before, please enable the `serde` feature in your NIF crate's
+  `Cargo.toml` on the `rustler` dependency.
 
 #### What it looks like
 
@@ -58,9 +70,9 @@ Rustler aims to support the newest three major OTP versions as well as newest th
 #### Supported NIF version
 
 The minimal supported NIF version for a library should be defined via Cargo
-features. The default is currently `2.14` (Erlang/OTP 21). To use features from
-NIF version `2.16` (Erlang/OTP 24), the respective feature flag has to be
-enabled on the dependency:
+features. The default is currently `2.15` (Erlang/OTP 21). To use features from
+NIF version `2.16` (Erlang/OTP 24) or `2.17` (Erlang/OTP 26), the respective
+feature flag has to be enabled on the dependency:
 
 ```toml
 [dependencies]
@@ -84,5 +96,5 @@ at your option.
 ##### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
-additional terms or conditions.
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
