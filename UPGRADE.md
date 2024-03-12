@@ -2,6 +2,16 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.31 -> 0.32
+
+1. The functionality of `rustler_bigint` has moved into `rustler`. The library
+   will still work, but it can now also be replaced by activating the new
+   `big_integer` feature on `rustler`. The new `rustler::BigInt` is a re-export
+   of `num_bigint::BigInt` in contrast to `rustler_bigint::BigInt`, which was a
+   wrapper. For most codebases, it will be enough to activate the feature and
+   replace all `rustler_bigint::BigInt` usages by `rustler::BigInt` (or
+   `num_bigint::BigInt`).
+
 ## 0.29 -> 0.30
 
 1. `rustler_crates` configuration is deprecated in favor of explicitly passing

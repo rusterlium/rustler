@@ -1,6 +1,4 @@
-use rustler::NifResult;
-use rustler_bigint::num_bigint;
-use rustler_bigint::BigInt;
+use rustler::{BigInt, NifResult};
 
 #[rustler::nif]
 pub fn echo(input: BigInt) -> NifResult<BigInt> {
@@ -9,15 +7,12 @@ pub fn echo(input: BigInt) -> NifResult<BigInt> {
 
 #[rustler::nif]
 pub fn add_one(input: BigInt) -> NifResult<BigInt> {
-    Ok(input
-        .checked_add(&num_bigint::BigInt::from(1))
-        .unwrap()
-        .into())
+    Ok(input.checked_add(&BigInt::from(1)).unwrap())
 }
 
 #[rustler::nif]
 pub fn add(a: BigInt, b: BigInt) -> NifResult<BigInt> {
-    Ok(a.checked_add(&b).unwrap().into())
+    Ok(a.checked_add(&b).unwrap())
 }
 
 rustler::init!("Elixir.RustlerBigintTest", [echo, add_one, add]);

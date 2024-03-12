@@ -8,6 +8,11 @@ pub use crate::types::atom::Atom;
 pub mod binary;
 pub use crate::types::binary::{Binary, NewBinary, OwnedBinary};
 
+#[cfg(feature = "big_integer")]
+pub mod big_int;
+#[cfg(feature = "big_integer")]
+pub use num_bigint::BigInt;
+
 #[doc(hidden)]
 pub mod list;
 pub use crate::types::list::ListIterator;

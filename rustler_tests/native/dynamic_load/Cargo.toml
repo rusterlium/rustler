@@ -9,5 +9,4 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-rustler_bigint = { path = "../../../rustler_bigint" }
-rustler = { path = "../../../rustler" }
+rustler = { path = "../../../rustler", features = ["big_integer"] }

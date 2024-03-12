@@ -41,6 +41,10 @@ pub use crate::types::{
     Atom, Binary, Decoder, Encoder, ErlOption, ListIterator, LocalPid, MapIterator, NewBinary,
     OwnedBinary,
 };
+
+#[cfg(feature = "big_integer")]
+pub use crate::types::BigInt;
+
 pub mod resource;
 pub use crate::resource::ResourceArc;
 
