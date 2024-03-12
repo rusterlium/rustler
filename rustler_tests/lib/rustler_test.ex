@@ -87,6 +87,7 @@ defmodule RustlerTest do
   def send_all(_, _), do: err()
   def send(_, _), do: err()
   def whereis_pid(_), do: err()
+  def is_process_alive(_), do: err()
   def sublists(_), do: err()
 
   def tuple_echo(_), do: err()

@@ -63,6 +63,7 @@ rustler::init!(
         test_env::send_all,
         test_env::send,
         test_env::whereis_pid,
+        test_env::is_process_alive,
         test_env::sublists,
         test_codegen::tuple_echo,
         test_codegen::record_echo,

@@ -14,6 +14,7 @@ versions.
 
 - Map iterators are now [DoubleEndedIterators](https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html)
   (#598), thus allowing being iterated in reverse using `.rev()`
+- `Env::is_process_alive` and `LocalPid::is_alive` (#599)
 
 ### Fixed
 
