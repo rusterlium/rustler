@@ -18,7 +18,6 @@ where
 #[derive(Clone, Copy)]
 pub struct Serializer<'a> {
     env: Env<'a>,
-    elixir: bool,
     non_finite_float_as_atom: bool,
 }
 
@@ -26,7 +25,6 @@ impl<'a> From<Env<'a>> for Serializer<'a> {
     fn from(env: Env<'a>) -> Serializer<'a> {
         Serializer {
             env,
-            elixir: true,
             non_finite_float_as_atom: false,
         }
     }
@@ -46,20 +44,12 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
     #[inline]
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
-        Ok(if v {
-            atoms::true_().encode(self.env)
-        } else {
-            atoms::false_().encode(self.env)
-        })
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        Ok(if self.elixir {
-            atoms::nil().encode(self.env)
-        } else {
-            atoms::undefined().encode(self.env)
-        })
+        Ok(atoms::nil().encode(self.env))
     }
 
     #[inline]
@@ -72,55 +62,47 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
     #[inline]
     fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
-        (v as i32).serialize(self)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        (v as i32).serialize(self)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
-        let env = self.env;
-        let res = unsafe { Term::new(env, rustler_sys::enif_make_int(env.as_c_arg(), v)) };
-        Ok(res)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-        let env = self.env;
-        let res = unsafe { Term::new(env, rustler_sys::enif_make_int64(env.as_c_arg(), v)) };
-        Ok(res)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
-        (v as u32).serialize(self)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
-        (v as u32).serialize(self)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
-        let env = self.env;
-        let res = unsafe { Term::new(env, rustler_sys::enif_make_uint(env.as_c_arg(), v)) };
-        Ok(res)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        let env = self.env;
-        let res = unsafe { Term::new(env, rustler_sys::enif_make_uint64(env.as_c_arg(), v)) };
-        Ok(res)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        (v as f64).serialize(self)
+        Ok(v.encode(self.env))
     }
 
     #[inline]
@@ -139,9 +121,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
             };
         }
 
-        let env = self.env;
-        let res = unsafe { Term::new(env, rustler_sys::enif_make_double(env.as_c_arg(), v)) };
-        Ok(res)
+        Ok(v.encode(self.env))
     }
 
     fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
