@@ -109,11 +109,10 @@ defmodule SerdeRustlerTests.NifTest do
       run_tests("i64 (max)", 9_223_372_036_854_775_807, ctx)
     end
 
-    @tag :skip
     test "i128", ctx do
-      run_tests("i128 (min)", 0, ctx)
-      run_tests("128 (0)", 0, ctx)
-      run_tests("i128 (max)", 0, ctx)
+      run_tests("i128 (min)", -170141183460469231731687303715884105728, ctx)
+      run_tests("i128 (0)", 0, ctx)
+      run_tests("i128 (max)", 170141183460469231731687303715884105727, ctx)
     end
 
     test "u8", ctx do
@@ -136,10 +135,9 @@ defmodule SerdeRustlerTests.NifTest do
       run_tests("u64 (max)", 18_446_744_073_709_551_615, ctx)
     end
 
-    @tag :skip
     test "u128", ctx do
       run_tests("u128 (min)", 0, ctx)
-      run_tests("u128 (max)", 0, ctx)
+      run_tests("u128 (max)", 340282366920938463463374607431768211455, ctx)
     end
 
     test "f32", ctx do

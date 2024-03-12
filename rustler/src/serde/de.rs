@@ -63,6 +63,8 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
             TermType::Integer => {
                 try_parse_number!(self.term, u64, visitor, visit_u64);
                 try_parse_number!(self.term, i64, visitor, visit_i64);
+                try_parse_number!(self.term, u128, visitor, visit_u128);
+                try_parse_number!(self.term, i128, visitor, visit_i128);
 
                 Err(Error::ExpectedNumber)
             }
@@ -167,6 +169,14 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
     }
 
     #[inline]
+    fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: Visitor<'de>,
+    {
+        visitor.visit_i128(util::parse_number(&self.term)?)
+    }
+
+    #[inline]
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
@@ -196,6 +206,14 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
         V: Visitor<'de>,
     {
         visitor.visit_u64(util::parse_number(&self.term)?)
+    }
+
+    #[inline]
+    fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, self::Error>
+    where
+        V: Visitor<'de>,
+    {
+        visitor.visit_u128(util::parse_number(&self.term)?)
     }
 
     #[inline]

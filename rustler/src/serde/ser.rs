@@ -3,10 +3,7 @@ use std::io::Write;
 use crate::serde::{atoms, error::Error, util};
 use crate::wrapper::list::make_list;
 use crate::{types::tuple, Encoder, Env, OwnedBinary, Term};
-use serde::{
-    ser::{self, Serialize},
-    serde_if_integer128,
-};
+use serde::ser::{self, Serialize};
 
 #[inline]
 /// Converts a native Rust type into a native Elixir term. See [conversion table](https://github.com/sunny-g/serde_rustler/tree/master/serde_rustler#conversion-table) for details about serialization behavior.
@@ -147,15 +144,12 @@ impl<'a> ser::Serializer for Serializer<'a> {
         Ok(res)
     }
 
-    // TODO: update rustler to support u128 and i128
-    serde_if_integer128! {
-        fn serialize_i128(self, _v: i128) -> Result<Self::Ok, Self::Error> {
-            unimplemented!("awaiting rustler support for i128s")
-        }
+    fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
+        Ok(v.encode(self.env))
+    }
 
-        fn serialize_u128(self, _v: u128) -> Result<Self::Ok, Self::Error> {
-            unimplemented!("awaiting rustler support for u128s")
-        }
+    fn serialize_u128(self, v: u128) -> Result<Self::Ok, Self::Error> {
+        Ok(v.encode(self.env))
     }
 
     #[inline]
