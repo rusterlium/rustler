@@ -126,7 +126,7 @@ impl<'a> Decoder<'a> for u128 {
         }
 
         let mut res = [0u8; 16];
-        res[16 - n..].copy_from_slice(&input[4..4 + n]);
+        res[..n].copy_from_slice(&input[4..4 + n]);
         Ok(u128::from_le_bytes(res))
     }
 }

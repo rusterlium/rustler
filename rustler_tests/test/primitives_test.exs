@@ -70,6 +70,9 @@ defmodule RustlerTest.PrimitivesTest do
     i = 1 <<< 63
     assert i == RustlerTest.echo_u128(i)
 
+    i = 1 <<< 80
+    assert i == RustlerTest.echo_u128(i)
+
     i = 1 <<< 127
     assert i == RustlerTest.echo_u128(i)
 
@@ -79,6 +82,7 @@ defmodule RustlerTest.PrimitivesTest do
 
     assert_raise ArgumentError, fn -> RustlerTest.echo_u128(:non_int) end
     assert_raise ArgumentError, fn -> RustlerTest.echo_u128(123.45) end
-    assert_raise ArgumentError, fn -> RustlerTest.echo_i128(1 <<< 129) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_u128(i + 1) end
+    assert_raise ArgumentError, fn -> RustlerTest.echo_u128(1 <<< 129) end
   end
 end
