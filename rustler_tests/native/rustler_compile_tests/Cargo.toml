@@ -11,4 +11,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 lazy_static = "1.4"
-rustler = { path = "../../../rustler" }
+rustler = { path = "../../../rustler", features = ["allocator"] }

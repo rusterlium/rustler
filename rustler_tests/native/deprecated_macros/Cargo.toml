@@ -10,4 +10,4 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-rustler = { path = "../../../rustler" }
+rustler = { path = "../../../rustler", features = ["allocator"]}

@@ -21,4 +21,4 @@ nif_version_2_17 = ["nif_version_2_16", "rustler/nif_version_2_17"]
 
 [dependencies]
 lazy_static = "1.4"
-rustler = { path = "../../../rustler" }
+rustler = { path = "../../../rustler", features = ["allocator"] }

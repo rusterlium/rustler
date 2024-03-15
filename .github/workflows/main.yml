@@ -83,6 +83,7 @@ jobs:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
     needs: [build]
     strategy:
+      fail-fast: false
       matrix:
         pair:
           - { erlang: "26", elixir: "1.16", latest: true }
