@@ -1,0 +1,18 @@
+[package]
+name = "rustler_serde_test"
+version = "0.0.1"
+authors = ["Sunny G <sunny.gonna@gmail.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+name = "rustler_serde_test"
+crate-type = ["cdylib"]
+
+[dependencies]
+lazy_static = "1"
+rustler = {path = "../../../rustler", features = ["serde"]}
+serde = { version = "1.0", features = ["derive"] }
+serde_bytes = "0.11"
+serde_json = "1.0"
+serde-transcode = "1.1"

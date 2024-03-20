@@ -92,7 +92,6 @@ impl<'a> Decoder<'a> for ListIterator<'a> {
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
-
 impl<T> Encoder for Vec<T>
 where
     T: Encoder,
@@ -122,6 +121,7 @@ where
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
+
 impl<'a, T> Encoder for &'a [T]
 where
     T: Encoder,

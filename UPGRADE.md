@@ -11,6 +11,10 @@ This document is intended to simplify upgrading to newer versions by extending t
    wrapper. For most codebases, it will be enough to activate the feature and
    replace all `rustler_bigint::BigInt` usages by `rustler::BigInt` (or
    `num_bigint::BigInt`).
+2. `serde_rustler` has been integrated into `rustler` behind the feature flag
+   `serde`. Arbitrary, `serde`-compatible objects (i.e. with `Deserialize` or
+   `Serialize` `impl`s) can be wrapped in `SerdeTerm` to use them in place of
+   `Encoder` or `Decoder`. The API is for now considered experimental.
 
 ## 0.29 -> 0.30
 

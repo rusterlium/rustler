@@ -7,7 +7,7 @@ fn initialize_dataset(mut asset_path: PathBuf) {
     asset_path.push("demo_dataset.txt");
 
     // https://github.com/elixir-lsp/elixir-ls/issues/604
-    eprintln!("Loading dataset from {:?}.", &asset_path);
+    // eprintln!("Loading dataset from {:?}.", &asset_path);
 
     let data = read_to_string(asset_path).unwrap().into_boxed_str();
     let data = Some(data);

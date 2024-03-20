@@ -65,6 +65,7 @@ impl Encoder for f32 {
         f64::from(*self).encode(env)
     }
 }
+
 impl<'a> Decoder<'a> for f32 {
     fn decode(term: Term) -> NifResult<f32> {
         let res: f64 = term.decode()?;
