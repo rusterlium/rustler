@@ -12,7 +12,8 @@ use serde::{
 };
 use std::iter;
 
-/// Converts a native Elixir term to a native Rust type. See the [conversion table](https://github.com/sunny-g/serde_rustler/tree/master/serde_rustler#conversion-table) for details about deserialization behavior.
+/// Converts a native BEAM term to a native Rust object. See the conversion table
+/// for details about deserialization behavior.
 #[inline]
 pub fn from_term<'de, 'a: 'de, T>(term: Term<'a>) -> Result<T, Error>
 where

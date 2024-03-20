@@ -6,8 +6,8 @@ use crate::{types::tuple, Encoder, Env, OwnedBinary, Term};
 use serde::ser::{self, Serialize};
 
 #[inline]
-/// Converts a native Rust type into a native Elixir term. See [conversion table](https://github.com/sunny-g/serde_rustler/tree/master/serde_rustler#conversion-table) for details about serialization behavior.
-///
+/// Converts a native Rust type into a native BEAM term. See conversion table
+/// for details about serialization behavior.
 pub fn to_term<T>(env: Env, value: T) -> Result<Term, Error>
 where
     T: Serialize,
