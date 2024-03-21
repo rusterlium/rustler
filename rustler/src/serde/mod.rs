@@ -9,9 +9,8 @@ in a better way and allow more Erlang-y configurations).
 ## Example
 
 ```rust
-use rustler;
+use rustler::{self, Encoder, SerdeTerm};
 use serde::{Serialize, Deserialize};
-use serde_rustler::{from_term, to_term};
 
 rustler::init!("Elixir.SerdeNif", [readme]);
 

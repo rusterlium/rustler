@@ -42,3 +42,6 @@ replace = "def rustler_version, do: \"{{version}}\""
 file = "../rustler_codegen/Cargo.toml"
 search = "# rustler_codegen version\nversion = \"[^\"]+\""
 replace = "# rustler_codegen version\nversion = \"{{version}}\""
+
+[package.metadata.docs.rs]
+all-features = true

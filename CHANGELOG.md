@@ -11,6 +11,12 @@ versions.
 ## [unreleased]
 
 ### Added
+### Fixed
+### Changed
+
+## [0.32.1] - 2024-03-21
+
+### Added
 
 - Map iterators are now [DoubleEndedIterators](https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html)
   (#598), thus allowing being iterated in reverse using `.rev()`
@@ -18,8 +24,6 @@ versions.
 - Encoding and decoding of 128 bit integers (#600)
 - Optional codec for `num_bigint::BigInt` using the `big_integer` feature (#601)
 - Add experimental `serde` support derived from `serde_rustler`
-
-### Fixed
 
 ### Changed
 
@@ -31,6 +35,10 @@ versions.
 
 - `rustler_bigint` is replaced by a feature flag and the wrapper is not
   necessary anymore (#601)
+
+## [0.32.0] - 2024-03-20
+
+Yanked because it did not include all merged changes.
 
 ## [0.31.0] - 2024-02-13
 
