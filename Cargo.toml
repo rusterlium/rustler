@@ -8,7 +8,6 @@ members = [
   "rustler_tests/native/rustler_test",
   "rustler_tests/native/rustler_bigint_test",
   "rustler_tests/native/rustler_serde_test",
-  "rustler_tests/native/deprecated_macros",
   "rustler_tests/native/dynamic_load",
   "rustler_tests/native/rustler_compile_tests",
   "rustler_benchmarks/native/benchmark",

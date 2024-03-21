@@ -35,20 +35,6 @@ defmodule Rustler.Compiler.Config do
   def from(otp_app, config, opts) do
     crate = config[:crate] || opts[:crate] || otp_app
 
-    # TODO: Remove in 1.0
-    rustler_crates =
-      if mix_config = Mix.Project.config()[:rustler_crates] do
-        IO.warn(
-          ":rustler_crates in mix.exs is deprecated, please explicitly pass options on `use Rustler` or configure the module in your `config/*.exs` files"
-        )
-
-        mix_config
-      else
-        []
-      end
-
-    legacy_config = rustler_crates[to_atom(crate)] || []
-
     defaults = %Config{
       crate: crate,
       load_from: {otp_app, "priv/native/lib#{crate}"},
@@ -61,7 +47,6 @@ defmodule Rustler.Compiler.Config do
     defaults
     |> Map.from_struct()
     |> Enum.into([])
-    |> Keyword.merge(legacy_config)
     |> Keyword.merge(opts)
     |> Keyword.merge(config)
     |> build()
@@ -147,10 +132,4 @@ defmodule Rustler.Compiler.Config do
     |> Enum.filter(&(&1["name"] == name))
     |> List.first()
   end
-
-  defp to_atom(name) when is_binary(name),
-    do: String.to_atom(name)
-
-  defp to_atom(name) when is_atom(name),
-    do: name
 end

@@ -60,7 +60,6 @@ pub mod thread;
 pub use crate::thread::{spawn, JobSpawner, ThreadSpawner};
 
 pub mod error;
-pub mod export;
 pub use crate::error::Error;
 
 pub mod r#return;
