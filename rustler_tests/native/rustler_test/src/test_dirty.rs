@@ -1,4 +1,4 @@
-use rustler::Atom;
+use rustler::{Atom, Encoder, Env, Yield};
 use std::time::Duration;
 
 mod atoms {
@@ -21,4 +21,16 @@ pub fn dirty_io() -> Atom {
     std::thread::sleep(duration);
 
     atoms::ok()
+}
+
+#[rustler::nif]
+fn yield_resume(input: i32) -> Atom {
+    assert_eq!(input, 42);
+    atoms::ok()
+}
+
+#[rustler::nif]
+pub fn yields(env: Env) -> Yield {
+    let term = 42.encode(env);
+    Yield::to(yield_resume, vec![term])
 }

@@ -115,6 +115,7 @@ defmodule RustlerTest do
 
   def dirty_io(), do: err()
   def dirty_cpu(), do: err()
+  def yields(), do: err()
 
   def sum_range(_), do: err()
 

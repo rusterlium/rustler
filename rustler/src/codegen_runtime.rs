@@ -1,6 +1,5 @@
 //! Functions used by runtime generated code. Should not be used.
 
-use std::ffi::CString;
 use std::fmt;
 
 use crate::{Encoder, Env, OwnedBinary, Term};
@@ -51,9 +50,9 @@ pub enum NifReturned {
     Raise(NIF_TERM),
     BadArg,
     Reschedule {
-        fun_name: CString,
+        fun_name: *const c_char,
         flags: crate::schedule::SchedulerFlags,
-        fun: unsafe extern "C" fn(NIF_ENV, i32, *const NIF_TERM) -> NIF_TERM,
+        fun: crate::nif::RawFunc,
         args: Vec<NIF_TERM>,
     },
 }
@@ -73,7 +72,7 @@ impl NifReturned {
                 args,
             } => rustler_sys::enif_schedule_nif(
                 env.as_c_arg(),
-                fun_name.as_ptr() as *const c_char,
+                fun_name,
                 flags as i32,
                 fun,
                 args.len() as i32,
