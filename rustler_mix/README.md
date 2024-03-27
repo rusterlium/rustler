@@ -22,10 +22,10 @@ end
 
 ## Usage
 
-1.  Fetch all necessary dependencies:
+1.  Fetch and compile all necessary dependencies:
 
     ```
-    $ mix deps.get
+    $ mix deps.get && mix deps.compile
     ```
 2.  Check your installation by showing help from the installed Mix task:
 
