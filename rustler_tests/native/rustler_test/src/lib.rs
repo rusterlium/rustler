@@ -7,6 +7,7 @@ mod test_error;
 mod test_list;
 mod test_map;
 mod test_nif_attrs;
+mod test_path;
 mod test_primitives;
 mod test_range;
 mod test_resource;
@@ -103,6 +104,7 @@ rustler::init!(
         test_codegen::reserved_keywords::reserved_keywords_type_echo,
         test_codegen::generic_types::generic_struct_echo,
         test_codegen::generic_types::mk_generic_map,
+        test_path::append_to_path,
     ],
     load = load
 );
