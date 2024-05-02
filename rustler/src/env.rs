@@ -30,7 +30,8 @@ impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
     }
 }
 
-///
+/// Indicates that a send failed, see
+/// [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
 #[derive(Clone, Copy, Debug)]
 pub struct SendError;
 
