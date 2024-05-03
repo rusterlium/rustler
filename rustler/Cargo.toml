@@ -7,6 +7,7 @@ authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 readme = "../README.md"
 edition = "2021"
+rust-version = "1.70"
 
 [features]
 big_integer = ["dep:num-bigint"]
@@ -20,7 +21,6 @@ nif_version_2_17 = ["nif_version_2_16", "rustler_sys/nif_version_2_17"]
 serde = ["dep:serde"]
 
 [dependencies]
-lazy_static = "1.4"
 rustler_codegen = { path = "../rustler_codegen", version = "0.32.1", optional = true}
 rustler_sys = { path = "../rustler_sys", version = "~2.4.0" }
 num-bigint = { version = "0.4", optional = true }
