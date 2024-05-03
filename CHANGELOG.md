@@ -14,6 +14,12 @@ versions.
 ### Fixed
 ### Changed
 
+### Removed
+
+- The old macros `rustler_export_nifs!`, `rustler::rustler_atoms!` and
+  `resource_struct_init!` have been removed (#604). They had been deprecated
+  since version 0.22.0.
+
 ## [0.32.1] - 2024-03-21
 
 ### Added
