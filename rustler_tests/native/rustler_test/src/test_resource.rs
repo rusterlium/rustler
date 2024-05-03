@@ -109,7 +109,7 @@ pub fn resource_make_binaries(
     )
 }
 
-#[rustler::nif]
+// #[rustler::nif]
 pub fn resource_make_binary_from_vec(env: Env, resource: ResourceArc<WithBinaries>) -> Binary {
     resource.make_binary(env, |w| &w.b)
 }

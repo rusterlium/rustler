@@ -39,6 +39,7 @@ unsafe impl Send for ErlNifEnv {}
 
 /// See [ErlNifFunc](http://www.erlang.org/doc/man/erl_nif.html#ErlNifFunc) in the Erlang docs.
 // #[allow(missing_copy_implementations)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct ErlNifFunc {
     pub name: *const c_char,

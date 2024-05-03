@@ -1,14 +1,11 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
-use syn::{Expr, Ident, Result, Token};
+use syn::{Ident, Result, Token};
 
 #[derive(Debug)]
 pub struct InitMacroInput {
     name: syn::Lit,
-    funcs: syn::ExprArray,
     load: TokenStream,
 }
 
@@ -16,11 +13,11 @@ impl Parse for InitMacroInput {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = syn::Lit::parse(input)?;
         let _comma = <syn::Token![,]>::parse(input)?;
-        let funcs = syn::ExprArray::parse(input)?;
+        let _funcs = syn::ExprArray::parse(input)?;
         let options = parse_expr_assigns(input);
         let load = extract_option(options, "load");
 
-        Ok(InitMacroInput { name, funcs, load })
+        Ok(InitMacroInput { name, load })
     }
 }
 
@@ -55,20 +52,21 @@ fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
 impl From<InitMacroInput> for proc_macro2::TokenStream {
     fn from(input: InitMacroInput) -> Self {
         let name = input.name;
-        let num_of_funcs = input.funcs.elems.len();
-        let funcs = nif_funcs(input.funcs.elems);
         let load = input.load;
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
-            use rustler::Nif;
+            let nif_funcs: Box<[_]> =
+                rustler::codegen_runtime::inventory::iter::<rustler::Nif>()
+                .map(rustler::Nif::get_def)
+                .collect();
 
             let entry = rustler::codegen_runtime::DEF_NIF_ENTRY {
                 major: rustler::codegen_runtime::NIF_MAJOR_VERSION,
                 minor: rustler::codegen_runtime::NIF_MINOR_VERSION,
                 name: concat!(#name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char,
-                num_of_funcs: #num_of_funcs as rustler::codegen_runtime::c_int,
-                funcs: [#funcs].as_ptr(),
+                num_of_funcs: nif_funcs.len() as rustler::codegen_runtime::c_int,
+                funcs: nif_funcs.as_ptr(),
                 load: {
                     extern "C" fn nif_load(
                         env: rustler::codegen_runtime::NIF_ENV,
@@ -91,6 +89,9 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             };
 
             unsafe {
+                // Leak nif_funcs
+                std::mem::forget(nif_funcs);
+
                 NIF_ENTRY = Some(entry);
                 NIF_ENTRY.as_ref().unwrap()
             }
@@ -114,18 +115,4 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             }
         }
     }
-}
-
-fn nif_funcs(funcs: Punctuated<Expr, Comma>) -> TokenStream {
-    let mut tokens = TokenStream::new();
-
-    for func in funcs.iter() {
-        if let Expr::Path(_) = *func {
-            tokens.extend(quote!(#func::FUNC,));
-        } else {
-            panic!("Expected an expression, found: {}", stringify!(func));
-        }
-    }
-
-    tokens
 }
