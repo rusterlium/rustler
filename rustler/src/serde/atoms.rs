@@ -3,12 +3,8 @@
 use crate::serde::Error;
 use crate::{types::atom::Atom, Encoder, Env, Term};
 
-use lazy_static::lazy_static;
-
-lazy_static! {
-    pub static ref OK: String = String::from("Ok");
-    pub static ref ERROR: String = String::from("Err");
-}
+pub static OK: &str = "Ok";
+pub static ERROR: &str = "Err";
 
 atoms! {
     nil,

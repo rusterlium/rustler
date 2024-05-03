@@ -14,6 +14,9 @@ versions.
 ### Fixed
 ### Changed
 
+- Drop usage of `lazy_static` in favour of `std::sync::OnceLock`. This change
+  raises the minimal supported Rust version to 1.70.
+
 ### Removed
 
 - The old macros `rustler_export_nifs!`, `rustler::rustler_atoms!` and

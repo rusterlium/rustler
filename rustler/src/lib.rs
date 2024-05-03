@@ -29,8 +29,6 @@ pub mod wrapper;
 #[doc(hidden)]
 pub mod codegen_runtime;
 
-pub use lazy_static;
-
 #[macro_use]
 pub mod types;
 

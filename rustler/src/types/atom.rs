@@ -201,17 +201,23 @@ macro_rules! atoms {
         struct RustlerAtoms {
             $( $name : $crate::types::atom::Atom ),*
         }
-        $crate::lazy_static::lazy_static! {
-            static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
-                RustlerAtoms {
-                    $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)? )) ),*
-                }
-            });
+        impl RustlerAtoms {
+            fn get() -> &'static Self {
+                use std::sync::OnceLock;
+                static RUSTLER_ATOMS: OnceLock<RustlerAtoms> = OnceLock::new();
+                RUSTLER_ATOMS.get_or_init(||
+                    $crate::env::OwnedEnv::new().run(|env| {
+                        RustlerAtoms {
+                            $( $name: $crate::atoms!(@internal_make_atom(env, $name $( = $str)? )) ),*
+                        }
+                    })
+                )
+            }
         }
         $(
             $( #[$attr] )*
             pub fn $name() -> $crate::types::atom::Atom {
-                RUSTLER_ATOMS.$name
+                RustlerAtoms::get().$name
             }
         )*
     };

@@ -10,7 +10,6 @@ name = "rustler_serde_test"
 crate-type = ["cdylib"]
 
 [dependencies]
-lazy_static = "1"
 rustler = {path = "../../../rustler", features = ["serde"]}
 serde = { version = "1.0", features = ["derive"] }
 serde_bytes = "0.11"

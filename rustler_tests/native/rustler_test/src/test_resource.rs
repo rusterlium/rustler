@@ -1,5 +1,5 @@
 use rustler::{Binary, Env, ResourceArc};
-use std::sync::RwLock;
+use std::sync::{OnceLock, RwLock};
 
 pub struct TestResource {
     test_field: RwLock<i32>,
@@ -46,14 +46,19 @@ pub fn resource_get_integer_field(resource: ResourceArc<TestResource>) -> i32 {
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-lazy_static::lazy_static! {
-    static ref COUNT: AtomicUsize = AtomicUsize::new(0);
-    static ref STATIC_BIN: [u8; 10] = [0,1,2,3,4,5,6,7,8,9];
+fn get_count() -> &'static AtomicUsize {
+    static COUNT: OnceLock<AtomicUsize> = OnceLock::new();
+    COUNT.get_or_init(|| AtomicUsize::new(0))
+}
+
+fn get_static_bin() -> &'static [u8; 10] {
+    static STATIC_BIN: OnceLock<[u8; 10]> = OnceLock::new();
+    STATIC_BIN.get_or_init(|| [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 }
 
 impl ImmutableResource {
     fn new(u: u32) -> ImmutableResource {
-        COUNT.fetch_add(1, Ordering::SeqCst);
+        get_count().fetch_add(1, Ordering::SeqCst);
         ImmutableResource { a: u, b: !u }
     }
 }
@@ -62,7 +67,7 @@ impl Drop for ImmutableResource {
     fn drop(&mut self) {
         assert_eq!(self.a, !self.b);
         self.b = self.a;
-        COUNT.fetch_sub(1, Ordering::SeqCst);
+        get_count().fetch_sub(1, Ordering::SeqCst);
     }
 }
 
@@ -74,7 +79,7 @@ pub fn resource_make_immutable(u: u32) -> ResourceArc<ImmutableResource> {
 // Count how many instances of `ImmutableResource` are currently alive globally.
 #[rustler::nif]
 pub fn resource_immutable_count() -> u32 {
-    COUNT.load(Ordering::SeqCst) as u32
+    get_count().load(Ordering::SeqCst) as u32
 }
 
 #[rustler::nif]
@@ -100,7 +105,7 @@ pub fn resource_make_binaries(
         // From vec (on the heap)
         resource.make_binary(env, |w| &w.b),
         // From static
-        resource.make_binary(env, |_| &*STATIC_BIN),
+        resource.make_binary(env, |_| get_static_bin()),
     )
 }
 
