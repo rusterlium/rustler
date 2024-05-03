@@ -262,14 +262,6 @@ where
 }
 
 #[macro_export]
-#[deprecated(since = "0.22.0", note = "Please use `resource!` instead.")]
-macro_rules! resource_struct_init {
-    ($struct_name:ty, $env: ident) => {
-        $crate::resource!($struct_name, $env)
-    };
-}
-
-#[macro_export]
 macro_rules! resource {
     ($struct_name:ty, $env: ident) => {
         {

@@ -226,44 +226,6 @@ macro_rules! atoms {
     };
 }
 
-#[macro_export]
-#[deprecated(since = "0.22.0", note = "Please use `atoms!` instead.")]
-macro_rules! rustler_atoms {
-    {
-        $(
-            $( #[$attr:meta] )*
-            atom $name:ident $( = $str:expr )?;
-        )*
-    } => {
-        #[allow(non_snake_case)]
-        struct RustlerAtoms {
-            $( $name : $crate::types::atom::Atom ),*
-        }
-        $crate::lazy_static::lazy_static! {
-            static ref RUSTLER_ATOMS: RustlerAtoms = $crate::env::OwnedEnv::new().run(|env| {
-                RustlerAtoms {
-                    $( $name: $crate::rustler_atoms!(@internal_make_atom(env, $name $( = $str)? )) ),*
-                }
-            });
-        }
-        $(
-            $( #[$attr] )*
-            pub fn $name() -> $crate::types::atom::Atom {
-                RUSTLER_ATOMS.$name
-            }
-        )*
-    };
-
-    // Internal helper macros.
-    { @internal_make_atom($env:ident, $name:ident) } => {
-        $crate::rustler_atoms!(@internal_make_atom($env, $name = stringify!($name)))
-    };
-    { @internal_make_atom($env:ident, $name:ident = $str:expr) } => {
-        $crate::types::atom::Atom::from_str($env, $str)
-            .expect("rustler::atoms!: bad atom string")
-    };
-}
-
 atoms! {
     /// The `nif_panicked` atom.
     nif_panicked,
