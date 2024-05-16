@@ -12,3 +12,8 @@ members = [
   "rustler_tests/native/rustler_compile_tests",
   "rustler_benchmarks/native/benchmark",
 ]
+default-members = [
+  "rustler",
+  "rustler_codegen",
+  "rustler_sys",
+]

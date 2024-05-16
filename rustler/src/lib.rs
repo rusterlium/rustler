@@ -29,6 +29,8 @@ pub mod wrapper;
 #[doc(hidden)]
 pub mod codegen_runtime;
 
+mod alloc;
+
 #[macro_use]
 pub mod types;
 
