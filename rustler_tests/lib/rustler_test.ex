@@ -33,6 +33,9 @@ defmodule RustlerTest do
   def sum_list(_), do: err()
   def make_list(), do: err()
 
+  def compare_local_pids(_, _), do: err()
+  def are_equal_local_pids(_, _), do: err()
+
   def term_debug(_), do: err()
 
   def term_debug_and_reparse(term) do

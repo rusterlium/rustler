@@ -5,6 +5,7 @@ mod test_dirty;
 mod test_env;
 mod test_error;
 mod test_list;
+mod test_local_pid;
 mod test_map;
 mod test_nif_attrs;
 mod test_primitives;
@@ -27,6 +28,8 @@ rustler::init!(
         test_primitives::echo_i128,
         test_list::sum_list,
         test_list::make_list,
+        test_local_pid::compare_local_pids,
+        test_local_pid::are_equal_local_pids,
         test_term::term_debug,
         test_term::term_eq,
         test_term::term_cmp,
