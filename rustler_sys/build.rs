@@ -858,6 +858,11 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
             "enif_make_monitor_term",
             "env: *mut ErlNifEnv, mon: *const ErlNifMonitor",
         );
+        b.func(
+            "c_int",
+            "enif_compare_pids",
+            "pid1: *const ErlNifPid, pid2: *const ErlNifPid"
+        );
     }
 
     // 2.16 was introduced in OTP 24
