@@ -133,4 +133,6 @@ defmodule RustlerTest do
   def maybe_add_one_to_tuple(_tuple), do: err()
   def add_i32_from_tuple(_tuple), do: err()
   def greeting_person_from_tuple(_tuple), do: err()
+
+  def append_to_path(_path, _to_append), do: err()
 end
