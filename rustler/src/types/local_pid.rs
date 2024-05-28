@@ -1,7 +1,7 @@
 use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-use std::mem::MaybeUninit;
 use std::cmp::Ordering;
+use std::mem::MaybeUninit;
 
 #[derive(Copy, Clone)]
 pub struct LocalPid {
@@ -37,27 +37,23 @@ impl Encoder for LocalPid {
     }
 }
 
-#[cfg(feature="nif_version_2_15")]
 impl PartialEq for LocalPid {
     fn eq(&self, other: &Self) -> bool {
-        unsafe{ rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) == 0 }
+        unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) == 0 }
     }
 }
 
-#[cfg(feature="nif_version_2_15")]
 impl Eq for LocalPid {}
 
-#[cfg(feature="nif_version_2_15")]
 impl PartialOrd for LocalPid {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-#[cfg(feature="nif_version_2_15")]
 impl Ord for LocalPid {
     fn cmp(&self, other: &Self) -> Ordering {
-        let cmp = unsafe{ rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) };
+        let cmp = unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) };
         cmp.cmp(&0)
     }
 }
