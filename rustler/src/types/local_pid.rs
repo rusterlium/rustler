@@ -1,5 +1,6 @@
 use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::cmp::Ordering;
 use std::mem::MaybeUninit;
 
 #[derive(Copy, Clone)]
@@ -33,6 +34,27 @@ impl<'a> Decoder<'a> for LocalPid {
 impl Encoder for LocalPid {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), self.c)) }
+    }
+}
+
+impl PartialEq for LocalPid {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) == 0 }
+    }
+}
+
+impl Eq for LocalPid {}
+
+impl PartialOrd for LocalPid {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LocalPid {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let cmp = unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) };
+        cmp.cmp(&0)
     }
 }
 

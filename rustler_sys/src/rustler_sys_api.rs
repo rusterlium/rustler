@@ -203,6 +203,12 @@ pub unsafe fn enif_make_pid(_env: *mut ErlNifEnv, pid: ErlNifPid) -> ERL_NIF_TER
     pid.pid
 }
 
+/// See [enif_compare_pids](http://erlang.org/doc/man/erl_nif.html#enif_compare_pids) in the Erlang docs
+pub unsafe fn enif_compare_pids(pid1: *const ErlNifPid, pid2: *const ErlNifPid) -> c_int {
+    // Mimics the implementation of the enif_compare_pids macro
+    enif_compare((*pid1).pid, (*pid2).pid)
+}
+
 /// See [ErlNifSysInfo](http://www.erlang.org/doc/man/erl_nif.html#ErlNifSysInfo) in the Erlang docs.
 #[allow(missing_copy_implementations)]
 #[repr(C)]
