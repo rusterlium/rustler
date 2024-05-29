@@ -12,8 +12,13 @@ pub struct InitMacroInput {
 impl Parse for InitMacroInput {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = syn::Lit::parse(input)?;
-        let _comma = <syn::Token![,]>::parse(input)?;
-        let _funcs = syn::ExprArray::parse(input)?;
+
+        if input.peek(syn::token::Comma) && input.peek2(syn::token::Bracket) {
+            let _ = syn::token::Comma::parse(input);
+            let _funcs = syn::ExprArray::parse(input);
+            // TODO: Generate deprecation warning
+        }
+
         let options = parse_expr_assigns(input);
         let load = extract_option(options, "load");
 
