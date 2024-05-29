@@ -117,7 +117,10 @@ defmodule Rustler.Compiler.Config do
 
     paths = Enum.map(local_deps, & &1["path"]) ++ paths_acc
 
-    as_specs = Enum.map(local_deps, &get_spec(packages, &1["name"]))
+    as_specs =
+      local_deps
+      |> Enum.map(&get_spec(packages, &1["name"]))
+      |> Enum.reject(&is_nil/1)
 
     visited =
       local_deps
