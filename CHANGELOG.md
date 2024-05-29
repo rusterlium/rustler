@@ -8,18 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
-## [unreleased]
+## [0.33.0] - 2024-05-29
 
 ### Added
 
-- Add optional support for using Erlang's allocator as Rust's global allocator
+- Optional support for using Erlang's allocator as Rust's global allocator
   (#580).
+- Comparison functions for PIDs (#611).
+- Conversions from and to Rust paths (`PathBuf` and `Path`) (#608).
 
 ### Fixed
+
+- `mix compile` failing on path dependencies in the Rust library (#577, fixed in
+  #578 and #607)
+
 ### Changed
 
 - Drop usage of `lazy_static` in favour of `std::sync::OnceLock`. This change
   raises the minimal supported Rust version to 1.70.
+- Drop obsolete and incorrect `Rustler.nif_versions` function.
 
 ### Removed
 

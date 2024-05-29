@@ -2,6 +2,12 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.32 -> 0.33
+
+The macro changes that where already carried out in version `0.22` are now
+mandatory, the deprecated macros have been removed. Please see below for
+documentation on how to convert from the old to the new set of macros.
+
 ## 0.31 -> 0.32
 
 1. The functionality of `rustler_bigint` has moved into `rustler`. The library
