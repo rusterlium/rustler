@@ -61,13 +61,4 @@ defmodule Rustler.Compiler.Messages do
     Note: You should already have this if you made your project with the project generator.
     """
   end
-
-  def message({:unsupported_nif_version, version}) do
-    """
-    Your current version of Erlang is on NIF version '#{version}'.
-    Rustler currently supports versions #{inspect(Rustler.nif_versions())}.
-
-    Go open an issue about this on github!
-    """
-  end
 end
