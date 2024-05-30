@@ -65,6 +65,9 @@ pub use crate::error::Error;
 pub mod r#return;
 pub use crate::r#return::Return;
 
+pub mod r#yield;
+pub use crate::r#yield::{Branch, Yield};
+
 #[doc(hidden)]
 mod nif;
 pub use nif::Nif;
