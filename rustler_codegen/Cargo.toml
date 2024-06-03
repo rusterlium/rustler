@@ -10,7 +10,7 @@ edition = "2021"
 
 [lib]
 name = "rustler_codegen"
-proc_macro = true
+proc-macro = true
 
 [dependencies]
 syn = { version = "2.0", features = ["full", "extra-traits"] }

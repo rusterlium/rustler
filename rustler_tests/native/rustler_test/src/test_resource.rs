@@ -1,16 +1,38 @@
-use rustler::{Binary, Env, ResourceArc};
-use std::sync::{OnceLock, RwLock};
+use rustler::{Binary, Env, LocalPid, Monitor, Resource, ResourceArc};
+use std::sync::{Mutex, OnceLock, RwLock};
 
 pub struct TestResource {
     test_field: RwLock<i32>,
 }
 
+struct TestMonitorResourceInner {
+    mon: Option<Monitor>,
+    down_called: bool,
+}
+
+pub struct TestMonitorResource {
+    inner: Mutex<TestMonitorResourceInner>,
+}
+
+impl Resource for TestMonitorResource {
+    const IMPLEMENTS_DOWN: bool = true;
+
+    fn down<'a>(&'a self, _env: Env<'a>, _pid: LocalPid, mon: Monitor) {
+        let mut inner = self.inner.lock().unwrap();
+        assert!(Some(mon) == inner.mon);
+        inner.down_called = true;
+    }
+}
+
 /// This one is designed to look more like pointer data, to increase the
 /// chance of segfaults if the implementation is wrong.
+#[derive(Debug)]
 pub struct ImmutableResource {
     a: u32,
     b: u32,
 }
+
+impl Resource for ImmutableResource {}
 
 pub struct WithBinaries {
     a: [u8; 10],
@@ -18,10 +40,10 @@ pub struct WithBinaries {
 }
 
 pub fn on_load(env: Env) -> bool {
-    rustler::resource!(TestResource, env);
-    rustler::resource!(ImmutableResource, env);
-    rustler::resource!(WithBinaries, env);
-    true
+    rustler::resource!(TestResource, env)
+        && env.register::<ImmutableResource>().is_ok()
+        && env.register::<TestMonitorResource>().is_ok()
+        && rustler::resource!(WithBinaries, env)
 }
 
 #[rustler::nif]
@@ -83,11 +105,23 @@ pub fn resource_immutable_count() -> u32 {
 }
 
 #[rustler::nif]
+pub fn monitor_resource_make() -> ResourceArc<TestMonitorResource> {
+    TestMonitorResource {
+        inner: Mutex::new(TestMonitorResourceInner {
+            mon: None,
+            down_called: false,
+        }),
+    }
+    .into()
+}
+
+#[rustler::nif]
 pub fn resource_make_with_binaries() -> ResourceArc<WithBinaries> {
-    ResourceArc::new(WithBinaries {
+    WithBinaries {
         a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
         b: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-    })
+    }
+    .into()
 }
 
 #[rustler::nif]
@@ -107,4 +141,27 @@ pub fn resource_make_binaries(
         // From static
         resource.make_binary(env, |_| get_static_bin()),
     )
+}
+
+#[rustler::nif]
+pub fn monitor_resource_monitor(
+    env: Env,
+    resource: ResourceArc<TestMonitorResource>,
+    pid: LocalPid,
+) {
+    let mut inner = resource.inner.lock().unwrap();
+    inner.mon = env.monitor(&resource, &pid);
+    assert!(inner.mon.is_some());
+    inner.down_called = false;
+}
+
+#[rustler::nif]
+pub fn monitor_resource_down_called(resource: ResourceArc<TestMonitorResource>) -> bool {
+    resource.inner.lock().unwrap().down_called
+}
+
+#[rustler::nif]
+pub fn monitor_resource_demonitor(env: Env, resource: ResourceArc<TestMonitorResource>) -> bool {
+    let inner = resource.inner.lock().unwrap();
+    env.demonitor(&resource, inner.mon.as_ref().unwrap())
 }

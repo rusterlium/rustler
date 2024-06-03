@@ -20,6 +20,5 @@ mod test_tuple;
 rustler::init!("Elixir.RustlerTest", [deprecated, usage], load = load);
 
 fn load(env: rustler::Env, _: rustler::Term) -> bool {
-    test_resource::on_load(env);
-    true
+    test_resource::on_load(env)
 }

@@ -61,3 +61,10 @@ where
         });
     });
 }
+
+/// Check if the currently running thread is managed by the ERTS.
+///
+/// This is relevant for (e.g.) `enif_send` or `enif_monitor_process` as
+pub fn is_scheduler_thread() -> bool {
+    unsafe { rustler_sys::enif_thread_type() > 0 }
+}
