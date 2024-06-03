@@ -4,43 +4,102 @@
 //! NIF calls. The struct will be automatically dropped when the BEAM GC decides that there are no
 //! more references to the resource.
 
-use std::marker::PhantomData;
-use std::mem;
+use std::any::TypeId;
+use std::collections::HashMap;
 use std::ops::Deref;
 use std::ptr;
+use std::sync::OnceLock;
+use std::{ffi::CString, mem};
 
 use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
-use crate::wrapper::{
+use crate::resource::resource::open_resource_type;
+pub use crate::wrapper::{
     c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
 };
+
+#[derive(Debug)]
+pub struct ResourceRegistration {
+    name: &'static str,
+    get_type_id: fn() -> TypeId,
+    destructor: unsafe extern "C" fn(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE),
+}
+inventory::collect!(ResourceRegistration);
+
+static mut RESOURCE_TYPES: OnceLock<HashMap<TypeId, usize>> = OnceLock::new();
+
+fn get_resource_type<T: 'static>() -> Option<NIF_RESOURCE_TYPE> {
+    let map = unsafe { RESOURCE_TYPES.get()? };
+    map.get(&TypeId::of::<T>())
+        .map(|ptr| *ptr as NIF_RESOURCE_TYPE)
+}
+
+impl ResourceRegistration {
+    pub const fn new<T: ResourceType>(name: &'static str) -> Self {
+        Self {
+            name,
+            destructor: resource_destructor::<T>,
+            get_type_id: TypeId::of::<T>,
+        }
+    }
+
+    pub fn initialize(env: Env) {
+        for reg in inventory::iter::<Self>() {
+            reg.register(env);
+        }
+    }
+
+    pub fn register(&self, env: Env) {
+        let res: Option<NIF_RESOURCE_TYPE> = unsafe {
+            open_resource_type(
+                env.as_c_arg(),
+                CString::new(self.name).unwrap().as_bytes_with_nul(),
+                Some(self.destructor),
+                NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE,
+            )
+        };
+
+        let type_id = (self.get_type_id)();
+
+        unsafe {
+            RESOURCE_TYPES.get_or_init(Default::default);
+            RESOURCE_TYPES
+                .get_mut()
+                .unwrap()
+                .insert(type_id, res.unwrap() as usize);
+        }
+    }
+}
 
 /// Re-export a type used by the `resource!` macro.
 #[doc(hidden)]
 pub use crate::wrapper::NIF_RESOURCE_FLAGS;
 
-/// The ResourceType struct contains a  NIF_RESOURCE_TYPE and a phantom reference to the type it
-/// is for. It serves as a holder for the information needed to interact with the Erlang VM about
-/// the resource type.
-///
-/// This is usually stored in an implementation of ResourceTypeProvider.
 #[doc(hidden)]
-pub struct ResourceType<T> {
-    pub res: NIF_RESOURCE_TYPE,
-    pub struct_type: PhantomData<T>,
+pub trait ResourceType: Sized + Send + Sync + 'static {
+    fn get_resource_type() -> Option<NIF_RESOURCE_TYPE> {
+        get_resource_type::<Self>()
+    }
 }
 
-/// This trait gets implemented for the type we want to put into a resource when
-/// resource! is called on it. It provides the ResourceType.
-///
-/// In most cases the user should not have to worry about this.
-#[doc(hidden)]
-pub trait ResourceTypeProvider: Sized + Send + Sync + 'static {
-    fn get_type() -> &'static ResourceType<Self>;
+impl<'a> Term<'a> {
+    unsafe fn get_resource_ptrs<T: ResourceType>(&self) -> Option<(*const c_void, *mut T)> {
+        let typ = T::get_resource_type()?;
+        let res = resource::get_resource(self.get_env().as_c_arg(), self.as_c_arg(), typ)?;
+        Some((res, align_alloced_mem_for_struct::<T>(res) as *mut T))
+    }
+
+    pub fn get_resource<T: ResourceType>(&self) -> Option<&'a T> {
+        unsafe { self.get_resource_ptrs().map(|(_, ptr)| &*ptr) }
+    }
+
+    pub unsafe fn get_mut_resource<T: ResourceType>(&self) -> Option<&'a mut T> {
+        self.get_resource_ptrs().map(|(_, ptr)| &mut *ptr)
+    }
 }
 
 impl<T> Encoder for ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.as_term(env)
@@ -48,48 +107,33 @@ where
 }
 impl<'a, T> Decoder<'a> for ResourceArc<T>
 where
-    T: ResourceTypeProvider + 'a,
+    T: ResourceType + 'a,
 {
     fn decode(term: Term<'a>) -> NifResult<Self> {
         ResourceArc::from_term(term)
     }
 }
 
+impl<'a, T> Decoder<'a> for &'a T
+where
+    T: ResourceType + 'a,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        term.get_resource().ok_or(Error::BadArg)
+    }
+}
+
 /// Drop a T that lives in an Erlang resource. (erlang_nif-sys requires us to declare this
 /// function safe, but it is of course thoroughly unsafe!)
-extern "C" fn resource_destructor<T>(_env: NIF_ENV, handle: MUTABLE_NIF_RESOURCE_HANDLE) {
+pub unsafe extern "C" fn resource_destructor<T>(
+    _env: NIF_ENV,
+    handle: MUTABLE_NIF_RESOURCE_HANDLE,
+) {
     unsafe {
         let aligned = align_alloced_mem_for_struct::<T>(handle);
         let res = aligned as *mut T;
         ptr::read(res);
     }
-}
-
-/// This is the function that gets called from resource! in on_load to create a new
-/// resource type.
-///
-/// # Panics
-///
-/// Panics if `name` isn't null-terminated.
-#[doc(hidden)]
-pub fn open_struct_resource_type<T: ResourceTypeProvider>(
-    env: Env,
-    name: &str,
-    flags: NifResourceFlags,
-) -> Option<ResourceType<T>> {
-    let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        resource::open_resource_type(
-            env.as_c_arg(),
-            name.as_bytes(),
-            Some(resource_destructor::<T>),
-            flags,
-        )
-    };
-
-    res.map(|r| ResourceType {
-        res: r,
-        struct_type: PhantomData,
-    })
 }
 
 fn get_alloc_size_struct<T>() -> usize {
@@ -115,25 +159,26 @@ unsafe fn align_alloced_mem_for_struct<T>(ptr: *const c_void) -> *const c_void {
 /// convert back and forth between the two using `Encoder` and `Decoder`.
 pub struct ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     raw: *const c_void,
     inner: *mut T,
 }
 
 // Safe because T is `Sync` and `Send`.
-unsafe impl<T> Send for ResourceArc<T> where T: ResourceTypeProvider {}
-unsafe impl<T> Sync for ResourceArc<T> where T: ResourceTypeProvider {}
+unsafe impl<T> Send for ResourceArc<T> where T: ResourceType {}
+unsafe impl<T> Sync for ResourceArc<T> where T: ResourceType {}
 
 impl<T> ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     /// Makes a new ResourceArc from the given type. Note that the type must have
-    /// ResourceTypeProvider implemented for it. See module documentation for info on this.
+    /// ResourceType implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
-        let mem_raw = unsafe { resource::alloc_resource(T::get_type().res, alloc_size) };
+        let resource_type = T::get_resource_type().unwrap();
+        let mem_raw = unsafe { rustler_sys::enif_alloc_resource(resource_type, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
         unsafe { ptr::write(aligned_mem, data) };
@@ -185,28 +230,18 @@ where
     }
 
     fn from_term(term: Term) -> Result<Self, Error> {
-        let res_resource = match unsafe {
-            resource::get_resource(
-                term.get_env().as_c_arg(),
-                term.as_c_arg(),
-                T::get_type().res,
-            )
-        } {
-            Some(res) => res,
-            None => return Err(Error::BadArg),
-        };
-        unsafe {
-            resource::keep_resource(res_resource);
-        }
-        let casted_ptr = unsafe { align_alloced_mem_for_struct::<T>(res_resource) as *mut T };
-        Ok(ResourceArc {
-            raw: res_resource,
-            inner: casted_ptr,
-        })
+        let (raw, inner) = unsafe { term.get_resource_ptrs::<T>() }.ok_or(Error::BadArg)?;
+        unsafe { rustler_sys::enif_keep_resource(raw) };
+        Ok(ResourceArc { raw, inner })
     }
 
     fn as_term<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe { Term::new(env, resource::make_resource(env.as_c_arg(), self.raw)) }
+        unsafe {
+            Term::new(
+                env,
+                rustler_sys::enif_make_resource(env.as_c_arg(), self.raw),
+            )
+        }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {
@@ -220,7 +255,7 @@ where
 
 impl<T> Deref for ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     type Target = T;
 
@@ -231,14 +266,12 @@ where
 
 impl<T> Clone for ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     /// Cloning a `ResourceArc` simply increments the reference count for the
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
-        unsafe {
-            resource::keep_resource(self.raw);
-        }
+        unsafe { rustler_sys::enif_keep_resource(self.raw) };
         ResourceArc {
             raw: self.raw,
             inner: self.inner,
@@ -248,7 +281,7 @@ where
 
 impl<T> Drop for ResourceArc<T>
 where
-    T: ResourceTypeProvider,
+    T: ResourceType,
 {
     /// When a `ResourceArc` is dropped, the reference count is decremented. If
     /// there are no other references to the resource, the `T` value is dropped.
@@ -263,30 +296,11 @@ where
 
 #[macro_export]
 macro_rules! resource {
-    ($struct_name:ty, $env: ident) => {
-        {
-            static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
+    ($struct_name:ty, $env: ident) => {{
+        impl $crate::resource::ResourceType for $struct_name {}
 
-            let temp_struct_type =
-                match $crate::resource::open_struct_resource_type::<$struct_name>(
-                    $env,
-                    concat!(stringify!($struct_name), "\x00"),
-                    $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
-                    ) {
-                    Some(inner) => inner,
-                    None => {
-                        println!("Failure in creating resource type");
-                        return false;
-                    }
-                };
-            unsafe { STRUCT_TYPE = Some(temp_struct_type) };
-
-            impl $crate::resource::ResourceTypeProvider for $struct_name {
-                fn get_type() -> &'static $crate::resource::ResourceType<Self> {
-                    unsafe { &STRUCT_TYPE }.as_ref()
-                        .expect("The resource type hasn't been initialized. Did you remember to call the function where you used the `resource!` macro?")
-                }
-            }
-        }
-    }
+        let tuple = rustler::resource::ResourceRegistration::new::<$struct_name>(
+            stringify!(#name)
+        ).register($env);
+    }};
 }

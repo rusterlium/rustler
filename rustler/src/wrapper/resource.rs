@@ -3,10 +3,6 @@ use crate::wrapper::{
 };
 
 use rustler_sys::c_char;
-pub use rustler_sys::{
-    enif_alloc_resource as alloc_resource, enif_keep_resource as keep_resource,
-    enif_make_resource as make_resource, enif_release_resource as release_resource,
-};
 
 use std::mem::MaybeUninit;
 use std::ptr;

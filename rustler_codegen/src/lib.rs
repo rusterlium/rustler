@@ -9,6 +9,7 @@ mod init;
 mod map;
 mod nif;
 mod record;
+mod resource;
 mod tagged_enum;
 mod tuple;
 mod unit_enum;
@@ -399,4 +400,10 @@ pub fn nif_tagged_enum(input: TokenStream) -> TokenStream {
 pub fn nif_untagged_enum(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     untagged_enum::transcoder_decorator(&ast).into()
+}
+
+#[proc_macro_derive(Resource)]
+pub fn resource_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    resource::transcoder_decorator(&ast).into()
 }

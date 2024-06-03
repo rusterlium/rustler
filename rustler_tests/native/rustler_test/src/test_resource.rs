@@ -1,12 +1,14 @@
-use rustler::{Binary, Env, ResourceArc};
+use rustler::{Binary, Env, Resource, ResourceArc};
 use std::sync::{OnceLock, RwLock};
 
+// #[derive(Resource)]
 pub struct TestResource {
     test_field: RwLock<i32>,
 }
 
 /// This one is designed to look more like pointer data, to increase the
 /// chance of segfaults if the implementation is wrong.
+#[derive(Debug, Resource)]
 pub struct ImmutableResource {
     a: u32,
     b: u32,
@@ -19,7 +21,7 @@ pub struct WithBinaries {
 
 pub fn on_load(env: Env) -> bool {
     rustler::resource!(TestResource, env);
-    rustler::resource!(ImmutableResource, env);
+    // rustler::resource!(ImmutableResource, env);
     rustler::resource!(WithBinaries, env);
     true
 }
