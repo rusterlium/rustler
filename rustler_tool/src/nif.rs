@@ -39,23 +39,25 @@ unsafe fn maybe_call_nif_init(
 impl NifLibrary {
     pub fn load(path: &Path) -> Result<NifLibrary, Box<dyn std::error::Error>> {
         unsafe {
-            let lib = Library::new(&path)?;
+            let lib = Library::new(path)?;
             let entry = maybe_call_nif_init(&lib)?;
 
             let name = CStr::from_ptr((*entry).name).to_str()?.to_string();
             let nif_array =
                 std::slice::from_raw_parts((*entry).funcs, (*entry).num_of_funcs as usize);
 
-            let nifs = nif_array
-                .into_iter()
+            let mut nifs: Vec<_> = nif_array
+                .iter()
                 .filter_map(|f| {
                     Some(Nif {
-                        name: CStr::from_ptr((*f).name).to_str().ok()?.to_string(),
-                        arity: (*f).arity as usize,
-                        flags: (*f).flags as usize,
+                        name: CStr::from_ptr(f.name).to_str().ok()?.to_string(),
+                        arity: f.arity as usize,
+                        flags: f.flags as usize,
                     })
                 })
                 .collect();
+
+            nifs.sort_by_key(|x| x.name.clone());
 
             Ok(NifLibrary {
                 path: path.to_path_buf(),
