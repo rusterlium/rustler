@@ -2,6 +2,12 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.33 -> 0.34
+
+1. NIF implementations are now discovered automatically, the respective argument
+   in the `rustler::init!` macro should be removed. If a NIF implementation
+   should not be exported, it must be disabled with a `#[cfg]` marker.
+
 ## 0.32 -> 0.33
 
 The macro changes that where already carried out in version `0.22` are now
@@ -109,7 +115,7 @@ rustler::rustler_export_nifs! {
     "Elixir.Math",
     [
         ("add", 2, add),
-	("long_running_operation", 0, long_running_operation, SchedulerFlags::DirtyCpu)
+        ("long_running_operation", 0, long_running_operation, SchedulerFlags::DirtyCpu)
     ],
     None
 }
@@ -184,9 +190,9 @@ NIF called `_long_running_operation`, which used to be declared prior to Rustler
 rustler::rustler_export_nifs! {
     "Elixir.SomeNif",
     [
-	// Note that the function in Rust is long_running_operation, but the NIF is exported as
-	// _long_running_operation!
-	("_long_running_operation", 0, long_running_operation, SchedulerFlags::DirtyCpu)
+        // Note that the function in Rust is long_running_operation, but the NIF is exported as
+        // _long_running_operation!
+        ("_long_running_operation", 0, long_running_operation, SchedulerFlags::DirtyCpu)
     ],
     None
 }

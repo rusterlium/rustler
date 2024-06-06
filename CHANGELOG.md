@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## [unreleased]
+
+### Added
+
+### Fixed
+
+### Changed
+
+- NIF implementations are now discovered automatically and the respective
+  argument of `rustler::init!` is ignored (#613)
+
+### Removed
+
+
 ## [0.33.0] - 2024-05-29
 
 ### Added
