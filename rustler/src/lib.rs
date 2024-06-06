@@ -71,7 +71,6 @@ pub use nif::Nif;
 
 pub type NifResult<T> = Result<T, Error>;
 
-#[cfg(feature = "derive")]
 pub use rustler_codegen::{
     init, nif, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
     NifUntaggedEnum,

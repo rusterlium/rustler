@@ -18,6 +18,8 @@ versions.
 
 - NIF implementations are now discovered automatically and the respective
   argument of `rustler::init!` is ignored (#613)
+- The `derive` feature flag is now ignored and its functionality unconditionally
+  enabled (#621)
 
 ### Removed
 
