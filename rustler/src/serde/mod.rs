@@ -12,7 +12,7 @@ in a better way and allow more Erlang-y configurations).
 use rustler::{self, Encoder, SerdeTerm};
 use serde::{Serialize, Deserialize};
 
-rustler::init!("Elixir.SerdeNif", [readme]);
+rustler::init!("Elixir.SerdeNif");
 
 // NOTE: to serialize to the correct Elixir record, you MUST tell serde to
 // rename the variants to the full Elixir record module atom.
