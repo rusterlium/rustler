@@ -1,4 +1,4 @@
-use std::alloc::{Layout, alloc, dealloc};
+use std::alloc::{alloc, dealloc, Layout};
 
 const HEADER: usize = 8;
 const ALIGNMENT: usize = 8;
@@ -25,6 +25,8 @@ pub unsafe extern "C" fn enif_free(ptr: *mut u8) {
 
 #[no_mangle]
 pub static enif_alloc_binary: usize = 0;
+#[no_mangle]
+pub static enif_alloc_resource: usize = 0;
 #[no_mangle]
 pub static enif_alloc_env: usize = 0;
 #[no_mangle]
@@ -98,6 +100,8 @@ pub static enif_is_ref: usize = 0;
 #[no_mangle]
 pub static enif_is_tuple: usize = 0;
 #[no_mangle]
+pub static enif_keep_resource: usize = 0;
+#[no_mangle]
 pub static enif_make_atom_len: usize = 0;
 #[no_mangle]
 pub static enif_make_badarg: usize = 0;
@@ -132,6 +136,10 @@ pub static enif_make_new_map: usize = 0;
 #[no_mangle]
 pub static enif_make_reverse_list: usize = 0;
 #[no_mangle]
+pub static enif_make_resource: usize = 0;
+#[no_mangle]
+pub static enif_make_resource_binary: usize = 0;
+#[no_mangle]
 pub static enif_make_sub_binary: usize = 0;
 #[no_mangle]
 pub static enif_make_tuple_from_array: usize = 0;
@@ -158,12 +166,20 @@ pub static enif_realloc_binary: usize = 0;
 #[no_mangle]
 pub static enif_release_binary: usize = 0;
 #[no_mangle]
+pub static enif_release_resource: usize = 0;
+#[no_mangle]
 pub static enif_schedule_nif: usize = 0;
 #[no_mangle]
 pub static enif_self: usize = 0;
+#[no_mangle]
+pub static enif_send: usize = 0;
 #[no_mangle]
 pub static enif_snprintf: usize = 0;
 #[no_mangle]
 pub static enif_term_to_binary: usize = 0;
 #[no_mangle]
 pub static enif_term_type: usize = 0;
+#[no_mangle]
+pub static enif_thread_type: usize = 0;
+#[no_mangle]
+pub static enif_whereis_pid: usize = 0;

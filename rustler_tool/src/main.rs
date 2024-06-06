@@ -1,6 +1,8 @@
 #[cfg(unix)]
 mod fake_symbols;
 mod nif;
+mod nif_elixir;
+mod nif_erlang;
 
 use std::path::PathBuf;
 
@@ -15,24 +17,44 @@ struct Cli {
     command: Option<Commands>,
 }
 
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum OutputFormat {
+    #[default]
+    Bare,
+    Erlang,
+    Elixir,
+}
+
 #[derive(Subcommand)]
 enum Commands {
     /// does testing things
-    Nif { path: PathBuf },
+    Nif {
+        path: PathBuf,
+        #[arg(short, long, default_value_t, value_enum)]
+        format: OutputFormat,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Nif { path }) => {
-            println!("Extracting nifs from {:?}", path);
+        Some(Commands::Nif { path, format }) => {
+            let lib = NifLibrary::load(path).unwrap();
 
-            let lib = NifLibrary::load(&path).unwrap();
-
-            println!("Found library {} with nifs", lib.name);
-            for nif in lib.nifs {
-                println!("  {}/{}", nif.name, nif.arity);
+            match format {
+                OutputFormat::Bare => {
+                    println!("{}", lib.name);
+                    for nif in lib.nifs {
+                        println!("  {}/{}", nif.name, nif.arity);
+                    }
+                }
+                OutputFormat::Erlang => {
+                    println!("{}", nif_erlang::LibAsErlang(lib))
+                }
+                OutputFormat::Elixir => {
+                    println!("{}", nif_elixir::LibAsElixir(lib))
+                }
             }
         }
         None => {
