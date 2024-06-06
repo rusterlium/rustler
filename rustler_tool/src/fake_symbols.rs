@@ -1,5 +1,28 @@
+use std::alloc::{Layout, alloc, dealloc};
+
+const HEADER: usize = 8;
+const ALIGNMENT: usize = 8;
+
 #[no_mangle]
-pub static enif_alloc: usize = 0;
+pub unsafe extern "C" fn enif_alloc(size: usize) -> *mut u8 {
+    if let Ok(layout) = Layout::from_size_align(size + HEADER, ALIGNMENT) {
+        let ptr = alloc(layout);
+        *(ptr as *mut usize) = size;
+        return ptr.wrapping_add(HEADER);
+    }
+
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn enif_free(ptr: *mut u8) {
+    let real_ptr = ptr.wrapping_sub(HEADER);
+    let size = *(real_ptr as *const usize);
+    if let Ok(layout) = Layout::from_size_align(size + HEADER, ALIGNMENT) {
+        dealloc(real_ptr, layout);
+    }
+}
+
 #[no_mangle]
 pub static enif_alloc_binary: usize = 0;
 #[no_mangle]
@@ -12,8 +35,6 @@ pub static enif_clear_env: usize = 0;
 pub static enif_compare: usize = 0;
 #[no_mangle]
 pub static enif_consume_timeslice: usize = 0;
-#[no_mangle]
-pub static enif_free: usize = 0;
 #[no_mangle]
 pub static enif_free_env: usize = 0;
 #[no_mangle]
