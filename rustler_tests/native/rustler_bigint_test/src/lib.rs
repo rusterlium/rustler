@@ -15,4 +15,4 @@ pub fn add(a: BigInt, b: BigInt) -> NifResult<BigInt> {
     Ok(a.checked_add(&b).unwrap())
 }
 
-rustler::init!("Elixir.RustlerBigintTest", [echo, add_one, add]);
+rustler::init!("Elixir.RustlerBigintTest");

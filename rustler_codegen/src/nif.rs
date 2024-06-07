@@ -55,54 +55,47 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
     }
 
     quote! {
-        #[allow(non_camel_case_types)]
-        pub struct #name;
+        rustler::codegen_runtime::inventory::submit!(
+            rustler::Nif {
+                name: concat!(#erl_func_name, "\0").as_ptr()
+                    as *const rustler::codegen_runtime::c_char,
+                arity: #arity,
+                flags: #flags as rustler::codegen_runtime::c_uint,
+                raw_func: {
+                    unsafe extern "C" fn nif_func(
+                        nif_env: rustler::codegen_runtime::NIF_ENV,
+                        argc: rustler::codegen_runtime::c_int,
+                        argv: *const rustler::codegen_runtime::NIF_TERM
+                    ) -> rustler::codegen_runtime::NIF_TERM {
+                        let lifetime = ();
+                        let env = rustler::Env::new(&lifetime, nif_env);
 
-        impl rustler::Nif for #name {
-            const NAME: *const rustler::codegen_runtime::c_char = concat!(#erl_func_name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char;
-            const ARITY: rustler::codegen_runtime::c_uint = #arity;
-            const FLAGS: rustler::codegen_runtime::c_uint = #flags as rustler::codegen_runtime::c_uint;
-            const RAW_FUNC: unsafe extern "C" fn(
-                nif_env: rustler::codegen_runtime::NIF_ENV,
-                argc: rustler::codegen_runtime::c_int,
-                argv: *const rustler::codegen_runtime::NIF_TERM
-            ) -> rustler::codegen_runtime::NIF_TERM = {
-                unsafe extern "C" fn nif_func(
-                    nif_env: rustler::codegen_runtime::NIF_ENV,
-                    argc: rustler::codegen_runtime::c_int,
-                    argv: *const rustler::codegen_runtime::NIF_TERM
-                ) -> rustler::codegen_runtime::NIF_TERM {
-                    let lifetime = ();
-                    let env = rustler::Env::new(&lifetime, nif_env);
+                        let terms = std::slice::from_raw_parts(argv, argc as usize)
+                            .iter()
+                            .map(|term| rustler::Term::new(env, *term))
+                            .collect::<Vec<rustler::Term>>();
 
-                    let terms = std::slice::from_raw_parts(argv, argc as usize)
-                        .iter()
-                        .map(|term| rustler::Term::new(env, *term))
-                        .collect::<Vec<rustler::Term>>();
+                        fn wrapper<'a>(
+                            env: rustler::Env<'a>,
+                            args: &[rustler::Term<'a>]
+                        ) -> rustler::codegen_runtime::NifReturned {
+                            let result: std::thread::Result<_> =
+                                std::panic::catch_unwind(move || {
+                                    #decoded_terms
+                                    #function
+                                    Ok(#name(#argument_names))
+                                });
 
-                    fn wrapper<'a>(
-                        env: rustler::Env<'a>,
-                        args: &[rustler::Term<'a>]
-                    ) -> rustler::codegen_runtime::NifReturned {
-                        let result: std::thread::Result<_> = std::panic::catch_unwind(move || {
-                            #decoded_terms
-                            #function
-                            Ok(#name(#argument_names))
-                        });
-
-                        rustler::codegen_runtime::handle_nif_result(result, env)
+                            rustler::codegen_runtime::handle_nif_result(
+                                result, env
+                            )
+                        }
+                        wrapper(env, &terms).apply(env)
                     }
-                    wrapper(env, &terms).apply(env)
+                    nif_func
                 }
-                nif_func
-            };
-            const FUNC: rustler::codegen_runtime::DEF_NIF_FUNC = rustler::codegen_runtime::DEF_NIF_FUNC {
-                arity: Self::ARITY,
-                flags: Self::FLAGS,
-                function: Self::RAW_FUNC,
-                name: Self::NAME
-            };
-        }
+            }
+        );
     }
 }
 

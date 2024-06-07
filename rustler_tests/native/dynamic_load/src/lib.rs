@@ -52,4 +52,4 @@ fn build_path_buf(priv_path: &[u8]) -> PathBuf {
     PathBuf::from(priv_path)
 }
 
-rustler::init!("Elixir.DynamicData", [get_dataset], load = load);
+rustler::init!("Elixir.DynamicData", load = load);

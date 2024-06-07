@@ -108,8 +108,3 @@ pub fn resource_make_binaries(
         resource.make_binary(env, |_| get_static_bin()),
     )
 }
-
-#[rustler::nif]
-pub fn resource_make_binary_from_vec(env: Env, resource: ResourceArc<WithBinaries>) -> Binary {
-    resource.make_binary(env, |w| &w.b)
-}
