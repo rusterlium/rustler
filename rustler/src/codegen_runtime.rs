@@ -5,8 +5,9 @@ use std::fmt;
 
 use crate::{Encoder, Env, OwnedBinary, Term};
 
-// Re-export of inventory
-pub use inventory;
+// Re-export of linkme
+pub use crate::nif::RUSTLER_NIFS as NIFS;
+pub use linkme;
 
 // Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
