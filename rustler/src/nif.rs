@@ -1,5 +1,6 @@
 use crate::codegen_runtime::{c_char, c_int, c_uint, DEF_NIF_FUNC, NIF_ENV, NIF_TERM};
 
+#[repr(C)]
 pub struct Nif {
     pub name: *const c_char,
     pub arity: c_uint,
@@ -22,4 +23,6 @@ impl Nif {
 
 unsafe impl Sync for Nif {}
 
-inventory::collect!(Nif);
+#[no_mangle]
+#[linkme::distributed_slice]
+pub static RUSTLER_NIFS: [Nif];

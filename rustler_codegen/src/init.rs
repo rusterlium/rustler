@@ -86,8 +86,9 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
             let nif_funcs: Box<[_]> =
-                rustler::codegen_runtime::inventory::iter::<rustler::Nif>()
-                .map(rustler::Nif::get_def)
+                rustler::codegen_runtime::NIFS
+                .iter()
+                .map(|n| n.get_def())
                 .collect();
 
             let entry = rustler::codegen_runtime::DEF_NIF_ENTRY {
