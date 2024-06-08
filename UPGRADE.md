@@ -7,6 +7,9 @@ This document is intended to simplify upgrading to newer versions by extending t
 1. NIF implementations are now discovered automatically, the respective argument
    in the `rustler::init!` macro should be removed. If a NIF implementation
    should not be exported, it must be disabled with a `#[cfg]` marker.
+2. The functionality related to the `derive` feature is now unconditionally
+   active. The feature flag is kept for compatibility for now but will be
+   removed in the future.
 
 ## 0.32 -> 0.33
 
