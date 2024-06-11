@@ -6,13 +6,14 @@ use std::fmt;
 use crate::{Encoder, Env, OwnedBinary, Term};
 
 // Re-export of inventory
+pub use crate::resource::ResourceRegistration;
 pub use inventory;
 
 // Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
     c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
-    MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
+    NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
 #[cfg(windows)]

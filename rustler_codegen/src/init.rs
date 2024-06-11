@@ -104,7 +104,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
                             let env = rustler::Env::new(&env, env);
-                            rustler::resource::ResourceRegistration::initialize(env);
+                            rustler::codegen_runtime::ResourceRegistration::initialize(env);
                             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
                             let load_info = rustler::Term::new(env, load_info);
                             rustler::codegen_runtime::handle_nif_init_call(

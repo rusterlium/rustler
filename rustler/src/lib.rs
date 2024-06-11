@@ -45,8 +45,8 @@ pub use crate::types::{
 #[cfg(feature = "big_integer")]
 pub use crate::types::BigInt;
 
-pub mod resource;
-pub use crate::resource::ResourceArc;
+mod resource;
+pub use crate::resource::{Monitor, MonitorResource, Resource, ResourceArc};
 
 #[doc(hidden)]
 pub mod dynamic;
@@ -72,8 +72,8 @@ pub use nif::Nif;
 pub type NifResult<T> = Result<T, Error>;
 
 pub use rustler_codegen::{
-    init, nif, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
-    NifUntaggedEnum, Resource,
+    init, nif, MonitorResource, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum,
+    NifTuple, NifUnitEnum, NifUntaggedEnum, Resource,
 };
 
 #[cfg(feature = "serde")]

@@ -12,8 +12,10 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         impl rustler::Resource for #name {}
 
         rustler::codegen_runtime::inventory::submit!(
-            rustler::codegen_runtime::ResourceRegistration::new::<#name>(
-                #name_s
+            rustler::codegen_runtime::ResourceRegistration::add_down_callback::<#name>(
+                rustler::codegen_runtime::ResourceRegistration::new::<#name>(
+                    #name_s
+                )
             )
         );
     }

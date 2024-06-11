@@ -1,3 +1,4 @@
+use crate::thread::is_scheduler_thread;
 use crate::types::LocalPid;
 use crate::wrapper::{NIF_ENV, NIF_TERM};
 use crate::{Encoder, Term};
@@ -229,7 +230,7 @@ impl OwnedEnv {
         F: FnOnce(Env<'a>) -> T,
         T: Encoder,
     {
-        if unsafe { rustler_sys::enif_thread_type() } != rustler_sys::ERL_NIF_THR_UNDEFINED {
+        if is_scheduler_thread() {
             panic!("send_and_clear: current thread is managed");
         }
 

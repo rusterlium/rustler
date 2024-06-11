@@ -67,6 +67,11 @@ defmodule RustlerTest do
   def resource_make_immutable(_), do: err()
   def resource_immutable_count(), do: err()
 
+  def monitor_resource_make(), do: err()
+  def monitor_resource_monitor(_, _), do: err()
+  def monitor_resource_down_called(_), do: err()
+  def monitor_resource_demonitor(_), do: err()
+
   def resource_make_with_binaries(), do: err()
   def resource_make_binaries(_), do: err()
 

@@ -1,9 +1,27 @@
-use rustler::{Binary, Env, Resource, ResourceArc};
-use std::sync::{OnceLock, RwLock};
+use rustler::{Binary, Env, LocalPid, Monitor, MonitorResource, Resource, ResourceArc};
+use std::sync::{Mutex, OnceLock, RwLock};
 
 // #[derive(Resource)]
 pub struct TestResource {
     test_field: RwLock<i32>,
+}
+
+struct TestMonitorResourceInner {
+    mon: Option<Monitor>,
+    down_called: bool,
+}
+
+#[derive(MonitorResource)]
+pub struct TestMonitorResource {
+    inner: Mutex<TestMonitorResourceInner>,
+}
+
+impl MonitorResource for TestMonitorResource {
+    fn down<'a>(&'a self, _env: Env<'a>, _pid: LocalPid, mon: Monitor) {
+        let mut inner = self.inner.lock().unwrap();
+        assert!(Some(mon) == inner.mon);
+        inner.down_called = true;
+    }
 }
 
 /// This one is designed to look more like pointer data, to increase the
@@ -85,6 +103,16 @@ pub fn resource_immutable_count() -> u32 {
 }
 
 #[rustler::nif]
+pub fn monitor_resource_make() -> ResourceArc<TestMonitorResource> {
+    ResourceArc::new(TestMonitorResource {
+        inner: Mutex::new(TestMonitorResourceInner {
+            mon: None,
+            down_called: false,
+        }),
+    })
+}
+
+#[rustler::nif]
 pub fn resource_make_with_binaries() -> ResourceArc<WithBinaries> {
     ResourceArc::new(WithBinaries {
         a: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -109,4 +137,27 @@ pub fn resource_make_binaries(
         // From static
         resource.make_binary(env, |_| get_static_bin()),
     )
+}
+
+#[rustler::nif]
+pub fn monitor_resource_monitor(
+    env: Env,
+    resource: ResourceArc<TestMonitorResource>,
+    pid: LocalPid,
+) {
+    let mut inner = resource.inner.lock().unwrap();
+    inner.mon = resource.monitor(Some(&env), &pid);
+    assert!(inner.mon.is_some());
+    inner.down_called = false;
+}
+
+#[rustler::nif]
+pub fn monitor_resource_down_called(resource: ResourceArc<TestMonitorResource>) -> bool {
+    resource.inner.lock().unwrap().down_called
+}
+
+#[rustler::nif]
+pub fn monitor_resource_demonitor(env: Env, resource: ResourceArc<TestMonitorResource>) -> bool {
+    let inner = resource.inner.lock().unwrap();
+    resource.demonitor(Some(&env), inner.mon.as_ref().unwrap())
 }
