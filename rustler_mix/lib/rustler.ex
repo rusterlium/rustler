@@ -170,5 +170,14 @@ defmodule Rustler do
   end
 
   @doc false
-  def rustler_version, do: "0.33.1"
+  def rustler_version do
+    # Retrieve newest version or fall back to hard-coded one
+    Req.get!("https://crates.io/api/v1/crates/rustler").body
+    |> Map.fetch!("versions")
+    |> Enum.filter(fn version -> not version["yanked"] end)
+    |> Enum.map(fn version -> version["num"] end)
+    |> Enum.fetch!(0)
+  rescue
+    _ -> "0.33.0"
+  end
 end

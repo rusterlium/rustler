@@ -24,14 +24,6 @@ defmodule Rustler.Compiler.Messages do
     """
   end
 
-  def message({:differing_versions, crate, rustler_version, codegen_version}) do
-    """
-    The '#{crate}' crate should have the same rustler and rustler_codegen version in its Cargo.toml:
-    rustler version: #{rustler_version}
-    rustler_codegen version: #{codegen_version}
-    """
-  end
-
   def message({:unsupported_rustler_version, crate, supported, version}) do
     """
     The crate '#{crate}' is using an unsupported version of rustler and rustler_codegen.
