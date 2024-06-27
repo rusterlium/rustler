@@ -11,7 +11,8 @@ use std::ptr;
 
 use super::{Binary, Decoder, Encoder, Env, Error, NifResult, Term};
 use crate::wrapper::{
-    c_void, resource, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_RESOURCE_TYPE,
+    c_void, resource, NifResourceDtor, NifResourceFlags, MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV,
+    NIF_RESOURCE_TYPE,
 };
 
 /// Re-export a type used by the `resource!` macro.
@@ -77,14 +78,23 @@ pub fn open_struct_resource_type<T: ResourceTypeProvider>(
     name: &str,
     flags: NifResourceFlags,
 ) -> Option<ResourceType<T>> {
-    let res: Option<NIF_RESOURCE_TYPE> = unsafe {
-        resource::open_resource_type(
-            env.as_c_arg(),
-            name.as_bytes(),
-            Some(resource_destructor::<T>),
-            flags,
-        )
-    };
+    open_struct_resource_type_with_dtor(env, name, resource_destructor::<T>, flags)
+}
+
+/// Similar to open_struct_resource_type but allows for a custom destructor.
+///
+/// # Panics
+///
+/// Panics if `name` isn't null-terminated.
+#[doc(hidden)]
+pub fn open_struct_resource_type_with_dtor<T: ResourceTypeProvider>(
+    env: Env,
+    name: &str,
+    dtor: NifResourceDtor,
+    flags: NifResourceFlags,
+) -> Option<ResourceType<T>> {
+    let res: Option<NIF_RESOURCE_TYPE> =
+        unsafe { resource::open_resource_type(env.as_c_arg(), name.as_bytes(), Some(dtor), flags) };
 
     res.map(|r| ResourceType {
         res: r,
@@ -271,6 +281,33 @@ macro_rules! resource {
                 match $crate::resource::open_struct_resource_type::<$struct_name>(
                     $env,
                     concat!(stringify!($struct_name), "\x00"),
+                    $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
+                    ) {
+                    Some(inner) => inner,
+                    None => {
+                        println!("Failure in creating resource type");
+                        return false;
+                    }
+                };
+            unsafe { STRUCT_TYPE = Some(temp_struct_type) };
+
+            impl $crate::resource::ResourceTypeProvider for $struct_name {
+                fn get_type() -> &'static $crate::resource::ResourceType<Self> {
+                    unsafe { &STRUCT_TYPE }.as_ref()
+                        .expect("The resource type hasn't been initialized. Did you remember to call the function where you used the `resource!` macro?")
+                }
+            }
+        }
+    };
+    ($struct_name:ty, $env: ident, $dtor: ident) => {
+        {
+            static mut STRUCT_TYPE: Option<$crate::resource::ResourceType<$struct_name>> = None;
+
+            let temp_struct_type =
+                match $crate::resource::open_struct_resource_type_with_dtor::<$struct_name>(
+                    $env,
+                    concat!(stringify!($struct_name), "\x00"),
+                    $dtor,
                     $crate::resource::NIF_RESOURCE_FLAGS::ERL_NIF_RT_CREATE
                     ) {
                     Some(inner) => inner,
