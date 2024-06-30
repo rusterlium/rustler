@@ -18,6 +18,7 @@ type EnvId<'a> = PhantomData<*mut &'a u8>;
 /// There is no way to allocate a Env at the moment, but this may be possible in the future.
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
+    pub(crate) init: bool,
     env: NIF_ENV,
     id: EnvId<'a>,
 }
@@ -48,6 +49,7 @@ impl<'a> Env<'a> {
     /// Don't create multiple `Env`s with the same lifetime.
     pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
         Env {
+            init: false,
             env,
             id: PhantomData,
         }

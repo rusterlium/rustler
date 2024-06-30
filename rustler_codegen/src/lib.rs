@@ -7,10 +7,8 @@ mod encode_decode_templates;
 mod ex_struct;
 mod init;
 mod map;
-mod monitor_resource;
 mod nif;
 mod record;
-mod resource;
 mod tagged_enum;
 mod tuple;
 mod unit_enum;
@@ -401,16 +399,4 @@ pub fn nif_tagged_enum(input: TokenStream) -> TokenStream {
 pub fn nif_untagged_enum(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     untagged_enum::transcoder_decorator(&ast).into()
-}
-
-#[proc_macro_derive(Resource)]
-pub fn resource_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    resource::transcoder_decorator(&ast).into()
-}
-
-#[proc_macro_derive(MonitorResource)]
-pub fn monitor_resource_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
-    monitor_resource::transcoder_decorator(&ast).into()
 }

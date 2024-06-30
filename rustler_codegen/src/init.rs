@@ -103,13 +103,15 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                         load_info: rustler::codegen_runtime::NIF_TERM
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
-                            let env = rustler::Env::new(&env, env);
-                            rustler::codegen_runtime::ResourceRegistration::initialize(env);
+                            let mut env = rustler::Env::new(&env, env);
                             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
                             let load_info = rustler::Term::new(env, load_info);
-                            rustler::codegen_runtime::handle_nif_init_call(
-                                #load, env, load_info
-                            )
+                            env.to_init_env();
+                            #load.map_or(0, |inner| {
+                                rustler::codegen_runtime::handle_nif_init_call(
+                                    inner, env, load_info
+                                )
+                            })
                         }
                     }
                     Some(nif_load)

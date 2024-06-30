@@ -1,5 +1,5 @@
-use super::traits;
 use super::util::align_alloced_mem_for_struct;
+use super::{traits, ResourceInitError};
 use crate::{Env, LocalPid, Monitor, MonitorResource, Resource};
 use rustler_sys::{
     c_char, c_void, ErlNifEnv, ErlNifMonitor, ErlNifPid, ErlNifResourceDown, ErlNifResourceDtor,
@@ -11,32 +11,24 @@ use std::mem::MaybeUninit;
 use std::ptr;
 
 #[derive(Debug)]
-pub struct ResourceRegistration {
-    name: &'static str,
+pub struct Registration {
     get_type_id: fn() -> TypeId,
+    get_type_name: fn() -> &'static str,
     init: ErlNifResourceTypeInit,
 }
 
-unsafe impl Sync for ResourceRegistration {}
-
-inventory::collect!(ResourceRegistration);
-
-impl ResourceRegistration {
-    pub const fn new<T: Resource>(name: &'static str) -> Self {
+impl Registration {
+    pub const fn new<T: Resource>() -> Self {
         let init = ErlNifResourceTypeInit {
-            dtor: if std::mem::needs_drop::<T>() {
-                resource_destructor::<T> as *const ErlNifResourceDtor
-            } else {
-                ptr::null()
-            },
+            dtor: resource_destructor::<T> as *const ErlNifResourceDtor,
             stop: ptr::null(),
             down: ptr::null(),
             members: 1,
             dyncall: ptr::null(),
         };
         Self {
-            name,
             init,
+            get_type_name: std::any::type_name::<T>,
             get_type_id: TypeId::of::<T>,
         }
     }
@@ -51,31 +43,37 @@ impl ResourceRegistration {
         }
     }
 
-    pub fn initialize(env: Env) {
-        for reg in inventory::iter::<Self>() {
-            reg.register(env);
-        }
-    }
+    pub fn register(&self, env: Env) -> Result<(), ResourceInitError> {
+        let type_id = (self.get_type_id)();
+        let type_name = (self.get_type_name)();
 
-    pub fn register(&self, env: Env) {
         let res: Option<*const ErlNifResourceType> = unsafe {
             open_resource_type(
                 env.as_c_arg(),
-                CString::new(self.name).unwrap().as_bytes_with_nul(),
+                CString::new(type_name).unwrap().as_bytes_with_nul(),
                 self.init,
                 ErlNifResourceFlags::ERL_NIF_RT_CREATE,
             )
         };
-
-        let type_id = (self.get_type_id)();
-        unsafe { traits::register_resource_type(type_id, res.unwrap()) }
+        if let Some(ptr) = res {
+            unsafe { traits::register_resource_type(type_id, ptr) };
+            Ok(())
+        } else {
+            Err(ResourceInitError)
+        }
     }
 }
 
 /// Drop a T that lives in an Erlang resource
-unsafe extern "C" fn resource_destructor<T>(_env: *mut ErlNifEnv, handle: *mut c_void) {
+unsafe extern "C" fn resource_destructor<T>(_env: *mut ErlNifEnv, handle: *mut c_void)
+where
+    T: Resource,
+{
+    let env = Env::new(&_env, _env);
     let aligned = align_alloced_mem_for_struct::<T>(handle);
-    ptr::drop_in_place(aligned as *mut T);
+    // Destructor takes ownership, thus the resource object will be dropped after the function has
+    // run.
+    ptr::read::<T>(aligned as *mut T).destructor(env);
 }
 
 unsafe extern "C" fn resource_down<T: MonitorResource>(

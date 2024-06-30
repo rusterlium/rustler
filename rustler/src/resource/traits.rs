@@ -16,7 +16,14 @@ pub(crate) unsafe fn register_resource_type(type_id: TypeId, resource_type: NifR
         .insert(type_id, resource_type as usize);
 }
 
-pub trait Resource: Sized + Send + Sync + 'static {}
+pub trait Resource: Sized + Send + Sync + 'static {
+    #[allow(unused_mut)]
+    fn destructor(mut self, _env: Env<'_>) {}
+}
+
+pub trait MonitorResource: Resource {
+    fn down<'a>(&'a self, env: Env<'a>, pid: LocalPid, monitor: Monitor);
+}
 
 #[doc(hidden)]
 pub(crate) trait ResourceExt: 'static {
@@ -27,8 +34,4 @@ pub(crate) trait ResourceExt: 'static {
     }
 }
 
-impl<T: 'static> ResourceExt for T {}
-
-pub trait MonitorResource: 'static {
-    fn down<'a>(&'a self, env: Env<'a>, pid: LocalPid, monitor: Monitor);
-}
+impl<T: Resource> ResourceExt for T {}

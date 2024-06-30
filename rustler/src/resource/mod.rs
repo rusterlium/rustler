@@ -5,6 +5,7 @@
 //! more references to the resource.
 
 mod handle;
+mod init_env;
 mod monitor;
 mod registration;
 mod traits;
@@ -16,7 +17,7 @@ use super::{Decoder, Error, NifResult, Term};
 
 pub use handle::ResourceArc;
 pub use monitor::Monitor;
-pub use registration::ResourceRegistration;
+pub use registration::Registration;
 use rustler_sys::c_void;
 use traits::ResourceExt;
 pub use traits::{MonitorResource, Resource};
@@ -59,13 +60,14 @@ where
     }
 }
 
+/// Indicates that a resource has not been registered successfully
+#[derive(Clone, Copy, Debug)]
+pub struct ResourceInitError;
+
 #[macro_export]
 macro_rules! resource {
     ($struct_name:ty, $env: ident) => {{
         impl $crate::Resource for $struct_name {}
-
-        let tuple = $crate::codegen_runtime::ResourceRegistration::new::<$struct_name>(
-            stringify!(#name)
-        ).register($env);
+        $env.add_resource_type::<$struct_name>().is_ok()
     }};
 }

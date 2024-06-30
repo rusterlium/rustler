@@ -6,7 +6,8 @@ use rustler_sys::{c_void, ErlNifEnv};
 
 use crate::thread::is_scheduler_thread;
 use crate::{
-    Binary, Decoder, Encoder, Env, Error, LocalPid, Monitor, MonitorResource, NifResult, Term,
+    Binary, Decoder, Encoder, Env, Error, LocalPid, Monitor, MonitorResource, NifResult, OwnedEnv,
+    Term,
 };
 
 use super::traits::{Resource, ResourceExt};
@@ -37,8 +38,8 @@ impl<T> ResourceArc<T>
 where
     T: Resource,
 {
-    /// Makes a new ResourceArc from the given type. Note that the type must have
-    /// ResourceType implemented for it. See module documentation for info on this.
+    /// Makes a new ResourceArc from the given type. Note that the type must have Resource
+    /// implemented for it. See module documentation for info on this.
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
         let resource_type = T::get_resource_type().unwrap();
@@ -119,7 +120,7 @@ where
 
 impl<T> ResourceArc<T>
 where
-    T: Resource + MonitorResource,
+    T: MonitorResource,
 {
     pub fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor> {
         let env = maybe_env(caller_env);
@@ -137,6 +138,34 @@ where
     pub fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool {
         let env = maybe_env(caller_env);
         unsafe { rustler_sys::enif_demonitor_process(env, self.raw, mon.as_c_arg()) == 0 }
+    }
+}
+
+impl OwnedEnv {
+    pub fn monitor<T: MonitorResource>(
+        &self,
+        resource: &ResourceArc<T>,
+        pid: &LocalPid,
+    ) -> Option<Monitor> {
+        resource.monitor(None, pid)
+    }
+
+    pub fn demonitor<T: MonitorResource>(&self, resource: &ResourceArc<T>, mon: &Monitor) -> bool {
+        resource.demonitor(None, mon)
+    }
+}
+
+impl<'a> Env<'a> {
+    pub fn monitor<T: MonitorResource>(
+        &self,
+        resource: &ResourceArc<T>,
+        pid: &LocalPid,
+    ) -> Option<Monitor> {
+        resource.monitor(Some(self), pid)
+    }
+
+    pub fn demonitor<T: MonitorResource>(&self, resource: &ResourceArc<T>, mon: &Monitor) -> bool {
+        resource.demonitor(Some(self), mon)
     }
 }
 
@@ -178,6 +207,12 @@ where
     /// collection.
     fn drop(&mut self) {
         unsafe { rustler_sys::enif_release_resource(self.as_c_arg()) };
+    }
+}
+
+impl<T: Resource> From<T> for ResourceArc<T> {
+    fn from(value: T) -> Self {
+        Self::new(value)
     }
 }
 
