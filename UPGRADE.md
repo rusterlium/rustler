@@ -10,6 +10,9 @@ This document is intended to simplify upgrading to newer versions by extending t
 2. The functionality related to the `derive` feature is now unconditionally
    active. The feature flag is kept for compatibility for now but will be
    removed in the future.
+3. To register a type as a resource, the new `#[derive(Resource)]` can be used
+   now. It is implicitly registered and does not require (or work in) the old
+   explicit registration with `rustler::resource!` a custom `load` function.
 
 ## 0.32 -> 0.33
 

@@ -12,6 +12,10 @@ versions.
 
 ### Added
 
+- Resource types can now be registered implicitly via a `#[derive(Resource)]`
+  instead of explicit registration in a `load` function using
+  `rustler::resource!` (#617)
+
 ### Fixed
 
 ### Changed

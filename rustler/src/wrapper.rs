@@ -15,7 +15,6 @@ pub mod exception;
 pub mod list;
 pub mod map;
 pub mod pid;
-pub mod resource;
 pub mod term;
 pub mod tuple;
 
@@ -37,20 +36,12 @@ pub fn get_nif_resource_type_init_size() -> usize {
     std::mem::size_of::<rustler_sys::ErlNifResourceTypeInit>()
 }
 
-pub type NIF_RESOURCE_HANDLE = *const c_void;
-pub type MUTABLE_NIF_RESOURCE_HANDLE = *mut c_void;
-
-pub type NifResourceDtor =
-    unsafe extern "C" fn(r_env: NIF_ENV, obj: MUTABLE_NIF_RESOURCE_HANDLE) -> ();
-pub type NifResourceFlags = rustler_sys::ErlNifResourceFlags;
-
 pub enum NIF_ERROR {
     BAD_ARG,
 }
 
 pub type DEF_NIF_FUNC = rustler_sys::ErlNifFunc;
 pub type DEF_NIF_ENTRY = rustler_sys::ErlNifEntry;
-pub use rustler_sys::ErlNifResourceFlags as NIF_RESOURCE_FLAGS;
 pub use rustler_sys::NIF_MAJOR_VERSION;
 pub use rustler_sys::NIF_MINOR_VERSION;
 
