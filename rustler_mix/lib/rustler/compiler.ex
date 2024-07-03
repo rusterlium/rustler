@@ -6,44 +6,90 @@ defmodule Rustler.Compiler do
   @doc false
   def compile_crate(otp_app, config, opts) do
     config = Config.from(otp_app, config, opts)
+    pgo_run = System.get_env("RUSTLER_PGO_RUN") === "true"
 
-    unless config.skip_compilation? do
-      crate_full_path = Path.expand(config.path, File.cwd!())
-
-      File.mkdir_p!(priv_dir())
-
-      Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
-
-      [cmd | args] =
-        make_base_command(config.cargo)
-        |> make_no_default_features_flag(config.default_features)
-        |> make_features_flag(config.features)
-        |> make_target_flag(config.target)
-        |> make_build_mode_flag(config.mode)
-
-      ensure_platform_requirements!(crate_full_path, config, :os.type())
-
-      compile_result =
-        System.cmd(cmd, args,
-          cd: crate_full_path,
-          stderr_to_stdout: true,
-          env: [{"CARGO_TARGET_DIR", config.target_dir} | config.env],
-          into: IO.stream(:stdio, :line)
-        )
-
-      case compile_result do
-        {_, 0} -> :ok
-        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
-      end
-
-      handle_artifacts(crate_full_path, config)
-      # See #326: Ensure that the libraries are copied into the correct subdirectory
-      # in `_build`.
-      Mix.Project.build_structure()
+    unless config.skip_compilation? || pgo_run do
+      config
+      |> do_pgo()
+      |> do_compile_crate()
     end
 
     config
   end
+
+  defp do_compile_crate(config) do
+    crate_full_path = Path.expand(config.path, File.cwd!())
+
+    File.mkdir_p!(priv_dir())
+
+    Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
+
+    [cmd | args] =
+      make_base_command(config.cargo)
+      |> make_no_default_features_flag(config.default_features)
+      |> make_features_flag(config.features)
+      |> make_target_flag(config.target)
+      |> make_build_mode_flag(config.mode)
+
+    ensure_platform_requirements!(crate_full_path, config, :os.type())
+
+    compile_result =
+      System.cmd(cmd, args,
+        cd: crate_full_path,
+        stderr_to_stdout: true,
+        env: [{"CARGO_TARGET_DIR", config.target_dir} | config.env],
+        into: IO.stream(:stdio, :line)
+      )
+
+    case compile_result do
+      {_, 0} -> :ok
+      {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
+    end
+
+    handle_artifacts(crate_full_path, config)
+    # See #326: Ensure that the libraries are copied into the correct subdirectory
+    # in `_build`.
+    Mix.Project.build_structure()
+    config
+  end
+
+  defp do_pgo(%Config{pgo_commands: cmds} = config) when is_list(cmds) do
+    Mix.shell().info("Configuring build for PGO profile collection")
+
+    # TODO better folder
+    File.rmdir("/tmp/pgo-data")
+
+    # TODO support target detection
+    do_compile_crate(%Config{
+      config
+      | env: [{"RUSTFLAGS", "-Cprofile-generate=/tmp/pgo-data"} | config.env],
+        target: "x86_64-unknown-linux-gnu"
+    })
+
+    for [cmd | args] = script <- cmds do
+      Mix.shell().info("Running script to collect profdata for PGO #{inspect(script)}")
+
+      System.cmd(cmd, args,
+        stderr_to_stdout: true,
+        into: IO.stream(:stdio, :line),
+        env: [{"RUSTLER_PGO_RUN", "true"}]
+      )
+    end
+
+    Mix.shell().info("Merging profdata")
+
+    System.cmd("llvm-profdata", ["merge", "-o", "/tmp/merged.profdata", "/tmp/pgo-data"],
+      stderr_to_stdout: true,
+      into: IO.stream(:stdio, :line)
+    )
+
+    %Config{
+      config
+      | env: [{"RUSTFLAGS", "-Cprofile-use=/tmp/merged.profdata"} | config.env]
+    }
+  end
+
+  defp do_pgo(config), do: config
 
   defp make_base_command(:system), do: ["cargo", "rustc"]
   defp make_base_command({:system, channel}), do: ["cargo", channel, "rustc"]
