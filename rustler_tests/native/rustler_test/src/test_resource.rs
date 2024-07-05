@@ -14,9 +14,8 @@ pub struct TestMonitorResource {
     inner: Mutex<TestMonitorResourceInner>,
 }
 
+#[rustler::resource_impl(register = true)]
 impl Resource for TestMonitorResource {
-    const IMPLEMENTS_DOWN: bool = true;
-
     fn down<'a>(&'a self, _env: Env<'a>, _pid: LocalPid, mon: Monitor) {
         let mut inner = self.inner.lock().unwrap();
         assert!(Some(mon) == inner.mon);
@@ -32,6 +31,7 @@ pub struct ImmutableResource {
     b: u32,
 }
 
+#[rustler::resource_impl(register = false)]
 impl Resource for ImmutableResource {}
 
 pub struct WithBinaries {
@@ -39,11 +39,12 @@ pub struct WithBinaries {
     b: Vec<u8>,
 }
 
+impl Resource for WithBinaries {}
+
 pub fn on_load(env: Env) -> bool {
     rustler::resource!(TestResource, env)
+        && env.register::<WithBinaries>().is_ok()
         && env.register::<ImmutableResource>().is_ok()
-        && env.register::<TestMonitorResource>().is_ok()
-        && rustler::resource!(WithBinaries, env)
 }
 
 #[rustler::nif]

@@ -20,6 +20,7 @@ versions.
   receives an `Env` parameter (#617)
 - Process monitoring via resources can now be used on resource types that
   implement the `Resource::down` callback (#617)
+- Resource implementation and registration helper attribute (#627)
 
 ### Fixed
 

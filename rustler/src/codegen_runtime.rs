@@ -8,6 +8,9 @@ use crate::{Encoder, Env, OwnedBinary, Term};
 // Re-export of inventory
 pub use inventory;
 
+// Re-export of resource registration
+pub use crate::resource::Registration as ResourceRegistration;
+
 // Names used by the `rustler::init!` macro or other generated code.
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{

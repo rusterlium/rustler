@@ -106,6 +106,11 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                             let mut env = rustler::Env::new_init_env(&env, env);
                             // TODO: If an unwrap ever happens, we will unwind right into C! Fix this!
                             let load_info = rustler::Term::new(env, load_info);
+
+                            if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
+                                return 1;
+                            }
+
                             #load.map_or(0, |inner| {
                                 rustler::codegen_runtime::handle_nif_init_call(
                                     inner, env, load_info

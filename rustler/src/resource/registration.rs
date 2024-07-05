@@ -13,11 +13,15 @@ use std::mem::MaybeUninit;
 use std::ptr;
 
 #[derive(Debug)]
-struct Registration {
+pub struct Registration {
     get_type_id: fn() -> TypeId,
     get_type_name: fn() -> &'static str,
     init: ErlNifResourceTypeInit,
 }
+
+unsafe impl Sync for Registration {}
+
+inventory::collect!(Registration);
 
 impl<'a> Env<'a> {
     /// Register a resource type, see `Registration::register`.
@@ -34,6 +38,15 @@ impl<'a> Env<'a> {
 /// `std::mem::needs_drop`). All other callbacks are only registered if `IMPLEMENTS_...` is set to
 /// `true`.
 impl Registration {
+    /// Register all resource types that have been submitted to the inventory.
+    pub fn register_all_collected(env: Env) -> Result<(), ResourceInitError> {
+        for reg in inventory::iter::<Registration>() {
+            reg.register(env)?;
+        }
+
+        Ok(())
+    }
+
     /// Generate a new (pending) resource type registration.
     pub const fn new<T: Resource>() -> Self {
         Self {

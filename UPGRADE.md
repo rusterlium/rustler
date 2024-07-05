@@ -10,9 +10,12 @@ This document is intended to simplify upgrading to newer versions by extending t
 2. The functionality related to the `derive` feature is now unconditionally
    active. The feature flag is kept for compatibility for now but will be
    removed in the future.
-3. To register a type as a resource, the new `#[derive(Resource)]` can be used
-   now. It is implicitly registered and does not require (or work in) the old
-   explicit registration with `rustler::resource!` a custom `load` function.
+3. To use a type as a resource, the `Resource` trait should now be implemented
+   on the type, which also allows for specifying a destructor (taking an `Env`
+   argument) or a `down` callback for process monitoring. If the recommended
+   `resource_impl` attribute is used on the `impl` block, the type will by
+   default be automatically registered and the `IMPLEMENTS_...` constants will
+   be set for implemented callbacks.
 
 ## 0.32 -> 0.33
 
