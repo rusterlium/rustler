@@ -92,7 +92,7 @@ where
     }
 
     fn from_term(term: Term) -> Result<Self, Error> {
-        let (raw, inner) = unsafe { term.get_resource_ptrs::<T>() }.ok_or(Error::BadArg)?;
+        let (raw, inner) = unsafe { term.try_get_resource_ptrs::<T>() }.ok_or(Error::BadArg)?;
         unsafe { rustler_sys::enif_keep_resource(raw) };
         Ok(ResourceArc { raw, inner })
     }
@@ -119,7 +119,7 @@ impl<T> ResourceArc<T>
 where
     T: Resource,
 {
-    pub fn monitor(&self, caller_env: Option<&Env>, pid: &LocalPid) -> Option<Monitor> {
+    pub fn monitor(&self, caller_env: Option<Env>, pid: &LocalPid) -> Option<Monitor> {
         if !T::IMPLEMENTS_DOWN {
             return None;
         }
@@ -136,7 +136,7 @@ where
         }
     }
 
-    pub fn demonitor(&self, caller_env: Option<&Env>, mon: &Monitor) -> bool {
+    pub fn demonitor(&self, caller_env: Option<Env>, mon: &Monitor) -> bool {
         if !T::IMPLEMENTS_DOWN {
             return false;
         }
@@ -166,11 +166,11 @@ impl<'a> Env<'a> {
         resource: &ResourceArc<T>,
         pid: &LocalPid,
     ) -> Option<Monitor> {
-        resource.monitor(Some(self), pid)
+        resource.monitor(Some(*self), pid)
     }
 
     pub fn demonitor<T: Resource>(&self, resource: &ResourceArc<T>, mon: &Monitor) -> bool {
-        resource.demonitor(Some(self), mon)
+        resource.demonitor(Some(*self), mon)
     }
 }
 
@@ -238,7 +238,7 @@ where
     }
 }
 
-fn maybe_env(env: Option<&Env>) -> *mut ErlNifEnv {
+fn maybe_env(env: Option<Env>) -> *mut ErlNifEnv {
     if is_scheduler_thread() {
         let env = env.expect("Env required when calling from a scheduler thread");
         // Panic if `env` is not the environment of the calling process.

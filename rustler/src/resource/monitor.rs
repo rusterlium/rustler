@@ -1,5 +1,9 @@
 use rustler_sys::ErlNifMonitor;
 
+/// Handle for a monitor created using `ResourceArc<T>::monitor`.
+///
+/// A monitor handle can be compared to other monitor handles. It is opaque and freely copyable.
+/// The monitor will not become inactive if this object is dropped.
 #[derive(Copy, Clone)]
 pub struct Monitor {
     inner: ErlNifMonitor,

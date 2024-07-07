@@ -20,12 +20,21 @@ struct Registration {
 }
 
 impl<'a> Env<'a> {
+    /// Register a resource type, see `Registration::register`.
     pub fn register<T: Resource>(&self) -> Result<(), ResourceInitError> {
         Registration::new::<T>().register(*self)
     }
 }
 
+/// Resource registration
+///
+/// The type name is derived using Rust's `std::any::type_name` and the callbacks are registered
+/// according to the `IMPLEMENTS_...` associated constants on the `Resource` trait implementation.
+/// A destructor is always registered if the type requires explicit `drop`ping (checked using
+/// `std::mem::needs_drop`). All other callbacks are only registered if `IMPLEMENTS_...` is set to
+/// `true`.
 impl Registration {
+    /// Generate a new (pending) resource type registration.
     pub const fn new<T: Resource>() -> Self {
         Self {
             init: ErlNifResourceTypeInit {
@@ -72,6 +81,9 @@ impl Registration {
         }
     }
 
+    /// Try to register the resource type for which this registration was created. This function
+    /// will only succeed when called from the `load` callback and if this type has not yet been
+    /// registered.
     pub fn register(&self, env: Env) -> Result<(), ResourceInitError> {
         if !env.init {
             return Err(ResourceInitError);
@@ -106,7 +118,10 @@ where
     let aligned = align_alloced_mem_for_struct::<T>(handle);
     // Destructor takes ownership, thus the resource object will be dropped after the function has
     // run.
-    ptr::read::<T>(aligned as *mut T).destructor(env);
+    let obj = ptr::read::<T>(aligned as *mut T);
+    if T::IMPLEMENTS_DESTRUCTOR {
+        obj.destructor(env);
+    }
 }
 
 unsafe extern "C" fn resource_down<T: Resource>(
