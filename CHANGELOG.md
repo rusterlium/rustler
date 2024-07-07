@@ -12,7 +12,18 @@ versions.
 
 ### Added
 
+- Resource type registration has been refactored to eventually remove the
+  `rustler::resource!` macro (#617, necessary due to a pending deprecation of a
+  Rust feature, #606)
+- Resources can (and should) now explicitly implement the new `Resource` trait
+  and provide a custom `destructor` function that is run before `drop` and
+  receives an `Env` parameter (#617)
+- Process monitoring via resources can now be used on resource types that
+  implement the `Resource::down` callback (#617)
+
 ### Fixed
+
+- Unwinding in the `on_load` callback is now caught and leads to a panic (#617)
 
 ### Changed
 

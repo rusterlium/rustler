@@ -1,3 +1,4 @@
+use crate::thread::is_scheduler_thread;
 use crate::types::LocalPid;
 use crate::wrapper::{NIF_ENV, NIF_TERM};
 use crate::{Encoder, Term};
@@ -17,6 +18,7 @@ type EnvId<'a> = PhantomData<*mut &'a u8>;
 /// There is no way to allocate a Env at the moment, but this may be possible in the future.
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
+    pub(crate) init: bool,
     env: NIF_ENV,
     id: EnvId<'a>,
 }
@@ -47,9 +49,17 @@ impl<'a> Env<'a> {
     /// Don't create multiple `Env`s with the same lifetime.
     pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
         Env {
+            init: false,
             env,
             id: PhantomData,
         }
+    }
+
+    #[doc(hidden)]
+    pub unsafe fn new_init_env<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
+        let mut res = Self::new(_lifetime_marker, env);
+        res.init = true;
+        res
     }
 
     pub fn as_c_arg(self) -> NIF_ENV {
@@ -229,7 +239,7 @@ impl OwnedEnv {
         F: FnOnce(Env<'a>) -> T,
         T: Encoder,
     {
-        if unsafe { rustler_sys::enif_thread_type() } != rustler_sys::ERL_NIF_THR_UNDEFINED {
+        if is_scheduler_thread() {
             panic!("send_and_clear: current thread is managed");
         }
 

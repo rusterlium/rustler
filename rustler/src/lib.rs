@@ -45,8 +45,8 @@ pub use crate::types::{
 #[cfg(feature = "big_integer")]
 pub use crate::types::BigInt;
 
-pub mod resource;
-pub use crate::resource::ResourceArc;
+mod resource;
+pub use crate::resource::{Monitor, Resource, ResourceArc, ResourceInitError};
 
 #[doc(hidden)]
 pub mod dynamic;

@@ -12,7 +12,7 @@ pub use inventory;
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
     c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
-    MUTABLE_NIF_RESOURCE_HANDLE, NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
+    NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
 #[cfg(windows)]
@@ -100,15 +100,12 @@ impl fmt::Debug for NifReturned {
 /// # Unsafe
 ///
 /// This takes arguments, including raw pointers, that must be correct.
-pub unsafe fn handle_nif_init_call(
-    function: Option<for<'a> fn(Env<'a>, Term<'a>) -> bool>,
-    r_env: NIF_ENV,
-    load_info: NIF_TERM,
+pub unsafe fn handle_nif_init_call<'a>(
+    function: for<'b> fn(Env<'b>, Term<'b>) -> bool,
+    env: Env<'a>,
+    load_info: Term<'a>,
 ) -> c_int {
-    let env = Env::new(&(), r_env);
-    let term = Term::new(env, load_info);
-
-    function.map_or(0, |inner| i32::from(!inner(env, term)))
+    std::panic::catch_unwind(|| function(env, load_info)).map_or(1, |x| i32::from(!x))
 }
 
 pub fn handle_nif_result<T>(
