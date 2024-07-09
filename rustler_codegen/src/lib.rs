@@ -9,6 +9,7 @@ mod init;
 mod map;
 mod nif;
 mod record;
+mod resource_impl;
 mod tagged_enum;
 mod tuple;
 mod unit_enum;
@@ -399,4 +400,64 @@ pub fn nif_tagged_enum(input: TokenStream) -> TokenStream {
 pub fn nif_untagged_enum(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     untagged_enum::transcoder_decorator(&ast).into()
+}
+
+/// Helper attribute for `Resource` implementations
+///
+/// When an `impl Resource for Type` block is annotated with this attribute, it will automatically
+/// set the `IMPLEMENTS_...` associated constants for all implemented callback methods. Thus,
+/// instead of
+///
+/// ```ignore
+/// struct ResourceType {}
+///
+/// impl Resource for ResourceType
+/// {
+///     const IMPLEMENTS_DESTRUCTOR: bool = true;
+///
+///     fn destructor(...) { ... }
+/// }
+/// ```
+/// it is enough to provide the implementation:
+/// ```ignore
+/// #[rustler::resource_impl]
+/// impl Resource for ResourceType
+/// {
+///     fn destructor(...) { ... }
+/// }
+/// ```
+///
+/// The resource type is also automatically registered by default, it does not have to be manually
+/// registered in a `load` callback. The automatic registration can be disabled with the `register`
+/// parameter:
+///
+/// ```ignore
+/// #[rustler::resource_impl]
+/// impl Resource for ResourceType
+/// {
+///     ...
+/// }
+///
+/// // no load callback necessary
+/// ```
+///
+/// If registration is disabled, the resource type has to be registered manually. It is not
+/// possible to use the old `resource!` macro for this, as that injects another `impl Resource`
+/// block.
+/// ```ignore
+/// #[rustler::resource_impl(register = false)]
+/// impl Resource for ResourceType
+/// {
+///     ...
+/// }
+///
+/// pub fn on_load(env: Env) -> bool {
+///     env.register::<ResourceType>().is_ok()
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn resource_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(item as syn::ItemImpl);
+
+    resource_impl::transcoder_decorator(input).into()
 }

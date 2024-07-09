@@ -72,8 +72,8 @@ pub use nif::Nif;
 pub type NifResult<T> = Result<T, Error>;
 
 pub use rustler_codegen::{
-    init, nif, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum,
-    NifUntaggedEnum,
+    init, nif, resource_impl, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple,
+    NifUnitEnum, NifUntaggedEnum,
 };
 
 #[cfg(feature = "serde")]
