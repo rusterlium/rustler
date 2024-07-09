@@ -12,13 +12,21 @@ use std::sync::{Arc, Weak};
 /// auto-convert a `Env<'a>` to a `Env<'b>`.
 type EnvId<'a> = PhantomData<*mut &'a u8>;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum EnvKind {
+    ProcessBound,
+    Callback,
+    Init,
+    ProcessIndependent,
+}
+
 /// On each NIF call, a Env is passed in. The Env is used for most operations that involve
 /// communicating with the BEAM, like decoding and encoding terms.
 ///
 /// There is no way to allocate a Env at the moment, but this may be possible in the future.
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
-    pub(crate) init: bool,
+    pub(crate) kind: EnvKind,
     env: NIF_ENV,
     id: EnvId<'a>,
 }
@@ -38,6 +46,19 @@ impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
 pub struct SendError;
 
 impl<'a> Env<'a> {
+    #[doc(hidden)]
+    pub(crate) unsafe fn new_internal<T>(
+        _lifetime_marker: &'a T,
+        env: NIF_ENV,
+        kind: EnvKind,
+    ) -> Env<'a> {
+        Env {
+            kind,
+            env,
+            id: PhantomData,
+        }
+    }
+
     /// Create a new Env. For the `_lifetime_marker` argument, pass a
     /// reference to any local variable that has its own lifetime, different
     /// from all other `Env` values. The purpose of the argument is to make
@@ -48,18 +69,12 @@ impl<'a> Env<'a> {
     /// # Unsafe
     /// Don't create multiple `Env`s with the same lifetime.
     pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
-        Env {
-            init: false,
-            env,
-            id: PhantomData,
-        }
+        Self::new_internal(_lifetime_marker, env, EnvKind::ProcessBound)
     }
 
     #[doc(hidden)]
     pub unsafe fn new_init_env<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
-        let mut res = Self::new(_lifetime_marker, env);
-        res.init = true;
-        res
+        Self::new_internal(_lifetime_marker, env, EnvKind::Init)
     }
 
     pub fn as_c_arg(self) -> NIF_ENV {
@@ -85,26 +100,15 @@ impl<'a> Env<'a> {
     ///
     /// The result indicates whether the send was successful, see also
     /// [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
-    ///
-    /// # Panics
-    ///
-    /// Panics if the above rules are broken (by trying to send a message from
-    /// an `OwnedEnv` on a thread that's managed by the Erlang VM).
-    ///
     pub fn send(self, pid: &LocalPid, message: impl Encoder) -> Result<(), SendError> {
-        let thread_type = unsafe { rustler_sys::enif_thread_type() };
-        let env = if thread_type == rustler_sys::ERL_NIF_THR_UNDEFINED {
-            ptr::null_mut()
-        } else if thread_type == rustler_sys::ERL_NIF_THR_NORMAL_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_CPU_SCHEDULER
-            || thread_type == rustler_sys::ERL_NIF_THR_DIRTY_IO_SCHEDULER
-        {
-            // Panic if `self` is not the environment of the calling process.
-            self.pid();
+        let env = if is_scheduler_thread() {
+            if self.kind == EnvKind::ProcessIndependent {
+                return Err(SendError);
+            }
 
             self.as_c_arg()
         } else {
-            panic!("Env::send(): unrecognized calling thread type");
+            ptr::null_mut()
         };
 
         let message = message.encode(self);
@@ -213,7 +217,7 @@ impl OwnedEnv {
     where
         F: FnOnce(Env<'a>) -> R,
     {
-        let env = unsafe { Env::new(&(), *self.env) };
+        let env = unsafe { Env::new_internal(&(), *self.env, EnvKind::ProcessIndependent) };
         closure(env)
     }
 
