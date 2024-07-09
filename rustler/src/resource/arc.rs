@@ -172,6 +172,29 @@ impl<'a> Env<'a> {
     pub fn demonitor<T: Resource>(&self, resource: &ResourceArc<T>, mon: &Monitor) -> bool {
         resource.demonitor(Some(*self), mon)
     }
+
+    #[cfg(feature = "nif_version_2_16")]
+    pub unsafe fn dynamic_resource_call(
+        self,
+        module: crate::Atom,
+        name: crate::Atom,
+        resource: Term<'a>,
+        call_data: *mut rustler_sys::c_void,
+    ) -> Result<(), super::DynamicResourceCallError> {
+        let res = rustler_sys::enif_dynamic_resource_call(
+            self.as_c_arg(),
+            module.as_c_arg(),
+            name.as_c_arg(),
+            resource.as_c_arg(),
+            call_data,
+        );
+
+        if res == 0 {
+            Ok(())
+        } else {
+            Err(super::DynamicResourceCallError)
+        }
+    }
 }
 
 impl<T> Deref for ResourceArc<T>

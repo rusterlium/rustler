@@ -65,6 +65,7 @@ impl Registration {
         }
         .maybe_add_destructor_callback::<T>()
         .maybe_add_down_callback::<T>()
+        .maybe_add_dyncall_callback::<T>()
     }
 
     pub const fn with_name(self, name: &'static str) -> Self {
@@ -95,6 +96,28 @@ impl Registration {
                 init: ErlNifResourceTypeInit {
                     down: resource_down::<T> as *const ErlNifResourceDown,
                     members: max(self.init.members, 3),
+                    ..self.init
+                },
+                ..self
+            }
+        } else {
+            self
+        }
+    }
+
+    #[cfg(not(feature = "nif_version_2_16"))]
+    #[allow(clippy::extra_unused_type_parameters)]
+    const fn maybe_add_dyncall_callback<T: Resource>(self) -> Self {
+        self
+    }
+
+    #[cfg(feature = "nif_version_2_16")]
+    const fn maybe_add_dyncall_callback<T: Resource>(self) -> Self {
+        if T::IMPLEMENTS_DYNCALL {
+            Self {
+                init: ErlNifResourceTypeInit {
+                    dyncall: resource_dyncall::<T> as *const rustler_sys::ErlNifResourceDynCall,
+                    members: max(self.init.members, 4),
                     ..self.init
                 },
                 ..self
@@ -162,6 +185,19 @@ unsafe extern "C" fn resource_down<T: Resource>(
     res.down(env, pid, mon);
 }
 
+#[cfg(feature = "nif_version_2_16")]
+unsafe extern "C" fn resource_dyncall<T: Resource>(
+    env: *mut ErlNifEnv,
+    obj: *mut c_void,
+    call_data: *mut c_void,
+) {
+    let env = Env::new_internal(&env, env, EnvKind::Callback);
+    let aligned = align_alloced_mem_for_struct::<T>(obj);
+    let res = &*(aligned as *const T);
+
+    res.dyncall(env, call_data);
+}
+
 pub unsafe fn open_resource_type(
     env: *mut ErlNifEnv,
     name: &[u8],
@@ -175,7 +211,7 @@ pub unsafe fn open_resource_type(
 
     let res = {
         let mut tried = MaybeUninit::uninit();
-        rustler_sys::enif_open_resource_type_x(env, name_p, &init, flags, tried.as_mut_ptr())
+        OPEN_RESOURCE_TYPE(env, name_p, &init, flags, tried.as_mut_ptr())
     };
 
     if res.is_null() {
@@ -184,6 +220,20 @@ pub unsafe fn open_resource_type(
         Some(res)
     }
 }
+
+type OpenResourceTypeFn = unsafe extern "C" fn(
+    *mut ErlNifEnv,
+    *const c_char,
+    *const ErlNifResourceTypeInit,
+    ErlNifResourceFlags,
+    *mut ErlNifResourceFlags,
+) -> *const ErlNifResourceType;
+
+#[cfg(feature = "nif_version_2_16")]
+static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = rustler_sys::enif_init_resource_type;
+
+#[cfg(not(feature = "nif_version_2_16"))]
+static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = rustler_sys::enif_open_resource_type_x;
 
 const fn max(i: i32, j: i32) -> i32 {
     if i > j {

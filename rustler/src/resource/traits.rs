@@ -35,6 +35,9 @@ pub trait Resource: Sized + Send + Sync + 'static {
     const IMPLEMENTS_DESTRUCTOR: bool = false;
     const IMPLEMENTS_DOWN: bool = false;
 
+    #[cfg(feature = "nif_version_2_16")]
+    const IMPLEMENTS_DYNCALL: bool = false;
+
     /// Callback function that is executed right before dropping a resource object.
     ///
     /// This callback does not have to be implemented to release associated resources or run
@@ -51,6 +54,10 @@ pub trait Resource: Sized + Send + Sync + 'static {
     /// by `ResourceArc<T>::monitor`.
     #[allow(unused)]
     fn down<'a>(&'a self, env: Env<'a>, pid: LocalPid, monitor: Monitor) {}
+
+    #[cfg(feature = "nif_version_2_16")]
+    #[allow(unused)]
+    unsafe fn dyncall<'a>(&'a self, env: Env<'a>, call_data: *mut rustler_sys::c_void) {}
 }
 
 #[doc(hidden)]

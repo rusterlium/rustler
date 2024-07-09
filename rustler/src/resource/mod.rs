@@ -13,7 +13,7 @@ mod traits;
 mod util;
 
 pub use arc::ResourceArc;
-pub use error::ResourceInitError;
+pub use error::*;
 pub use monitor::Monitor;
 pub use registration::Registration;
 pub use traits::Resource;
