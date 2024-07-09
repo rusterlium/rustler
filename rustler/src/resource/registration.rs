@@ -1,6 +1,7 @@
 use super::traits;
 use super::util::align_alloced_mem_for_struct;
 use super::ResourceInitError;
+use crate::env::EnvKind;
 use crate::{Env, LocalPid, Monitor, Resource};
 use rustler_sys::ErlNifResourceDtor;
 use rustler_sys::{
@@ -98,7 +99,7 @@ impl Registration {
     /// will only succeed when called from the `load` callback and if this type has not yet been
     /// registered.
     pub fn register(&self, env: Env) -> Result<(), ResourceInitError> {
-        if !env.init {
+        if env.kind != EnvKind::Init {
             return Err(ResourceInitError);
         }
 
@@ -127,7 +128,7 @@ unsafe extern "C" fn resource_destructor<T>(_env: *mut ErlNifEnv, handle: *mut c
 where
     T: Resource,
 {
-    let env = Env::new(&_env, _env);
+    let env = Env::new_internal(&_env, _env, EnvKind::Callback);
     let aligned = align_alloced_mem_for_struct::<T>(handle);
     // Destructor takes ownership, thus the resource object will be dropped after the function has
     // run.
@@ -143,7 +144,7 @@ unsafe extern "C" fn resource_down<T: Resource>(
     pid: *const ErlNifPid,
     mon: *const ErlNifMonitor,
 ) {
-    let env = Env::new(&env, env);
+    let env = Env::new_internal(&env, env, EnvKind::Callback);
     let aligned = align_alloced_mem_for_struct::<T>(obj);
     let res = &*(aligned as *const T);
     let pid = LocalPid::from_c_arg(*pid);
