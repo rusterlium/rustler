@@ -1,5 +1,4 @@
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-use std::convert::TryFrom;
 
 const EXTERNAL_TERM_FORMAT_VERSION: u8 = 131;
 const SMALL_BIG_EXT: u8 = 110;

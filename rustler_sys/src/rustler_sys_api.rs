@@ -11,7 +11,6 @@ use std::os;
 #[allow(non_camel_case_types)]
 pub type size_t = usize;
 
-use std::option::Option;
 //use std::mem::size_of;
 
 #[allow(non_camel_case_types)]
