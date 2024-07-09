@@ -185,6 +185,6 @@ defmodule Rustler do
     |> Enum.map(fn version -> version["num"] end)
     |> Enum.fetch!(0)
   rescue
-    _ -> "0.33.0"
+    _ -> "0.34.0"
   end
 end
