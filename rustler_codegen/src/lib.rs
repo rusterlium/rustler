@@ -456,8 +456,15 @@ pub fn nif_untagged_enum(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn resource_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn resource_impl(args: TokenStream, item: TokenStream) -> TokenStream {
+    let mut attributes = resource_impl::Attributes::default();
+
+    if !args.is_empty() {
+        let parser = syn::meta::parser(|meta| attributes.parse(meta));
+
+        syn::parse_macro_input!(args with parser);
+    }
     let input = syn::parse_macro_input!(item as syn::ItemImpl);
 
-    resource_impl::transcoder_decorator(input).into()
+    resource_impl::transcoder_decorator(attributes, input).into()
 }

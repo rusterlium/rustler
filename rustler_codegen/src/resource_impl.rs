@@ -1,8 +1,39 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use std::collections::HashSet;
+use syn::{meta::ParseNestedMeta, LitBool, LitStr};
 
-pub fn transcoder_decorator(mut input: syn::ItemImpl) -> TokenStream {
+pub struct Attributes {
+    register: bool,
+    name: Option<String>,
+}
+
+impl Default for Attributes {
+    fn default() -> Self {
+        Self {
+            register: true,
+            name: None,
+        }
+    }
+}
+
+impl Attributes {
+    pub fn parse(&mut self, meta: ParseNestedMeta) -> syn::parse::Result<()> {
+        if meta.path.is_ident("register") {
+            let value: LitBool = meta.value()?.parse()?;
+            self.register = value.value;
+            Ok(())
+        } else if meta.path.is_ident("name") {
+            let value: LitStr = meta.value()?.parse()?;
+            self.name = Some(value.value());
+            Ok(())
+        } else {
+            Err(meta.error("Unsupported macro attribute. Expecting register or name."))
+        }
+    }
+}
+
+pub fn transcoder_decorator(attrs: Attributes, mut input: syn::ItemImpl) -> TokenStream {
     // Should be `Resource` but will fail somewhere else anyway if it isn't.
     // let (_, _trait_path, _) = input.trait_.unwrap();
     let type_path = match *input.self_ty {
@@ -32,11 +63,23 @@ pub fn transcoder_decorator(mut input: syn::ItemImpl) -> TokenStream {
         input.items.push(impl_item);
     }
 
-    quote!(
-        #input
+    let mut res = quote!(#input);
 
-        rustler::codegen_runtime::inventory::submit!(
-            rustler::codegen_runtime::ResourceRegistration::new::<#type_path>()
-        );
-    )
+    if attrs.register {
+        if let Some(name) = attrs.name {
+            res.extend(quote!(
+            rustler::codegen_runtime::inventory::submit!(
+                rustler::codegen_runtime::ResourceRegistration::new::<#type_path>().with_name(#name)
+            );
+                ));
+        } else {
+            res.extend(quote!(
+            rustler::codegen_runtime::inventory::submit!(
+                rustler::codegen_runtime::ResourceRegistration::new::<#type_path>()
+            );
+            ));
+        }
+    }
+
+    res
 }
