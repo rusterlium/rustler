@@ -14,7 +14,7 @@ pub struct TestMonitorResource {
     inner: Mutex<TestMonitorResourceInner>,
 }
 
-#[rustler::resource_impl(register = true)]
+#[rustler::resource_impl(register = true, name = "monitor")]
 impl Resource for TestMonitorResource {
     fn down<'a>(&'a self, _env: Env<'a>, _pid: LocalPid, mon: Monitor) {
         let mut inner = self.inner.lock().unwrap();

@@ -17,6 +17,7 @@ use std::ptr;
 pub struct Registration {
     get_type_id: fn() -> TypeId,
     get_type_name: fn() -> &'static str,
+    type_name: Option<&'static str>,
     init: ErlNifResourceTypeInit,
 }
 
@@ -60,9 +61,17 @@ impl Registration {
             },
             get_type_name: std::any::type_name::<T>,
             get_type_id: TypeId::of::<T>,
+            type_name: None,
         }
         .maybe_add_destructor_callback::<T>()
         .maybe_add_down_callback::<T>()
+    }
+
+    pub const fn with_name(self, name: &'static str) -> Self {
+        Self {
+            type_name: Some(name),
+            ..self
+        }
     }
 
     const fn maybe_add_destructor_callback<T: Resource>(self) -> Self {
@@ -104,7 +113,7 @@ impl Registration {
         }
 
         let type_id = (self.get_type_id)();
-        let type_name = (self.get_type_name)();
+        let type_name = self.type_name.unwrap_or_else(self.get_type_name);
 
         let res: Option<*const ErlNifResourceType> = unsafe {
             open_resource_type(
