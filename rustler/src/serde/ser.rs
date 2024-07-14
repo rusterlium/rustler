@@ -212,7 +212,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
     /// `enum Result { Ok(u8), Err(_) }` into `{:ok, u8}` or `{:err, _}`.
     fn serialize_newtype_variant<T>(
         self,
-        _name: &'static str,
+        name: &'static str,
         _variant_index: u32,
         variant: &'static str,
         value: &T,
@@ -220,9 +220,9 @@ impl<'a> ser::Serializer for Serializer<'a> {
     where
         T: ?Sized + ser::Serialize,
     {
-        match variant {
-            "Ok" => self.serialize_newtype_struct("ok", value),
-            "Err" => self.serialize_newtype_struct("error", value),
+        match (name, variant) {
+            ("Result", "Ok") => self.serialize_newtype_struct("ok", value),
+            ("Result", "Err") => self.serialize_newtype_struct("error", value),
             _ => self.serialize_newtype_struct(variant, value),
         }
     }

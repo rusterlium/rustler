@@ -728,8 +728,13 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for VariantNameDeserializer<'a> {
     {
         match self.variant.get_type() {
             TermType::Atom => {
-                let string =
-                    atoms::term_to_string(&self.variant).or(Err(Error::InvalidVariantName))?;
+                let string = atoms::term_to_string(&self.variant)
+                    .map(|s| match s.as_str() {
+                        "ok" => "Ok".to_string(),
+                        "error" => "Err".to_string(),
+                        _ => s,
+                    })
+                    .or(Err(Error::InvalidVariantName))?;
                 visitor.visit_string(string)
             }
             TermType::Binary => visitor.visit_string(util::term_to_str(&self.variant)?),
