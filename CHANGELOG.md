@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## unreleased
+
+### Added
+
+- The resource type name can now be overridden with
+  `#[register_impl(name = "...")]` (#638)
+
+### Fixed
+
+- The optional `register` attribute on `#[register_impl]` works as advertised
+now (#638)
+
+### Changed
+
+### Removed
+
 ## [0.34.0] - 2024-07-09
 
 ### Added
@@ -32,9 +48,6 @@ versions.
   argument of `rustler::init!` is ignored (#613)
 - The `derive` feature flag is now ignored and its functionality unconditionally
   enabled (#621)
-
-### Removed
-
 
 ## [0.33.0] - 2024-05-29
 
