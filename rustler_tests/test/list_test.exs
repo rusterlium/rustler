@@ -22,4 +22,10 @@ defmodule RustlerTest.ListTest do
   test "simple list construction with sum" do
     assert RustlerTest.sum_list(RustlerTest.make_list()) == 6
   end
+
+  test "sum float list" do
+    assert_in_delta RustlerTest.sum_list_as_floats([1, 2, 3, 4]), 10.0, 0.01
+    assert_in_delta RustlerTest.sum_list_as_floats([1.0, 2.0, 3.0, 4.0]), 10.0, 0.01
+    assert_in_delta RustlerTest.sum_list_as_floats([1, 2.0, 3, 4.0]), 10.0, 0.01
+  end
 end

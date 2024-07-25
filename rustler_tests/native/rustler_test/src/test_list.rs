@@ -18,3 +18,8 @@ pub fn sum_list(iter: ListIterator) -> NifResult<i64> {
 pub fn make_list() -> Vec<usize> {
     vec![1, 2, 3]
 }
+
+#[rustler::nif]
+pub fn sum_list_as_floats(list: Vec<f64>) -> f64 {
+    list.into_iter().sum()
+}

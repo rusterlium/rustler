@@ -33,6 +33,7 @@ defmodule RustlerTest do
 
   def sum_list(_), do: err()
   def make_list(), do: err()
+  def sum_list_as_floats(_), do: err()
 
   def compare_local_pids(_, _), do: err()
   def are_equal_local_pids(_, _), do: err()

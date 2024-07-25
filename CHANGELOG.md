@@ -14,11 +14,12 @@ versions.
 
 - The resource type name can now be overridden with
   `#[register_impl(name = "...")]` (#638)
+- Floats can be decoded from integers (#641, fixes #603)
 
 ### Fixed
 
 - The optional `register` attribute on `#[register_impl]` works as advertised
-now (#638)
+  now (#638)
 
 ### Changed
 
