@@ -11,6 +11,11 @@ pub fn add_i32(a: i32, b: i32) -> i32 {
 }
 
 #[rustler::nif]
+pub fn add_floats(a: f32, b: f64) -> f64 {
+    (a as f64) + b
+}
+
+#[rustler::nif]
 pub fn echo_u8(n: u8) -> u8 {
     n
 }
