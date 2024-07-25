@@ -22,6 +22,9 @@ now (#638)
 
 ### Changed
 
+- The special ok/error handling for atoms in serde is now restricted to variant
+  names (#639)
+
 ### Removed
 
 ## [0.34.0] - 2024-07-09

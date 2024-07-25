@@ -253,14 +253,14 @@ defmodule SerdeRustlerTests.NifTest do
 
     test "newtype variant (Result::Ok(T), or {:ok, T})", ctx do
       test_case = {:ok, 255}
-      transcoded = ["Ok", 255]
+      transcoded = ["ok", 255]
       run_tests("newtype variant (ok tuple)", test_case, Helpers.skip(ctx, :transcode))
       Helpers.run_transcode("newtype variant (ok tuple)", test_case, transcoded)
     end
 
     test "newtype variant (Result::Err(T), or {:error, T}", ctx do
       test_case = {:error, "error reason"}
-      transcoded = ["Err", "error reason"]
+      transcoded = ["error", "error reason"]
       run_tests("newtype variant (error tuple)", test_case, Helpers.skip(ctx, :transcode))
       Helpers.run_transcode("newtype variant (error tuple)", test_case, transcoded)
     end
