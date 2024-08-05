@@ -845,18 +845,18 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
 
     // 2.15 was introduced in OTP 22
     if opts.nif_version >= (2, 15) {
-        b.func(
-            "ErlNifTermType",
-            "enif_term_type",
-            "env: *mut ErlNifEnv, term: ERL_NIF_TERM",
-        );
-
-        b.func("c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid");
-        b.func("", "enif_set_pid_undefined", "pid: *mut ErlNifPid");
+        b.dummy("enif_select_x");
         b.func(
             "ERL_NIF_TERM",
             "enif_make_monitor_term",
             "env: *mut ErlNifEnv, mon: *const ErlNifMonitor",
+        );
+        b.func("c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid");
+        b.func("", "enif_set_pid_undefined", "pid: *mut ErlNifPid");
+        b.func(
+            "ErlNifTermType",
+            "enif_term_type",
+            "env: *mut ErlNifEnv, term: ERL_NIF_TERM",
         );
     }
 
@@ -868,14 +868,14 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
 
     // 2.17 was introduced in OTP 26
     if opts.nif_version >= (2, 17) {
+        b.func("c_int", "enif_get_string_length", "env: *mut ErlNifEnv, list: ERL_NIF_TERM, len: *mut c_uint, encoding: ErlNifCharEncoding");
+        b.func("c_int", "enif_make_new_atom", "env: *mut ErlNifEnv, name: *const c_char, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
+        b.func("c_int", "enif_make_new_atom_len", "env: *mut ErlNifEnv, name: *const c_char, len: size_t, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
         b.func(
             "c_int",
             "enif_set_option",
             "env: *mut ErlNifEnv, opt: ErlNifOption",
         );
-        b.func("c_int", "enif_get_string_length", "env: *mut ErlNifEnv, list: ERL_NIF_TERM, len: *mut c_uint, encoding: ErlNifCharEncoding");
-        b.func("c_int", "enif_make_new_atom", "env: *mut ErlNifEnv, name: *const c_char, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
-        b.func("c_int", "enif_make_new_atom_len", "env: *mut ErlNifEnv, name: *const c_char, len: size_t, atom: *mut ERL_NIF_TERM, encoding: ErlNifCharEncoding");
     }
 }
 
