@@ -1,3 +1,6 @@
+# Raise an error if RustlerTest can't be loaded
+Code.ensure_loaded!(RustlerTest)
+
 ExUnit.start()
 
 defmodule SerdeRustlerTests.Helpers do

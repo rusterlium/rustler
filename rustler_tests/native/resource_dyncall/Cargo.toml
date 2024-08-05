@@ -1,0 +1,11 @@
+[package]
+name = "resource_dyncall"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "resource_dyncall"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = { path = "../../../rustler", features = ["allocator", "nif_version_2_16"] }

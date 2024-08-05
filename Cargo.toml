@@ -10,6 +10,7 @@ members = [
   "rustler_tests/native/rustler_serde_test",
   "rustler_tests/native/dynamic_load",
   "rustler_tests/native/rustler_compile_tests",
+  "rustler_tests/native/resource_dyncall",
   "rustler_benchmarks/native/benchmark",
 ]
 default-members = [

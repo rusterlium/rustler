@@ -15,6 +15,8 @@ versions.
 - The resource type name can now be overridden with
   `#[register_impl(name = "...")]` (#638)
 - Floats can be decoded from integers (#641, fixes #603)
+- Resource types can now implement and use dynamic calls on NIF version 2.16
+  (#635)
 
 ### Fixed
 

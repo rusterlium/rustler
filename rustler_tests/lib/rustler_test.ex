@@ -2,22 +2,24 @@ defmodule NifNotLoadedError do
   defexception message: "nif not loaded"
 end
 
-defmodule RustlerTest.Helper do
-  def nif_feature_from_running_version() do
-    [major, minor | _] =
-      :erlang.system_info(:nif_version)
-      |> to_string
-      |> String.split(".")
-
-    "nif_version_#{major}_#{minor}"
-  end
-end
-
 defmodule RustlerTest do
+  defmodule Helper do
+    @nif_version Version.parse!("#{:erlang.system_info(:nif_version)}.0")
+
+    def nif_feature_from_running_version() do
+      "nif_version_#{@nif_version.major}_#{@nif_version.minor}"
+    end
+
+    def has_nif_version(version) do
+      req = Version.parse_requirement!("~> #{version}")
+      Version.match?(@nif_version, req)
+    end
+  end
+
   use Rustler,
     otp_app: :rustler_test,
     crate: :rustler_test,
-    features: [RustlerTest.Helper.nif_feature_from_running_version()]
+    features: [Helper.nif_feature_from_running_version()]
 
   defp err, do: :erlang.nif_error(:nif_not_loaded)
 
@@ -145,4 +147,8 @@ defmodule RustlerTest do
   def greeting_person_from_tuple(_tuple), do: err()
 
   def append_to_path(_path, _to_append), do: err()
+
+  if Helper.has_nif_version("2.16") do
+    def perform_dyncall(_res, _a, _b, _c), do: err()
+  end
 end

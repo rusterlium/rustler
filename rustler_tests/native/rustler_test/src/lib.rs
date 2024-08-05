@@ -2,6 +2,8 @@ mod test_atom;
 mod test_binary;
 mod test_codegen;
 mod test_dirty;
+#[cfg(feature = "nif_version_2_16")]
+mod test_dyncall;
 mod test_env;
 mod test_error;
 mod test_list;
