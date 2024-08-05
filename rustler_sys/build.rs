@@ -877,6 +877,12 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
             "env: *mut ErlNifEnv, opt: ErlNifOption",
         );
     }
+
+    // If new functions are added for a new OTP version, ensure that *all* functions are added in
+    // the *correct order*. Failure to do so will result in errors on Windows, as the callback
+    // handling uses the `TWinDynNifCallbacks` struct.
+    //
+    // The correct order can (currently) by derived from the `erl_nif_api_funcs.h` header.
 }
 
 fn get_nif_version_from_features() -> (u32, u32) {
