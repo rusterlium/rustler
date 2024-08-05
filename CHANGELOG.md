@@ -20,6 +20,8 @@ versions.
 
 - The optional `register` attribute on `#[register_impl]` works as advertised
   now (#638)
+- API functions for Windows are correctly assigned now for NIF version 2.15 and
+  above (#635)
 
 ### Changed
 
