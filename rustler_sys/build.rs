@@ -139,7 +139,7 @@ impl<'a> ApiBuilder for WinForwardersApiBuilder<'a> {
         )
         .unwrap();
         writeln!(self.0, "#[inline]").unwrap();
-        writeln!(self.0, "pub unsafe fn {}({})", name, args).unwrap();
+        writeln!(self.0, "pub unsafe extern \"C\" fn {}({})", name, args).unwrap();
         write_ret(self.0, ret);
         writeln!(self.0, "{{").unwrap();
         writeln!(
