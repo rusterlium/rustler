@@ -24,7 +24,7 @@ serde = ["dep:serde"]
 [dependencies]
 inventory = "0.3"
 rustler_codegen = { path = "../rustler_codegen", version = "0.34.0" }
-rustler_sys = { path = "../rustler_sys", version = "~2.4.2" }
+rustler_sys = { path = "../rustler_sys", version = "~2.4.3" }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
 
