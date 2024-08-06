@@ -60,7 +60,7 @@ rustler::init!("Elixir.Math");
 
 #### Minimal Supported Rust Version (MSRV)
 
-Rustler currently has a minimal supported Rust version (MSRV) of 1.56.1. This
+Rustler currently has a minimal supported Rust version (MSRV) of 1.70. This
 is the configured version in `.clippy.toml`.
 
 #### Supported OTP and Elixir Versions
@@ -70,7 +70,7 @@ Rustler aims to support the newest three major OTP versions as well as newest th
 #### Supported NIF version
 
 The minimal supported NIF version for a library should be defined via Cargo
-features. The default is currently `2.15` (Erlang/OTP 21). To use features from
+features. The default is currently `2.15` (Erlang/OTP 22). To use features from
 NIF version `2.16` (Erlang/OTP 24) or `2.17` (Erlang/OTP 26), the respective
 feature flag has to be enabled on the dependency:
 
