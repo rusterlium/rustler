@@ -3,7 +3,7 @@
 // Generate the NIF APIs that will be built in `src/rustler_sys_api.rs`.
 //
 
-use regex::Regex;
+use regex_lite::Regex;
 use std::fmt::Write;
 use std::path::Path;
 use std::{env, fs};

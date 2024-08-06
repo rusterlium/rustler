@@ -45,4 +45,4 @@ nif_version_2_17 = ["nif_version_2_16"]
 unreachable = "1.0"
 
 [build-dependencies]
-regex = "1"
+regex-lite = "0.1"
