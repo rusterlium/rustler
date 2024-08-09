@@ -66,6 +66,24 @@ where
     }
 }
 
+impl<T> Encoder for Box<T>
+where
+    T: Encoder,
+{
+    fn encode<'c>(&self, env: Env<'c>) -> Term<'c> {
+        self.as_ref().encode(env)
+    }
+}
+
+impl<'a, T> Decoder<'a> for Box<T>
+where
+    T: Decoder<'a>,
+{
+    fn decode(term: Term<'a>) -> NifResult<Self> {
+        term.decode().map(Box::new)
+    }
+}
+
 impl<T> Encoder for Option<T>
 where
     T: Encoder,
