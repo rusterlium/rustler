@@ -142,7 +142,6 @@ unsafe impl Sync for Atom {}
 unsafe impl Send for Atom {}
 
 /// Macro for defining Rust functions that return Erlang atoms.
-/// To use this macro, you must also import the `lazy_static` crate.
 ///
 /// For example, this code:
 ///
