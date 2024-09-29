@@ -19,7 +19,7 @@ pub use crate::wrapper::{
     NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
-pub use rustler_sys::{internal_set_symbols, internal_write_symbols, DynNifCallbacks};
+pub use crate::sys::{internal_set_symbols, internal_write_symbols, DynNifCallbacks};
 
 pub unsafe trait NifReturnable {
     unsafe fn into_returned(self, env: Env) -> NifReturned;
@@ -83,7 +83,7 @@ impl NifReturned {
                 flags,
                 fun,
                 args,
-            } => rustler_sys::enif_schedule_nif(
+            } => crate::sys::enif_schedule_nif(
                 env.as_c_arg(),
                 fun_name.as_ptr() as *const c_char,
                 flags as i32,

@@ -82,6 +82,4 @@ pub mod serde;
 #[cfg(feature = "serde")]
 pub use crate::serde::SerdeTerm;
 
-pub mod sys {
-    pub use rustler_sys::*;
-}
+pub mod sys;

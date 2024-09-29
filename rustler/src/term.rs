@@ -1,3 +1,4 @@
+use crate::sys::*;
 use crate::types::binary::OwnedBinary;
 use crate::wrapper::env::term_to_binary;
 use crate::wrapper::NIF_TERM;
@@ -53,12 +54,7 @@ impl<'a> Term<'a> {
             // lifetimes of two .run() calls on the same OwnedEnv.)
             unsafe { Term::new(env, self.as_c_arg()) }
         } else {
-            unsafe {
-                Term::new(
-                    env,
-                    rustler_sys::enif_make_copy(env.as_c_arg(), self.as_c_arg()),
-                )
-            }
+            unsafe { Term::new(env, enif_make_copy(env.as_c_arg(), self.as_c_arg())) }
         }
     }
 
@@ -103,8 +99,8 @@ impl<'a> Term<'a> {
     /// It takes 32-bit salt values and generates hashes within 0..2^32-1.
     pub fn hash_internal(&self, salt: u32) -> u32 {
         unsafe {
-            rustler_sys::enif_hash(
-                rustler_sys::ErlNifHash::ERL_NIF_INTERNAL_HASH,
+            enif_hash(
+                ErlNifHash::ERL_NIF_INTERNAL_HASH,
                 self.as_c_arg(),
                 salt as u64,
             ) as u32
@@ -116,27 +112,24 @@ impl<'a> Term<'a> {
     ///
     /// It generates hashes within 0..2^27-1.
     pub fn hash_phash2(&self) -> u32 {
-        unsafe {
-            rustler_sys::enif_hash(rustler_sys::ErlNifHash::ERL_NIF_PHASH2, self.as_c_arg(), 0)
-                as u32
-        }
+        unsafe { enif_hash(ErlNifHash::ERL_NIF_PHASH2, self.as_c_arg(), 0) as u32 }
     }
 
     #[cfg(feature = "nif_version_2_15")]
-    pub fn get_erl_type(&self) -> rustler_sys::ErlNifTermType {
-        unsafe { rustler_sys::enif_term_type(self.env.as_c_arg(), self.as_c_arg()) }
+    pub fn get_erl_type(&self) -> ErlNifTermType {
+        unsafe { enif_term_type(self.env.as_c_arg(), self.as_c_arg()) }
     }
 }
 
 impl<'a> PartialEq for Term<'a> {
     fn eq(&self, other: &Term) -> bool {
-        unsafe { rustler_sys::enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
+        unsafe { enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
     }
 }
 impl<'a> Eq for Term<'a> {}
 
 fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
-    let ord = unsafe { rustler_sys::enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
+    let ord = unsafe { enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
     match ord {
         0 => Ordering::Equal,
         n if n < 0 => Ordering::Less,

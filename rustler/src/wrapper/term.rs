@@ -1,6 +1,6 @@
+use crate::sys::{c_char, enif_snprintf};
 use crate::wrapper::NIF_TERM;
 use std::fmt;
-use std::os::raw::c_char;
 
 pub fn fmt(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     const SIZE: usize = 1024;
@@ -9,7 +9,7 @@ pub fn fmt(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     let mut n = 0;
     for _ in 0..10 {
         let i = unsafe {
-            rustler_sys::enif_snprintf!(
+            enif_snprintf!(
                 bytes.as_mut_ptr() as *mut c_char,
                 bytes.capacity(),
                 b"%T\x00" as *const u8 as *const c_char,

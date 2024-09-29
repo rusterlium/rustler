@@ -1,3 +1,4 @@
+use crate::sys::{enif_compare_pids, enif_is_process_alive, enif_self};
 use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::cmp::Ordering;
@@ -39,7 +40,7 @@ impl Encoder for LocalPid {
 
 impl PartialEq for LocalPid {
     fn eq(&self, other: &Self) -> bool {
-        unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) == 0 }
+        unsafe { enif_compare_pids(self.as_c_arg(), other.as_c_arg()) == 0 }
     }
 }
 
@@ -53,7 +54,7 @@ impl PartialOrd for LocalPid {
 
 impl Ord for LocalPid {
     fn cmp(&self, other: &Self) -> Ordering {
-        let cmp = unsafe { rustler_sys::enif_compare_pids(self.as_c_arg(), other.as_c_arg()) };
+        let cmp = unsafe { enif_compare_pids(self.as_c_arg(), other.as_c_arg()) };
         cmp.cmp(&0)
     }
 }
@@ -68,7 +69,7 @@ impl<'a> Env<'a> {
     /// called is always associated with the calling Erlang process.)
     pub fn pid(self) -> LocalPid {
         let mut pid = MaybeUninit::uninit();
-        if unsafe { rustler_sys::enif_self(self.as_c_arg(), pid.as_mut_ptr()) }.is_null() {
+        if unsafe { enif_self(self.as_c_arg(), pid.as_mut_ptr()) }.is_null() {
             panic!("environment is process-independent");
         }
         LocalPid {
@@ -78,7 +79,7 @@ impl<'a> Env<'a> {
 
     /// Checks whether the given process is alive
     pub fn is_process_alive(self, pid: LocalPid) -> bool {
-        let res = unsafe { rustler_sys::enif_is_process_alive(self.as_c_arg(), pid.as_c_arg()) };
+        let res = unsafe { enif_is_process_alive(self.as_c_arg(), pid.as_c_arg()) };
         res != 0
     }
 }

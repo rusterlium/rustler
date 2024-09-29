@@ -1,5 +1,7 @@
 use std::alloc::{GlobalAlloc, Layout};
 
+use crate::sys::{c_void, enif_alloc, enif_free};
+
 const SIZEOF_USIZE: usize = std::mem::size_of::<usize>();
 const MAX_ALIGN: usize = 8;
 
@@ -23,7 +25,7 @@ unsafe impl GlobalAlloc for EnifAllocator {
             // `layout.align() - 1`. The requirement for an additional `usize` just shifts the
             // problem without changing the padding requirement.
             let total_size = SIZEOF_USIZE + layout.size() + layout.align() - 1;
-            let ptr = rustler_sys::enif_alloc(total_size) as *mut u8;
+            let ptr = enif_alloc(total_size) as *mut u8;
 
             // Shift the returned pointer to make space for the original pointer
             let ptr1 = ptr.wrapping_add(SIZEOF_USIZE);
@@ -37,7 +39,7 @@ unsafe impl GlobalAlloc for EnifAllocator {
 
             aligned_ptr
         } else {
-            rustler_sys::enif_alloc(layout.size()) as *mut u8
+            enif_alloc(layout.size()) as *mut u8
         }
     }
 
@@ -46,10 +48,10 @@ unsafe impl GlobalAlloc for EnifAllocator {
             // Retrieve the original pointer
             let header = ptr.wrapping_sub(SIZEOF_USIZE);
             let ptr = *(header as *mut usize);
-            ptr as *mut rustler_sys::c_void
+            ptr as *mut c_void
         } else {
-            ptr as *mut rustler_sys::c_void
+            ptr as *mut c_void
         };
-        rustler_sys::enif_free(ptr);
+        enif_free(ptr);
     }
 }
