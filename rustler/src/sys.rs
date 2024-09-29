@@ -10,5 +10,5 @@ mod functions;
 mod nif_filler;
 mod types;
 
-pub use crate::functions::*;
-pub use crate::types::*;
+pub use self::functions::*;
+pub use self::types::*;

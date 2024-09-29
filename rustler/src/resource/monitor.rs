@@ -1,4 +1,4 @@
-use rustler_sys::ErlNifMonitor;
+use crate::sys::{enif_compare_monitors, ErlNifMonitor};
 
 /// Handle for a monitor created using `ResourceArc<T>::monitor`.
 ///
@@ -25,6 +25,6 @@ impl Monitor {
 
 impl PartialEq for Monitor {
     fn eq(&self, other: &Self) -> bool {
-        unsafe { rustler_sys::enif_compare_monitors(&self.inner, &other.inner) == 0 }
+        unsafe { enif_compare_monitors(&self.inner, &other.inner) == 0 }
     }
 }

@@ -2,12 +2,11 @@ use super::traits;
 use super::util::align_alloced_mem_for_struct;
 use super::ResourceInitError;
 use crate::env::EnvKind;
-use crate::{Env, LocalPid, Monitor, Resource};
-use rustler_sys::ErlNifResourceDtor;
-use rustler_sys::{
-    c_char, c_void, ErlNifEnv, ErlNifMonitor, ErlNifPid, ErlNifResourceDown, ErlNifResourceFlags,
-    ErlNifResourceType, ErlNifResourceTypeInit,
+use crate::sys::{
+    c_char, c_void, ErlNifEnv, ErlNifMonitor, ErlNifPid, ErlNifResourceDown, ErlNifResourceDtor,
+    ErlNifResourceFlags, ErlNifResourceType, ErlNifResourceTypeInit,
 };
+use crate::{Env, LocalPid, Monitor, Resource};
 use std::any::TypeId;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
@@ -116,7 +115,7 @@ impl Registration {
         if T::IMPLEMENTS_DYNCALL {
             Self {
                 init: ErlNifResourceTypeInit {
-                    dyncall: resource_dyncall::<T> as *const rustler_sys::ErlNifResourceDynCall,
+                    dyncall: resource_dyncall::<T> as *const crate::sys::ErlNifResourceDynCall,
                     members: max(self.init.members, 4),
                     ..self.init
                 },
@@ -230,10 +229,10 @@ type OpenResourceTypeFn = unsafe extern "C" fn(
 ) -> *const ErlNifResourceType;
 
 #[cfg(feature = "nif_version_2_16")]
-static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = rustler_sys::enif_init_resource_type;
+static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = crate::sys::enif_init_resource_type;
 
 #[cfg(not(feature = "nif_version_2_16"))]
-static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = rustler_sys::enif_open_resource_type_x;
+static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = crate::sys::enif_open_resource_type_x;
 
 const fn max(i: i32, j: i32) -> i32 {
     if i > j {

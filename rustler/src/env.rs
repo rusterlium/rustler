@@ -1,3 +1,4 @@
+use crate::sys::{enif_alloc_env, enif_clear_env, enif_free_env, enif_send, enif_whereis_pid};
 use crate::thread::is_scheduler_thread;
 use crate::types::LocalPid;
 use crate::wrapper::{NIF_ENV, NIF_TERM};
@@ -114,9 +115,7 @@ impl<'a> Env<'a> {
         let message = message.encode(self);
 
         // Send the message.
-        let res = unsafe {
-            rustler_sys::enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg())
-        };
+        let res = unsafe { enif_send(env, pid.as_c_arg(), ptr::null_mut(), message.as_c_arg()) };
 
         if res == 1 {
             Ok(())
@@ -143,7 +142,7 @@ impl<'a> Env<'a> {
         let mut enif_pid = std::mem::MaybeUninit::uninit();
 
         if unsafe {
-            rustler_sys::enif_whereis_pid(
+            enif_whereis_pid(
                 self.as_c_arg(),
                 name_or_pid.as_c_arg(),
                 enif_pid.as_mut_ptr(),
@@ -208,7 +207,7 @@ impl OwnedEnv {
     #[allow(clippy::arc_with_non_send_sync)] // Likely false negative, see https://github.com/rust-lang/rust-clippy/issues/11382
     pub fn new() -> OwnedEnv {
         OwnedEnv {
-            env: Arc::new(unsafe { rustler_sys::enif_alloc_env() }),
+            env: Arc::new(unsafe { enif_alloc_env() }),
         }
     }
 
@@ -249,9 +248,7 @@ impl OwnedEnv {
 
         let message = self.run(|env| closure(env).encode(env).as_c_arg());
 
-        let res = unsafe {
-            rustler_sys::enif_send(ptr::null_mut(), recipient.as_c_arg(), *self.env, message)
-        };
+        let res = unsafe { enif_send(ptr::null_mut(), recipient.as_c_arg(), *self.env, message) };
 
         self.clear();
 
@@ -275,7 +272,7 @@ impl OwnedEnv {
         let c_env = *self.env;
         self.env = Arc::new(c_env);
         unsafe {
-            rustler_sys::enif_clear_env(c_env);
+            enif_clear_env(c_env);
         }
     }
 
@@ -318,7 +315,7 @@ impl OwnedEnv {
 impl Drop for OwnedEnv {
     fn drop(&mut self) {
         unsafe {
-            rustler_sys::enif_free_env(*self.env);
+            enif_free_env(*self.env);
         }
     }
 }

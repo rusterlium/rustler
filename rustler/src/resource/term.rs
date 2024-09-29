@@ -1,7 +1,7 @@
 use super::util::align_alloced_mem_for_struct;
 use super::{Resource, ResourceExt};
+use crate::sys::{c_void, enif_get_resource};
 use crate::{Decoder, Error, NifResult, Term};
-use rustler_sys::c_void;
 use std::mem::MaybeUninit;
 
 impl<'a> Term<'a> {
@@ -12,7 +12,7 @@ impl<'a> Term<'a> {
     ) -> Option<(*const c_void, *mut T)> {
         let typ = T::get_resource_type()?;
         let mut ret_obj = MaybeUninit::uninit();
-        let res = rustler_sys::enif_get_resource(
+        let res = enif_get_resource(
             self.get_env().as_c_arg(),
             self.as_c_arg(),
             typ,

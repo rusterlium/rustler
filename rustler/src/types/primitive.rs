@@ -7,7 +7,7 @@ macro_rules! erl_make {
         unsafe {
             Term::new(
                 $env,
-                rustler_sys::$encode_fun($env.as_c_arg(), $self as $type),
+                crate::sys::$encode_fun($env.as_c_arg(), $self as $type),
             )
         }
     };
@@ -15,9 +15,7 @@ macro_rules! erl_make {
 
 macro_rules! erl_get {
     ($decode_fun:ident, $term:ident, $dest:ident) => {
-        unsafe {
-            rustler_sys::$decode_fun($term.get_env().as_c_arg(), $term.as_c_arg(), &mut $dest)
-        }
+        unsafe { crate::sys::$decode_fun($term.get_env().as_c_arg(), $term.as_c_arg(), &mut $dest) }
     };
 }
 

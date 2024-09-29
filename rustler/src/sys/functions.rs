@@ -1,5 +1,7 @@
-use crate::nif_filler::{self, DynNifFiller};
-use crate::types::*;
+use super::{
+    nif_filler::{self, DynNifFiller},
+    types::*,
+};
 
 static mut DYN_NIF_CALLBACKS: DynNifCallbacks =
     unsafe { std::mem::MaybeUninit::zeroed().assume_init() };

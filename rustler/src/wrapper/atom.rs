@@ -1,14 +1,17 @@
+use crate::sys::ErlNifCharEncoding::ERL_NIF_LATIN1;
+use crate::sys::{
+    enif_get_atom, enif_get_atom_length, enif_make_atom_len, enif_make_existing_atom_len,
+};
 use crate::wrapper::{c_char, c_uint, NIF_ENV, NIF_TERM};
 use crate::Error;
-use rustler_sys::ErlNifCharEncoding::ERL_NIF_LATIN1;
 
 pub unsafe fn make_atom(env: NIF_ENV, name: &[u8]) -> NIF_TERM {
-    rustler_sys::enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len())
+    enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len())
 }
 
 pub unsafe fn make_existing_atom(env: NIF_ENV, name: &[u8]) -> Option<NIF_TERM> {
     let mut atom_out: NIF_TERM = 0;
-    let success = rustler_sys::enif_make_existing_atom_len(
+    let success = enif_make_existing_atom_len(
         env,
         name.as_ptr() as *const c_char,
         name.len(),
@@ -33,7 +36,7 @@ pub unsafe fn make_existing_atom(env: NIF_ENV, name: &[u8]) -> Option<NIF_TERM> 
 pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> Result<String, Error> {
     // Determine the length of the atom, in bytes.
     let mut len = 0;
-    let success = rustler_sys::enif_get_atom_length(env, term, &mut len, ERL_NIF_LATIN1);
+    let success = enif_get_atom_length(env, term, &mut len, ERL_NIF_LATIN1);
     if success == 0 {
         return Err(Error::BadArg);
     }
@@ -42,7 +45,7 @@ pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> Result<String, Error> {
     // enif_get_atom() writes a null terminated string,
     // so add 1 to the atom's length to make room for it.
     let mut bytes: Vec<u8> = Vec::with_capacity(len as usize + 1);
-    let nbytes = rustler_sys::enif_get_atom(env, term, bytes.as_mut_ptr(), len + 1, ERL_NIF_LATIN1);
+    let nbytes = enif_get_atom(env, term, bytes.as_mut_ptr(), len + 1, ERL_NIF_LATIN1);
     assert!(nbytes as c_uint == len + 1);
 
     // This is safe unless the VM is lying to us.

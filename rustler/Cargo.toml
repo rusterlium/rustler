@@ -15,18 +15,21 @@ default = ["nif_version_2_15"]
 derive = []
 alternative_nif_init_name = []
 allocator = []
-nif_version_2_14 = ["rustler_sys/nif_version_2_14"]
-nif_version_2_15 = ["nif_version_2_14", "rustler_sys/nif_version_2_15"]
-nif_version_2_16 = ["nif_version_2_15", "rustler_sys/nif_version_2_16"]
-nif_version_2_17 = ["nif_version_2_16", "rustler_sys/nif_version_2_17"]
+nif_version_2_14 = []
+nif_version_2_15 = ["nif_version_2_14"]
+nif_version_2_16 = ["nif_version_2_15"]
+nif_version_2_17 = ["nif_version_2_16"]
 serde = ["dep:serde"]
 
 [dependencies]
+libloading = "0.8"
 inventory = "0.3"
 rustler_codegen = { path = "../rustler_codegen", version = "0.34.0" }
-rustler_sys = { path = "../rustler_sys", version = "~2.4.3" }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
+
+[build-dependencies]
+regex-lite = "0.1"
 
 [profile.dev]
 panic = "unwind"
