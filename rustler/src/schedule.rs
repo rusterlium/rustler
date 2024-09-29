@@ -1,3 +1,4 @@
+use crate::sys::enif_consume_timeslice;
 use crate::wrapper::ErlNifTaskFlags;
 use crate::Env;
 
@@ -8,6 +9,6 @@ pub enum SchedulerFlags {
 }
 
 pub fn consume_timeslice(env: Env, percent: i32) -> bool {
-    let success = unsafe { rustler_sys::enif_consume_timeslice(env.as_c_arg(), percent) };
+    let success = unsafe { enif_consume_timeslice(env.as_c_arg(), percent) };
     success == 1
 }

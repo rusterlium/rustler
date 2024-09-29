@@ -108,11 +108,10 @@ impl<'a> ApiBuilder for ForwardersApiBuilder<'a> {
         writeln!(self.0, "}}\n").unwrap();
     }
     fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
-        writeln!(self.0, "#[macro_export]").unwrap();
-        writeln!(self.0, "macro_rules! {} {{", name).unwrap();
+        writeln!(self.0, "#[macro_export] macro_rules! {} {{", name).unwrap();
         writeln!(
             self.0,
-            "    ( $( $arg:expr ),* ) => {{ $crate::get_{}()($($arg),*) }};",
+            "    ( $( $arg:expr ),* ) => {{ $crate::sys::get_{}()($($arg),*) }};",
             name
         )
         .unwrap();
@@ -123,6 +122,7 @@ impl<'a> ApiBuilder for ForwardersApiBuilder<'a> {
         )
         .unwrap();
         writeln!(self.0, "}}\n").unwrap();
+        writeln!(self.0, "pub use {name};\n").unwrap();
 
         write!(self.0, "pub unsafe fn get_{}() -> ", name).unwrap();
         write_variadic_fn_type(self.0, args, ret);

@@ -2,9 +2,10 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
+use crate::sys::ErlNifResourceType;
 use crate::{Env, LocalPid, Monitor};
 
-type NifResourcePtr = *const rustler_sys::ErlNifResourceType;
+type NifResourcePtr = *const ErlNifResourceType;
 
 /// Map from `TypeId` to the `NifResourcePtr`. To be able to store this in a `OnceLock`, the
 /// pointer is type-erased and stored as a `usize`.
@@ -57,7 +58,7 @@ pub trait Resource: Sized + Send + Sync + 'static {
 
     #[cfg(feature = "nif_version_2_16")]
     #[allow(unused)]
-    unsafe fn dyncall<'a>(&'a self, env: Env<'a>, call_data: *mut rustler_sys::c_void) {}
+    unsafe fn dyncall<'a>(&'a self, env: Env<'a>, call_data: *mut crate::sys::c_void) {}
 }
 
 #[doc(hidden)]

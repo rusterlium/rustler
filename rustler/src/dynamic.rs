@@ -1,7 +1,7 @@
 use std::ffi::c_double;
 
 #[cfg(feature = "nif_version_2_15")]
-use rustler_sys::ErlNifTermType;
+use crate::sys::ErlNifTermType;
 
 use crate::wrapper::check;
 use crate::Term;
@@ -108,7 +108,7 @@ impl<'a> Term<'a> {
     pub fn is_float(self) -> bool {
         let mut val: c_double = 0.0;
         unsafe {
-            rustler_sys::enif_get_double(self.get_env().as_c_arg(), self.as_c_arg(), &mut val) == 1
+            crate::sys::enif_get_double(self.get_env().as_c_arg(), self.as_c_arg(), &mut val) == 1
         }
     }
 

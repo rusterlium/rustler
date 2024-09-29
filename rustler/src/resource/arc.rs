@@ -2,7 +2,10 @@ use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ptr;
 
-use rustler_sys::{c_void, ErlNifEnv};
+use crate::sys::{
+    c_void, enif_alloc_resource, enif_demonitor_process, enif_keep_resource, enif_make_resource,
+    enif_make_resource_binary, enif_monitor_process, enif_release_resource, ErlNifEnv,
+};
 
 use crate::thread::is_scheduler_thread;
 use crate::{Binary, Decoder, Encoder, Env, Error, LocalPid, Monitor, NifResult, OwnedEnv, Term};
@@ -40,7 +43,7 @@ where
     pub fn new(data: T) -> Self {
         let alloc_size = get_alloc_size_struct::<T>();
         let resource_type = T::get_resource_type().unwrap();
-        let mem_raw = unsafe { rustler_sys::enif_alloc_resource(resource_type, alloc_size) };
+        let mem_raw = unsafe { enif_alloc_resource(resource_type, alloc_size) };
         let aligned_mem = unsafe { align_alloced_mem_for_struct::<T>(mem_raw) as *mut T };
 
         unsafe { ptr::write(aligned_mem, data) };
@@ -80,7 +83,7 @@ where
         F: FnOnce(&'a T) -> &'b [u8],
     {
         let bin = f(&*self.inner);
-        let binary = rustler_sys::enif_make_resource_binary(
+        let binary = enif_make_resource_binary(
             env.as_c_arg(),
             self.raw,
             bin.as_ptr() as *const c_void,
@@ -93,17 +96,12 @@ where
 
     fn from_term(term: Term) -> Result<Self, Error> {
         let (raw, inner) = unsafe { term.try_get_resource_ptrs::<T>() }.ok_or(Error::BadArg)?;
-        unsafe { rustler_sys::enif_keep_resource(raw) };
+        unsafe { enif_keep_resource(raw) };
         Ok(ResourceArc { raw, inner })
     }
 
     fn as_term<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe {
-            Term::new(
-                env,
-                rustler_sys::enif_make_resource(env.as_c_arg(), self.raw),
-            )
-        }
+        unsafe { Term::new(env, enif_make_resource(env.as_c_arg(), self.raw)) }
     }
 
     fn as_c_arg(&mut self) -> *const c_void {
@@ -126,9 +124,8 @@ where
 
         let env = maybe_env(caller_env);
         let mut mon = MaybeUninit::uninit();
-        let res = unsafe {
-            rustler_sys::enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0
-        };
+        let res =
+            unsafe { enif_monitor_process(env, self.raw, pid.as_c_arg(), mon.as_mut_ptr()) == 0 };
         if res {
             Some(unsafe { Monitor::new(mon.assume_init()) })
         } else {
@@ -142,7 +139,7 @@ where
         }
 
         let env = maybe_env(caller_env);
-        unsafe { rustler_sys::enif_demonitor_process(env, self.raw, mon.as_c_arg()) == 0 }
+        unsafe { enif_demonitor_process(env, self.raw, mon.as_c_arg()) == 0 }
     }
 }
 
@@ -179,9 +176,11 @@ impl<'a> Env<'a> {
         module: crate::Atom,
         name: crate::Atom,
         resource: Term<'a>,
-        call_data: *mut rustler_sys::c_void,
+        call_data: *mut c_void,
     ) -> Result<(), super::DynamicResourceCallError> {
-        let res = rustler_sys::enif_dynamic_resource_call(
+        use crate::sys::enif_dynamic_resource_call;
+
+        let res = enif_dynamic_resource_call(
             self.as_c_arg(),
             module.as_c_arg(),
             name.as_c_arg(),
@@ -215,7 +214,7 @@ where
     /// Cloning a `ResourceArc` simply increments the reference count for the
     /// resource. The `T` value is not cloned.
     fn clone(&self) -> Self {
-        unsafe { rustler_sys::enif_keep_resource(self.raw) };
+        unsafe { enif_keep_resource(self.raw) };
         ResourceArc {
             raw: self.raw,
             inner: self.inner,
@@ -234,7 +233,7 @@ where
     /// at an unpredictable time: whenever the VM decides to do garbage
     /// collection.
     fn drop(&mut self) {
-        unsafe { rustler_sys::enif_release_resource(self.as_c_arg()) };
+        unsafe { enif_release_resource(self.as_c_arg()) };
     }
 }
 
