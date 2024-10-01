@@ -42,7 +42,7 @@ nif_version_2_16 = ["nif_version_2_15"]
 nif_version_2_17 = ["nif_version_2_16"]
 
 [dependencies]
-unreachable = "1.0"
+libloading = "0.8"
 
 [build-dependencies]
 regex-lite = "0.1"

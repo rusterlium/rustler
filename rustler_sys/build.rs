@@ -11,24 +11,25 @@ use std::{env, fs};
 pub const MIN_SUPPORTED_VERSION: (u32, u32) = (2, 14);
 pub const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 17);
 
-const SNIPPET_NAME: &str = "nif_api.snippet";
+const SNIPPET_NAME: &str = "nif_api.snippet.rs";
 
 trait ApiBuilder {
+    fn init(&mut self) {}
+    fn finish(&mut self) {}
+
     fn func(&mut self, ret: &str, name: &str, args: &str);
     fn variadic_func(&mut self, ret: &str, name: &str, args: &str);
     fn dummy(&mut self, name: &str);
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum OsFamily {
-    Unix,
-    Win,
-}
-
 pub struct GenerateOptions {
     pub ulong_size: usize,
     pub nif_version: (u32, u32),
-    pub target_family: OsFamily,
+}
+
+enum OsFamily {
+    Win,
+    Unix,
 }
 
 fn write_ret(out: &mut String, ret: &str) {
@@ -47,81 +48,37 @@ fn write_variadic_fn_type(out: &mut String, args: &str, ret: &str) {
     write_ret(out, ret);
 }
 
-pub struct BasicApiBuilder<'a>(&'a mut String);
+pub struct CallbacksApiBuilder<'a>(&'a mut String);
+impl<'a> ApiBuilder for CallbacksApiBuilder<'a> {
+    fn init(&mut self) {
+        writeln!(self.0, "#[allow(dead_code)]").unwrap();
+        writeln!(self.0, "#[derive(Default, Copy, Clone)]").unwrap();
+        writeln!(self.0, "pub struct DynNifCallbacks {{").unwrap();
+    }
 
-impl<'a> ApiBuilder for BasicApiBuilder<'a> {
-    fn func(&mut self, ret: &str, name: &str, args: &str) {
-        writeln!(self.0, "extern \"C\" {{").unwrap();
-        writeln!(
-            self.0,
-            "    /// See [{}](http://www.erlang.org/doc/man/erl_nif.html#{}) in the Erlang docs.",
-            name, name
-        )
-        .unwrap();
-
-        write!(self.0, "    pub fn {}({})", name, args).unwrap();
-        write_ret(self.0, ret);
-        writeln!(self.0, ";").unwrap();
-
+    fn finish(&mut self) {
         writeln!(self.0, "}}").unwrap();
     }
-    fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
-        writeln!(self.0, "extern \"C\" {{").unwrap();
-        writeln!(self.0, "    #[doc(hidden)]").unwrap();
-        writeln!(self.0, "    #[link_name = \"{}\"]", name).unwrap();
 
-        write!(self.0, "    pub fn _{}({}, ...)", name, args).unwrap();
-        write_ret(self.0, ret);
-        writeln!(self.0, ";").unwrap();
-
-        writeln!(self.0, "}}\n").unwrap();
-
-        writeln!(
-            self.0,
-            "/// See [{}](http://www.erlang.org/doc/man/erl_nif.html#{}) in the Erlang docs.",
-            name, name
-        )
-        .unwrap();
-        writeln!(self.0, "#[macro_export]").unwrap();
-        writeln!(self.0, "macro_rules! {} {{", name).unwrap();
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),*  ) => {{ $crate::_{}($($arg),*) }};",
-            name
-        )
-        .unwrap();
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),+, ) => {{ {}!($($arg),*) }};",
-            name
-        )
-        .unwrap();
-        writeln!(self.0, "}}\n").unwrap();
-    }
-    fn dummy(&mut self, _name: &str) {}
-}
-
-pub struct WinCallbacksApiBuilder<'a>(&'a mut String);
-impl<'a> ApiBuilder for WinCallbacksApiBuilder<'a> {
     fn func(&mut self, ret: &str, name: &str, args: &str) {
-        write!(self.0, "    {}: ", name).unwrap();
+        write!(self.0, "    {}: Option<", name).unwrap();
         write_fn_type(self.0, args, ret);
-        writeln!(self.0, ",").unwrap();
+        writeln!(self.0, ">,").unwrap();
     }
     fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
-        write!(self.0, "    {}: ", name).unwrap();
+        write!(self.0, "    {}: Option<", name).unwrap();
         write_variadic_fn_type(self.0, args, ret);
-        writeln!(self.0, ",").unwrap();
+        writeln!(self.0, ">,").unwrap();
     }
     fn dummy(&mut self, name: &str) {
-        write!(self.0, "    {}: ", name).unwrap();
+        write!(self.0, "    {}: Option<", name).unwrap();
         write_fn_type(self.0, "", "");
-        writeln!(self.0, ",").unwrap();
+        writeln!(self.0, ">,").unwrap();
     }
 }
 
-pub struct WinForwardersApiBuilder<'a>(&'a mut String);
-impl<'a> ApiBuilder for WinForwardersApiBuilder<'a> {
+pub struct ForwardersApiBuilder<'a>(&'a mut String);
+impl<'a> ApiBuilder for ForwardersApiBuilder<'a> {
     fn func(&mut self, ret: &str, name: &str, args: &str) {
         // This regex takes a list of args with types and return only the name of the args.
         //
@@ -144,7 +101,7 @@ impl<'a> ApiBuilder for WinForwardersApiBuilder<'a> {
         writeln!(self.0, "{{").unwrap();
         writeln!(
             self.0,
-            "    (WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().{})({})",
+            "    (DYN_NIF_CALLBACKS.{}.unwrap_unchecked())({})",
             name, args_names
         )
         .unwrap();
@@ -170,13 +127,35 @@ impl<'a> ApiBuilder for WinForwardersApiBuilder<'a> {
         write!(self.0, "pub unsafe fn get_{}() -> ", name).unwrap();
         write_variadic_fn_type(self.0, args, ret);
         writeln!(self.0, " {{").unwrap();
-        writeln!(
+        writeln!(self.0, "    DYN_NIF_CALLBACKS.{}.unwrap_unchecked()", name).unwrap();
+        writeln!(self.0, "}}\n").unwrap();
+    }
+    fn dummy(&mut self, _name: &str) {}
+}
+
+pub struct WriterBuilder<'a>(&'a mut String);
+
+impl<'a> ApiBuilder for WriterBuilder<'a> {
+    fn init(&mut self) {
+        write!(
             self.0,
-            "    WIN_DYN_NIF_CALLBACKS.unchecked_unwrap().{}",
-            name
+            "impl DynNifCallbacks {{\n    fn write_symbols<T: DynNifFiller>(&mut self, filler: T) {{\n"
         )
         .unwrap();
-        writeln!(self.0, "}}\n").unwrap();
+    }
+    fn finish(&mut self) {
+        writeln!(self.0, "    }}\n}}").unwrap();
+    }
+    fn func(&mut self, _ret: &str, name: &str, _args: &str) {
+        writeln!(
+            self.0,
+            "        filler.write(&mut self.{}, \"{}\0\");",
+            name, name
+        )
+        .unwrap();
+    }
+    fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
+        self.func(ret, name, args);
     }
     fn dummy(&mut self, _name: &str) {}
 }
@@ -202,31 +181,10 @@ fn generate(opts: &GenerateOptions) -> String {
     )
     .unwrap();
 
-    // Basic
-    if opts.target_family == OsFamily::Win {
-        writeln!(out, "#[allow(dead_code)]").unwrap();
-        writeln!(out, "#[derive(Copy, Clone)]").unwrap();
-        writeln!(out, "pub struct TWinDynNifCallbacks {{").unwrap();
-        build_api(&mut WinCallbacksApiBuilder(&mut out), opts);
-        writeln!(out, "}}").unwrap();
+    build_api(&mut CallbacksApiBuilder(&mut out), opts);
 
-        // The line below would be the "faithful" reproduction of the NIF Win API, but Rust
-        // is currently not allowing statics to be uninitialized (1.3 beta).  Revisit this when
-        // RFC911 is implemented (or some other mechanism)
-        // writeln!(out, "pub static mut WIN_DYN_NIF_CALLBACKS: TWinDynNifCallbacks = unsafe {{ std::mem::uninitialized() }};\n").unwrap();
-
-        // The work-around is to use Option.  The problem here is that we have to do an unwrap() for
-        // each API call which is extra work.
-        writeln!(
-            out,
-            "pub static mut WIN_DYN_NIF_CALLBACKS:Option<TWinDynNifCallbacks> = None;\n"
-        )
-        .unwrap();
-
-        build_api(&mut WinForwardersApiBuilder(&mut out), opts);
-    } else {
-        build_api(&mut BasicApiBuilder(&mut out), opts);
-    }
+    build_api(&mut ForwardersApiBuilder(&mut out), opts);
+    build_api(&mut WriterBuilder(&mut out), opts);
 
     if opts.ulong_size == 4 {
         writeln!(out, "use std::os::raw::{{c_ulonglong, c_longlong}};").unwrap();
@@ -258,6 +216,7 @@ pub unsafe fn enif_get_uint64(env: *mut ErlNifEnv, term: ERL_NIF_TERM, ip: *mut 
 }
 
 fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
+    b.init();
     b.func("*mut c_void", "enif_priv_data", "arg1: *mut ErlNifEnv");
     b.func("*mut c_void", "enif_alloc", "size: size_t");
     b.func("", "enif_free", "ptr: *mut c_void");
@@ -883,6 +842,8 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
     // handling uses the `TWinDynNifCallbacks` struct.
     //
     // The correct order can (currently) by derived from the `erl_nif_api_funcs.h` header.
+
+    b.finish();
 }
 
 fn get_nif_version_from_features() -> (u32, u32) {
@@ -936,7 +897,6 @@ fn main() {
     let opts = GenerateOptions {
         ulong_size,
         nif_version,
-        target_family,
     };
     let api = generate(&opts);
 

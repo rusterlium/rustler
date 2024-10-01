@@ -18,8 +18,7 @@ pub use crate::wrapper::{
     NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
-#[cfg(windows)]
-pub use rustler_sys::{TWinDynNifCallbacks, WIN_DYN_NIF_CALLBACKS};
+pub use rustler_sys::{internal_set_symbols, internal_write_symbols, DynNifCallbacks};
 
 pub unsafe trait NifReturnable {
     unsafe fn into_returned(self, env: Env) -> NifReturned;

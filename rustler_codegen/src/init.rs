@@ -142,14 +142,15 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             #[cfg(unix)]
             #[no_mangle]
             extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+                unsafe { rustler::codegen_runtime::internal_write_symbols() };
                 #inner
             }
 
             #[cfg(windows)]
             #[no_mangle]
-            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::TWinDynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::DynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
-                    rustler::codegen_runtime::WIN_DYN_NIF_CALLBACKS = Some(*callbacks);
+                    rustler::codegen_runtime::internal_set_symbols(*callbacks);
                 }
 
                 #inner

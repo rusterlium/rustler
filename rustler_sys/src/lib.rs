@@ -4,7 +4,11 @@ Low level Rust bindings to the [Erlang NIF API](http://www.erlang.org/doc/man/er
 
 // Don't throw warnings on NIF naming conventions
 #![allow(non_camel_case_types)]
+#![allow(clippy::missing_safety_doc)]
 
-pub mod rustler_sys_api;
+mod functions;
+mod nif_filler;
+mod types;
 
-pub use crate::rustler_sys_api::*;
+pub use crate::functions::*;
+pub use crate::types::*;

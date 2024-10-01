@@ -61,68 +61,7 @@ defmodule Rustler.Compiler do
     ["rustup", "run", version, "cargo", "rustc"]
   end
 
-  defp ensure_platform_requirements!(crate_path, config, {:unix, :darwin}) do
-    # We attempt to find a .cargo/config upwards from the crate_path, which
-    # has a target configuration for macos. If any such config exists, we
-    # assume that the config correctly encodes the needed linker arguments.
-
-    workspace_root = config.metadata["workspace_root"]
-
-    components =
-      crate_path
-      |> Path.relative_to(workspace_root)
-      |> Path.split()
-
-    {potential_config_files, _} =
-      Enum.map_reduce(["" | components], workspace_root, fn component, path ->
-        path = Path.join(path, component)
-        # See https://doc.rust-lang.org/cargo/reference/config.html, cargo
-        # accepts the config with and without a file extension of `.toml`.
-        file = Path.join([path, ".cargo", "config"])
-        file_with_extension = file <> ".toml"
-        {[file, file_with_extension], path}
-      end)
-
-    potential_config_files = List.flatten(potential_config_files)
-
-    has_macos_target_os_configuration? =
-      potential_config_files
-      |> Enum.filter(&File.exists?/1)
-      |> Enum.reverse()
-      |> Stream.map(&Toml.decode_file!/1)
-      |> Enum.find(&macos_target_configuration/1)
-
-    unless has_macos_target_os_configuration? do
-      raise """
-      Compiling on macOS requires special link args in order to compile
-      correctly.
-
-      To remove this error, please create .cargo/config.toml or .cargo/config
-      with the following content:
-
-             [target.'cfg(target_os = "macos")']
-             rustflags = [
-                 "-C", "link-arg=-undefined",
-                 "-C", "link-arg=dynamic_lookup",
-             ]
-
-
-      See https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
-      for more details.
-      """
-    end
-  end
-
   defp ensure_platform_requirements!(_, _, _), do: :ok
-
-  defp macos_target_configuration(toml) do
-    toml
-    |> Map.get("target", [])
-    |> Enum.filter(fn {key, _} ->
-      String.match?(key, ~r/(.*macos.*)|(.*darwin.*)/)
-    end)
-    |> Map.new()
-  end
 
   defp make_no_default_features_flag(args, true), do: args
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
