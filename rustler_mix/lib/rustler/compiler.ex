@@ -136,8 +136,6 @@ defmodule Rustler.Compiler do
     end
   end
 
-  def get_lib_suffix(), do: get_suffix(nil, :lib)
-
   defp get_suffix(target, :lib) do
     case get_target_os_type(target) do
       {:win32, _} -> "dll"
