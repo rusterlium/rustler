@@ -1,4 +1,5 @@
 use crate::env::OwnedEnv;
+use crate::sys::enif_thread_type;
 use crate::{Atom, Encoder, Env, Term};
 use std::panic;
 use std::thread;
@@ -66,5 +67,5 @@ where
 ///
 /// This is relevant for (e.g.) `enif_send` or `enif_monitor_process` as
 pub fn is_scheduler_thread() -> bool {
-    unsafe { rustler_sys::enif_thread_type() > 0 }
+    unsafe { enif_thread_type() > 0 }
 }

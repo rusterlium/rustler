@@ -1,4 +1,4 @@
-use rustler_sys::c_void;
+use crate::sys::c_void;
 use std::mem;
 
 pub fn get_alloc_size_struct<T>() -> usize {
