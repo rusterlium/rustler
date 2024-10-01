@@ -104,13 +104,6 @@ defmodule Rustler do
       end
 
       if config.lib do
-        {otp_app, path} = config.load_from
-
-        @external_resource Application.app_dir(
-                             otp_app,
-                             "#{path}.#{Rustler.Compiler.get_lib_suffix()}"
-                           )
-
         @load_from config.load_from
         @load_data config.load_data
         @load_data_fun config.load_data_fun
