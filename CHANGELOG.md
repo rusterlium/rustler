@@ -24,6 +24,7 @@ versions.
   now (#638)
 - API functions for Windows are correctly assigned now for NIF version 2.15 and
   above (#635)
+- Panics in encoding the result of NIF function are caught (#656)
 
 ### Changed
 

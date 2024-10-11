@@ -3,6 +3,7 @@
 use std::ffi::CString;
 use std::fmt;
 
+use crate::types::atom;
 use crate::{Encoder, Env, OwnedBinary, Term};
 
 // Re-export of inventory
@@ -26,10 +27,16 @@ pub unsafe trait NifReturnable {
 
 unsafe impl<T> NifReturnable for T
 where
-    T: crate::Encoder,
+    T: crate::Encoder + std::panic::RefUnwindSafe,
 {
     unsafe fn into_returned(self, env: Env) -> NifReturned {
-        NifReturned::Term(self.encode(env).as_c_arg())
+        if let Ok(res) = std::panic::catch_unwind(|| NifReturned::Term(self.encode(env).as_c_arg()))
+        {
+            res
+        } else {
+            let term = atom::nif_panicked().as_c_arg();
+            NifReturned::Raise(term)
+        }
     }
 }
 
@@ -126,7 +133,7 @@ where
             Err(err) => match err.downcast::<NifReturned>() {
                 Ok(ty) => NifReturned::Term(ty.apply(env)),
                 Err(_) => {
-                    let term = crate::types::atom::nif_panicked().as_c_arg();
+                    let term = atom::nif_panicked().as_c_arg();
                     NifReturned::Raise(term)
                 }
             },
