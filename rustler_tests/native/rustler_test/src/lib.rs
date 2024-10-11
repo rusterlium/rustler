@@ -10,6 +10,7 @@ mod test_list;
 mod test_local_pid;
 mod test_map;
 mod test_nif_attrs;
+mod test_panic;
 mod test_path;
 mod test_primitives;
 mod test_range;

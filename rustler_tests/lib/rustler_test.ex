@@ -148,6 +148,10 @@ defmodule RustlerTest do
 
   def append_to_path(_path, _to_append), do: err()
 
+  def panic_in_nif(), do: err()
+  def panic_in_encode(), do: err()
+  def panic_in_decode(_), do: err()
+
   if Helper.has_nif_version("2.16") do
     def perform_dyncall(_res, _a, _b, _c), do: err()
   end
