@@ -31,12 +31,6 @@ serde = { version = "1", optional = true }
 [build-dependencies]
 regex-lite = "0.1"
 
-[profile.dev]
-panic = "unwind"
-
-[profile.release]
-panic = "unwind"
-
 [package.metadata.release]
 
 [[package.metadata.release.pre-release-replacements]]
