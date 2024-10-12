@@ -12,26 +12,28 @@ versions.
 
 ### Added
 
-- The resource type name can now be overridden with
+- The resource type name can be overridden with
   `#[register_impl(name = "...")]` (#638)
 - Floats can be decoded from integers (#641, fixes #603)
-- Resource types can now implement and use dynamic calls on NIF version 2.16
-  (#635)
+- Resource types can implement and use dynamic calls on NIF version 2.16 (#635)
+- `Encoder` and `Decoder` implementations for `Box<T>` (#644)
 
 ### Fixed
 
 - The optional `register` attribute on `#[register_impl]` works as advertised
   now (#638)
-- API functions for Windows are correctly assigned now for NIF version 2.15 and
+- API functions for Windows are correctly assigned for NIF version 2.15 and
   above (#635)
 - Panics in encoding the result of NIF function are caught (#656)
+- Reverted change to "recompile if the NIF library is changed/deleted" (#654,
+  fixes #651)
 
 ### Changed
 
 - The special ok/error handling for atoms in serde is now restricted to variant
   names (#639)
-
-### Removed
+- `rustler_sys` as a separate library is merged into `rustler::sys` and will not
+  be released independently of `rustler` anymore (#653)
 
 ## [0.34.0] - 2024-07-09
 
