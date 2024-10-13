@@ -2,6 +2,13 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.34 -> 0.35
+
+`rustler_sys` as a standalone library has been replaced by an embedded
+`rustler::sys` submodule. Due to how the `rustler_/::sys` initialisation works,
+it is not possible to use the new `rustler` in conjunction with `rustler_sys`. A
+simple textual replacement is enough, though.
+
 ## 0.33 -> 0.34
 
 1. NIF implementations are now discovered automatically, the respective argument
