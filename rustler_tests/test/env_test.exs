@@ -104,4 +104,13 @@ defmodule RustlerTest.EnvTest do
     assert :error == RustlerTest.send(task.pid, :msg)
     assert :error == RustlerTest.send(task.pid, :msg)
   end
+
+  test "make_ref" do
+    {different, ref1, ref2} = RustlerTest.make_refs()
+
+    assert different
+    assert is_reference(ref1)
+    assert is_reference(ref2)
+    assert ref1 != ref2
+  end
 end

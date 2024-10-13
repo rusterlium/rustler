@@ -2,7 +2,7 @@ use rustler::env::{OwnedEnv, SavedTerm, SendError};
 use rustler::types::atom;
 use rustler::types::list::ListIterator;
 use rustler::types::LocalPid;
-use rustler::{Atom, Encoder, Env, NifResult, Term};
+use rustler::{Atom, Encoder, Env, NifResult, Reference, Term};
 use std::thread;
 
 // Send a message to several PIDs.
@@ -83,4 +83,11 @@ pub fn sublists<'a>(env: Env<'a>, list: Term<'a>) -> NifResult<Atom> {
     });
 
     Ok(atom::ok())
+}
+
+#[rustler::nif]
+fn make_refs<'a>(env: Env<'a>) -> (bool, Reference<'a>, Reference<'a>) {
+    let first = env.make_ref();
+    let second = env.make_ref();
+    (first != second, first, second)
 }
