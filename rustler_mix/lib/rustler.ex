@@ -158,13 +158,29 @@ defmodule Rustler do
         :code.purge(__MODULE__)
 
         {otp_app, path} = @load_from
+        app_dir = Application.app_dir(otp_app, path)
 
         load_path =
-          otp_app
-          |> Application.app_dir(path)
-          |> to_charlist()
+          case System.get_env("ESCRIPT_NAME") do
+            nil ->
+              app_dir
 
-        :erlang.load_nif(load_path, _construct_load_data())
+            escript_path ->
+              if String.starts_with?(app_dir, escript_path) do
+                tmp = System.tmp_dir!()
+
+                :zip.extract(escript_path,
+                  file_list: [Path.join(otp_app |> Atom.to_string(), path)],
+                  cwd: tmp
+                )
+
+                Path.join(tmp, path)
+              else
+                app_dir
+              end
+          end
+
+        :erlang.load_nif(load_path |> to_charlist(), _construct_load_data())
       end
     end
   end
