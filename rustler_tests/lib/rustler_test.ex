@@ -103,6 +103,7 @@ defmodule RustlerTest do
   def whereis_pid(_), do: err()
   def is_process_alive(_), do: err()
   def sublists(_), do: err()
+  def make_refs(), do: err()
 
   def tuple_echo(_), do: err()
   def record_echo(_), do: err()

@@ -2,8 +2,6 @@ use crate::{Env, Error, NifResult, Term};
 
 #[macro_use]
 pub mod atom;
-pub mod i128;
-pub mod path;
 pub use crate::types::atom::Atom;
 
 pub mod binary;
@@ -31,6 +29,13 @@ pub mod tuple;
 #[doc(hidden)]
 pub mod local_pid;
 pub use self::local_pid::LocalPid;
+
+#[doc(hidden)]
+pub mod reference;
+pub use self::reference::Reference;
+
+pub mod i128;
+pub mod path;
 
 pub mod truthy;
 
