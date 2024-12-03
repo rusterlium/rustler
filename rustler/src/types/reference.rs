@@ -1,22 +1,24 @@
 use std::ops::Deref;
 
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
 
 use crate::sys::enif_make_ref;
 
-/// Wrapper for BEAM reference terms.
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub struct Reference<'a>(Term<'a>);
+wrapper!(Reference, TermType::Ref);
 
-impl Reference<'_> {
-    /// Returns a representation of self in the given Env.
-    ///
-    /// If the term is already is in the provided env, it will be directly returned. Otherwise
-    /// the term will be copied over.
-    pub fn in_env<'b>(&self, env: Env<'b>) -> Reference<'b> {
-        Reference(self.0.in_env(env))
-    }
-}
+/// Wrapper for BEAM reference terms.
+// #[derive(PartialEq, Eq, Clone, Copy)]
+// pub struct Reference<'a>(Term<'a>);
+//
+// impl<'a> Reference<'a> {
+//     /// Returns a representation of self in the given Env.
+//     ///
+//     /// If the term is already is in the provided env, it will be directly returned. Otherwise
+//     /// the term will be copied over.
+//     pub fn in_env<'b>(&self, env: Env<'b>) -> Reference<'b> {
+//         Reference(self.0.in_env(env))
+//     }
+// }
 
 impl<'a> Deref for Reference<'a> {
     type Target = Term<'a>;
