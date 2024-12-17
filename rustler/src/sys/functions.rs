@@ -10,6 +10,7 @@ pub unsafe fn internal_set_symbols(callbacks: DynNifCallbacks) {
     DYN_NIF_CALLBACKS = callbacks;
 }
 
+#[allow(static_mut_refs)]
 pub unsafe fn internal_write_symbols() {
     let filler = nif_filler::new();
     DYN_NIF_CALLBACKS.write_symbols(filler);

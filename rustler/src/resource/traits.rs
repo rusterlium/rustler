@@ -12,6 +12,7 @@ type NifResourcePtr = *const ErlNifResourceType;
 static mut RESOURCE_TYPES: OnceLock<HashMap<TypeId, usize>> = OnceLock::new();
 
 /// Register an Erlang resource type handle for a particular type given by its `TypeId`
+#[allow(static_mut_refs)]
 pub(crate) unsafe fn register_resource_type(type_id: TypeId, resource_type: NifResourcePtr) {
     RESOURCE_TYPES.get_or_init(Default::default);
     RESOURCE_TYPES
@@ -64,6 +65,7 @@ pub trait Resource: Sized + Send + Sync + 'static {
 #[doc(hidden)]
 pub(crate) trait ResourceExt: 'static {
     /// Get the NIF resource type handle for this type if it had been registered before
+    #[allow(static_mut_refs)]
     fn get_resource_type() -> Option<NifResourcePtr> {
         let map = unsafe { RESOURCE_TYPES.get()? };
         map.get(&TypeId::of::<Self>())
