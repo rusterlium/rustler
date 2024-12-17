@@ -122,7 +122,7 @@ where
     }
 }
 
-impl<'a, T> Encoder for &'a [T]
+impl<T> Encoder for &[T]
 where
     T: Encoder,
 {

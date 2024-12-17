@@ -51,7 +51,7 @@ pub trait Decoder<'a>: Sized + 'a {
     fn decode(term: Term<'a>) -> NifResult<Self>;
 }
 
-impl<'a> Encoder for Term<'a> {
+impl Encoder for Term<'_> {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.in_env(env)
     }
@@ -62,7 +62,7 @@ impl<'a> Decoder<'a> for Term<'a> {
     }
 }
 
-impl<'a, T> Encoder for &'a T
+impl<T> Encoder for &T
 where
     T: Encoder,
 {

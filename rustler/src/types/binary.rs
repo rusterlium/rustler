@@ -393,12 +393,12 @@ impl<'a> Binary<'a> {
     }
 }
 
-impl<'a> Borrow<[u8]> for Binary<'a> {
+impl Borrow<[u8]> for Binary<'_> {
     fn borrow(&self) -> &[u8] {
         self.as_slice()
     }
 }
-impl<'a> Deref for Binary<'a> {
+impl Deref for Binary<'_> {
     type Target = [u8];
     fn deref(&self) -> &[u8] {
         self.as_slice()
@@ -410,7 +410,7 @@ impl<'a> Decoder<'a> for Binary<'a> {
         Binary::from_term(term)
     }
 }
-impl<'a> Encoder for Binary<'a> {
+impl Encoder for Binary<'_> {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.to_term(env)
     }
@@ -479,13 +479,13 @@ impl<'a> From<NewBinary<'a>> for Term<'a> {
     }
 }
 
-impl<'a> Deref for NewBinary<'a> {
+impl Deref for NewBinary<'_> {
     type Target = [u8];
     fn deref(&self) -> &[u8] {
         self.as_slice()
     }
 }
-impl<'a> DerefMut for NewBinary<'a> {
+impl DerefMut for NewBinary<'_> {
     fn deref_mut(&mut self) -> &mut [u8] {
         self.as_mut_slice()
     }

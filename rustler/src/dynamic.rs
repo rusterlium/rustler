@@ -85,7 +85,7 @@ macro_rules! impl_check {
 }
 
 /// ## Type checks
-impl<'a> Term<'a> {
+impl Term<'_> {
     /// Returns an enum representing which type the term is.
     /// Note that using the individual `is_*` functions is more
     /// efficient for checking a single type.

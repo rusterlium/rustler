@@ -35,7 +35,7 @@ pub struct Env<'a> {
 /// Two environments are equal if they're the same `NIF_ENV` value.
 ///
 /// A `Env<'a>` is equal to a `Env<'b>` if and only if `'a` and `'b` are the same lifetime.
-impl<'a, 'b> PartialEq<Env<'b>> for Env<'a> {
+impl<'b> PartialEq<Env<'b>> for Env<'_> {
     fn eq(&self, other: &Env<'b>) -> bool {
         self.env == other.env
     }

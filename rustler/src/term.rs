@@ -17,7 +17,7 @@ pub struct Term<'a> {
     env: Env<'a>,
 }
 
-impl<'a> Debug for Term<'a> {
+impl Debug for Term<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         crate::wrapper::term::fmt(self.as_c_arg(), f)
     }
@@ -121,12 +121,12 @@ impl<'a> Term<'a> {
     }
 }
 
-impl<'a> PartialEq for Term<'a> {
+impl PartialEq for Term<'_> {
     fn eq(&self, other: &Term) -> bool {
         unsafe { enif_is_identical(self.as_c_arg(), other.as_c_arg()) == 1 }
     }
 }
-impl<'a> Eq for Term<'a> {}
+impl Eq for Term<'_> {}
 
 fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
     let ord = unsafe { enif_compare(lhs.as_c_arg(), rhs.as_c_arg()) };
@@ -137,7 +137,7 @@ fn cmp(lhs: &Term, rhs: &Term) -> Ordering {
     }
 }
 
-impl<'a> Ord for Term<'a> {
+impl Ord for Term<'_> {
     fn cmp(&self, other: &Term) -> Ordering {
         cmp(self, other)
     }
@@ -148,7 +148,7 @@ impl<'a> PartialOrd for Term<'a> {
     }
 }
 
-impl<'a> Hash for Term<'a> {
+impl Hash for Term<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         // As far as I can see, there is really no way
         // to get a seed from the hasher. This is definitely
@@ -157,5 +157,5 @@ impl<'a> Hash for Term<'a> {
     }
 }
 
-unsafe impl<'a> Sync for Term<'a> {}
-unsafe impl<'a> Send for Term<'a> {}
+unsafe impl Sync for Term<'_> {}
+unsafe impl Send for Term<'_> {}

@@ -8,7 +8,7 @@ use crate::sys::enif_make_ref;
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Reference<'a>(Term<'a>);
 
-impl<'a> Reference<'a> {
+impl Reference<'_> {
     /// Returns a representation of self in the given Env.
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
@@ -50,7 +50,7 @@ impl<'a> Decoder<'a> for Reference<'a> {
     }
 }
 
-impl<'a> Encoder for Reference<'a> {
+impl Encoder for Reference<'_> {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         self.0.encode(env)
     }
