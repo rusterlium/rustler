@@ -129,7 +129,6 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// Then the traits `Encoder` and `Decoder` are derived automatically for your Rust struct
 /// such that you can use the Elixir struct definition for it.
-
 #[proc_macro_derive(NifStruct, attributes(module, rustler))]
 pub fn nif_struct(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();

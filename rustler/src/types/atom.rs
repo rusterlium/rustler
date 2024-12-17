@@ -106,7 +106,7 @@ impl<'a> PartialEq<Term<'a>> for Atom {
 }
 
 /// ## Atom terms
-impl<'a> Term<'a> {
+impl Term<'_> {
     /// When the term is an atom, this method will return the string
     /// representation of it.
     ///

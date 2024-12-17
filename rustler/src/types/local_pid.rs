@@ -59,7 +59,7 @@ impl Ord for LocalPid {
     }
 }
 
-impl<'a> Env<'a> {
+impl Env<'_> {
     /// Return the calling process's pid.
     ///
     /// # Panics

@@ -7,7 +7,7 @@ pub enum Return<'a> {
     Error(Error),
 }
 
-unsafe impl<'b> NifReturnable for Return<'b> {
+unsafe impl NifReturnable for Return<'_> {
     unsafe fn into_returned(self, env: Env) -> NifReturned {
         match self {
             Return::Term(inner) => NifReturned::Term(inner.as_c_arg()),

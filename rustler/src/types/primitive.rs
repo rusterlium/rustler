@@ -68,7 +68,7 @@ impl_number_transcoder!(isize, i64, enif_make_int64, enif_get_int64);
 impl_number_encoder!(f32, f64, enif_make_double);
 
 // Manual Decoder impls for floats so they can fall back to decoding from integer terms
-impl<'a> Decoder<'a> for f64 {
+impl Decoder<'_> for f64 {
     fn decode(term: Term) -> NifResult<f64> {
         #![allow(unused_unsafe)]
         let mut res: f64 = Default::default();
@@ -80,7 +80,7 @@ impl<'a> Decoder<'a> for f64 {
     }
 }
 
-impl<'a> Decoder<'a> for f32 {
+impl Decoder<'_> for f32 {
     fn decode(term: Term) -> NifResult<f32> {
         let res: f64 = term.decode()?;
         let res = res as f32;

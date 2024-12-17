@@ -49,7 +49,7 @@ fn write_variadic_fn_type(out: &mut String, args: &str, ret: &str) {
 }
 
 pub struct CallbacksApiBuilder<'a>(&'a mut String);
-impl<'a> ApiBuilder for CallbacksApiBuilder<'a> {
+impl ApiBuilder for CallbacksApiBuilder<'_> {
     fn init(&mut self) {
         writeln!(self.0, "#[allow(dead_code)]").unwrap();
         writeln!(self.0, "#[derive(Default, Copy, Clone)]").unwrap();
@@ -78,7 +78,7 @@ impl<'a> ApiBuilder for CallbacksApiBuilder<'a> {
 }
 
 pub struct ForwardersApiBuilder<'a>(&'a mut String);
-impl<'a> ApiBuilder for ForwardersApiBuilder<'a> {
+impl ApiBuilder for ForwardersApiBuilder<'_> {
     fn func(&mut self, ret: &str, name: &str, args: &str) {
         // This regex takes a list of args with types and return only the name of the args.
         //
@@ -135,7 +135,7 @@ impl<'a> ApiBuilder for ForwardersApiBuilder<'a> {
 
 pub struct WriterBuilder<'a>(&'a mut String);
 
-impl<'a> ApiBuilder for WriterBuilder<'a> {
+impl ApiBuilder for WriterBuilder<'_> {
     fn init(&mut self) {
         write!(
             self.0,

@@ -24,7 +24,7 @@ unsafe impl Sync for Registration {}
 
 inventory::collect!(Registration);
 
-impl<'a> Env<'a> {
+impl Env<'_> {
     /// Register a resource type, see `Registration::register`.
     pub fn register<T: Resource>(&self) -> Result<(), ResourceInitError> {
         Registration::new::<T>().register(*self)

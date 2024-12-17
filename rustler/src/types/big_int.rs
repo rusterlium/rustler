@@ -1,18 +1,3 @@
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-
-use num_bigint::{BigInt, Sign};
-
-// From https://www.erlang.org/doc/apps/erts/erl_ext_dist.html
-const EXTERNAL_TERM_FORMAT_VERSION: u8 = 131;
-const SMALL_INTEGER: u8 = 97;
-const INTEGER: u8 = 98;
-const SMALL_BIG_EXT: u8 = 110;
-const LARGE_BIG_EXT: u8 = 111;
-
-crate::atoms! {
-    big_int_encoder_invalid_bytes
-}
-
 /// Implementation of [Decoder](rustler::Decoder) and [Encoder](rustler::Encoder) traits for
 /// num-bigint.
 ///
@@ -48,6 +33,20 @@ crate::atoms! {
 /// }
 /// ```
 ///
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+
+use num_bigint::{BigInt, Sign};
+
+// From https://www.erlang.org/doc/apps/erts/erl_ext_dist.html
+const EXTERNAL_TERM_FORMAT_VERSION: u8 = 131;
+const SMALL_INTEGER: u8 = 97;
+const INTEGER: u8 = 98;
+const SMALL_BIG_EXT: u8 = 110;
+const LARGE_BIG_EXT: u8 = 111;
+
+crate::atoms! {
+    big_int_encoder_invalid_bytes
+}
 
 fn decode_big_integer(input: &[u8]) -> NifResult<BigInt> {
     if Some(&EXTERNAL_TERM_FORMAT_VERSION) != input.first() {

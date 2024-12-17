@@ -259,7 +259,7 @@ impl<'a> SimpleMapIterator<'a> {
     }
 }
 
-impl<'a> Drop for SimpleMapIterator<'a> {
+impl Drop for SimpleMapIterator<'_> {
     fn drop(&mut self) {
         if let Some(iter) = self.iter.as_mut() {
             unsafe {
@@ -314,7 +314,7 @@ impl<'a> Iterator for MapIterator<'a> {
     }
 }
 
-impl<'a> DoubleEndedIterator for MapIterator<'a> {
+impl DoubleEndedIterator for MapIterator<'_> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.reverse.next().and_then(|(key, value)| {
             if self.forward.last_key == Some(key) {
