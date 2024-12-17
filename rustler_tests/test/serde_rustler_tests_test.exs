@@ -69,7 +69,7 @@ defmodule SerdeRustlerTests.NifTest do
     Helpers.run_ser(test_name, expected_term)
     Helpers.run_de(test_name, expected_term)
 
-    unless ctx[:skip] == :transcode do
+    if ctx[:skip] != :transcode do
       Helpers.run_transcode(test_name, expected_term)
     end
   end

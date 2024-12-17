@@ -7,7 +7,7 @@ defmodule Rustler.Compiler do
   def compile_crate(otp_app, config, opts) do
     config = Config.from(otp_app, config, opts)
 
-    unless config.skip_compilation? do
+    if !config.skip_compilation? do
       crate_full_path = Path.expand(config.path, File.cwd!())
 
       File.mkdir_p!(priv_dir())
@@ -54,7 +54,7 @@ defmodule Rustler.Compiler do
       throw_error(:rustup_not_installed)
     end
 
-    unless Rustup.version_installed?(version) do
+    if !Rustup.version_installed?(version) do
       throw_error({:rust_version_not_installed, version})
     end
 
@@ -176,7 +176,7 @@ defmodule Rustler.Compiler do
   end
 
   defp toml_data(path) do
-    unless File.dir?(path) do
+    if !File.dir?(path) do
       throw_error({:nonexistent_crate_directory, path})
     end
 

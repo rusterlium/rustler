@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Rustler.New do
   root = Path.join(:code.priv_dir(:rustler), "templates/")
 
   for {format, source, _} <- @basic do
-    unless format == :keep do
+    if format != :keep do
       @external_resource Path.join(root, source)
       defp render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
     end
@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Rustler.New do
   end
 
   defp check_module_name_validity!(name) do
-    unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
+    if !(name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
       Mix.raise(
         "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect(name)}"
       )
