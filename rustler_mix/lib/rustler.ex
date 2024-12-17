@@ -113,43 +113,42 @@ defmodule Rustler do
     end
   end
 
-  defmacro __before_compile__(_env) do
+  defmacro __before_compile__(env) do
     default_load_data_value = %Rustler.Compiler.Config{}.load_data
     default_fun_value = %Rustler.Compiler.Config{}.load_data_fun
 
+    load_data = Module.get_attribute(env.module, :load_data)
+    load_data_fun = Module.get_attribute(env.module, :load_data_fun)
+
+    load_data =
+      case {load_data, load_data_fun} do
+        {load_data, ^default_fun_value} ->
+          quote do
+            unquote(load_data)
+          end
+
+        {^default_load_data_value, {module, function}}
+        when is_atom(module) and is_atom(function) ->
+          quote do
+            apply(unquote(module), unquote(function), [])
+          end
+
+        {^default_load_data_value, provided_value} ->
+          raise """
+          `load_data_fun` has to be `{Module, :function}`.
+          Instead received: #{inspect(provided_value)}
+          """
+
+        {load_data, load_data_fun} ->
+          raise """
+          Only `load_data` or `load_data_fun` can be provided. Instead received:
+          >>> load_data: #{inspect(load_data)}
+          >>> load_data_fun: #{inspect(load_data_fun)}
+          """
+      end
+
     quote do
       @on_load :rustler_init
-
-      defmacrop _construct_load_data do
-        default_load_data_value = unquote(default_load_data_value)
-        default_fun_value = unquote(default_fun_value)
-
-        case {@load_data, @load_data_fun} do
-          {load_data, ^default_fun_value} ->
-            quote do
-              unquote(load_data)
-            end
-
-          {^default_load_data_value, {module, function}}
-          when is_atom(module) and is_atom(function) ->
-            quote do
-              apply(unquote(module), unquote(function), [])
-            end
-
-          {^default_load_data_value, provided_value} ->
-            raise """
-            `load_data` has to be `{Module, :function}`.
-            Instead received: #{inspect(provided_value)}
-            """
-
-          {load_data, load_data_fun} ->
-            raise """
-            Only `load_data` or `load_data_fun` can be provided. Instead received:
-            >>> load_data: #{inspect(load_data)}
-            >>> load_data_fun: #{inspect(load_data_fun)}
-            """
-        end
-      end
 
       @doc false
       def rustler_init do
@@ -164,7 +163,9 @@ defmodule Rustler do
           |> Application.app_dir(path)
           |> to_charlist()
 
-        :erlang.load_nif(load_path, _construct_load_data())
+        load_data = unquote(load_data)
+
+        :erlang.load_nif(load_path, load_data)
       end
     end
   end
