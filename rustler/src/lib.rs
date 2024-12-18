@@ -36,10 +36,14 @@ pub use crate::alloc::EnifAllocator;
 pub mod types;
 
 mod term;
+mod wrapped_types;
+pub use crate::wrapped_types::{
+    ListIterator, Map
+};
 
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ErlOption, ListIterator, LocalPid, MapIterator, NewBinary,
+    Atom, Binary, Decoder, Encoder, ErlOption, LocalPid, MapIterator, NewBinary,
     OwnedBinary, Reference,
 };
 
