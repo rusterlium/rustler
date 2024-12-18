@@ -8,14 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
-## unreleased
-
-### Added
+## [0.35.1] - 2024-12-18
 
 ### Fixed
 
-### Changed
-
+- Fix clippy lints in `rustler_codegen` (#671)
+- Adjust `Rustler` macros to not produce warnings on Elixir 1.18 (#670)
 
 ## [0.35.0] - 2024-10-15
 
