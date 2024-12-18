@@ -1,21 +1,55 @@
-use crate::wrapper::{tuple, NIF_TERM};
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::{
+    sys::{enif_get_tuple, ERL_NIF_TERM},
+    Decoder, Encoder, Env, Error, NifResult, Term, TermType,
+};
 
-/// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
-/// instead.)
-///
-/// # Errors
-/// `badarg` if `term` is not a tuple.
-pub fn get_tuple(term: Term) -> Result<Vec<Term>, Error> {
+use std::{ffi::c_int, mem::MaybeUninit, ops::Index};
+wrapper!(
+    struct Tuple(TermType::Tuple)
+);
+
+pub unsafe fn get_tuple<'a>(term: Term<'a>) -> NifResult<&'a [ERL_NIF_TERM]> {
     let env = term.get_env();
-    unsafe {
-        match tuple::get_tuple(env.as_c_arg(), term.as_c_arg()) {
-            Ok(terms) => Ok(terms
-                .iter()
-                .map(|x| Term::new(env, *x))
-                .collect::<Vec<Term>>()),
-            Err(_error) => Err(Error::BadArg),
-        }
+    let mut arity: c_int = 0;
+    let mut array_ptr = MaybeUninit::uninit();
+    let success = enif_get_tuple(
+        env.as_c_arg(),
+        term.as_c_arg(),
+        &mut arity,
+        array_ptr.as_mut_ptr(),
+    );
+    if success != 1 {
+        return Err(Error::BadArg);
+    }
+    let term_array = ::std::slice::from_raw_parts(array_ptr.assume_init(), arity as usize);
+    Ok(term_array)
+}
+
+impl<'a> Tuple<'a> {
+    pub fn size(&self) -> usize {
+        self.get_elements().len()
+    }
+
+    pub fn get(&self, index: usize) -> Option<Term<'a>> {
+        self.get_elements()
+            .get(index)
+            .map(|ptr| unsafe { Term::new(self.get_env(), ptr) })
+    }
+
+    /// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
+    /// instead.)
+    ///
+    /// # Errors
+    /// `badarg` if `term` is not a tuple.
+    pub fn to_vec(&self) -> Vec<Term<'a>> {
+        self.get_elements()
+            .iter()
+            .map(|ptr| unsafe { Term::new(self.get_env(), *ptr) })
+            .collect()
+    }
+
+    fn get_elements(&self) -> &'a [ERL_NIF_TERM] {
+        unsafe { get_tuple(self.unwrap()).unwrap() }
     }
 }
 

@@ -1,12 +1,66 @@
 //! Utilities used to access and create Erlang maps.
 
 use super::atom;
+use crate::sys::{enif_get_map_value, enif_make_map_put, enif_make_new_map};
 use crate::wrapper::map;
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
+use std::mem::MaybeUninit;
 use std::ops::RangeInclusive;
 
-pub fn map_new(env: Env) -> Term {
-    unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
+wrapper!(
+    /// A wrapper around an Erlang map term.
+    struct Map(TermType::Map)
+);
+
+impl<'a> Env<'a> {
+    pub fn new_map(self) -> Map<'a> {
+        unsafe { Map::wrap_unchecked(Term::new(self, enif_make_new_map(self.as_c_arg()))) }
+    }
+}
+
+impl<'a> Map<'a> {
+    pub fn get(&self, key: impl Encoder) -> Option<Term<'a>> {
+        let env = self.get_env();
+        let key = key.encode(env);
+
+        let mut result = MaybeUninit::uninit();
+        let success = unsafe {
+            enif_get_map_value(
+                env.as_c_arg(),
+                self.as_c_arg(),
+                key.as_c_arg(),
+                result.as_mut_ptr(),
+            )
+        };
+
+        if success != 1 {
+            return None;
+        }
+
+        unsafe { Some(Term::new(env, result.assume_init())) }
+    }
+
+    pub fn put(&self, key: impl Encoder, value: impl Encoder) -> NifResult<Self> {
+        let env = self.get_env();
+        let key = key.encode(env);
+        let value = value.encode(env);
+
+        let mut result = MaybeUninit::uninit();
+        let success = unsafe {
+            enif_make_map_put(
+                env.as_c_arg(),
+                self.as_c_arg(),
+                key.as_c_arg(),
+                value.as_c_arg(),
+                result.as_mut_ptr(),
+            )
+        };
+
+        if success != 1 {
+            return Err(Error::BadArg);
+        }
+        unsafe { Ok(Map::wrap_ptr_unchecked(env, result.assume_init())) }
+    }
 }
 
 /// ## Map terms
@@ -18,7 +72,7 @@ impl<'a> Term<'a> {
     /// %{}
     /// ```
     pub fn map_new(env: Env<'a>) -> Term<'a> {
-        map_new(env)
+        env.new_map().unwrap()
     }
 
     /// Construct a new map from two vectors

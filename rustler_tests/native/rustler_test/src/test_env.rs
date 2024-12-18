@@ -62,12 +62,12 @@ pub fn sublists<'a>(env: Env<'a>, list: Term<'a>) -> NifResult<Atom> {
                 let reversed_list = saved_reversed_list.load(env);
                 let iter: ListIterator = reversed_list.decode()?;
 
-                let empty_list = Vec::<Term>::new().encode(env);
+                let empty_list = ListIterator::new_empty(env);
                 let mut all_sublists = vec![empty_list];
 
                 for element in iter {
                     for i in 0..all_sublists.len() {
-                        let new_list = all_sublists[i].list_prepend(element);
+                        let new_list = all_sublists[i].prepend(element);
                         all_sublists.push(new_list);
                     }
                 }
