@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## unreleased
+
+### Added
+
+- Create a workplace `Cargo.toml` file with `mix rustler.new` (#672)
+
+### Fixed
+
+### Changed
+
+### Removed
+
+- The linkage override for macOS is not needed anymore and has been removed from
+  the template (#672)
+
+
 ## [0.35.1] - 2024-12-18
 
 ### Fixed

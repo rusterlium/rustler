@@ -6,7 +6,6 @@ edition = "2021"
 
 [lib]
 name = "<%= library_name %>"
-path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]

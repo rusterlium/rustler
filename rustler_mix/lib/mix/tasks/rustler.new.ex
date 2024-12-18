@@ -14,7 +14,6 @@ defmodule Mix.Tasks.Rustler.New do
   """
 
   @basic [
-    {:eex, "basic/.cargo/config.toml", ".cargo/config.toml"},
     {:eex, "basic/README.md", "README.md"},
     {:eex, "basic/Cargo.toml.eex", "Cargo.toml"},
     {:eex, "basic/src/lib.rs", "src/lib.rs"},
@@ -68,8 +67,14 @@ defmodule Mix.Tasks.Rustler.New do
 
     check_module_name_validity!(module)
 
-    path = Path.join([File.cwd!(), "native/", name])
+    path = Path.join([File.cwd!(), "native", name])
     new(otp_app, path, module, name, opts)
+
+    # Create a Cargo workspace
+    File.write(
+      Path.join(path, "Cargo.toml"),
+      "[workspace]\nresolver = \"2\"\nmembers = [\"native/#{name}\"]\n"
+    )
   end
 
   defp new(otp_app, path, module, name, _opts) do
