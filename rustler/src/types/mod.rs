@@ -1,6 +1,9 @@
 use crate::{Env, Error, NifResult, Term};
 
 #[macro_use]
+mod wrapper;
+
+#[macro_use]
 pub mod atom;
 pub use crate::types::atom::Atom;
 
