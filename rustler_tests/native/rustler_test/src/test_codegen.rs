@@ -29,6 +29,7 @@ pub fn tuple_echo(tuple: AddTuple) -> AddTuple {
 
 #[derive(NifRecord)]
 #[rustler(encode, decode)] // Added to check encode/decode attribute, #180
+// The case of only `decode` is checked below
 #[must_use] // Added to check attribute order (see similar issue #152)
 #[tag = "record"]
 pub struct AddRecord {
@@ -223,6 +224,39 @@ pub struct TupleStructRecord(i64, i64, i64);
 #[rustler::nif]
 pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRecord {
     tuplestruct
+}
+
+mod check_if_only_decode_is_enough {
+    // Regression test, failed to compile
+    // TODO: Move this test to the trybuild tests in rustler_codegen
+
+    use rustler::{NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum};
+
+    #[derive(NifMap)]
+    #[rustler(decode)]
+    struct TestMap {}
+
+    #[derive(NifRecord)]
+    #[tag = "test_rec"]
+    #[rustler(decode)]
+    struct TestRec {}
+
+    #[derive(NifTuple)]
+    #[rustler(decode)]
+    struct TestTuple {}
+
+    #[derive(NifStruct)]
+    #[module = "TestStruct"]
+    #[rustler(decode)]
+    struct TestStruct {}
+
+    #[derive(NifUnitEnum)]
+    #[rustler(decode)]
+    enum TestUnitEnum {}
+
+    #[derive(NifTaggedEnum)]
+    #[rustler(decode)]
+    enum TestTaggedEnum {}
 }
 
 pub mod reserved_keywords {
