@@ -1,11 +1,13 @@
 //! Utilities used to access and create Erlang maps.
 
-use super::atom;
 use crate::sys::{enif_get_map_value, enif_make_map_put, enif_make_new_map};
+use crate::types::atom;
 use crate::wrapper::map;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
 use std::mem::MaybeUninit;
 use std::ops::RangeInclusive;
+
+use super::wrapper;
 
 wrapper!(
     /// A wrapper around an Erlang map term.

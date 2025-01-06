@@ -1,7 +1,5 @@
+use crate::wrapped_types::MapIterator;
 use crate::{Env, Error, NifResult, Term};
-
-#[macro_use]
-mod wrapper;
 
 #[macro_use]
 pub mod atom;
@@ -16,26 +14,13 @@ pub mod big_int;
 pub use num_bigint::BigInt;
 
 #[doc(hidden)]
-pub mod list;
-pub use crate::types::list::ListIterator;
-
-#[doc(hidden)]
-pub mod map;
-pub use self::map::MapIterator;
-
-#[doc(hidden)]
 pub mod primitive;
 #[doc(hidden)]
 pub mod string;
-pub mod tuple;
 
 #[doc(hidden)]
 pub mod local_pid;
 pub use self::local_pid::LocalPid;
-
-#[doc(hidden)]
-pub mod reference;
-pub use self::reference::Reference;
 
 pub mod i128;
 pub mod path;

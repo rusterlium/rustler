@@ -46,7 +46,7 @@ macro_rules! wrapper {
         #[derive(PartialEq, Eq, Clone, Copy)]
         pub struct $name<'a>(Term<'a>);
 
-        use $crate::types::wrapper::Wrapper;
+        use $crate::wrapped_types::Wrapper;
 
         impl<'a> $name<'a> {
             /// Returns a representation of self in the given Env.
@@ -83,14 +83,14 @@ macro_rules! wrapper {
             type Error = $crate::Error;
 
             fn try_from(term: Term<'a>) -> Result<Self, Self::Error> {
-                use $crate::types::wrapper::Wrapper;
+                use $crate::wrapped_types::Wrapper;
                 Self::wrap(term).or(Err($crate::Error::BadArg))
             }
         }
 
         impl<'a> $crate::Decoder<'a> for $name<'a> {
             fn decode(term: Term<'a>) -> $crate::NifResult<Self> {
-                use $crate::types::wrapper::Wrapper;
+                use $crate::wrapped_types::Wrapper;
                 Self::wrap(term).or(Err($crate::Error::BadArg))
             }
         }

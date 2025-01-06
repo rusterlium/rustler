@@ -8,8 +8,7 @@
 //! `#[module = "Elixir.TheStructModule"]`.
 
 use super::atom::{self, Atom};
-use super::map::Map;
-use crate::{Env, Error, NifResult, Term};
+use crate::{Env, Error, Map, NifResult, Term};
 
 pub fn get_ex_struct_name(map: Term) -> NifResult<Atom> {
     // In an Elixir struct the value in the __struct__ field is always an atom.

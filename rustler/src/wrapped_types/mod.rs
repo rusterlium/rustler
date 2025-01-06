@@ -1,7 +1,13 @@
 mod list;
 mod map;
-mod tuple;
-mod wrapper;
+mod reference;
+pub mod tuple;
+pub mod wrapper;
+
+pub use list::ListIterator;
+pub use map::{Map, MapIterator};
+pub use reference::Reference;
+pub use tuple::Tuple;
 
 pub(crate) use wrapper::wrapper;
-pub(crate) use list::ListIterator;
+pub(crate) use wrapper::Wrapper;

@@ -2,6 +2,8 @@ use crate::{Env, Term, TermType};
 
 use crate::sys::enif_make_ref;
 
+use super::wrapper;
+
 wrapper!{
     struct Reference(TermType::Ref)
 }

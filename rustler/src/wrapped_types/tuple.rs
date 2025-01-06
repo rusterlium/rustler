@@ -1,9 +1,10 @@
-use crate::{
-    sys::{enif_get_tuple, ERL_NIF_TERM},
-    Decoder, Encoder, Env, Error, NifResult, Term, TermType,
-};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
+use crate::sys::{enif_get_tuple, enif_make_tuple_from_array, ERL_NIF_TERM};
 
-use std::{ffi::c_int, mem::MaybeUninit, ops::Index};
+use std::ffi::c_int;
+use std::mem::MaybeUninit;
+
+use super::wrapper;
 wrapper!(
     struct Tuple(TermType::Tuple)
 );
@@ -33,7 +34,7 @@ impl<'a> Tuple<'a> {
     pub fn get(&self, index: usize) -> Option<Term<'a>> {
         self.get_elements()
             .get(index)
-            .map(|ptr| unsafe { Term::new(self.get_env(), ptr) })
+            .map(|ptr| unsafe { Term::new(self.get_env(), *ptr) })
     }
 
     /// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
@@ -56,8 +57,13 @@ impl<'a> Tuple<'a> {
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
 pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Term<'a> {
-    let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
-    unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
+    let c_terms: Vec<ERL_NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
+    unsafe {
+        let term =
+            enif_make_tuple_from_array(env.as_c_arg(), c_terms.as_ptr(), c_terms.len() as u32);
+        Term::new(env, term)
+    }
+    // unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
 
 /// Helper macro to emit tuple-like syntax. Wraps its arguments in parentheses, and adds a comma if
@@ -83,10 +89,8 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
             Encoder for tuple!( $( $tyvar ),* )
         {
             fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-                let arr = [ $( Encoder::encode(&self.$index, env).as_c_arg() ),* ];
-                unsafe {
-                    Term::new(env, tuple::make_tuple(env.as_c_arg(), &arr))
-                }
+                let arr = [ $( Encoder::encode(&self.$index, env) ),* ];
+                make_tuple(env, &arr)
             }
         }
 
@@ -95,7 +99,7 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         {
             fn decode(term: Term<'a>) -> NifResult<tuple!( $( $tyvar ),* )>
             {
-                match unsafe { tuple::get_tuple(term.get_env().as_c_arg(), term.as_c_arg()) } {
+                match unsafe { get_tuple(term) } {
                     Ok(elements) if elements.len() == count!( $( $index ),* ) =>
                         Ok(tuple!( $(
                             (<$tyvar as Decoder>::decode(
