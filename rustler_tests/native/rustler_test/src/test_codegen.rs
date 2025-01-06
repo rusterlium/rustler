@@ -29,6 +29,7 @@ pub fn tuple_echo(tuple: AddTuple) -> AddTuple {
 
 #[derive(NifRecord)]
 #[rustler(encode, decode)] // Added to check encode/decode attribute, #180
+// The case of only `decode` is checked below
 #[must_use] // Added to check attribute order (see similar issue #152)
 #[tag = "record"]
 pub struct AddRecord {
