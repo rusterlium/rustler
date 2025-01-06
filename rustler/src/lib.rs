@@ -36,15 +36,13 @@ pub mod types;
 
 mod term;
 mod wrapped_types;
-pub use crate::wrapped_types::{
-    ListIterator, Map
-};
 
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ErlOption, LocalPid, MapIterator, NewBinary,
-    OwnedBinary, Reference,
+    Atom, Binary, Decoder, Encoder, ErlOption, LocalPid, NewBinary, OwnedBinary
 };
+
+pub use crate::wrapped_types::{ListIterator, Reference, MapIterator, Map, Tuple};
 
 #[cfg(feature = "big_integer")]
 pub use crate::types::BigInt;
