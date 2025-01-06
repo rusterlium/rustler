@@ -59,7 +59,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput, add_exception: bool) -> Toke
 
         #decoder
 
-        #[allow(clippy::needless_borrow)]
         #encoder
     };
 

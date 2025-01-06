@@ -44,7 +44,6 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
 
         #decoder
 
-        #[allow(clippy::needless_borrow)]
         #encoder
     };
 

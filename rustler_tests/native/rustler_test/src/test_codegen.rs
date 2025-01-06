@@ -225,6 +225,39 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
     tuplestruct
 }
 
+mod check_if_only_decode_is_enough {
+    // Regression test, failed to compile
+    // TODO: Move this test to the trybuild tests in rustler_codegen
+
+    use rustler::{NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple, NifUnitEnum};
+
+    #[derive(NifMap)]
+    #[rustler(decode)]
+    struct TestMap {}
+
+    #[derive(NifRecord)]
+    #[tag = "test_rec"]
+    #[rustler(decode)]
+    struct TestRec {}
+
+    #[derive(NifTuple)]
+    #[rustler(decode)]
+    struct TestTuple {}
+
+    #[derive(NifStruct)]
+    #[module = "TestStruct"]
+    #[rustler(decode)]
+    struct TestStruct {}
+
+    #[derive(NifUnitEnum)]
+    #[rustler(decode)]
+    enum TestUnitEnum {}
+
+    #[derive(NifTaggedEnum)]
+    #[rustler(decode)]
+    enum TestTaggedEnum {}
+}
+
 pub mod reserved_keywords {
     use rustler::{NifMap, NifRecord, NifStruct, NifTuple, NifUntaggedEnum};
 
