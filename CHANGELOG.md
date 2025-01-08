@@ -10,9 +10,20 @@ versions.
 
 ## unreleased
 
+### Added
+
+- Create a workplace `Cargo.toml` file with `mix rustler.new` (#672)
+
 ### Fixed
 
 - Some derive macros failed when only `decode` was requested (#676)
+
+### Changed
+
+### Removed
+
+- The linkage override for macOS is not needed anymore and has been removed from
+  the template (#672)
 
 ## [0.35.1] - 2024-12-18
 
@@ -317,7 +328,6 @@ The `Untagged` variant is represented as the atom `:untagged` in Elixir.
 - `rustler_mix`: Bumped required toml dependency to 0.6
 - Bumped `rustler_sys` dependency to `~2.2`
 
-
 ## [0.23.0] - 2021-12-22
 
 ### Added
@@ -383,6 +393,7 @@ The `Untagged` variant is represented as the atom `:untagged` in Elixir.
   - `rustler_atoms!` is now `rustler::atoms!`
   - `resource_struct_init!` is now `rustler::resource!`
 - New `rustler::atoms!` macro removed the `atom` prefix from the name:
+
   ```rust
   //
   // Before
@@ -404,6 +415,7 @@ The `Untagged` variant is represented as the atom `:untagged` in Elixir.
   ```
 
 - NIF functions can be initialized with a simplified syntax:
+
   ```rust
   //
   // Before
@@ -424,6 +436,7 @@ The `Untagged` variant is represented as the atom `:untagged` in Elixir.
 
 - NIFs can be derived from regular functions, if the arguments implement
   `Decoder` and the return type implements `Encoder`:
+
   ```rust
   //
   // Before
@@ -446,6 +459,7 @@ The `Untagged` variant is represented as the atom `:untagged` in Elixir.
 
 - `rustler::nif` exposes more options to configure a NIF were the NIF is
   defined:
+
   ```rust
 
   #[rustler::nif(schedule = "DirtyCpu")]
