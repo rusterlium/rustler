@@ -20,9 +20,13 @@ defmodule Mix.Tasks.Rustler.New do
     {:text, "basic/.gitignore", ".gitignore"}
   ]
 
+  @root [
+    {:eex, "root/Cargo.toml.eex", "Cargo.toml"}
+  ]
+
   root = Path.join(:code.priv_dir(:rustler), "templates/")
 
-  for {format, source, _} <- @basic do
+  for {format, source, _} <- @basic ++ @root do
     if format != :keep do
       @external_resource Path.join(root, source)
       defp render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
@@ -70,11 +74,9 @@ defmodule Mix.Tasks.Rustler.New do
     path = Path.join([File.cwd!(), "native", name])
     new(otp_app, path, module, name, opts)
 
-    # Create a Cargo workspace
-    File.write(
-      Path.join(path, "Cargo.toml"),
-      "[workspace]\nresolver = \"2\"\nmembers = [\"native/#{name}\"]\n"
-    )
+    copy_from(File.cwd!(), [library_name: name], @root)
+
+    Mix.Shell.IO.info([:green, "Ready to go! See #{path}/README.md for further instructions."])
   end
 
   defp new(otp_app, path, module, name, _opts) do
@@ -90,8 +92,6 @@ defmodule Mix.Tasks.Rustler.New do
     ]
 
     copy_from(path, binding, @basic)
-
-    Mix.Shell.IO.info([:green, "Ready to go! See #{path}/README.md for further instructions."])
   end
 
   defp check_module_name_validity!(name) do
