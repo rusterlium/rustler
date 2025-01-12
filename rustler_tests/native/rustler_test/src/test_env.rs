@@ -1,8 +1,7 @@
 use rustler::env::{OwnedEnv, SavedTerm, SendError};
 use rustler::types::atom;
-use rustler::types::list::ListIterator;
 use rustler::types::LocalPid;
-use rustler::{Atom, Encoder, Env, NifResult, Reference, Term};
+use rustler::{Atom, Encoder, Env, ListIterator, NifResult, Reference, Term};
 use std::thread;
 
 // Send a message to several PIDs.

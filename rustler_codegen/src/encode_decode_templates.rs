@@ -153,7 +153,7 @@ pub(crate) fn encoder(ctx: &Context, inner: TokenStream) -> TokenStream {
         impl #impl_generics ::rustler::Encoder for #ident #ty_generics #where_clause {
             #[allow(clippy::needless_borrow)]
             fn encode<'__rustler__encode_lifetime>(&self, env: ::rustler::Env<'__rustler__encode_lifetime>) -> ::rustler::Term<'__rustler__encode_lifetime> {
-                #inner
+                #inner.into()
             }
         }
     }
