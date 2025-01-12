@@ -29,8 +29,7 @@ wrapper!(
     /// the `Result`s out of the list. (Contains extra type annotations for clarity)
     ///
     /// ```
-    /// # use rustler::{Term, NifResult};
-    /// # use rustler::types::list::ListIterator;
+    /// # use rustler::{Term, NifResult, ListIterator};
     /// # fn list_iterator_example(list_term: Term) -> NifResult<Vec<i64>> {
     /// let list_iterator: ListIterator = list_term.decode()?;
     ///
@@ -55,7 +54,7 @@ impl<'a> Iterator for ListIterator<'a> {
                 // TODO: This is unsafe as tail might not be a list.
                 self.0 = tail;
                 Some(head)
-            },
+            }
             None => {
                 if self.is_empty_list() {
                     // We reached the end of the list, finish the iterator.
