@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crate::serde::{atoms, error::Error, util};
 use crate::wrapper::list::make_list;
-use crate::{types::tuple, Encoder, Env, OwnedBinary, Term};
+use crate::{Encoder, Env, OwnedBinary, Term, Tuple};
 use serde::ser::{self, Serialize};
 
 #[inline]
@@ -336,7 +336,7 @@ impl<'a> SequenceSerializer<'a> {
 
     #[inline]
     fn to_tuple(&self) -> Result<Term<'a>, Error> {
-        Ok(tuple::make_tuple(self.ser.env, &self.items))
+        Ok(Tuple::make(self.ser.env, &self.items))
     }
 }
 

@@ -1,5 +1,5 @@
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
 use crate::sys::{enif_get_tuple, enif_make_tuple_from_array, ERL_NIF_TERM};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term, TermType};
 
 use std::ffi::c_int;
 use std::mem::MaybeUninit;
@@ -27,6 +27,10 @@ pub unsafe fn get_tuple<'a>(term: Term<'a>) -> NifResult<&'a [ERL_NIF_TERM]> {
 }
 
 impl<'a> Tuple<'a> {
+    pub fn make(env: Env<'a>, terms: &[Term<'a>]) -> Term<'a> {
+        make_tuple(env, terms)
+    }
+
     pub fn size(&self) -> usize {
         self.get_elements().len()
     }

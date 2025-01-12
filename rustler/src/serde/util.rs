@@ -1,5 +1,5 @@
 use crate::serde::{atoms, Error};
-use crate::{types::tuple, Binary, Decoder, Encoder, Env, Term};
+use crate::{Binary, Decoder, Encoder, Env, Term, Tuple};
 
 /// Converts an `&str` to either an existing atom or an Elixir bitstring.
 pub fn str_to_term<'a>(env: &Env<'a>, string: &str) -> Result<Term<'a>, Error> {
@@ -62,7 +62,10 @@ pub fn validate_tuple(term: Term, len: Option<usize>) -> Result<Vec<Term>, Error
         return Err(Error::ExpectedTuple);
     }
 
-    let tuple = tuple::get_tuple(term).or(Err(Error::ExpectedTuple))?;
+    let tuple = Tuple::try_from(term)
+        .or(Err(Error::ExpectedTuple))?
+        .to_vec();
+
     match len {
         None => Ok(tuple),
         Some(len) => {
