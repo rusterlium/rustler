@@ -39,10 +39,10 @@ mod wrapped_types;
 
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ErlOption, LocalPid, NewBinary, OwnedBinary
+    Atom, Binary, Decoder, Encoder, ErlOption, LocalPid, NewBinary, OwnedBinary,
 };
 
-pub use crate::wrapped_types::{ListIterator, Reference, MapIterator, Map, Tuple};
+pub use crate::wrapped_types::{ListIterator, Map, MapIterator, Reference, Tuple};
 
 #[cfg(feature = "big_integer")]
 pub use crate::types::BigInt;

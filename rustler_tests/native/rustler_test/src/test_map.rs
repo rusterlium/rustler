@@ -1,6 +1,4 @@
-use rustler::types::map::MapIterator;
-use rustler::types::tuple::make_tuple;
-use rustler::{Atom, Encoder, Env, Error, ListIterator, NifResult, Term};
+use rustler::{Encoder, Env, Error, ListIterator, MapIterator, NifResult, Term, Tuple};
 
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
@@ -11,31 +9,31 @@ pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
 }
 
 #[rustler::nif]
-pub fn map_entries<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+pub fn map_entries<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Tuple<'a>>> {
     let mut vec = vec![];
     for (key, value) in iter {
         let key_string = key.decode::<String>()?;
         vec.push((key_string, value));
     }
 
-    let erlang_pairs: Vec<Term> = vec
+    let erlang_pairs: Vec<_> = vec
         .into_iter()
-        .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))
+        .map(|(key, value)| env.make_tuple(&[key.encode(env), value]))
         .collect();
     Ok(erlang_pairs)
 }
 
 #[rustler::nif]
-pub fn map_entries_reversed<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+pub fn map_entries_reversed<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Tuple<'a>>> {
     let mut vec = vec![];
     for (key, value) in iter.rev() {
         let key_string = key.decode::<String>()?;
         vec.push((key_string, value));
     }
 
-    let erlang_pairs: Vec<Term> = vec
+    let erlang_pairs: Vec<_> = vec
         .into_iter()
-        .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))
+        .map(|(key, value)| env.make_tuple(&[key.encode(env), value]))
         .collect();
     Ok(erlang_pairs)
 }

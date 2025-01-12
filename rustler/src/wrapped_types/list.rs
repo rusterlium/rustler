@@ -103,7 +103,7 @@ where
     }
 }
 
-impl<'a, T> Encoder for &'a [T]
+impl<T> Encoder for &[T]
 where
     T: Encoder,
 {
@@ -131,7 +131,7 @@ impl<'a> ListIterator<'a> {
         Some(len as usize)
     }
 
-    pub fn empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.is_empty_list()
     }
 

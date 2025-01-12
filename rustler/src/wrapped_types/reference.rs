@@ -4,7 +4,7 @@ use crate::sys::enif_make_ref;
 
 use super::wrapper;
 
-wrapper!{
+wrapper! {
     struct Reference(TermType::Ref)
 }
 
