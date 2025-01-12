@@ -103,7 +103,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         quote! {
             use #atoms_module_name::*;
 
-            let terms = match ::rustler::types::tuple::get_tuple(term) {
+            let terms = match ::rustler::Tuple::try_from(term) {
                 Err(_) => return Err(::rustler::Error::RaiseTerm(
                         Box::new(format!("Invalid Record structure for {}", #struct_name_str)))),
                 Ok(value) => value,
@@ -113,19 +113,24 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
                 return Err(::rustler::Error::RaiseAtom("invalid_record"));
             }
 
-            let tag : ::rustler::types::atom::Atom = terms[0].decode()?;
+            let tag : ::rustler::types::atom::Atom = terms.get(0).unwrap().decode()?;
 
             if tag != atom_tag() {
                 return Err(::rustler::Error::RaiseAtom("invalid_record"));
             }
 
-            fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
+            fn try_decode_index<'a, T>(terms: &::rustler::Tuple<'a>, pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
                 where
                     T: rustler::Decoder<'a>,
             {
-                match ::rustler::Decoder::decode(terms[index]) {
+                use ::rustler::{Decoder, Error};
+
+                let term = terms.get(index).ok_or_else(|| Error::BadArg)?;
+
+                match term.decode() {
                     Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(
-                                format!("Could not decode field {} on Record {}", pos_in_struct, #struct_name_str)))),
+                        format!("Could not decode field {} on Record {}", pos_in_struct, #struct_name_str))
+                    )),
                     Ok(value) => Ok(value)
                 }
             }
@@ -166,7 +171,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
 
             use ::rustler::Encoder;
             let arr = #field_list_ast;
-            ::rustler::types::tuple::make_tuple(env, &arr)
+            env.make_tuple(&arr)
         },
     )
 }

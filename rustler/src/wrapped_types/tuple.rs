@@ -9,7 +9,7 @@ wrapper!(
     struct Tuple(TermType::Tuple)
 );
 
-pub unsafe fn get_tuple<'a>(term: Term<'a>) -> NifResult<&'a [ERL_NIF_TERM]> {
+pub unsafe fn get_tuple(term: Term<'_>) -> NifResult<&[ERL_NIF_TERM]> {
     let env = term.get_env();
     let mut arity: c_int = 0;
     let mut array_ptr = MaybeUninit::uninit();
@@ -27,11 +27,11 @@ pub unsafe fn get_tuple<'a>(term: Term<'a>) -> NifResult<&'a [ERL_NIF_TERM]> {
 }
 
 impl<'a> Tuple<'a> {
-    pub fn make(env: Env<'a>, terms: &[Term<'a>]) -> Term<'a> {
-        make_tuple(env, terms)
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.get_elements().len()
     }
 
@@ -58,16 +58,21 @@ impl<'a> Tuple<'a> {
     }
 }
 
+impl<'a> Env<'a> {
+    pub fn make_tuple(&self, terms: &[Term<'a>]) -> Tuple<'a> {
+        make_tuple(*self, terms)
+    }
+}
+
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
-pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Term<'a> {
+pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Tuple<'a> {
     let c_terms: Vec<ERL_NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
     unsafe {
         let term =
             enif_make_tuple_from_array(env.as_c_arg(), c_terms.as_ptr(), c_terms.len() as u32);
-        Term::new(env, term)
+        Term::new(env, term).try_into().unwrap()
     }
-    // unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
 
 /// Helper macro to emit tuple-like syntax. Wraps its arguments in parentheses, and adds a comma if
@@ -94,7 +99,7 @@ macro_rules! impl_nifencoder_nifdecoder_for_tuple {
         {
             fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
                 let arr = [ $( Encoder::encode(&self.$index, env) ),* ];
-                make_tuple(env, &arr)
+                make_tuple(env, &arr).into()
             }
         }
 

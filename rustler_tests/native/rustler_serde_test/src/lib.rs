@@ -11,7 +11,7 @@ mod types;
 
 use crate::types::Animal;
 use rustler::serde::{atoms, Deserializer, Error, Serializer};
-use rustler::{types::tuple, Encoder, Env, NifResult, SerdeTerm, Term};
+use rustler::{Encoder, Env, NifResult, SerdeTerm, Term};
 
 init!("Elixir.SerdeRustlerTests");
 
@@ -56,10 +56,10 @@ where
 
 fn ok_tuple<'a>(env: Env<'a>, term: Term<'a>) -> Term<'a> {
     let ok_atom_term = atoms::ok().encode(env);
-    tuple::make_tuple(env, &[ok_atom_term, term])
+    env.make_tuple(&[ok_atom_term, term]).into()
 }
 
 fn error_tuple<'a>(env: Env<'a>, reason_term: Term<'a>) -> Term<'a> {
     let err_atom_term = atoms::error().encode(env);
-    tuple::make_tuple(env, &[err_atom_term, reason_term])
+    env.make_tuple(&[err_atom_term, reason_term]).into()
 }

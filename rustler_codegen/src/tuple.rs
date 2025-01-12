@@ -84,18 +84,22 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
     super::encode_decode_templates::decoder(
         ctx,
         quote! {
-                let terms = ::rustler::types::tuple::get_tuple(term)?;
+                let terms = ::rustler::Tuple::try_from(term)?;
                 if terms.len() != #field_num {
                     return Err(::rustler::Error::BadArg);
                 }
 
-                fn try_decode_index<'a, T>(terms: &[::rustler::Term<'a>], pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
+                fn try_decode_index<'a, T>(terms: &::rustler::Tuple<'a>, pos_in_struct: &str, index: usize) -> ::rustler::NifResult<T>
                     where
                         T: rustler::Decoder<'a>,
                 {
-                    match ::rustler::Decoder::decode(terms[index]) {
-                        Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(
-                                    format!("Could not decode field {} on {}", pos_in_struct, #struct_name_str)))),
+                    use ::rustler::{Decoder, Error};
+
+                    let term = terms.get(index).ok_or_else(|| Error::BadArg)?;
+                    match term.decode() {
+                        Err(_) => Err(Error::RaiseTerm(Box::new(
+                            format!("Could not decode field {} on {}", pos_in_struct, #struct_name_str))
+                        )),
                         Ok(value) => Ok(value)
                     }
                 }
@@ -131,7 +135,7 @@ fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
         quote! {
             use ::rustler::Encoder;
             let arr = #field_list_ast;
-            ::rustler::types::tuple::make_tuple(env, &arr)
+            env.make_tuple(&arr)
         },
     )
 }
