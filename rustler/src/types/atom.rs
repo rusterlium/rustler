@@ -1,5 +1,6 @@
 use crate::wrapper::atom;
 use crate::wrapper::NIF_TERM;
+use crate::Wrapper;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -83,6 +84,19 @@ impl Atom {
     }
 }
 
+impl<'a> Wrapper<'a> for Atom {
+    const WRAPPED_TYPE: crate::TermType = crate::TermType::Atom;
+
+    fn unwrap(&self) -> Term<'a> {
+        unimplemented!()
+    }
+
+    unsafe fn wrap_unchecked(term: Term<'a>) -> Self {
+        Atom::from_nif_term(term.as_c_arg())
+    }
+}
+
+use std::fmt;
 impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         crate::wrapper::term::fmt(self.as_c_arg(), f)

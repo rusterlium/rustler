@@ -460,7 +460,11 @@ impl<'a> MapSerializer<'a> {
 
     #[inline]
     fn to_map(&self) -> Result<Term<'a>, Error> {
-        Term::map_from_arrays(self.ser.env, &self.keys, &self.values).or(Err(Error::InvalidMap))
+        self.ser
+            .env
+            .map_from_arrays(&self.keys, &self.values)
+            .map(|map| map.into())
+            .or(Err(Error::InvalidMap))
     }
 
     #[inline]
