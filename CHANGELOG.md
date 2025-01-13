@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
-## unreleased
+## 0.36.0 - 2025-01-13
 
 ### Added
 
@@ -17,8 +17,6 @@ versions.
 ### Fixed
 
 - Some derive macros failed when only `decode` was requested (#676)
-
-### Changed
 
 ### Removed
 
