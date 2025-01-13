@@ -22,11 +22,13 @@ nif_version_2_17 = ["nif_version_2_16"]
 serde = ["dep:serde"]
 
 [dependencies]
-libloading = "0.8"
 inventory = "0.3"
 rustler_codegen = { path = "../rustler_codegen", version = "0.36.0"}
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
+
+[target.'cfg(not(windows))'.dependencies]
+libloading = "0.8"
 
 [build-dependencies]
 regex-lite = "0.1"
