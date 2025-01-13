@@ -1,4 +1,4 @@
-use rustler::{Encoder, Env, Error, ListIterator, MapIterator, NifResult, Term, Tuple};
+use rustler::{Encoder, Env, Error, ListIterator, Map, MapIterator, NifResult, Term, Tuple};
 
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
@@ -43,15 +43,15 @@ pub fn map_from_arrays<'a>(
     env: Env<'a>,
     keys: Vec<Term<'a>>,
     values: Vec<Term<'a>>,
-) -> NifResult<Term<'a>> {
-    Term::map_from_arrays(env, &keys, &values)
+) -> NifResult<Map<'a>> {
+    env.map_from_arrays(&keys, &values)
 }
 
 #[rustler::nif]
-pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Term<'a>> {
+pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Map<'a>> {
     let res: Result<Vec<(Term, Term)>, Error> = pairs.map(|x| x.decode()).collect();
 
-    res.and_then(|v| Term::map_from_pairs(env, &v))
+    res.and_then(|v| env.map_from_pairs(&v))
 }
 
 #[rustler::nif]

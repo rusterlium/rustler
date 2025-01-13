@@ -10,4 +10,4 @@ pub use reference::Reference;
 pub use tuple::Tuple;
 
 pub(crate) use wrapper::wrapper;
-pub(crate) use wrapper::Wrapper;
+pub use wrapper::Wrapper;

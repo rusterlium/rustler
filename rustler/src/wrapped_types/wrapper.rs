@@ -9,7 +9,7 @@ impl From<WrapperError> for crate::Error {
     }
 }
 
-pub(crate) trait Wrapper<'a>: Sized {
+pub trait Wrapper<'a>: Sized {
     const WRAPPED_TYPE: TermType;
 
     unsafe fn wrap_ptr_unchecked(env: Env<'a>, ptr: ERL_NIF_TERM) -> Self {

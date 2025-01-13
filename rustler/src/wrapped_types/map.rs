@@ -18,6 +18,26 @@ impl<'a> Env<'a> {
     pub fn new_map(self) -> Map<'a> {
         unsafe { Map::wrap_unchecked(Term::new(self, enif_make_new_map(self.as_c_arg()))) }
     }
+
+    pub fn map_from_pairs(self, pairs: &[(impl Encoder, impl Encoder)]) -> NifResult<Map<'a>> {
+        Term::map_from_pairs(self, pairs).map(|res| res.try_into().unwrap())
+    }
+
+    pub fn map_from_arrays(
+        self,
+        keys: &[impl Encoder],
+        values: &[impl Encoder],
+    ) -> NifResult<Map<'a>> {
+        Term::map_from_arrays(self, keys, values).map(|res| res.try_into().unwrap())
+    }
+
+    pub fn map_from_term_arrays(
+        self,
+        keys: &[Term<'a>],
+        values: &[Term<'a>],
+    ) -> NifResult<Map<'a>> {
+        Term::map_from_term_arrays(self, keys, values).map(|res| res.try_into().unwrap())
+    }
 }
 
 impl<'a> Map<'a> {
