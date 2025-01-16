@@ -2,7 +2,7 @@
 
 [Documentation](https://docs.rs/rustler/latest/rustler) | [Getting Started](https://github.com/rusterlium/rustler/blob/master/README.md#getting-started) | [Example](https://github.com/rusterlium/NifIo)
 
-[![CI](https://github.com/rusterlium/rustler/actions/workflows/main.yml/badge.svg)](https://github.com/rusterlium/rustler/actions/workflows/main.yml)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/rusterlium/rustler/main.yml)](https://github.com/rusterlium/rustler/actions/workflows/main.yml)
 [![Hex.pm package version](https://img.shields.io/hexpm/v/rustler.svg)](https://hex.pm/packages/rustler)
 [![Crates.io package version](https://img.shields.io/crates/v/rustler.svg)](https://crates.io/crates/rustler)
 [![Last Updated](https://img.shields.io/github/last-commit/rusterlium/rustler.svg)](https://github.com/rusterlium/rustler/commits/master)
