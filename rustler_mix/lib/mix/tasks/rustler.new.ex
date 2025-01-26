@@ -16,13 +16,14 @@ defmodule Mix.Tasks.Rustler.New do
   @basic [
     {:eex, "basic/README.md", "README.md"},
     {:eex, "basic/Cargo.toml.eex", "Cargo.toml"},
-    {:eex, "basic/src/lib.rs", "src/lib.rs"},
-    {:text, "basic/.gitignore", ".gitignore"}
+    {:eex, "basic/src/lib.rs", "src/lib.rs"}
   ]
 
   @root [
     {:eex, "root/Cargo.toml.eex", "Cargo.toml"}
   ]
+
+  @fallback_version "0.36.1"
 
   root = Path.join(:code.priv_dir(:rustler), "templates/")
 
@@ -50,6 +51,8 @@ defmodule Mix.Tasks.Rustler.New do
           module
       end
 
+    module_as_atom = parse_module_name!(module)
+
     name =
       case opts[:name] do
         nil ->
@@ -69,41 +72,81 @@ defmodule Mix.Tasks.Rustler.New do
         otp_app -> otp_app
       end
 
-    check_module_name_validity!(module)
+    rustler_version = rustler_version()
 
     path = Path.join([File.cwd!(), "native", name])
-    new(otp_app, path, module, name, opts)
+    new(otp_app, path, module_as_atom, name, rustler_version, opts)
 
-    copy_from(File.cwd!(), [library_name: name], @root)
+    if Path.join(File.cwd!(), "Cargo.toml") |> File.exists?() do
+      Mix.shell().info([
+        :green,
+        "Workspace Cargo.toml already exists, please add ",
+        :bright,
+        path |> Path.relative_to_cwd(),
+        :reset,
+        :green,
+        " to the ",
+        :bright,
+        "\"members\"",
+        :reset,
+        :green,
+        " list"
+      ])
+    else
+      copy_from(File.cwd!(), [library_name: name], @root)
 
-    Mix.Shell.IO.info([:green, "Ready to go! See #{path}/README.md for further instructions."])
+      gitignore = Path.join(File.cwd!(), ".gitignore")
+
+      if gitignore |> File.exists?() do
+        Mix.shell().info([:green, "Updating .gitignore file"])
+        File.write(gitignore, "\n# Rust binary artifacts\n/target/\n", [:append])
+      else
+        create_file(gitignore, "/target/\n")
+      end
+    end
+
+    Mix.shell().info([
+      :green,
+      "\nReady to go! See #{path |> Path.relative_to_cwd()}/README.md for further instructions."
+    ])
   end
 
-  defp new(otp_app, path, module, name, _opts) do
-    module_elixir = "Elixir." <> module
-
+  defp new(otp_app, path, module, name, rustler_version, _opts) do
     binding = [
       otp_app: otp_app,
-      project_name: module_elixir,
-      native_module: module_elixir,
-      module: module,
+      # Elixir syntax for the README
+      module: module |> Macro.to_string(),
+      # Erlang syntax for the init! invocation
+      native_module: module |> Atom.to_string(),
       library_name: name,
-      rustler_version: Rustler.rustler_version()
+      rustler_version: rustler_version
     ]
 
     copy_from(path, binding, @basic)
   end
 
-  defp check_module_name_validity!(name) do
-    if !(name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
-      Mix.raise(
-        "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect(name)}"
-      )
+  defp parse_module_name!(name) do
+    case Code.string_to_quoted(name) do
+      {:ok, atom} when is_atom(atom) ->
+        atom
+
+      {:ok, {:__aliases__, _, parts}} ->
+        Module.concat(parts)
+
+      _ ->
+        Mix.raise(
+          "Module name must be a valid Elixir alias (for example: Foo.Bar, or :foo_bar), got: #{inspect(name)}"
+        )
     end
   end
 
   defp format_module_name_as_name(module_name) do
-    String.replace(String.downcase(module_name), ".", "_")
+    if module_name |> String.starts_with?(":") do
+      # Skip first
+      module_name |> String.downcase() |> String.slice(1..-1//1)
+    else
+      module_name |> String.downcase() |> String.replace(".", "_")
+    end
   end
 
   defp copy_from(target_dir, binding, mapping) when is_list(mapping) do
@@ -134,9 +177,66 @@ defmodule Mix.Tasks.Rustler.New do
   end
 
   defp prompt(message) do
-    Mix.Shell.IO.print_app()
+    Mix.shell().print_app()
     resp = IO.gets(IO.ANSI.format([message, :white, " > "]))
     ?\n = :binary.last(resp)
     :binary.part(resp, {0, byte_size(resp) - 1})
+  end
+
+  @doc false
+  defp rustler_version do
+    versions =
+      case Mix.Utils.read_path("https://crates.io/api/v1/crates/rustler",
+             timeout: 10_000,
+             unsafe_uri: true
+           ) do
+        {:ok, body} ->
+          get_versions(body)
+
+        err ->
+          raise err
+      end
+
+    try do
+      result =
+        versions
+        |> Enum.map(&Version.parse!/1)
+        |> Enum.filter(&(&1.pre == []))
+        |> Enum.max(Version)
+        |> Version.to_string()
+
+      Mix.shell().info("Fetched latest rustler crate version: #{result}")
+      result
+    rescue
+      ex ->
+        Mix.shell().error(
+          "Failed to fetch rustler crate versions, using hardcoded fallback: #{@fallback_version}\nError: #{ex |> Kernel.inspect()}"
+        )
+
+        @fallback_version
+    end
+  end
+
+  defp get_versions(data) do
+    cond do
+      # Erlang 27
+      Code.ensure_loaded?(:json) and Kernel.function_exported?(:json, :decode, 1) ->
+        data |> :json.decode() |> versions_from_parsed_json()
+
+      Code.ensure_loaded?(Jason) ->
+        data |> Jason.decode!() |> versions_from_parsed_json()
+
+      true ->
+        # Nasty hack: Instead of parsing the JSON, we use a regex, abusing the
+        # compact nature of the returned data
+        Regex.scan(~r/"num":"([^"]+)"/, data) |> Enum.map(fn [_, res] -> res end)
+    end
+  end
+
+  defp versions_from_parsed_json(parsed) do
+    parsed
+    |> Map.fetch!("versions")
+    |> Enum.filter(fn version -> not version["yanked"] end)
+    |> Enum.map(fn version -> version["num"] end)
   end
 end

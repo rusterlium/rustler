@@ -8,9 +8,11 @@
 
 set -e
 
-rustler_mix=$PWD
-rustler=$(realpath $PWD/../rustler)
+rustler_mix=$(realpath $(dirname $0))
+rustler=$(realpath $rustler_mix/../rustler)
 tmp=$(mktemp --directory)
+
+export MIX_ARCHIVES="$tmp/mix_archives/"
 
 #
 # Test Steps
@@ -24,12 +26,21 @@ tmp=$(mktemp --directory)
 # * Check that the NIF can be loaded and used
 #
 
+echo "Build and install archive"
+echo
+mix local.hex --force
+MIX_ENV=prod mix archive.build -o "$tmp/rustler.ez"
+mix archive.install --force "$tmp/rustler.ez"
+
+echo
 echo "Creating a new mix project and rustler template in $tmp"
+echo
 cd $tmp
+
+mkdir archives
 
 mix new test_rustler_mix
 cd test_rustler_mix
-mkdir -p priv/native
 
 cat >mix.exs <<EOF
 defmodule TestRustlerMix.MixProject do
@@ -51,14 +62,14 @@ defmodule TestRustlerMix.MixProject do
 end
 EOF
 
-mix deps.get
-mix deps.compile
+mix rustler.new --module RustlerMixTest --name rustler_mix_test || exit 1
 
-mix rustler.new --module RustlerMixTest --name rustler_mix_test
+mix deps.get || exit 1
+mix deps.compile || exit 1
 
 sed -i "s|^rustler.*$|rustler = { path = \"$rustler\" }|" native/rustler_mix_test/Cargo.toml
 
-mix compile
+mix compile || exit 1
 
 # Delete everything except the templated module from the generated README
 
@@ -88,12 +99,12 @@ defmodule RustlerMixTestTest do
 end
 EOF
 
-mix test
+mix test || exit 1
 
 # See https://github.com/rusterlium/rustler/issues/516, we also need to verify that everything
 # we need is part of a release.
-mix release
-_build/dev/rel/test_rustler_mix/bin/test_rustler_mix eval 'RustlerMixTest.add(1, 2)'
+mix release || exit 1
+_build/dev/rel/test_rustler_mix/bin/test_rustler_mix eval 'RustlerMixTest.add(1, 2)' || exit 1
 
 echo "Done; cleaning up"
 rm -r $tmp
