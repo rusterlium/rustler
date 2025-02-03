@@ -20,7 +20,8 @@ versions.
 
 ## 0.36.1 - 2025-02-03
 
-No changes in the Rust code, only `rustler_mix` adjustments.
+No changes in the Rust code, only `rustler_mix` adjustments and dependency
+updates.
 
 ### Added
 
@@ -31,6 +32,10 @@ No changes in the Rust code, only `rustler_mix` adjustments.
 - Retrieve the newest Rustler version without additional dependencies
   (#682, fixes #680)
 - Adjust `.gitignore` handling to match the new workspace style
+
+### Changed
+
+- Only depend on `libloading` on non-Windows systems (#677)
 
 ## 0.36.0 - 2025-01-13
 
