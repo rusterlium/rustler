@@ -18,6 +18,20 @@ versions.
 
 ### Removed
 
+## 0.36.1 - 2025-02-03
+
+No changes in the Rust code, only `rustler_mix` adjustments.
+
+### Added
+
+- Support for Erlang-style NIF module names (`:module_name`) (#682)
+
+### Fixed
+
+- Retrieve the newest Rustler version without additional dependencies
+  (#682, fixes #680)
+- Adjust `.gitignore` handling to match the new workspace style
+
 ## 0.36.0 - 2025-01-13
 
 ### Added
