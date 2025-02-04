@@ -1,8 +1,5 @@
 use crate::serde::{atoms, error::Error, util};
-use crate::{
-    types::{ListIterator, MapIterator},
-    Term, TermType,
-};
+use crate::{ListIterator, MapIterator, Term, TermType};
 use serde::{
     de::{
         self, Deserialize, DeserializeSeed, EnumAccess, MapAccess, SeqAccess, VariantAccess,
