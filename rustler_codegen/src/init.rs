@@ -136,24 +136,55 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             }
         };
 
-        quote! {
+        let primary_package =
+            std::env::var("CARGO_PKG_NAME").unwrap_or_else(|_| "rustler_pkg".to_string());
+        let nif_init_name = format!("{}_nif_init", primary_package);
+        let nif_init_name = Ident::new(&nif_init_name, Span::call_site());
+
+        let bare_nif_inits = quote! {
+            #[cfg(not(windows))]
+            #[no_mangle]
+            extern "C" fn nif_init() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                #nif_init_name()
+            }
+
+            #[cfg(windows)]
+            #[no_mangle]
+            extern "C" fn nif_init(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                #nif_init_name(callbacks)
+            }
+        };
+
+        let nif_inits = quote! {
             #maybe_warning
 
-            #[cfg(unix)]
+            #[cfg(not(windows))]
             #[no_mangle]
-            extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
-                unsafe { rustler::codegen_runtime::internal_write_symbols() };
+            extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                unsafe {
+                    ::rustler::codegen_runtime::internal_write_symbols()
+                }
+
                 #inner
             }
 
             #[cfg(windows)]
             #[no_mangle]
-            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::DynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
-                    rustler::codegen_runtime::internal_set_symbols(*callbacks);
+                    ::rustler::codegen_runtime::internal_set_symbols(*callbacks);
                 }
 
                 #inner
+            }
+        };
+
+        if cfg!(feature = "staticlib") {
+            nif_inits
+        } else {
+            quote! {
+                #bare_nif_inits
+                #nif_inits
             }
         }
     }
