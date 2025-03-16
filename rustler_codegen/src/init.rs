@@ -136,36 +136,26 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             }
         };
 
-        let lib_name = if let Ok(name) = std::env::var("CARGO_PKG_NAME") {
-            if std::env::var("CARGO_TARGET_OS").unwrap_or_else(|_| "unknown".to_string())
-                == "windows"
-            {
-                name
+        let nif_init_name = if cfg!(feature = "staticlib") {
+            let lib_name = if let Ok(name) = std::env::var("CARGO_CRATE_NAME") {
+                if std::env::var("CARGO_TARGET_OS").unwrap_or_else(|_| "unknown".to_string())
+                    == "windows"
+                {
+                    name
+                } else {
+                    format!("lib{name}")
+                }
             } else {
-                format!("lib{name}")
-            }
-        } else {
-            "rustler_pkg".to_string()
-        };
+                "rustler_pkg".to_string()
+            };
 
-        let nif_init_name = format!("{lib_name}_nif_init");
+            format!("{lib_name}_nif_init")
+        } else {
+            "nif_init".to_string()
+        };
         let nif_init_name = Ident::new(&nif_init_name, Span::call_site());
 
-        let bare_nif_inits = quote! {
-            #[cfg(not(windows))]
-            #[no_mangle]
-            extern "C" fn nif_init() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
-                #nif_init_name()
-            }
-
-            #[cfg(windows)]
-            #[no_mangle]
-            extern "C" fn nif_init(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
-                #nif_init_name(callbacks)
-            }
-        };
-
-        let nif_inits = quote! {
+        quote! {
             #maybe_warning
 
             #[cfg(not(windows))]
@@ -186,15 +176,6 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 }
 
                 #inner
-            }
-        };
-
-        if cfg!(feature = "staticlib") {
-            nif_inits
-        } else {
-            quote! {
-                #bare_nif_inits
-                #nif_inits
             }
         }
     }
