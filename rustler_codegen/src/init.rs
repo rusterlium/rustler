@@ -137,22 +137,12 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
         };
 
         let nif_init_name = if cfg!(feature = "staticlib") {
-            let lib_name = if let Ok(name) = std::env::var("CARGO_CRATE_NAME") {
-                if std::env::var("CARGO_TARGET_OS").unwrap_or_else(|_| "unknown".to_string())
-                    == "windows"
-                {
-                    name
-                } else {
-                    format!("lib{name}")
-                }
-            } else {
-                "rustler_pkg".to_string()
-            };
-
+            let lib_name = std::env::var("CARGO_CRATE_NAME").unwrap();
             format!("{lib_name}_nif_init")
         } else {
             "nif_init".to_string()
         };
+
         let nif_init_name = Ident::new(&nif_init_name, Span::call_site());
 
         quote! {
