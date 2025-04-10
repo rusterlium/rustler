@@ -18,20 +18,16 @@ is favored as of now.
 
 #### Features
 
-**Safety**
-
+**Safety**  
 The code you write in a Rust NIF should never be able to crash the BEAM.
 
-**Interop**
-
+**Interop**  
 Decoding and encoding rust values into Erlang terms is as easy as a function call.
 
-**Type composition**
-
+**Type composition**  
 Making a Rust struct encodable and decodable to Erlang or Elixir can be done with a single attribute.
 
-**Resource objects**
-
+**Resource objects**  
 Enables you to safely pass a reference to a Rust struct into Erlang code. The struct will be automatically dropped when it's no longer referenced.
 
 #### Getting started
