@@ -1,5 +1,6 @@
 use crate::wrapper::atom;
 use crate::wrapper::NIF_TERM;
+use crate::Wrapper;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
@@ -78,6 +79,18 @@ impl Atom {
             }
             Atom::from_bytes(env, &bytes)
         }
+    }
+}
+
+impl<'a> Wrapper<'a> for Atom {
+    const WRAPPED_TYPE: crate::TermType = crate::TermType::Atom;
+
+    fn unwrap(&self) -> Term<'a> {
+        unimplemented!()
+    }
+
+    unsafe fn wrap_unchecked(term: Term<'a>) -> Self {
+        Atom::from_nif_term(term.as_c_arg())
     }
 }
 
