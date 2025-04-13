@@ -12,6 +12,9 @@ edition = "2021"
 name = "rustler_codegen"
 proc-macro = true
 
+[features]
+staticlib = []
+
 [dependencies]
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"

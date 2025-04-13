@@ -136,21 +136,33 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             }
         };
 
+        let nif_init_name = if cfg!(feature = "staticlib") {
+            let lib_name = std::env::var("CARGO_CRATE_NAME").unwrap();
+            format!("{lib_name}_nif_init")
+        } else {
+            "nif_init".to_string()
+        };
+
+        let nif_init_name = Ident::new(&nif_init_name, Span::call_site());
+
         quote! {
             #maybe_warning
 
-            #[cfg(unix)]
+            #[cfg(not(windows))]
             #[no_mangle]
-            extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
-                unsafe { rustler::codegen_runtime::internal_write_symbols() };
+            extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                unsafe {
+                    ::rustler::codegen_runtime::internal_write_symbols()
+                }
+
                 #inner
             }
 
             #[cfg(windows)]
             #[no_mangle]
-            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::DynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
-                    rustler::codegen_runtime::internal_set_symbols(*callbacks);
+                    ::rustler::codegen_runtime::internal_set_symbols(*callbacks);
                 }
 
                 #inner
