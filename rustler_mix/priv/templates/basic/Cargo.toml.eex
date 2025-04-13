@@ -5,7 +5,6 @@ authors = []
 edition = "2021"
 
 [lib]
-name = "<%= library_name %>"
 crate-type = ["cdylib"]
 
 [dependencies]
