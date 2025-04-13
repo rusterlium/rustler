@@ -79,8 +79,6 @@ defmodule Rustler do
 
     * `:target` - Specify a compile [target] triple.
 
-    * `:target_dir` - Override the compiler output directory.
-
   Any of the above options can be passed directly into the `use` macro like so:
 
       defmodule MyNIF do
