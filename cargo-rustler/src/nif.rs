@@ -1,5 +1,5 @@
 use libloading::{Library, Symbol};
-use rustler_sys::ErlNifEntry;
+use rustler::sys::ErlNifEntry;
 use std::ffi::CStr;
 use std::path::{Path, PathBuf};
 
