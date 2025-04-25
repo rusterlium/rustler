@@ -1,5 +1,5 @@
+use crate::nif_types::ErlNifEntry;
 use libloading::{Library, Symbol};
-use rustler::sys::ErlNifEntry;
 use std::ffi::CStr;
 use std::path::{Path, PathBuf};
 
@@ -28,12 +28,18 @@ unsafe fn maybe_call_nif_init(
 unsafe fn maybe_call_nif_init(
     lib: &Library,
 ) -> Result<*const ErlNifEntry, Box<dyn std::error::Error>> {
-    use rustler_sys::TWinDynNifCallbacks;
-    static NULL_CALLBACKS: TWinDynNifCallbacks = TWinDynNifCallbacks {};
-    let func: Symbol<unsafe extern "C" fn(*mut TWinDynNifCallbacks) -> *const ErlNifEntry> =
+    static mut NULL_CALLBACKS: [usize; 1024] = [0; 1024];
+    // enif_priv_data
+    NULL_CALLBACKS[0] = 0;
+    // enif_alloc
+    NULL_CALLBACKS[1] = crate::fake_symbols::enif_alloc as *mut c_void as usize;
+    // enif_free
+    NULL_CALLBACKS[2] = crate::fake_symbols::enif_free as *mut c_void as usize;
+
+    let func: Symbol<unsafe extern "C" fn(*mut [usize; 1024]) -> *const ErlNifEntry> =
         lib.get(b"nif_init")?;
 
-    func(&NULL_CALLBACKS)
+    Ok(func(std::ptr::addr_of_mut!(NULL_CALLBACKS)))
 }
 
 impl NifLibrary {

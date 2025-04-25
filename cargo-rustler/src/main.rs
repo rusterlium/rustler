@@ -5,6 +5,7 @@ mod nif;
 mod nif_elixir;
 mod nif_erlang;
 mod rust_build;
+mod nif_types;
 
 use std::path::PathBuf;
 
