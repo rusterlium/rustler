@@ -10,5 +10,4 @@ metadata = { msrv = "1.77" }
 cargo_metadata = "0.19.2"
 clap = { version = "4.5", features = [ "derive" ] }
 libloading = "0.8"
-rustler = { version = "0.36.1", path = "../rustler" }
 tempfile = "3.19.1"

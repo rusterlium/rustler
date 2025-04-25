@@ -4,6 +4,7 @@ mod fake_symbols;
 mod nif;
 mod nif_elixir;
 mod nif_erlang;
+mod nif_types;
 mod rust_build;
 
 use std::path::PathBuf;
