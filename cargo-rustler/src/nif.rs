@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 pub struct Nif {
     pub name: String,
     pub arity: usize,
-    pub flags: usize,
+    pub _flags: usize,
 }
 
 pub struct NifLibrary {
@@ -52,7 +52,7 @@ impl NifLibrary {
                     Some(Nif {
                         name: CStr::from_ptr(f.name).to_str().ok()?.to_string(),
                         arity: f.arity as usize,
-                        flags: f.flags as usize,
+                        _flags: f.flags as usize,
                     })
                 })
                 .collect();

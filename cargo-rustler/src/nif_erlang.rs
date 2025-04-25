@@ -5,23 +5,54 @@ pub struct LibAsErlang(pub NifLibrary);
 
 impl fmt::Display for LibAsErlang {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "-module({}).\n\n", string_to_erlang_atom(&self.0.name))?;
+        let nif_lib = &self.0;
+
+        let module_name = string_to_erlang_atom(&nif_lib.name);
+
+        let nifs: Vec<_> = nif_lib
+            .nifs
+            .iter()
+            .enumerate()
+            .map(|(n, nif)| (n, string_to_erlang_atom(&nif.name), nif.arity))
+            .collect();
+
+        let nif_name = nif_lib
+            .path
+            .with_extension("")
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+
+        writeln!(f, "-module({module_name}).\n")?;
         writeln!(f, "-export([")?;
-        let count = self.0.nifs.len();
-        for (n, nif) in self.0.nifs.iter().enumerate() {
-            write!(f, "    {}/{}", string_to_erlang_atom(&nif.name), nif.arity)?;
-            if n == count - 1 {
+        let count = nifs.len();
+        for (n, name, arity) in &nifs {
+            write!(f, "    {name}/{arity}")?;
+            if *n != count - 1 {
                 write!(f, ",")?;
             }
             writeln!(f)?;
         }
         write!(f, "]).\n\n")?;
 
-        // TODO: On Load function
+        writeln!(f, "-nifs([")?;
+        for (n, name, arity) in &nifs {
+            write!(f, "    {name}/{arity}")?;
+            if *n != count - 1 {
+                write!(f, ",")?;
+            }
+            writeln!(f)?;
+        }
+        write!(f, "]).\n\n")?;
 
-        for nif in &self.0.nifs {
-            write!(f, "{}(", string_to_erlang_atom(&nif.name))?;
-            for i in 0..nif.arity {
+        writeln!(f, "-define(NIF_LOAD_INFO, 0).")?;
+        writeln!(f, "-define(NIF_NAME, \"{}\").", &nif_name)?;
+        write!(f, "{}", include_str!("../snippets/on_load.erl"))?;
+
+        for (_, name, arity) in &nifs {
+            write!(f, "{name}(")?;
+            for i in 0..*arity {
                 if i > 0 {
                     write!(f, ", ")?;
                 }

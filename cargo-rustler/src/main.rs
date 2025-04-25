@@ -1,12 +1,15 @@
+mod erl_build;
 #[cfg(unix)]
 mod fake_symbols;
 mod nif;
 mod nif_elixir;
 mod nif_erlang;
+mod rust_build;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use rust_build::BuildArgs;
 
 use crate::nif::NifLibrary;
 
@@ -14,7 +17,7 @@ use crate::nif::NifLibrary;
 #[command(version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
@@ -33,13 +36,15 @@ enum Commands {
         #[arg(short, long, default_value_t, value_enum)]
         format: OutputFormat,
     },
+
+    Build(BuildArgs),
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Nif { path, format }) => {
+        Commands::Nif { path, format } => {
             let lib = NifLibrary::load(path).unwrap();
 
             match format {
@@ -57,8 +62,20 @@ fn main() {
                 }
             }
         }
-        None => {
-            panic!("No command given")
+        Commands::Build(args) => {
+            println!("Building NIFs in {:?}", args.path);
+            let paths = rust_build::build(args);
+
+            println!("Got NIFs: {paths:?}");
+
+            for path in paths {
+                let lib = NifLibrary::load(&path).unwrap();
+                let erlang = nif_erlang::LibAsErlang(lib);
+                let module = format!("{erlang}");
+                let module_name = erlang.0.name;
+
+                erl_build::build(&module_name, &module, &args.out);
+            }
         }
     }
 }
