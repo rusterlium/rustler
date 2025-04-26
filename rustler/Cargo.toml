@@ -19,7 +19,6 @@ nif_version_2_15 = ["nif_version_2_14"]
 nif_version_2_16 = ["nif_version_2_15"]
 nif_version_2_17 = ["nif_version_2_16"]
 serde = ["dep:serde"]
-staticlib = ["rustler_codegen/staticlib"]
 
 [dependencies]
 inventory = "0.3"
