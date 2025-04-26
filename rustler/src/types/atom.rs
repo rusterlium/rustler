@@ -1,6 +1,7 @@
 use crate::wrapper::atom;
 use crate::wrapper::NIF_TERM;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::hash::{Hash, Hasher};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -96,6 +97,12 @@ impl Encoder for Atom {
 impl<'a> Decoder<'a> for Atom {
     fn decode(term: Term<'a>) -> NifResult<Atom> {
         Atom::from_term(term)
+    }
+}
+
+impl Hash for Atom {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_c_arg().hash(state);
     }
 }
 
