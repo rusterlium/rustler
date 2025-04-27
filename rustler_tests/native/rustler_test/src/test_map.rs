@@ -1,6 +1,6 @@
 use rustler::types::map::MapIterator;
 use rustler::types::tuple::make_tuple;
-use rustler::{Encoder, Env, Error, ListIterator, NifResult, Term};
+use rustler::{Atom, Encoder, Env, Error, ListIterator, NifResult, Term};
 
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
@@ -60,5 +60,12 @@ pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Te
 pub fn map_generic(
     map: std::collections::HashMap<i64, String>,
 ) -> std::collections::HashMap<i64, String> {
+    map
+}
+
+#[rustler::nif]
+pub fn map_atom_keys(
+    map: std::collections::HashMap<Atom, String>,
+) -> std::collections::HashMap<Atom, String> {
     map
 }
