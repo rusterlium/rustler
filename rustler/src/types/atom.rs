@@ -141,7 +141,8 @@ pub(in crate::types) fn decode_bool(term: Term) -> NifResult<bool> {
 impl Hash for Atom {
     fn hash<H: Hasher>(&self, state: &mut H) {
         use crate::sys::{enif_hash, ErlNifHash};
-        let hash = unsafe { enif_hash(ErlNifHash::ERL_NIF_PHASH2, self.as_c_arg(), 0) as u32 };
+        let hash =
+            unsafe { enif_hash(ErlNifHash::ERL_NIF_INTERNAL_HASH, self.as_c_arg(), 0) as u32 };
         state.write_u32(hash);
     }
 }

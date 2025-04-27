@@ -153,7 +153,7 @@ impl Hash for Term<'_> {
         // As far as I can see, there is really no way
         // to get a seed from the hasher. This is definitely
         // not optimal, but it's the best we can do for now.
-        state.write_u32(self.hash_phash2());
+        state.write_u32(self.hash_internal(0));
     }
 }
 
