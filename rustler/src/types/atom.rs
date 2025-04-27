@@ -1,6 +1,7 @@
 use crate::wrapper::atom;
 use crate::wrapper::NIF_TERM;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::fmt;
 use std::hash::{Hash, Hasher};
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
@@ -82,7 +83,6 @@ impl Atom {
     }
 }
 
-use std::fmt;
 impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         crate::wrapper::term::fmt(self.as_c_arg(), f)
@@ -97,12 +97,6 @@ impl Encoder for Atom {
 impl<'a> Decoder<'a> for Atom {
     fn decode(term: Term<'a>) -> NifResult<Atom> {
         Atom::from_term(term)
-    }
-}
-
-impl Hash for Atom {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_c_arg().hash(state);
     }
 }
 
@@ -142,6 +136,14 @@ pub(in crate::types) fn decode_bool(term: Term) -> NifResult<bool> {
     }
 
     Err(Error::BadArg)
+}
+
+impl Hash for Atom {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        use crate::sys::{enif_hash, ErlNifHash};
+        let hash = unsafe { enif_hash(ErlNifHash::ERL_NIF_PHASH2, self.as_c_arg(), 0) as u32 };
+        state.write_u32(hash);
+    }
 }
 
 // This is safe because atoms are never removed/changed once they are created.
