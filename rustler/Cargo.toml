@@ -13,7 +13,6 @@ rust-version = "1.70"
 big_integer = ["dep:num-bigint"]
 default = ["nif_version_2_15"]
 derive = []
-alternative_nif_init_name = []
 allocator = []
 nif_version_2_14 = []
 nif_version_2_15 = ["nif_version_2_14"]
@@ -23,7 +22,7 @@ serde = ["dep:serde"]
 
 [dependencies]
 inventory = "0.3"
-rustler_codegen = { path = "../rustler_codegen", version = "0.36.1"}
+rustler_codegen = { path = "../rustler_codegen", version = "0.36.1" }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
 
