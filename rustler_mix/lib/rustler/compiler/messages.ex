@@ -53,4 +53,10 @@ defmodule Rustler.Compiler.Messages do
     Note: You should already have this if you made your project with the project generator.
     """
   end
+
+  def message({:unknown_target, target}) do
+    """
+    #{target} is not in the support list yet. Please report it on https://github.com/rusterlium/rustler/issues."
+    """
+  end
 end
