@@ -95,10 +95,7 @@ defmodule Rustler.Compiler do
     if os_type do
       os_type.os_type
     else
-      throw_error(
-        {:unknown_target,
-         "#{target} is not in the support list yet. Please report it on https://github.com/rusterlium/rustler/issues."}
-      )
+      throw_error({:unknown_target, target})
     end
   end
 
