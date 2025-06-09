@@ -8,15 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
-## unreleased
+## 0.36.2 - 2025-06-09
 
 ### Added
 
+- `std::hash::Hash` implementation for atoms (#695)
+
 ### Fixed
 
-### Changed
-
-### Removed
+- Fix typing error in `rustler_mix` (#696, thanks @dkuku)
 
 ## 0.36.1 - 2025-02-03
 
