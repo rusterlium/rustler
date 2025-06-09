@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## unreleased
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Removed
+
 ## 0.36.2 - 2025-06-09
 
 ### Added
