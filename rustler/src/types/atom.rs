@@ -84,7 +84,34 @@ impl Atom {
     }
 }
 
-impl<'a> Wrapper<'a> for Atom {
+// Wrapper
+//
+// Should be an ErlNifTerm along with its origin environment.
+//
+// For Atoms and LocalPids, the term is not associated with any environment, so we can
+// just store the term itself. For other types, we need to store the environment
+// as well, so we can create a new Term from it later.
+//
+// The objects are not safe to use outside of the function call, so they are not `clone`, or `copy`
+// or even movable.
+//
+// Maybe use references everywhere instead of objects?
+//
+// A function call would then look like this:
+//
+// ```rust
+// fn foo<'a>(env: Env<'a>, atom: &'a Atom, map: &'a Map) -> NifResult<()> {
+//    let atom = Atom::from_term(term)?;
+//    let term = atom.to_term(env);
+// }
+// ```
+//
+// Instead of `PhantomData` we could use `std::marker::Unsize` to make the type
+// unsized. This would allow us to use the type as a reference, but it would
+// also make it impossible to use as a value. This would be a problem for
+// `Term` and `Env`, which are both values.
+
+impl Wrapper for Atom {
     const WRAPPED_TYPE: crate::TermType = crate::TermType::Atom;
 
     fn unwrap(&self) -> Term<'a> {
