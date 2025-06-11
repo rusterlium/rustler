@@ -8,46 +8,76 @@ defmodule Rustler.Compiler do
     config = Config.from(otp_app, config, opts)
 
     if !config.skip_compilation? do
-      crate_full_path = Path.expand(config.path, File.cwd!())
-
       File.mkdir_p!(priv_dir())
 
       Mix.shell().info("Compiling crate #{config.crate} in #{config.mode} mode (#{config.path})")
+      do_compile(config)
+      Mix.Project.build_structure()
 
-      [cmd | args] =
-        make_base_command(config.cargo)
-        |> make_no_default_features_flag(config.default_features)
-        |> make_features_flag(config.features)
-        |> make_target_flag(config.target)
-        |> make_build_mode_flag(config.mode)
-
-      ensure_platform_requirements!(crate_full_path, config, :os.type())
-
-      compile_result =
-        System.cmd(cmd, args,
-          cd: crate_full_path,
-          stderr_to_stdout: true,
-          env: [{"CARGO_TARGET_DIR", config.target_dir} | config.env],
-          into: IO.stream(:stdio, :line)
-        )
-
-      case compile_result do
-        {_, 0} -> :ok
-        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
-      end
-
-      handle_artifacts(crate_full_path, config)
       # See #326: Ensure that the libraries are copied into the correct subdirectory
       # in `_build`.
-      Mix.Project.build_structure()
+      missing = Enum.reject(expected_files(config), &File.exists?/1)
+
+      if missing != [] do
+        Mix.shell().info("Expected files do not exist: #{inspect(missing)}, rebuilding")
+
+        do_compile(config, true)
+        Mix.Project.build_structure()
+      end
+
+      missing = Enum.reject(expected_files(config), &File.exists?/1)
+
+      if missing != [] do
+        raise "Expected files do still not exist: #{inspect(missing)}\nPlease verify your configuration"
+      end
     end
 
     config
   end
 
-  defp make_base_command(:system), do: ["cargo", "rustc"]
-  defp make_base_command({:system, channel}), do: ["cargo", channel, "rustc"]
-  defp make_base_command({:bin, path}), do: [path, "rustc"]
+  defp do_compile(config, recompile \\ false) do
+    [cmd | args] =
+      rustc(config.cargo)
+      |> build_flags(config)
+      |> make_build_mode_flag(config.mode)
+
+    args =
+      if recompile do
+        # HACK: Cargo does not allow forcing a recompilation, but we need the
+        # compiler-artifact messages, so force a recompilation via a "config
+        # change"
+        args ++ ["--cfg", "build_#{System.system_time(:millisecond)}"]
+      else
+        args
+      end
+
+    compile_result =
+      System.cmd(cmd, args, env: config.env, into: %Rustler.BuildResults{}, lines: 1024)
+
+    artifacts =
+      case compile_result do
+        {build_results, 0} -> build_results.artifacts
+        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
+      end
+
+    handle_artifacts(artifacts, config)
+  end
+
+  defp build_flags(args, config) do
+    args
+    |> make_package_flag(config.crate)
+    |> make_no_default_features_flag(config.default_features)
+    |> make_features_flag(config.features)
+    |> make_target_flag(config.target)
+  end
+
+  defp rustc(cargo) do
+    make_base_command(cargo) ++ ["rustc", "--message-format=json-render-diagnostics", "--quiet"]
+  end
+
+  defp make_base_command(:system), do: ["cargo"]
+  defp make_base_command({:system, channel}), do: ["cargo", channel]
+  defp make_base_command({:bin, path}), do: [path]
 
   defp make_base_command({:rustup, version}) do
     if Rustup.version() == :none do
@@ -58,10 +88,10 @@ defmodule Rustler.Compiler do
       throw_error({:rust_version_not_installed, version})
     end
 
-    ["rustup", "run", version, "cargo", "rustc"]
+    ["rustup", "run", version, "cargo"]
   end
 
-  defp ensure_platform_requirements!(_, _, _), do: :ok
+  defp make_package_flag(args, crate), do: args ++ ["-p", "#{crate}"]
 
   defp make_no_default_features_flag(args, true), do: args
   defp make_no_default_features_flag(args, false), do: args ++ ["--no-default-features"]
@@ -99,91 +129,60 @@ defmodule Rustler.Compiler do
     end
   end
 
-  defp handle_artifacts(path, config) do
-    toml = toml_data(path)
+  defp handle_artifacts(artifacts, config) do
     target = config.target
-    names = get_name(toml, :lib) ++ get_name(toml, :bin)
 
-    output_dir =
-      if is_binary(target) do
-        Path.join([target, Atom.to_string(config.mode)])
-      else
-        Atom.to_string(config.mode)
+    if artifacts == [] do
+      throw_error(:no_artifacts)
+    end
+
+    Enum.each(artifacts, fn artifact = %Rustler.BuildArtifact{} ->
+      if artifact.kind == :lib or artifact.kind == :bin do
+        dst_file = output_file(artifact.name, artifact.kind, target)
+        destination_lib = Path.join(priv_dir(), dst_file)
+
+        # If the file exists already, we delete it first. This is to ensure that another
+        # process, which might have the library dynamically linked in, does not generate
+        # a segfault. By deleting it first, we ensure that the copy operation below does
+        # not write into the existing file.
+        Mix.shell().info("Copying #{artifact.filename} to #{destination_lib}")
+        File.rm(destination_lib)
+        File.cp!(artifact.filename, destination_lib)
       end
-
-    Enum.each(names, fn {name, type} ->
-      {src_file, dst_file} = make_file_names(name, type, target)
-      compiled_lib = Path.join([config.target_dir, output_dir, src_file])
-      destination_lib = Path.join(priv_dir(), dst_file)
-
-      # If the file exists already, we delete it first. This is to ensure that another
-      # process, which might have the library dynamically linked in, does not generate
-      # a segfault. By deleting it first, we ensure that the copy operation below does
-      # not write into the existing file.
-      File.rm(destination_lib)
-      File.cp!(compiled_lib, destination_lib)
     end)
   end
 
-  defp get_name(toml, section) do
-    case toml[to_string(section)] do
-      nil -> []
-      values when is_map(values) -> [{values["name"], section}]
-      values when is_list(values) -> Enum.map(values, &{&1["name"], section})
+  defp expected_files(config) do
+    lib = if config.lib, do: [output_file(config.crate, :lib, config.target)], else: []
+    bins = for bin <- config.binaries, do: output_file(bin, :bin, config.target)
+
+    for filename <- lib ++ bins do
+      Path.join(priv_dir(), filename)
     end
   end
 
-  defp get_suffix(target, :lib) do
+  defp output_file(base_name, kind, target) do
+    "#{base_name}#{suffix(kind, target)}"
+  end
+
+  defp suffix(:lib, target) do
     case get_target_os_type(target) do
-      {:win32, _} -> "dll"
-      {:unix, :darwin} -> "dylib"
-      {:unix, _} -> "so"
+      {:win32, _} -> ".dll"
+      {:unix, :darwin} -> ".so"
+      {:unix, _} -> ".so"
     end
   end
 
-  defp get_suffix(target, :bin) do
+  defp suffix(:bin, target) do
     case get_target_os_type(target) do
-      {:win32, _} -> "exe"
+      {:win32, _} -> ".exe"
       {:unix, _} -> ""
-    end
-  end
-
-  defp make_file_names(base_name, :lib, target) do
-    suffix = get_suffix(target, :lib)
-
-    case get_target_os_type(target) do
-      {:win32, _} -> {"#{base_name}.#{suffix}", "lib#{base_name}.dll"}
-      {:unix, :darwin} -> {"lib#{base_name}.#{suffix}", "lib#{base_name}.so"}
-      {:unix, _} -> {"lib#{base_name}.#{suffix}", "lib#{base_name}.so"}
-    end
-  end
-
-  defp make_file_names(base_name, :bin, target) do
-    suffix = get_suffix(target, :bin)
-
-    case get_target_os_type(target) do
-      {:win32, _} -> {"#{base_name}.#{suffix}", "#{base_name}.exe"}
-      {:unix, _} -> {base_name, base_name}
     end
   end
 
   defp throw_error(error_descr) do
     Mix.shell().error(Messages.message(error_descr))
     raise "Compilation error"
-  end
-
-  defp toml_data(path) do
-    if !File.dir?(path) do
-      throw_error({:nonexistent_crate_directory, path})
-    end
-
-    case File.read("#{path}/Cargo.toml") do
-      {:error, :enoent} ->
-        throw_error({:cargo_toml_not_found, path})
-
-      {:ok, text} ->
-        Toml.decode!(text)
-    end
   end
 
   defp priv_dir, do: "priv/native"

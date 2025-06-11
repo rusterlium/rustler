@@ -18,16 +18,15 @@ defmodule Rustler.Compiler.Config do
             external_resources: [],
             features: [],
             lib: true,
+            binaries: [],
             load_data: 0,
             load_data_fun: nil,
             load_from: nil,
             mode: :release,
             otp_app: nil,
             path: "",
-            priv_dir: "",
             skip_compilation?: false,
             target: nil,
-            target_dir: "",
             metadata: nil
 
   alias Rustler.Compiler.Config
@@ -37,11 +36,10 @@ defmodule Rustler.Compiler.Config do
 
     defaults = %Config{
       crate: crate,
-      load_from: {otp_app, "priv/native/lib#{crate}"},
       mode: :release,
       otp_app: otp_app,
       path: "native/#{crate}",
-      target_dir: Application.app_dir(otp_app, "native/#{crate}")
+      load_from: {otp_app, "priv/native/#{crate}"}
     }
 
     defaults
