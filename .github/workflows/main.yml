@@ -94,7 +94,6 @@ jobs:
           - { erlang: "26", elixir: "1.16" }
           - { erlang: "26", elixir: "1.15" }
           - { erlang: "25", elixir: "1.15" }
-          - { erlang: "24", elixir: "1.14" }
         rust:
           - stable
           - nightly
