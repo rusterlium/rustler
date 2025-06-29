@@ -20,3 +20,4 @@ format:
 
 lint:
     cargo clippy --all-targets --all-features
+    cd rustler_mix && mix credo --strict
