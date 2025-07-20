@@ -290,7 +290,7 @@ fn gen_unnamed_encoder(
 ) -> TokenStream {
     let len = fields.unnamed.len();
     let inners = (0..len)
-        .map(|i| Ident::new(&format!("inner{}", i), Span::call_site()))
+        .map(|i| Ident::new(&format!("inner{i}"), Span::call_site()))
         .collect::<Vec<_>>();
     quote! {
         #enum_name :: #variant_ident ( #(ref #inners),* ) => ::rustler::Encoder::encode(&(#atom_fn(), #(#inners),*), env),

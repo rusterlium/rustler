@@ -23,8 +23,7 @@ impl NifAttributes {
                 Ok(())
             } else {
                 Err(meta.error(format!(
-                    "The schedule option is expecting one of the values: {:?}",
-                    VALID_SCHEDULE_OPTIONS
+                    "The schedule option is expecting one of the values: {VALID_SCHEDULE_OPTIONS:?}"
                 )))
             }
         } else if meta.path.is_ident("name") {
@@ -166,7 +165,7 @@ fn extract_inputs(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
                     tokens.extend(decoder);
                 }
                 other => {
-                    panic!("unsupported input given: {:?}", other);
+                    panic!("unsupported input given: {other:?}");
                 }
             }
         } else {

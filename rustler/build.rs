@@ -34,17 +34,17 @@ enum OsFamily {
 
 fn write_ret(out: &mut String, ret: &str) {
     if !ret.is_empty() {
-        write!(out, " -> {}", ret).unwrap();
+        write!(out, " -> {ret}").unwrap();
     }
 }
 
 fn write_fn_type(out: &mut String, args: &str, ret: &str) {
-    write!(out, "extern \"C\" fn ({})", args).unwrap();
+    write!(out, "extern \"C\" fn ({args})").unwrap();
     write_ret(out, ret);
 }
 
 fn write_variadic_fn_type(out: &mut String, args: &str, ret: &str) {
-    write!(out, "extern \"C\" fn ({}, ...)", args).unwrap();
+    write!(out, "extern \"C\" fn ({args}, ...)").unwrap();
     write_ret(out, ret);
 }
 
@@ -61,17 +61,17 @@ impl ApiBuilder for CallbacksApiBuilder<'_> {
     }
 
     fn func(&mut self, ret: &str, name: &str, args: &str) {
-        write!(self.0, "    {}: Option<", name).unwrap();
+        write!(self.0, "    {name}: Option<").unwrap();
         write_fn_type(self.0, args, ret);
         writeln!(self.0, ">,").unwrap();
     }
     fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
-        write!(self.0, "    {}: Option<", name).unwrap();
+        write!(self.0, "    {name}: Option<").unwrap();
         write_variadic_fn_type(self.0, args, ret);
         writeln!(self.0, ">,").unwrap();
     }
     fn dummy(&mut self, name: &str) {
-        write!(self.0, "    {}: Option<", name).unwrap();
+        write!(self.0, "    {name}: Option<").unwrap();
         write_fn_type(self.0, "", "");
         writeln!(self.0, ">,").unwrap();
     }
@@ -91,43 +91,39 @@ impl ApiBuilder for ForwardersApiBuilder<'_> {
 
         writeln!(
             self.0,
-            "/// See [{}](http://www.erlang.org/doc/man/erl_nif.html#{}) in the Erlang docs.",
-            name, name
+            "/// See [{name}](http://www.erlang.org/doc/man/erl_nif.html#{name}) in the Erlang docs."
         )
         .unwrap();
         writeln!(self.0, "#[inline]").unwrap();
-        writeln!(self.0, "pub unsafe extern \"C\" fn {}({})", name, args).unwrap();
+        writeln!(self.0, "pub unsafe extern \"C\" fn {name}({args})").unwrap();
         write_ret(self.0, ret);
         writeln!(self.0, "{{").unwrap();
         writeln!(
             self.0,
-            "    (DYN_NIF_CALLBACKS.{}.unwrap_unchecked())({})",
-            name, args_names
+            "    (DYN_NIF_CALLBACKS.{name}.unwrap_unchecked())({args_names})"
         )
         .unwrap();
         writeln!(self.0, "}}\n").unwrap();
     }
     fn variadic_func(&mut self, ret: &str, name: &str, args: &str) {
-        writeln!(self.0, "#[macro_export] macro_rules! {} {{", name).unwrap();
+        writeln!(self.0, "#[macro_export] macro_rules! {name} {{").unwrap();
         writeln!(
             self.0,
-            "    ( $( $arg:expr ),* ) => {{ $crate::sys::get_{}()($($arg),*) }};",
-            name
+            "    ( $( $arg:expr ),* ) => {{ $crate::sys::get_{name}()($($arg),*) }};"
         )
         .unwrap();
         writeln!(
             self.0,
-            "    ( $( $arg:expr ),+, ) => {{ {}!($($arg),*) }};",
-            name
+            "    ( $( $arg:expr ),+, ) => {{ {name}!($($arg),*) }};"
         )
         .unwrap();
         writeln!(self.0, "}}\n").unwrap();
         writeln!(self.0, "pub use {name};\n").unwrap();
 
-        write!(self.0, "pub unsafe fn get_{}() -> ", name).unwrap();
+        write!(self.0, "pub unsafe fn get_{name}() -> ").unwrap();
         write_variadic_fn_type(self.0, args, ret);
         writeln!(self.0, " {{").unwrap();
-        writeln!(self.0, "    DYN_NIF_CALLBACKS.{}.unwrap_unchecked()", name).unwrap();
+        writeln!(self.0, "    DYN_NIF_CALLBACKS.{name}.unwrap_unchecked()").unwrap();
         writeln!(self.0, "}}\n").unwrap();
     }
     fn dummy(&mut self, _name: &str) {}
@@ -149,8 +145,7 @@ impl ApiBuilder for WriterBuilder<'_> {
     fn func(&mut self, _ret: &str, name: &str, _args: &str) {
         writeln!(
             self.0,
-            "        filler.write(&mut self.{}, \"{}\0\");",
-            name, name
+            "        filler.write(&mut self.{name}, \"{name}\0\");"
         )
         .unwrap();
     }
@@ -849,7 +844,7 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
 fn get_nif_version_from_features() -> (u32, u32) {
     for major in ((MIN_SUPPORTED_VERSION.0)..=(MAX_SUPPORTED_VERSION.0)).rev() {
         for minor in ((MIN_SUPPORTED_VERSION.1)..=(MAX_SUPPORTED_VERSION.1)).rev() {
-            if env::var(format!("CARGO_FEATURE_NIF_VERSION_{}_{}", major, minor)).is_ok() {
+            if env::var(format!("CARGO_FEATURE_NIF_VERSION_{major}_{minor}")).is_ok() {
                 return (major, minor);
             }
         }
@@ -876,8 +871,7 @@ fn main() {
     let target_pointer_width = match env::var("CARGO_CFG_TARGET_POINTER_WIDTH") {
        Ok(target_pointer_width) => target_pointer_width,
          Err(err) => panic!(
-            "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{:?}\n\nPlease report a bug.",
-            err
+            "An error occurred while determining the pointer width to compile `rustler_sys` for:\n\n{err:?}\n\nPlease report a bug."
         )
     };
 

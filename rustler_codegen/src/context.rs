@@ -132,7 +132,7 @@ impl<'a> Context<'a> {
         let ident_str = ident.to_string().to_snake_case();
         let ident_str = Self::remove_raw(&ident_str);
 
-        Ident::new(&format!("atom_{}", ident_str), Span::call_site())
+        Ident::new(&format!("atom_{ident_str}"), Span::call_site())
     }
 
     pub fn escape_ident_with_index(ident_str: &str, index: usize, infix: &str) -> Ident {

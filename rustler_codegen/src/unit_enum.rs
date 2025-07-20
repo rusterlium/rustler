@@ -27,7 +27,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
         .iter()
         .map(|variant| {
             let atom_str = variant.ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            let atom_fn = Ident::new(&format!("atom_{atom_str}"), Span::call_site());
             quote! {
                 #atom_fn = #atom_str,
             }
@@ -75,7 +75,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .map(|variant| {
             let variant_ident = &variant.ident;
             let atom_str = variant_ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            let atom_fn = Ident::new(&format!("atom_{atom_str}"), Span::call_site());
 
             quote! {
                 if value == #atom_fn() {
@@ -107,7 +107,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .map(|variant| {
             let variant_ident = &variant.ident;
             let atom_str = variant_ident.to_string().to_snake_case();
-            let atom_fn = Ident::new(&format!("atom_{}", atom_str), Span::call_site());
+            let atom_fn = Ident::new(&format!("atom_{atom_str}"), Span::call_site());
 
             quote! {
                 #enum_name :: #variant_ident => ::rustler::Encoder::encode(&#atom_fn(), env),

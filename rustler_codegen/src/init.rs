@@ -55,7 +55,7 @@ fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
     while <Token![,]>::parse(input).is_ok() {
         match syn::ExprAssign::parse(input) {
             Ok(expr) => vec.push(expr),
-            Err(err) => panic!("{} (i.e. `load = load`)", err),
+            Err(err) => panic!("{err} (i.e. `load = load`)"),
         }
     }
     vec
