@@ -136,25 +136,58 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             }
         };
 
+        let nif_init_name = {
+            let lib_name = std::env::var("CARGO_CRATE_NAME").unwrap();
+            format!("{lib_name}_nif_init")
+        };
+
+        let nif_init_name = Ident::new(&nif_init_name, Span::call_site());
+
+        let should_generate_primary_nif = std::env::var("RUSTLER_PRIMARY_NIF_INIT").is_ok()
+            || std::env::var("CARGO_PRIMARY_PACKAGE").is_ok();
+
+        let maybe_primary_nif_init = if should_generate_primary_nif {
+            quote! {
+                #[cfg(not(windows))]
+                #[no_mangle]
+                fn nif_init() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                    #nif_init_name()
+                }
+
+                #[cfg(windows)]
+                #[no_mangle]
+                fn nif_init(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                    #nif_init_name(callbacks)
+                }
+            }
+        } else {
+            quote!()
+        };
+
         quote! {
             #maybe_warning
 
-            #[cfg(unix)]
+            #[cfg(not(windows))]
             #[no_mangle]
-            extern "C" fn nif_init() -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
-                unsafe { rustler::codegen_runtime::internal_write_symbols() };
+            extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                unsafe {
+                    ::rustler::codegen_runtime::internal_write_symbols()
+                }
+
                 #inner
             }
 
             #[cfg(windows)]
             #[no_mangle]
-            extern "C" fn nif_init(callbacks: *mut rustler::codegen_runtime::DynNifCallbacks) -> *const rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
-                    rustler::codegen_runtime::internal_set_symbols(*callbacks);
+                    ::rustler::codegen_runtime::internal_set_symbols(*callbacks);
                 }
 
                 #inner
             }
+
+            #maybe_primary_nif_init
         }
     }
 }
