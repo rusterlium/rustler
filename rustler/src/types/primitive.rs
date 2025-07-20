@@ -22,6 +22,7 @@ macro_rules! erl_get {
 macro_rules! impl_number_encoder {
     ($dec_type:ty, $nif_type:ty, $encode_fun:ident) => {
         impl Encoder for $dec_type {
+            #[inline]
             fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
                 erl_make!(*self, env, $encode_fun, $nif_type)
             }
@@ -32,6 +33,7 @@ macro_rules! impl_number_encoder {
 macro_rules! impl_number_decoder {
     ($dec_type:ty, $nif_type:ty, $decode_fun:ident) => {
         impl<'a> Decoder<'a> for $dec_type {
+            #[inline]
             fn decode(term: Term) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();

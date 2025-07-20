@@ -5,6 +5,7 @@ use crate::wrapper::map;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::ops::RangeInclusive;
 
+#[inline]
 pub fn map_new(env: Env) -> Term {
     unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
 }
@@ -17,6 +18,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// %{}
     /// ```
+    #[inline]
     pub fn map_new(env: Env<'a>) -> Term<'a> {
         map_new(env)
     }
@@ -29,6 +31,7 @@ impl<'a> Term<'a> {
     /// values = [1, 2]
     /// Enum.zip(keys, values) |> Map.new()
     /// ```
+    #[inline]
     pub fn map_from_arrays(
         env: Env<'a>,
         keys: &[impl Encoder],
@@ -80,6 +83,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.new([{"foo", 1}, {"bar", 2}])
     /// ```
+    #[inline]
     pub fn map_from_pairs(
         env: Env<'a>,
         pairs: &[(impl Encoder, impl Encoder)],
@@ -104,6 +108,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.get(self_term, key)
     /// ```
+    #[inline]
     pub fn map_get(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
         match unsafe {
@@ -122,6 +127,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// map_size(self_term)
     /// ```
+    #[inline]
     pub fn map_size(self) -> NifResult<usize> {
         let env = self.get_env();
         unsafe { map::get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(Error::BadArg) }
@@ -136,6 +142,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.put(self_term, key, value)
     /// ```
+    #[inline]
     pub fn map_put(self, key: impl Encoder, value: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
@@ -161,6 +168,7 @@ impl<'a> Term<'a> {
     /// ```elixir
     /// Map.delete(self_term, key)
     /// ```
+    #[inline]
     pub fn map_remove(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
@@ -176,6 +184,7 @@ impl<'a> Term<'a> {
     ///
     /// Returns Err(Error::BadArg) if the term is not a map of if key
     /// doesn't exist.
+    #[inline]
     pub fn map_update(self, key: impl Encoder, new_value: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 

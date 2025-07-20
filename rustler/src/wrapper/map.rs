@@ -122,6 +122,7 @@ pub unsafe fn map_iterator_get_pair(
     }
 }
 
+#[inline]
 pub unsafe fn map_iterator_next(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_next(env, iter);
 }
@@ -130,6 +131,7 @@ pub unsafe fn map_iterator_prev(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_prev(env, iter);
 }
 
+#[inline]
 pub unsafe fn make_map_from_arrays(
     env: NIF_ENV,
     keys: &[NIF_TERM],

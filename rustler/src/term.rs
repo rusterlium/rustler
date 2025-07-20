@@ -29,15 +29,18 @@ impl<'a> Term<'a> {
     /// # Unsafe
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
     /// unless `inner` is an atom term.
+    #[inline]
     pub unsafe fn new(env: Env<'a>, inner: NIF_TERM) -> Self {
         Term { term: inner, env }
     }
     /// This extracts the raw term pointer. It is usually used in order to obtain a type that can
     /// be passed to calls into the erlang vm.
+    #[inline]
     pub fn as_c_arg(&self) -> NIF_TERM {
         self.term
     }
 
+    #[inline]
     pub fn get_env(self) -> Env<'a> {
         self.env
     }
@@ -46,6 +49,7 @@ impl<'a> Term<'a> {
     ///
     /// If the term is already is in the provided env, it will be directly returned. Otherwise
     /// the term will be copied over.
+    #[inline]
     pub fn in_env<'b>(&self, env: Env<'b>) -> Term<'b> {
         if self.get_env() == env {
             // It's safe to create a new Term<'b> without copying because we
@@ -81,6 +85,7 @@ impl<'a> Term<'a> {
     /// is needed.
     ///
     /// [`decode`]: #method.decode
+    #[inline]
     pub fn decode_as_binary(self) -> NifResult<Binary<'a>> {
         if self.is_binary() {
             return Binary::from_term(self);
@@ -88,6 +93,7 @@ impl<'a> Term<'a> {
         Binary::from_iolist(self)
     }
 
+    #[inline]
     pub fn to_binary(self) -> OwnedBinary {
         let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
         unsafe { OwnedBinary::from_raw(raw_binary) }
