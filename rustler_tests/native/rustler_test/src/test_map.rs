@@ -1,6 +1,4 @@
-use rustler::types::map::MapIterator;
-use rustler::types::tuple::make_tuple;
-use rustler::{Atom, Encoder, Env, Error, ListIterator, NifResult, Term};
+use rustler::{Encoder, Env, Error, ListIterator, Map, MapIterator, NifResult, Term, Tuple};
 
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
@@ -11,31 +9,31 @@ pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
 }
 
 #[rustler::nif]
-pub fn map_entries<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+pub fn map_entries<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Tuple<'a>>> {
     let mut vec = vec![];
     for (key, value) in iter {
         let key_string = key.decode::<String>()?;
         vec.push((key_string, value));
     }
 
-    let erlang_pairs: Vec<Term> = vec
+    let erlang_pairs: Vec<_> = vec
         .into_iter()
-        .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))
+        .map(|(key, value)| env.make_tuple(&[key.encode(env), value]))
         .collect();
     Ok(erlang_pairs)
 }
 
 #[rustler::nif]
-pub fn map_entries_reversed<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Term<'a>>> {
+pub fn map_entries_reversed<'a>(env: Env<'a>, iter: MapIterator<'a>) -> NifResult<Vec<Tuple<'a>>> {
     let mut vec = vec![];
     for (key, value) in iter.rev() {
         let key_string = key.decode::<String>()?;
         vec.push((key_string, value));
     }
 
-    let erlang_pairs: Vec<Term> = vec
+    let erlang_pairs: Vec<_> = vec
         .into_iter()
-        .map(|(key, value)| make_tuple(env, &[key.encode(env), value]))
+        .map(|(key, value)| env.make_tuple(&[key.encode(env), value]))
         .collect();
     Ok(erlang_pairs)
 }
@@ -45,15 +43,15 @@ pub fn map_from_arrays<'a>(
     env: Env<'a>,
     keys: Vec<Term<'a>>,
     values: Vec<Term<'a>>,
-) -> NifResult<Term<'a>> {
-    Term::map_from_arrays(env, &keys, &values)
+) -> NifResult<Map<'a>> {
+    env.map_from_arrays(&keys, &values)
 }
 
 #[rustler::nif]
-pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Term<'a>> {
+pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Map<'a>> {
     let res: Result<Vec<(Term, Term)>, Error> = pairs.map(|x| x.decode()).collect();
 
-    res.and_then(|v| Term::map_from_pairs(env, &v))
+    res.and_then(|v| env.map_from_pairs(&v))
 }
 
 #[rustler::nif]
