@@ -2,8 +2,8 @@
 name = "cargo-rustler"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.77"
 
-metadata = { msrv = "1.77" }
 
 [dependencies]
 cargo_metadata = "0.21.0"
