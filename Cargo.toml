@@ -11,6 +11,7 @@ members = [
   "rustler_tests/native/rustler_compile_tests",
   "rustler_tests/native/resource_dyncall",
   "rustler_benchmarks/native/benchmark",
+  "cargo-rustler",
 ]
 default-members = [
   "rustler",
