@@ -96,7 +96,7 @@ fn string_to_erlang_atom(input: &str) -> String {
     }
 
     if needs_quotes {
-        format!("'{}'", output).to_string()
+        format!("'{output}'").to_string()
     } else {
         output
     }
