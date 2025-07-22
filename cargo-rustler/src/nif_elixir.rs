@@ -51,9 +51,9 @@ fn string_to_elixir_atom(s: &str, func: bool) -> String {
             }
 
             if needs_quotes {
-                format!(":\"{}\"", output).to_string()
+                format!(":\"{output}\"").to_string()
             } else if !func {
-                format!(":{}", output).to_string()
+                format!(":{output}").to_string()
             } else {
                 output
             }

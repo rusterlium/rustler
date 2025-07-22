@@ -46,7 +46,7 @@ pub fn build(args: &BuildArgs) -> Vec<PathBuf> {
     let output = command.wait().expect("Couldn't get cargo's exit status");
 
     if !output.success() {
-        panic!("Cargo build failed with status: {}", output);
+        panic!("Cargo build failed with status: {output}");
     }
 
     artifacts
@@ -65,10 +65,10 @@ pub fn build(args: &BuildArgs) -> Vec<PathBuf> {
             }
 
             // Stripping the "lib" prefix simplifies the load_nif call as it can be the same on all platforms
-            let output_name = format!("{}.{}", name, ext);
+            let output_name = format!("{name}.{ext}");
             let destination = out_dir.join(&output_name);
 
-            println!("Copying artifact from {:?} to {:?}", filename, destination,);
+            println!("Copying artifact from {filename:?} to {destination:?}",);
 
             // Copy the artifact to the output directory
             fs::copy(filename, &destination).expect("Failed to copy artifact");
