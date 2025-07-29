@@ -2,12 +2,14 @@ use super::binary::{Binary, OwnedBinary};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 impl<'a> Decoder<'a> for String {
+    #[inline]
     fn decode(term: Term<'a>) -> NifResult<Self> {
         let string: &str = Decoder::decode(term)?;
         Ok(string.to_string())
     }
 }
 impl<'a> Decoder<'a> for &'a str {
+    #[inline]
     fn decode(term: Term<'a>) -> NifResult<Self> {
         let binary = Binary::from_term(term)?;
         match ::std::str::from_utf8(binary.as_slice()) {
