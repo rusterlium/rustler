@@ -28,7 +28,7 @@ pub fn parse_bool(term: &Term) -> Result<bool, Error> {
     }
 }
 
-pub fn parse_binary(term: Term) -> Result<&[u8], Error> {
+pub fn parse_binary<'a>(term: Term<'a>) -> Result<&'a [u8], Error> {
     validate_binary(&term)?;
     let binary: Binary = term.decode().or(Err(Error::ExpectedBinary))?;
     Ok(binary.as_slice())
@@ -42,7 +42,7 @@ pub fn parse_number<'a, T: Decoder<'a>>(term: &Term<'a>) -> Result<T, Error> {
     term.decode().or(Err(Error::ExpectedNumber))
 }
 
-pub fn parse_str(term: Term) -> Result<&str, Error> {
+pub fn parse_str<'a>(term: Term<'a>) -> Result<&'a str, Error> {
     let bytes = parse_binary(term)?;
     std::str::from_utf8(bytes).or(Err(Error::ExpectedStringable))
 }
