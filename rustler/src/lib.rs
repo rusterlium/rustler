@@ -30,6 +30,7 @@ pub mod wrapper;
 pub mod codegen_runtime;
 
 mod alloc;
+pub use crate::alloc::EnifAllocator;
 
 #[macro_use]
 pub mod types;

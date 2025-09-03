@@ -2,11 +2,6 @@ pub(crate) trait DynNifFiller {
     fn write<T: Copy>(&self, field: &mut Option<T>, name: &str);
 }
 
-pub struct NullNifFiller;
-impl DynNifFiller for NullNifFiller {
-    fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
-}
-
 #[cfg(not(target_os = "windows"))]
 mod internal {
     use std::ffi::OsStr;
@@ -42,6 +37,11 @@ mod internal {
 #[cfg(target_os = "windows")]
 mod internal {
     use super::*;
+
+    pub struct NullNifFiller;
+    impl DynNifFiller for NullNifFiller {
+        fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
+    }
 
     pub fn new() -> impl DynNifFiller {
         NullNifFiller

@@ -48,6 +48,7 @@ pub struct SendError;
 
 impl<'a> Env<'a> {
     #[doc(hidden)]
+    #[inline]
     pub(crate) unsafe fn new_internal<T>(
         _lifetime_marker: &'a T,
         env: NIF_ENV,
@@ -69,11 +70,13 @@ impl<'a> Env<'a> {
     ///
     /// # Unsafe
     /// Don't create multiple `Env`s with the same lifetime.
+    #[inline]
     pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
         Self::new_internal(_lifetime_marker, env, EnvKind::ProcessBound)
     }
 
     #[doc(hidden)]
+    #[inline]
     pub unsafe fn new_init_env<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
         Self::new_internal(_lifetime_marker, env, EnvKind::Init)
     }
@@ -83,6 +86,7 @@ impl<'a> Env<'a> {
     }
 
     /// Convenience method for building a tuple `{error, Reason}`.
+    #[inline]
     pub fn error_tuple(self, reason: impl Encoder) -> Term<'a> {
         let error = crate::types::atom::error().to_term(self);
         (error, reason).encode(self)
@@ -101,6 +105,7 @@ impl<'a> Env<'a> {
     ///
     /// The result indicates whether the send was successful, see also
     /// [enif\_send](https://www.erlang.org/doc/man/erl_nif.html#enif_send).
+    #[inline]
     pub fn send(self, pid: &LocalPid, message: impl Encoder) -> Result<(), SendError> {
         let env = if is_scheduler_thread() {
             if self.kind == EnvKind::ProcessIndependent {

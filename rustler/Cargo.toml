@@ -13,7 +13,6 @@ rust-version = "1.70"
 big_integer = ["dep:num-bigint"]
 default = ["nif_version_2_15"]
 derive = []
-alternative_nif_init_name = []
 allocator = []
 nif_version_2_14 = []
 nif_version_2_15 = ["nif_version_2_14"]
