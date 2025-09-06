@@ -125,6 +125,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 vm_variant: b"beam.vanilla\0".as_ptr() as *const rustler::codegen_runtime::c_char,
                 options: 0,
                 sizeof_ErlNifResourceTypeInit: rustler::codegen_runtime::get_nif_resource_type_init_size(),
+                min_erts: rustler::codegen_runtime::min_erts().as_ptr() as *const rustler::codegen_runtime::c_char,
             };
 
             unsafe {
