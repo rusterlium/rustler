@@ -85,6 +85,7 @@ pub struct ErlNifEntry {
     pub vm_variant: *const c_char,
     pub options: c_uint,                      // added in 2.7
     pub sizeof_ErlNifResourceTypeInit: usize, // added in 2.12
+    pub min_erts: *const c_char,              // added in 2.14
 }
 
 pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
