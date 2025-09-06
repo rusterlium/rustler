@@ -236,6 +236,32 @@ impl Drop for OwnedBinary {
 unsafe impl Send for OwnedBinary {}
 unsafe impl Sync for OwnedBinary {}
 
+impl FromIterator<u8> for OwnedBinary {
+    fn from_iter<T: IntoIterator<Item = u8>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        let (lower, upper) = iter.size_hint();
+        let mut bin = OwnedBinary::new(upper.unwrap_or(lower)).expect("Allocation failed");
+        let mut i = 0;
+        loop {
+            match iter.next() {
+                None => {
+                    if bin.len() != i {
+                        bin.realloc_or_copy(i);
+                    }
+                    return bin;
+                }
+                Some(x) => {
+                    if bin.len() <= i {
+                        bin.realloc_or_copy(i + i / 2 + 1);
+                    }
+                    bin.as_mut_slice()[i] = x;
+                    i += 1;
+                }
+            }
+        }
+    }
+}
+
 /// An immutable smart-pointer to an Erlang binary.
 ///
 /// See [module-level doc](index.html) for more information.
