@@ -18,6 +18,24 @@ versions.
 
 ### Removed
 
+## 0.37.0 - 2025-09-09
+
+### Added
+
+- Add `staticlib` feature to compile without `nif_init` and add `{pkg}_nif_init`
+  symbol (#688)
+- Add `IntoIterator` to `OwnedBinary` (#702, thanks aDifferentJT)
+
+### Fixed
+
+- Set `ErlNifEntry.min_erts` to a placeholder value (#703)
+
+### Changed
+
+- Refactor build logic to remove TOML dependency (#691)
+- Use `inline` on commonly used functions (#475, thanks @joshuataylor)
+- Make `EnifAllocator` available even if the `allocator` feature is not enabled
+
 ## 0.36.2 - 2025-06-09
 
 ### Added
