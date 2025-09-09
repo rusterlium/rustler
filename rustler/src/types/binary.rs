@@ -501,6 +501,14 @@ impl<'a> NewBinary<'a> {
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         unsafe { ::std::slice::from_raw_parts_mut(self.buf, self.size) }
     }
+
+    pub fn from_iter(env: Env<'a>, iter: impl ExactSizeIterator<Item = u8>) -> Self {
+        let mut bin = Self::new(env, iter.len());
+        for (src, dst) in ::std::iter::zip(iter, bin.iter_mut()) {
+            *dst = src;
+        }
+        bin
+    }
 }
 
 impl<'a> From<NewBinary<'a>> for Binary<'a> {
