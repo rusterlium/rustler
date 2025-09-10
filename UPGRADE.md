@@ -2,23 +2,6 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
-## 0.36 -> 0.37
-
-`rustler_mix` will now require a workspace with the same root as the Elixir
-package with all relevant crates included as workspace members. If the package
-previously had a crate at `native/my_crate`, a `Cargo.toml` with the following
-content should be added at the root:
-```toml
-[workspace]
-resolver = "3"
-members = ["native/my_crate"]
-```
-
-The `/target` directory should also be added to the root's `.gitignore` file.
-
-More information on workspaces can be found in the Rust documentation at
-https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html.
-
 ## 0.34 -> 0.35
 
 `rustler_sys` as a standalone library has been replaced by an embedded

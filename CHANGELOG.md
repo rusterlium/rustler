@@ -8,15 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
-## unreleased
-
-### Added
+## 0.37.1 - 2025-09-10
 
 ### Fixed
 
-### Changed
-
-### Removed
+- Fix required Elixir version (>= 1.15) in `rustler_mix`
+- Fix missing `chdir` in `rustler_mix` when compiling in a subdirectory (#706)
 
 ## 0.37.0 - 2025-09-09
 
