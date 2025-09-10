@@ -52,7 +52,14 @@ defmodule Rustler.Compiler do
       end
 
     compile_result =
-      System.cmd(cmd, args, env: config.env, into: %Rustler.BuildResults{}, lines: 1024)
+      System.cmd(
+        cmd,
+        args,
+        cd: config.path,
+        env: config.env,
+        into: %Rustler.BuildResults{},
+        lines: 1024
+      )
 
     artifacts =
       case compile_result do
