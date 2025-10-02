@@ -6,11 +6,13 @@ mod nif_elixir;
 mod nif_erlang;
 mod nif_types;
 mod rust_build;
+mod download;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use rust_build::BuildArgs;
+use download::DownloadArgs;
 
 use crate::nif::NifLibrary;
 
@@ -39,6 +41,8 @@ enum Commands {
     },
 
     Build(BuildArgs),
+
+    Download(DownloadArgs),
 }
 
 fn main() {
@@ -50,7 +54,7 @@ fn main() {
 
             match format {
                 OutputFormat::Bare => {
-                    println!("{}", lib.name);
+                    println!("{}", lib.module_name);
                     for nif in lib.nifs {
                         println!("  {}/{}", nif.name, nif.arity);
                     }
@@ -73,10 +77,12 @@ fn main() {
                 let lib = NifLibrary::load(&path).unwrap();
                 let erlang = nif_erlang::LibAsErlang(lib);
                 let module = format!("{erlang}");
-                let module_name = erlang.0.name;
+                let module_name = erlang.0.module_name;
 
                 erl_build::build(&module_name, &module, &args.out);
             }
+        }
+        Commands::Download(args) => {
         }
     }
 }

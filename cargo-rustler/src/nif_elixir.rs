@@ -8,7 +8,7 @@ impl fmt::Display for LibAsElixir {
         writeln!(
             f,
             "defmodule {} do",
-            string_to_elixir_atom(&self.0.name, false)
+            string_to_elixir_atom(&self.0.module_name, false)
         )?;
 
         for nif in &self.0.nifs {

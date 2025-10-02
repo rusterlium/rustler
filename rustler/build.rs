@@ -145,7 +145,7 @@ impl ApiBuilder for WriterBuilder<'_> {
     fn func(&mut self, _ret: &str, name: &str, _args: &str) {
         writeln!(
             self.0,
-            "        filler.write(&mut self.{name}, \"{name}\0\");"
+            "        filler.write(&mut self.{name}, b\"{name}\\0\");"
         )
         .unwrap();
     }

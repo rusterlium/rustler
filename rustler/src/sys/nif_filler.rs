@@ -1,10 +1,10 @@
 pub(crate) trait DynNifFiller {
-    fn write<T: Copy>(&self, field: &mut Option<T>, name: &str);
+    fn write<T: Copy>(&self, field: &mut Option<T>, name: &[u8]);
 }
 
 pub struct NullNifFiller;
 impl DynNifFiller for NullNifFiller {
-    fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
+    fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &[u8]) {}
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -28,8 +28,8 @@ mod internal {
     }
 
     impl DynNifFiller for DlsymNifFiller {
-        fn write<T: Copy>(&self, field: &mut Option<T>, name: &str) {
-            let symbol = unsafe { self.lib.get::<T>(name.as_bytes()).unwrap() };
+        fn write<T: Copy>(&self, field: &mut Option<T>, name: &[u8]) {
+            let symbol = unsafe { self.lib.get::<T>(name).unwrap() };
             *field = Some(*symbol);
         }
     }

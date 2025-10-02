@@ -7,7 +7,7 @@ impl fmt::Display for LibAsErlang {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let nif_lib = &self.0;
 
-        let module_name = string_to_erlang_atom(&nif_lib.name);
+        let module_name = string_to_erlang_atom(&nif_lib.module_name);
 
         let nifs: Vec<_> = nif_lib
             .nifs
@@ -16,41 +16,69 @@ impl fmt::Display for LibAsErlang {
             .map(|(n, nif)| (n, string_to_erlang_atom(&nif.name), nif.arity))
             .collect();
 
-        let nif_name = nif_lib
-            .path
-            .with_extension("")
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
+        let optional_nifs: Vec<_> = nif_lib
+            .optional_nifs
+            .iter()
+            .enumerate()
+            .map(|(n, nif)| (n, string_to_erlang_atom(&nif.name), nif.arity))
+            .collect();
+
+        let nif_name = &nif_lib.lib_name;
 
         writeln!(f, "-module({module_name}).\n")?;
+
+        writeln!(f, "-nif_lib_name(\"{nif_name}\").")?;
+        writeln!(f, "-nif_load_info(0).")?;
+        writeln!(f, "-nif_load_hook(undefined).")?;
+
+        write!(f, "{}", include_str!("../snippets/on_load.erl"))?;
+
         writeln!(f, "-export([")?;
         let count = nifs.len();
-        for (n, name, arity) in &nifs {
+        if count > 0 {
+            for (n, name, arity) in &nifs {
+                write!(f, "    {name}/{arity}")?;
+                if *n+1 != count {
+                    write!(f, ",")?;
+                }
+                writeln!(f)?;
+            }
+            write!(f, "]).\n\n")?;
+        }
+
+        let count = optional_nifs.len();
+        for (n, name, arity) in &optional_nifs {
             write!(f, "    {name}/{arity}")?;
-            if *n != count - 1 {
+            if *n +1 != count {
                 write!(f, ",")?;
             }
             writeln!(f)?;
         }
         write!(f, "]).\n\n")?;
 
+        let count = nifs.len();
         writeln!(f, "-nifs([")?;
         for (n, name, arity) in &nifs {
             write!(f, "    {name}/{arity}")?;
-            if *n != count - 1 {
+            if *n + 1!= count {
                 write!(f, ",")?;
             }
             writeln!(f)?;
         }
         write!(f, "]).\n\n")?;
 
-        writeln!(f, "-define(NIF_LOAD_INFO, 0).")?;
-        writeln!(f, "-define(NIF_NAME, \"{}\").", &nif_name)?;
-        write!(f, "{}", include_str!("../snippets/on_load.erl"))?;
-
         for (_, name, arity) in &nifs {
+            write!(f, "{name}(")?;
+            for i in 0..*arity {
+                if i > 0 {
+                    write!(f, ", ")?;
+                }
+                write!(f, "_")?;
+            }
+            write!(f, ") ->\n    erlang:nif_error(not_loaded).\n\n")?;
+        }
+
+        for (_, name, arity) in &optional_nifs {
             write!(f, "{name}(")?;
             for i in 0..*arity {
                 if i > 0 {

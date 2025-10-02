@@ -27,7 +27,7 @@ pub fn build(module_name: &str, module: &str, output: &Path) {
         .expect("Failed to execute erlc");
 
     if !command.status.success() {
-        let stderr = String::from_utf8_lossy(&command.stdout);
+        let stderr = String::from_utf8_lossy(&command.stderr);
         panic!(
             "Erlang compilation failed: {}",
             stderr.trim_end_matches('\n')

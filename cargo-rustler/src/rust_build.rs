@@ -6,6 +6,8 @@ use std::process::{Command, Stdio};
 use cargo_metadata::Message;
 use clap::Args;
 
+// TODO: Support cross as well
+
 #[derive(Args)]
 pub struct BuildArgs {
     #[arg(default_value = ".")]
@@ -13,22 +15,38 @@ pub struct BuildArgs {
 
     #[arg(default_value = "out")]
     pub out: PathBuf,
+
+    #[arg(long)]
+    pub target: Option<String>,
+
+    #[arg(long, default_value = "false")]
+    pub debug: bool,
 }
 
 pub fn build(args: &BuildArgs) -> Vec<PathBuf> {
     let path = args.path.clone();
 
     // Run `cargo build` in the specified directory
-    let mut command = Command::new("cargo")
+    let mut command = Command::new("cargo");
+
+    command
         .arg("build")
         .arg("--release")
         .arg("--message-format=json")
         .current_dir(&path)
-        .stdout(Stdio::piped())
+        .stdout(Stdio::piped());
+
+    // if args.debug {
+    //     command.arg("--debug")
+    // } else {
+    //     command.arg("--release")
+    // };
+
+    let mut proc = command
         .spawn()
         .expect("Failed to execute cargo build");
 
-    let reader = BufReader::new(command.stdout.take().unwrap());
+    let reader = BufReader::new(proc.stdout.take().unwrap());
 
     let mut artifacts = vec![];
 
@@ -41,9 +59,9 @@ pub fn build(args: &BuildArgs) -> Vec<PathBuf> {
         }
     }
 
-    dbg!(&artifacts);
+    // dbg!(&artifacts);
 
-    let output = command.wait().expect("Couldn't get cargo's exit status");
+    let output = proc.wait().expect("Couldn't get cargo's exit status");
 
     if !output.success() {
         panic!("Cargo build failed with status: {output}");
