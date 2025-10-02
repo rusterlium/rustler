@@ -1,7 +1,7 @@
 use crate::nif_types::ErlNifEntry;
 use libloading::{Library, Symbol};
 use std::ffi::CStr;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub struct Nif {
     pub name: String,
@@ -10,16 +10,21 @@ pub struct Nif {
 }
 
 pub struct NifLibrary {
-    pub path: PathBuf,
-    pub name: String,
+    /// Name of the dynamic library (without extension)
+    pub lib_name: String,
+    /// Name of the BEAM module
+    pub module_name: String,
+    /// The NIFs implemented by this library
     pub nifs: Vec<Nif>,
+    /// Optional NIFs, will not be listed in -nifs() but still be exported
+    pub optional_nifs: Vec<Nif>,
 }
 
 #[cfg(unix)]
 unsafe fn maybe_call_nif_init(
     lib: &Library,
 ) -> Result<*const ErlNifEntry, Box<dyn std::error::Error>> {
-    let func: Symbol<unsafe extern "C" fn() -> *const ErlNifEntry> = lib.get(b"nif_init")?;
+    let func: Symbol<unsafe extern "C" fn() -> *const ErlNifEntry> = lib.get(b"nif_init\0")?;
 
     Ok(func())
 }
@@ -48,7 +53,7 @@ impl NifLibrary {
             let lib = Library::new(path)?;
             let entry = maybe_call_nif_init(&lib)?;
 
-            let name = CStr::from_ptr((*entry).name).to_str()?.to_string();
+            let module_name = CStr::from_ptr((*entry).name).to_str()?.to_string();
             let nif_array =
                 std::slice::from_raw_parts((*entry).funcs, (*entry).num_of_funcs as usize);
 
@@ -65,10 +70,19 @@ impl NifLibrary {
 
             nifs.sort_by_key(|x| x.name.clone());
 
+            let lib_name = path
+                .with_extension("")
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_owned();
+
             Ok(NifLibrary {
-                path: path.to_path_buf(),
-                name,
+                lib_name,
+                module_name,
                 nifs,
+                optional_nifs: vec![],
             })
         }
     }

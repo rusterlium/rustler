@@ -10,10 +10,31 @@ on_load() ->
                     error(nif_module_not_found);
                 BeamPath ->
                     AbsDir = filename:dirname(filename:absname(BeamPath)), 
-                    filename:flatten(filename:join([AbsDir, "..", "priv"]))
+                    filename:flatten(filename:join([AbsDir, <<"..">>, <<"priv">>]))
             end
     end,
 
-    Filename = filename:join([PrivDir, "native", ?NIF_NAME]),
-    erlang:load_nif(Filename, ?NIF_LOAD_INFO).
+    Attributes = ?MODULE:module_info(attributes),
 
+    Filename =
+        case proplists:get_value(nif_lib_name, Attributes) of
+            undefined ->
+                error({missing_attribute, nif_lib_name});
+            NifLibName ->
+                filename:join([PrivDir, <<"native">>, NifLibName])
+        end,
+
+    case proplists:get_value(nif_load_hook, Attributes) of
+        undefined ->
+            ok;
+        {Mod, FuncName} ->
+            case erlang:function_exported(Mod, FuncName, 2) of
+                true ->
+                    Mod:FuncName(?MODULE, Filename);
+                false ->
+                    error({nif_hook_not_defined, Mod, FuncName})
+            end
+    end,
+
+    LoadInfo = proplists:get_value(nif_load_info, Attributes, 0),
+    erlang:load_nif(Filename, LoadInfo).
