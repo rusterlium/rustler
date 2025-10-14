@@ -1,6 +1,6 @@
 use crate::serde::{atoms, error::Error, util};
 use crate::{
-    types::{ListIterator, MapIterator},
+    types::{Encoder, ListIterator, MapIterator},
     Term, TermType,
 };
 use serde::{
@@ -325,12 +325,22 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
     where
         V: Visitor<'de>,
     {
-        if !(self.term.is_list() | self.term.is_empty_list()) {
+        if self.term.is_list() | self.term.is_empty_list() {
+            let iter: ListIterator = self.term.decode().or(Err(Error::ExpectedList))?;
+            visitor.visit_seq(SequenceDeserializer::new(iter))
+        } else if self.term.is_binary() {
+            let binary = self
+                .term
+                .decode_as_binary()
+                .or(Err(Error::ExpectedBinary))?;
+            let iter = binary
+                .as_slice()
+                .iter()
+                .map(|x| x.encode(self.term.get_env()));
+            visitor.visit_seq(SequenceDeserializer::new(iter))
+        } else {
             return Err(Error::ExpectedList);
         }
-
-        let iter: ListIterator = self.term.decode().or(Err(Error::ExpectedList))?;
-        visitor.visit_seq(SequenceDeserializer::new(iter))
     }
 
     #[inline]
