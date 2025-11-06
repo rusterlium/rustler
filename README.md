@@ -57,7 +57,7 @@ rustler::init!("Elixir.Math");
 
 #### Minimal Supported Rust Version (MSRV)
 
-Rustler currently has a minimal supported Rust version (MSRV) of 1.70. This
+Rustler currently has a minimal supported Rust version (MSRV) of 1.91. This
 is the configured version in `.clippy.toml`.
 
 #### Supported OTP and Elixir Versions
