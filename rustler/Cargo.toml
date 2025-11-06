@@ -7,7 +7,7 @@ authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 readme = "../README.md"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.91"
 
 [features]
 big_integer = ["dep:num-bigint"]
