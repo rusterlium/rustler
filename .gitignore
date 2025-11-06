@@ -12,6 +12,9 @@ Session.vim
 /.idea
 /rustler.iml
 
+# LSP
+.expert/
+
 ### Rust ###
 # Compiled files
 *.o
