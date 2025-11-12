@@ -40,6 +40,11 @@ defmodule RustlerTest do
   def compare_local_pids(_, _), do: err()
   def are_equal_local_pids(_, _), do: err()
 
+  def async_add(_, _), do: err()
+  def async_sleep_and_return(_, _), do: err()
+  def async_tuple_multiply(_), do: err()
+  def async_with_progress(_), do: err()
+
   def term_debug(_), do: err()
 
   def term_debug_and_reparse(term) do

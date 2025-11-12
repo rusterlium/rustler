@@ -28,7 +28,7 @@ pub mod tuple;
 
 #[doc(hidden)]
 pub mod local_pid;
-pub use self::local_pid::LocalPid;
+pub use self::local_pid::{CallerPid, LocalPid};
 
 #[doc(hidden)]
 pub mod reference;
