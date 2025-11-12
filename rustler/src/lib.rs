@@ -83,4 +83,7 @@ pub mod serde;
 #[cfg(feature = "serde")]
 pub use crate::serde::SerdeTerm;
 
+#[cfg(feature = "tokio_rt")]
+pub mod tokio;
+
 pub mod sys;
