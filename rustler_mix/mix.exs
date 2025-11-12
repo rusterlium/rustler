@@ -26,6 +26,7 @@ defmodule Rustler.Mixfile do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, "~> 1.0", only: :dev, runtime: false},
+      {:makeup_rust, ">= 0.0.0", only: :dev, runtime: false},
       {:jason, "~> 1.0", runtime: false}
     ]
   end
@@ -46,11 +47,13 @@ defmodule Rustler.Mixfile do
   defp docs do
     [
       extras: [
+        "README.md",
         "../CHANGELOG.md",
         "../UPGRADE.md",
-        {:"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
-        {:"../LICENSE-MIT", [title: "License (MIT)"]},
-        "README.md"
+        {"../LICENSE-APACHE", [title: "License (Apache-2.0)"]},
+        {"../LICENSE-MIT", [title: "License (MIT)"]},
+        {"../doc/rust-api.md", [title: "Rust API"]},
+        {"../doc/rust-codegen.md", [title: "Rust Code Generation"]},
       ],
       main: "readme",
       homepage_url: @source_url,
