@@ -44,6 +44,11 @@ defmodule RustlerTest do
   def async_sleep_and_return(_, _), do: err()
   def async_tuple_multiply(_), do: err()
   def async_with_progress(_), do: err()
+  def async_spawned_work(_), do: err()
+  def async_channel_echo(), do: err()
+  def channel_send_string(_, _), do: err()
+  def stateful_worker(), do: err()
+  def worker_send_command(_, _), do: err()
 
   def term_debug(_), do: err()
 
