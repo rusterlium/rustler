@@ -53,13 +53,21 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
     }
 
     if is_async {
-        generate_async_nif(erl_func_name, name, flags, arity, function, inputs.clone())
+        generate_task(
+            erl_func_name,
+            name,
+            flags,
+            arity,
+            function,
+            inputs.clone(),
+            &sig.output,
+        )
     } else {
-        generate_sync_nif(erl_func_name, name, flags, arity, function, inputs.clone())
+        generate_nif(erl_func_name, name, flags, arity, function, inputs.clone())
     }
 }
 
-fn generate_sync_nif(
+fn generate_nif(
     erl_func_name: String,
     name: &syn::Ident,
     flags: TokenStream,
@@ -115,16 +123,53 @@ fn generate_sync_nif(
     }
 }
 
-fn generate_async_nif(
+fn generate_task(
     erl_func_name: String,
     name: &syn::Ident,
     flags: TokenStream,
     arity: u32,
     function: TokenStream,
     inputs: Punctuated<syn::FnArg, Comma>,
+    return_type: &syn::ReturnType,
 ) -> TokenStream {
-    let decoded_terms_async = extract_inputs_for_async(inputs.clone());
+    // Check if first parameter is Caller<T>
+    let uses_caller = inputs
+        .first()
+        .and_then(|arg| {
+            if let syn::FnArg::Typed(typed) = arg {
+                if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
+                    let segment = path.segments.last()?;
+                    return Some(segment.ident == "Caller");
+                }
+            }
+            None
+        })
+        .unwrap_or(false);
+
+    let decoded_terms_async = extract_inputs_for_async(inputs.clone(), return_type);
     let argument_names = create_function_params(inputs);
+
+    // Generate code for sending the final result
+    let (send_result, caller_for_finish) = if uses_caller {
+        // When using Caller, clone it for the finish call
+        let caller_clone = quote! {
+            let caller_for_finish = caller.clone();
+        };
+        let finish = quote! {
+            caller_for_finish.finish(value);
+        };
+        (finish, Some(caller_clone))
+    } else {
+        // When not using Caller, send directly
+        let direct_send = quote! {
+            let mut msg_env = rustler::OwnedEnv::new();
+            let _ = msg_env.send_and_clear(&pid, |env| {
+                use rustler::Encoder;
+                (task_ref_for_spawn, value).encode(env)
+            });
+        };
+        (direct_send, None)
+    };
 
     quote! {
         // Define the original async function at module level
@@ -158,8 +203,15 @@ fn generate_async_nif(
                             // Get the calling process PID
                             let pid = env.pid();
 
+                            // Create a unique task reference resource
+                            let task_ref = rustler::ResourceArc::new(rustler::TaskRef::new());
+                            let task_ref_for_spawn = task_ref.clone();
+
                             // Decode all arguments before spawning async task
                             #decoded_terms_async
+
+                            // Clone caller if needed for finish() call
+                            #caller_for_finish
 
                             // Spawn async task on tokio runtime
                             let handle = rustler::tokio::runtime_handle();
@@ -167,16 +219,14 @@ fn generate_async_nif(
                                 // Execute the async function and get the result
                                 let value = #name(#argument_names).await;
 
-                                // Send result back to calling process
-                                let mut msg_env = rustler::OwnedEnv::new();
-                                let _ = msg_env.send_and_clear(&pid, |env| {
-                                    rustler::Encoder::encode(&value, env)
-                                });
+                                // Send {ref, result} back to calling process
+                                #send_result
                             });
 
-                            // Return :ok immediately
+                            // Return the task reference immediately
+                            use rustler::Encoder;
                             rustler::codegen_runtime::NifReturned::Term(
-                                rustler::types::atom::ok().to_term(env).as_c_arg()
+                                task_ref.encode(env).as_c_arg()
                             )
                         }
                         wrapper(env, &terms).apply(env)
@@ -291,8 +341,8 @@ fn arity(inputs: Punctuated<syn::FnArg, Comma>) -> u32 {
             if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
                 let ident = path.segments.last().unwrap().ident.to_string();
 
-                // Skip Env and CallerPid when they're the first parameter
-                if i == 0 && (ident == "Env" || ident == "CallerPid") {
+                // Skip Env and Caller when they're the first parameter
+                if i == 0 && (ident == "Env" || ident == "Caller") {
                     continue;
                 }
 
@@ -309,9 +359,17 @@ fn arity(inputs: Punctuated<syn::FnArg, Comma>) -> u32 {
     arity
 }
 
-fn extract_inputs_for_async(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStream {
+fn extract_inputs_for_async(
+    inputs: Punctuated<syn::FnArg, Comma>,
+    return_type: &syn::ReturnType,
+) -> TokenStream {
     let mut tokens = TokenStream::new();
     let mut args_offset = 0;
+
+    // Validate that async tasks have an explicit return type
+    if matches!(return_type, syn::ReturnType::Default) {
+        panic!("Async tasks must have an explicit return type");
+    }
 
     for (param_idx, item) in inputs.iter().enumerate() {
         if let syn::FnArg::Typed(ref typed) = item {
@@ -322,10 +380,14 @@ fn extract_inputs_for_async(inputs: Punctuated<syn::FnArg, Comma>) -> TokenStrea
                 syn::Type::Path(syn::TypePath { path, .. }) => {
                     let ident = path.segments.last().unwrap().ident.to_string();
 
-                    // Special case: CallerPid as first parameter
-                    if param_idx == 0 && ident == "CallerPid" {
+                    // Special case: Caller<T> as first parameter
+                    if param_idx == 0 && ident == "Caller" {
+                        // Validate that generic argument matches return type (optional check)
+                        // The Rust compiler will catch mismatches anyway, but we could add
+                        // a better error message here if needed
+
                         let caller_setup = quote! {
-                            let #name: #typ = rustler::types::CallerPid::new(pid);
+                            let #name: #typ = rustler::types::Caller::new(pid, task_ref.clone());
                         };
                         tokens.extend(caller_setup);
                         args_offset = 1; // Don't consume an arg slot
