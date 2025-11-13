@@ -30,9 +30,6 @@ pub mod tuple;
 pub mod local_pid;
 pub use self::local_pid::LocalPid;
 
-#[cfg(feature = "tokio_rt")]
-pub use self::local_pid::Caller;
-
 #[doc(hidden)]
 pub mod reference;
 pub use self::reference::Reference;

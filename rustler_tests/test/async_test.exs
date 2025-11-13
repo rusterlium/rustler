@@ -76,4 +76,104 @@ defmodule RustlerTest.AsyncTest do
     # Final result should also be tagged with ref: {ref, 3}
     assert {ref, 3} in messages
   end
+
+  test "async_spawned_work demonstrates Caller can be cloned and sent across threads" do
+    ref = RustlerTest.async_spawned_work(3)
+    assert is_reference(ref)
+
+    # Should receive messages from spawned tasks and final result
+    # Each spawned task sends its i value, plus final result
+    messages =
+      for _ <- 1..4 do
+        receive do
+          msg -> msg
+        after
+          500 -> :timeout
+        end
+      end
+
+    # Check we got messages from spawned tasks (sent across threads)
+    assert {ref, 0} in messages
+    assert {ref, 1} in messages
+    assert {ref, 2} in messages
+
+    # Final result: 0 + 1 + 2 = 3
+    assert {ref, 3} in messages
+  end
+
+  test "async_channel_echo demonstrates bidirectional communication with Stream trait" do
+    # Start the task and get channel sender (which is also the task ref)
+    channel_sender = RustlerTest.async_channel_echo()
+    assert is_reference(channel_sender)
+
+    # Send messages to the task via the channel
+    assert :ok == RustlerTest.channel_send_string(channel_sender, "hello")
+    assert :ok == RustlerTest.channel_send_string(channel_sender, "world")
+    assert :ok == RustlerTest.channel_send_string(channel_sender, "stop")
+
+    # Collect echo messages
+    messages =
+      for _ <- 1..3 do
+        receive do
+          msg -> msg
+        after
+          500 -> :timeout
+        end
+      end
+
+    # Check we got echoes (tagged with channel_sender)
+    assert {channel_sender, "echo: hello"} in messages
+    assert {channel_sender, "echo: world"} in messages
+
+    # Final message with count
+    assert {channel_sender, "Received 2 messages"} in messages
+  end
+
+  test "stateful_worker demonstrates enum-based commands and responses" do
+    # Start the stateful worker
+    worker = RustlerTest.stateful_worker()
+    assert is_reference(worker)
+
+    # Add 10
+    assert :ok == RustlerTest.worker_send_command(worker, {:add, %{value: 10}})
+
+    assert_receive {^worker, {:updated, %{old_value: 0, new_value: 10}}}, 500
+
+    # Add 5
+    assert :ok == RustlerTest.worker_send_command(worker, {:add, %{value: 5}})
+
+    assert_receive {^worker, {:updated, %{old_value: 10, new_value: 15}}}, 500
+
+    # Multiply by 2
+    assert :ok == RustlerTest.worker_send_command(worker, {:multiply, %{value: 2}})
+
+    assert_receive {^worker, {:updated, %{old_value: 15, new_value: 30}}}, 500
+
+    # Subtract 5
+    assert :ok == RustlerTest.worker_send_command(worker, {:subtract, %{value: 5}})
+
+    assert_receive {^worker, {:updated, %{old_value: 30, new_value: 25}}}, 500
+
+    # Get current value
+    assert :ok == RustlerTest.worker_send_command(worker, :get_current)
+
+    assert_receive {^worker, {:current, %{value: 25}}}, 500
+
+    # Reset
+    assert :ok == RustlerTest.worker_send_command(worker, :reset)
+
+    assert_receive {^worker, :reset}, 500
+
+    # Verify reset worked
+    assert :ok == RustlerTest.worker_send_command(worker, :get_current)
+
+    assert_receive {^worker, {:current, %{value: 0}}}, 500
+
+    # Shutdown
+    assert :ok == RustlerTest.worker_send_command(worker, :shutdown)
+
+    # Should receive two shutdown messages: one from the command, one as final
+    assert_receive {^worker, {:shutting_down, %{final_value: 0, operations: 0}}}, 500
+    assert_receive {^worker, {:shutting_down, %{final_value: 0, operations: 0}}}, 500
+  end
 end

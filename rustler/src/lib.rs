@@ -59,7 +59,7 @@ pub use crate::schedule::SchedulerFlags;
 pub mod env;
 pub use crate::env::{Env, OwnedEnv};
 pub mod thread;
-pub use crate::thread::{spawn, JobSpawner, ThreadSpawner};
+pub use crate::thread::{JobSpawner, ThreadSpawner};
 
 pub mod error;
 pub use crate::error::Error;
@@ -84,13 +84,35 @@ pub mod serde;
 #[cfg(feature = "serde")]
 pub use crate::serde::SerdeTerm;
 
-#[cfg(feature = "tokio_rt")]
-pub mod tokio;
+#[cfg(feature = "async-rt")]
+pub mod runtime;
 
-#[cfg(feature = "tokio_rt")]
-mod task_ref;
-
-#[cfg(feature = "tokio_rt")]
-pub use task_ref::TaskRef;
+/// Spawn an async task on the global runtime.
+///
+/// This provides a runtime-agnostic API similar to `tokio::spawn()`.
+/// The future is spawned on the global runtime and executed to completion.
+///
+/// Returns a join handle that can be used to await the result or cancel the task.
+///
+/// # Example
+///
+/// ```ignore
+/// let handle = rustler::spawn(async {
+///     // Your async code
+///     process_data().await
+/// });
+/// ```
+///
+/// # Panics
+///
+/// Panics if the runtime fails to spawn the task.
+#[cfg(feature = "tokio-rt")]
+pub fn spawn<F>(future: F) -> tokio::task::JoinHandle<F::Output>
+where
+    F: std::future::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    runtime::handle().spawn(future)
+}
 
 pub mod sys;

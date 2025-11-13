@@ -132,43 +132,62 @@ fn generate_task(
     inputs: Punctuated<syn::FnArg, Comma>,
     return_type: &syn::ReturnType,
 ) -> TokenStream {
-    // Check if first parameter is Caller<T>
-    let uses_caller = inputs
-        .first()
-        .and_then(|arg| {
-            if let syn::FnArg::Typed(typed) = arg {
-                if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
-                    let segment = path.segments.last()?;
-                    return Some(segment.ident == "Caller");
+    // Check if first parameter is Channel<Request, Response>
+    // and extract the types if present
+    let channel_info = inputs.first().and_then(|arg| {
+        if let syn::FnArg::Typed(typed) = arg {
+            if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
+                let segment = path.segments.last()?;
+                if segment.ident == "Channel" {
+                    // Return the full type for generating Channel::new
+                    return Some(typed.ty.clone());
                 }
             }
-            None
-        })
-        .unwrap_or(false);
+        }
+        None
+    });
+
+    let uses_channel = channel_info.is_some();
 
     let decoded_terms_async = extract_inputs_for_async(inputs.clone(), return_type);
     let argument_names = create_function_params(inputs);
 
-    // Generate code for sending the final result
-    let (send_result, caller_for_finish) = if uses_caller {
-        // When using Caller, clone it for the finish call
-        let caller_clone = quote! {
-            let caller_for_finish = caller.clone();
-        };
-        let finish = quote! {
-            caller_for_finish.finish(value);
-        };
-        (finish, Some(caller_clone))
+    // Determine the Channel type to use
+    let channel_type = if let Some(ty) = channel_info {
+        // Use the type from the function signature
+        ty
     } else {
-        // When not using Caller, send directly
-        let direct_send = quote! {
+        // Default to Channel<(), Response> where Response is the return type
+        let response_type = match return_type {
+            syn::ReturnType::Type(_, ty) => ty.clone(),
+            syn::ReturnType::Default => {
+                panic!("Async tasks must have an explicit return type");
+            }
+        };
+        syn::parse_quote! { rustler::runtime::Channel<(), #response_type> }
+    };
+
+    // Generate code for sending the final result
+    let (clone_setup, send_result) = if uses_channel {
+        // When using Channel, the function is responsible for calling finish()
+        // The macro just executes the function and does nothing with the result
+        let send = quote! {
+            // Function is responsible for calling channel.finish()
+        };
+        (quote! {}, send)
+    } else {
+        // When not using Channel, clone channel_sender before async block
+        let clone = quote! {
+            let channel_sender_for_send = channel_sender.clone();
+        };
+        let send = quote! {
             let mut msg_env = rustler::OwnedEnv::new();
             let _ = msg_env.send_and_clear(&pid, |env| {
                 use rustler::Encoder;
-                (task_ref_for_spawn, value).encode(env)
+                (channel_sender_for_send, value).encode(env)
             });
         };
-        (direct_send, None)
+        (clone, send)
     };
 
     quote! {
@@ -203,30 +222,30 @@ fn generate_task(
                             // Get the calling process PID
                             let pid = env.pid();
 
-                            // Create a unique task reference resource
-                            let task_ref = rustler::ResourceArc::new(rustler::TaskRef::new());
-                            let task_ref_for_spawn = task_ref.clone();
+                            // Create channel - if task doesn't use Channel param,
+                            // still create Channel<(), Response> for message tagging
+                            let (channel_sender, channel): (_, #channel_type) = rustler::runtime::Channel::new(pid);
+
+                            // Clone channel_sender if needed (for tasks without Channel param)
+                            #clone_setup
 
                             // Decode all arguments before spawning async task
                             #decoded_terms_async
 
-                            // Clone caller if needed for finish() call
-                            #caller_for_finish
-
-                            // Spawn async task on tokio runtime
-                            let handle = rustler::tokio::runtime_handle();
-                            handle.spawn(async move {
-                                // Execute the async function and get the result
+                            // Spawn async task
+                            rustler::spawn(async move {
+                                // Execute the async function
+                                #[allow(unused_variables)]
                                 let value = #name(#argument_names).await;
 
-                                // Send {ref, result} back to calling process
+                                // Send {channel_sender, result} back to calling process
                                 #send_result
                             });
 
-                            // Return the task reference immediately
+                            // Return the channel sender as task reference
                             use rustler::Encoder;
                             rustler::codegen_runtime::NifReturned::Term(
-                                task_ref.encode(env).as_c_arg()
+                                channel_sender.encode(env).as_c_arg()
                             )
                         }
                         wrapper(env, &terms).apply(env)
@@ -341,8 +360,8 @@ fn arity(inputs: Punctuated<syn::FnArg, Comma>) -> u32 {
             if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
                 let ident = path.segments.last().unwrap().ident.to_string();
 
-                // Skip Env and Caller when they're the first parameter
-                if i == 0 && (ident == "Env" || ident == "Caller") {
+                // Skip Env, Caller, and Channel when they're the first parameter
+                if i == 0 && (ident == "Env" || ident == "Caller" || ident == "Channel") {
                     continue;
                 }
 
@@ -366,8 +385,21 @@ fn extract_inputs_for_async(
     let mut tokens = TokenStream::new();
     let mut args_offset = 0;
 
-    // Validate that async tasks have an explicit return type
-    if matches!(return_type, syn::ReturnType::Default) {
+    // Check if first parameter is Channel (determines if explicit return type is required)
+    let has_channel = inputs
+        .first()
+        .and_then(|arg| {
+            if let syn::FnArg::Typed(typed) = arg {
+                if let syn::Type::Path(syn::TypePath { path, .. }) = &*typed.ty {
+                    return path.segments.last().map(|s| s.ident == "Channel");
+                }
+            }
+            None
+        })
+        .unwrap_or(false);
+
+    // Validate that async tasks have an explicit return type (unless they have a Channel parameter)
+    if !has_channel && matches!(return_type, syn::ReturnType::Default) {
         panic!("Async tasks must have an explicit return type");
     }
 
@@ -380,16 +412,10 @@ fn extract_inputs_for_async(
                 syn::Type::Path(syn::TypePath { path, .. }) => {
                     let ident = path.segments.last().unwrap().ident.to_string();
 
-                    // Special case: Caller<T> as first parameter
-                    if param_idx == 0 && ident == "Caller" {
-                        // Validate that generic argument matches return type (optional check)
-                        // The Rust compiler will catch mismatches anyway, but we could add
-                        // a better error message here if needed
-
-                        let caller_setup = quote! {
-                            let #name: #typ = rustler::types::Caller::new(pid, task_ref.clone());
-                        };
-                        tokens.extend(caller_setup);
+                    // Special case: Channel<Request, Response> as first parameter
+                    if param_idx == 0 && ident == "Channel" {
+                        // Channel is already created by wrapper, just pass it through
+                        // No need to decode from args, and it doesn't consume an arg slot
                         args_offset = 1; // Don't consume an arg slot
                         continue;
                     }
