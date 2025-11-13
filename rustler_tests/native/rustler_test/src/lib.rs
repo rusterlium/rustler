@@ -23,11 +23,11 @@ mod test_tuple;
 rustler::init!("Elixir.RustlerTest", load = load);
 
 fn load(env: rustler::Env, load_info: rustler::Term) -> bool {
-    // Configure Tokio runtime from Elixir load_data
-    #[cfg(feature = "tokio_rt")]
+    // Configure runtime from Elixir load_data
+    #[cfg(feature = "tokio-rt")]
     {
-        if let Ok(config) = load_info.decode::<rustler::tokio::RuntimeConfig>() {
-            rustler::tokio::configure(config).ok();
+        if let Ok(config) = load_info.decode::<rustler::runtime::RuntimeConfig>() {
+            rustler::runtime::configure(config).ok();
         }
     }
 
