@@ -63,55 +63,98 @@ impl Ord for LocalPid {
     }
 }
 
-/// A wrapper for `LocalPid` that represents the calling process in async NIFs.
+/// Caller information for async tasks with type-safe message sending.
 ///
-/// When used as the first parameter of an async NIF, `CallerPid` is automatically
-/// populated with the calling process's PID, and is not decoded from the arguments.
-/// This allows async NIFs to send intermediate messages back to the caller.
+/// Contains the calling process's PID and the task reference. When used as the first
+/// parameter of a `#[rustler::task]`, it is automatically populated and provides
+/// convenient methods for sending messages tagged with the task reference.
+///
+/// The generic type `T` is automatically inferred from the task's return type,
+/// ensuring that intermediate messages sent via `send()` are the same type as
+/// the final result.
 ///
 /// # Example
 ///
 /// ```ignore
-/// #[rustler::nif]
-/// async fn with_progress(caller: CallerPid, work: Vec<i64>) -> i64 {
-///     // Send progress updates
-///     let mut env = OwnedEnv::new();
-///     env.send(caller.as_pid(), |e| "started".encode(e));
-///
-///     let result = do_work(work).await;
-///
-///     // Final result sent automatically
-///     result
+/// #[rustler::task]
+/// async fn with_progress(caller: Caller, work: Vec<i64>) -> Result<i64, String> {
+///     for (i, item) in work.iter().enumerate() {
+///         // Type-checked: must send Result<i64, String>
+///         caller.send(Ok(i as i64));
+///         process(item).await?;
+///     }
+///     Ok(work.len() as i64)
 /// }
 /// ```
-#[derive(Copy, Clone)]
-pub struct CallerPid(LocalPid);
+#[cfg(feature = "tokio_rt")]
+#[derive(Clone)]
+pub struct Caller<T> {
+    pid: LocalPid,
+    task_ref: crate::ResourceArc<crate::TaskRef>,
+    _phantom: std::marker::PhantomData<T>,
+}
 
-impl CallerPid {
-    /// Create a new CallerPid from a LocalPid.
+#[cfg(feature = "tokio_rt")]
+impl<T: Encoder> Caller<T> {
+    /// Create a new Caller.
     ///
-    /// This is only used internally by the NIF macro.
+    /// This is only used internally by the task macro.
     #[doc(hidden)]
-    pub fn new(pid: LocalPid) -> Self {
-        CallerPid(pid)
+    pub fn new(pid: LocalPid, task_ref: crate::ResourceArc<crate::TaskRef>) -> Self {
+        Self {
+            pid,
+            task_ref,
+            _phantom: std::marker::PhantomData,
+        }
     }
 
-    /// Get the underlying LocalPid.
-    pub fn as_pid(&self) -> &LocalPid {
-        &self.0
+    /// Get the calling process's PID.
+    pub fn pid(&self) -> &LocalPid {
+        &self.pid
+    }
+
+    /// Get the task reference.
+    pub fn task_ref(&self) -> &crate::ResourceArc<crate::TaskRef> {
+        &self.task_ref
+    }
+
+    /// Send an intermediate message to the caller, automatically tagged with the task reference.
+    ///
+    /// The message will be sent as `{task_ref, message}`.
+    ///
+    /// The message type `T` must match the task's return type, ensuring type safety
+    /// for all messages sent during task execution.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// #[rustler::task]
+    /// async fn process(caller: Caller, count: i64) -> String {
+    ///     for i in 0..count {
+    ///         caller.send(format!("Progress: {}", i));  // ✅ Type-safe
+    ///         // caller.send(i);  // ❌ Compile error: expected String, got i64
+    ///     }
+    ///     "Done".to_string()
+    /// }
+    /// ```
+    pub fn send(&self, message: T) {
+        let mut env = crate::OwnedEnv::new();
+        let task_ref = self.task_ref.clone();
+        let _ = env.send_and_clear(&self.pid, move |env| (task_ref, message).encode(env));
+    }
+
+    /// Send the final message and complete the task.
+    ///
+    /// This is used internally by the `#[rustler::task]` macro to send the
+    /// task's return value. User code should just return the value normally.
+    #[doc(hidden)]
+    pub fn finish(self, message: T) {
+        self.send(message);
     }
 
     /// Check whether the calling process is alive.
-    pub fn is_alive(self, env: Env) -> bool {
-        self.0.is_alive(env)
-    }
-}
-
-impl std::ops::Deref for CallerPid {
-    type Target = LocalPid;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub fn is_alive(&self, env: Env) -> bool {
+        self.pid.is_alive(env)
     }
 }
 
