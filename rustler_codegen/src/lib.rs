@@ -103,17 +103,7 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let input = syn::parse_macro_input!(input as syn::ItemFn);
 
-    // Reject async functions in #[rustler::nif]
-    if input.sig.asyncness.is_some() {
-        return syn::Error::new_spanned(
-            input.sig.asyncness,
-            "async functions are not supported with #[rustler::nif]. Use #[rustler::task] instead.",
-        )
-        .to_compile_error()
-        .into();
-    }
-
-    nif::transcoder_decorator(nif_attributes, input).into()
+    nif::transcoder_decorator(nif_attributes, input, false).into()
 }
 
 /// Wrap an async function as a spawned task that returns a reference.
@@ -162,7 +152,7 @@ pub fn task(args: TokenStream, input: TokenStream) -> TokenStream {
         .into();
     }
 
-    nif::transcoder_decorator(nif_attributes, input).into()
+    nif::transcoder_decorator(nif_attributes, input, true).into()
 }
 
 /// Derives implementations for the `Encoder` and `Decoder` traits

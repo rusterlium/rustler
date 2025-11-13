@@ -11,6 +11,12 @@ pub use tokio::TokioRuntime;
 #[cfg(feature = "tokio-rt")]
 pub use tokio::{ConfigError, RuntimeConfig};
 
+#[cfg(feature = "async-rt")]
+pub mod yielding;
+
+#[cfg(feature = "async-rt")]
+pub use yielding::{yield_now, yielding_nif_run, YieldingTaskState};
+
 #[cfg(rustler_unstable)]
 pub mod channel;
 
