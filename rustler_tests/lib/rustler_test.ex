@@ -50,6 +50,12 @@ defmodule RustlerTest do
   def stateful_worker(), do: err()
   def worker_send_command(_, _), do: err()
 
+  # Yielding runtime NIFs (true cooperative yielding)
+  def yielding_immediate(), do: err()
+  def yielding_sum(_), do: err()
+  def yielding_work_with_sleeps(), do: err()
+  def yielding_tuple_result(_, _), do: err()
+
   def term_debug(_), do: err()
 
   def term_debug_and_reparse(term) do
