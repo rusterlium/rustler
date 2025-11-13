@@ -1,4 +1,3 @@
-mod test_async;
 mod test_atom;
 mod test_binary;
 mod test_codegen;
@@ -16,9 +15,11 @@ mod test_path;
 mod test_primitives;
 mod test_range;
 mod test_resource;
+mod test_tasks;
 mod test_term;
 mod test_thread;
 mod test_tuple;
+mod test_yielding;
 
 rustler::init!("Elixir.RustlerTest", load = load);
 
