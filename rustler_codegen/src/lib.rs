@@ -1,3 +1,4 @@
+#![deny(warnings)]
 #![recursion_limit = "128"]
 
 use proc_macro::TokenStream;
@@ -101,6 +102,65 @@ pub fn nif(args: TokenStream, input: TokenStream) -> TokenStream {
     }
 
     let input = syn::parse_macro_input!(input as syn::ItemFn);
+
+    // Reject async functions in #[rustler::nif]
+    if input.sig.asyncness.is_some() {
+        return syn::Error::new_spanned(
+            input.sig.asyncness,
+            "async functions are not supported with #[rustler::nif]. Use #[rustler::task] instead.",
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    nif::transcoder_decorator(nif_attributes, input).into()
+}
+
+/// Wrap an async function as a spawned task that returns a reference.
+///
+/// The task is spawned onto the configured async runtime and returns a unique
+/// reference immediately. When the task completes, a message `{ref, result}` is
+/// sent to the calling process.
+///
+/// ```ignore
+/// #[rustler::task]
+/// async fn fetch_data(url: String) -> Result<String, String> {
+///     // Long-running async operation
+///     tokio::time::sleep(Duration::from_secs(1)).await;
+///     Ok("data".to_string())
+/// }
+/// ```
+///
+/// From Elixir:
+/// ```elixir
+/// ref = MyNIF.fetch_data("https://example.com")
+/// receive do
+///   {^ref, result} -> IO.puts("Got result: #{inspect(result)}")
+/// after
+///   5000 -> :timeout
+/// end
+/// ```
+#[proc_macro_attribute]
+pub fn task(args: TokenStream, input: TokenStream) -> TokenStream {
+    let mut nif_attributes = nif::NifAttributes::default();
+
+    if !args.is_empty() {
+        let nif_macro_parser = syn::meta::parser(|meta| nif_attributes.parse(meta));
+
+        syn::parse_macro_input!(args with nif_macro_parser);
+    }
+
+    let input = syn::parse_macro_input!(input as syn::ItemFn);
+
+    // Require async functions for #[rustler::task]
+    if input.sig.asyncness.is_none() {
+        return syn::Error::new_spanned(
+            input.sig.fn_token,
+            "#[rustler::task] requires an async function",
+        )
+        .to_compile_error()
+        .into();
+    }
 
     nif::transcoder_decorator(nif_attributes, input).into()
 }

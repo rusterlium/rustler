@@ -1,3 +1,4 @@
+#![deny(warnings)]
 #![allow(non_camel_case_types)]
 #![allow(clippy::missing_safety_doc)]
 
@@ -85,8 +86,8 @@ macro_rules! term_map {
 }
 
 pub use rustler_codegen::{
-    init, nif, resource_impl, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple,
-    NifUnitEnum, NifUntaggedEnum,
+    init, nif, resource_impl, task, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum,
+    NifTuple, NifUnitEnum, NifUntaggedEnum,
 };
 
 #[cfg(feature = "serde")]
@@ -97,6 +98,12 @@ pub use crate::serde::SerdeTerm;
 
 #[cfg(feature = "tokio_rt")]
 pub mod tokio;
+
+#[cfg(feature = "tokio_rt")]
+mod task_ref;
+
+#[cfg(feature = "tokio_rt")]
+pub use task_ref::TaskRef;
 
 pub mod sys;
 
