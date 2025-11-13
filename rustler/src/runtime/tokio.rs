@@ -1,7 +1,33 @@
+use crate::runtime::AsyncRuntime;
 use crate::{Decoder, NifResult, Term};
 use once_cell::sync::OnceCell;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
+
+/// Tokio runtime implementation of AsyncRuntime.
+pub struct TokioRuntime {
+    handle: tokio::runtime::Handle,
+}
+
+impl TokioRuntime {
+    pub fn new(runtime: Arc<Runtime>) -> Self {
+        Self {
+            handle: runtime.handle().clone(),
+        }
+    }
+
+    pub fn from_handle(handle: tokio::runtime::Handle) -> Self {
+        Self { handle }
+    }
+}
+
+impl AsyncRuntime for TokioRuntime {
+    fn spawn(&self, future: Pin<Box<dyn Future<Output = ()> + Send + 'static>>) {
+        self.handle.spawn(future);
+    }
+}
 
 /// Global tokio runtime for async NIFs.
 ///
@@ -106,8 +132,8 @@ impl<'a> Decoder<'a> for RuntimeConfig {
 
 /// Configure the global Tokio runtime from Elixir load_data.
 ///
-/// This is the recommended way to configure the runtime, allowing Elixir application
-/// developers to tune the runtime without recompiling the NIF.
+/// **Note:** Most users should use `rustler::runtime::configure()` instead for
+/// a more runtime-agnostic API.
 ///
 /// # Example
 ///
@@ -115,10 +141,10 @@ impl<'a> Decoder<'a> for RuntimeConfig {
 /// use rustler::{Env, Term};
 ///
 /// fn load(_env: Env, load_info: Term) -> bool {
-///     // Try to decode runtime config from load_info
-///     if let Ok(config) = load_info.decode::<rustler::tokio::RuntimeConfig>() {
-///         rustler::tokio::configure(config)
-///             .expect("Failed to configure Tokio runtime");
+///     // Prefer: rustler::runtime::configure()
+///     if let Ok(config) = load_info.decode::<rustler::runtime::RuntimeConfig>() {
+///         rustler::runtime::configure(config)
+///             .expect("Failed to configure runtime");
 ///     }
 ///     true
 /// }
@@ -160,9 +186,8 @@ pub fn configure(config: RuntimeConfig) -> Result<(), ConfigError> {
 
 /// Configure the global Tokio runtime programmatically.
 ///
-/// This provides direct access to the Tokio Builder API for advanced use cases.
-/// For most applications, prefer `configure_runtime_from_term` which allows
-/// configuration from Elixir.
+/// **Note:** Most users should use `rustler::runtime::builder()` instead for
+/// a more runtime-agnostic API.
 ///
 /// # Example
 ///
@@ -170,12 +195,13 @@ pub fn configure(config: RuntimeConfig) -> Result<(), ConfigError> {
 /// use rustler::{Env, Term};
 ///
 /// fn load(_env: Env, _: Term) -> bool {
-///     rustler::tokio::configure_runtime(|builder| {
+///     // Prefer: rustler::runtime::builder()
+///     rustler::runtime::builder(|builder| {
 ///         builder
 ///             .worker_threads(4)
-///             .thread_name("myapp-tokio")
+///             .thread_name("myapp-runtime")
 ///             .thread_stack_size(3 * 1024 * 1024);
-///     }).expect("Failed to configure Tokio runtime");
+///     }).expect("Failed to configure runtime");
 ///
 ///     true
 /// }
@@ -198,6 +224,9 @@ where
 }
 
 /// Get a handle to the global tokio runtime, or the current runtime if already inside one.
+///
+/// **Note:** Most users should use `rustler::runtime::handle()` instead for
+/// a more runtime-agnostic API.
 pub fn runtime_handle() -> tokio::runtime::Handle {
     // Try to get the current runtime handle first (if already in a tokio context)
     tokio::runtime::Handle::try_current().unwrap_or_else(|_| {
