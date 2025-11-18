@@ -14,10 +14,15 @@ name = "hello_rust"
 path = "src/main.rs"
 
 [features]
+default = ["rustler/async-rt", "rustler/tokio-rt"]
+async-rt = ["rustler/async-rt"]
+tokio-rt = ["async-rt", "rustler/tokio-rt"]
 nif_version_2_14 = ["rustler/nif_version_2_14"]
 nif_version_2_15 = ["nif_version_2_14", "rustler/nif_version_2_15"]
 nif_version_2_16 = ["nif_version_2_15", "rustler/nif_version_2_16"]
 nif_version_2_17 = ["nif_version_2_16", "rustler/nif_version_2_17"]
 
 [dependencies]
-rustler = { path = "../../../rustler", features = ["allocator"] }
+rustler = { path = "../../../rustler", features = ["allocator", "async-rt", "tokio-rt"] }
+tokio = { version = "1", features = ["time"] }
+futures-core = "0.3"

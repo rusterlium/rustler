@@ -901,6 +901,9 @@ fn main() {
     let dest_path = Path::new(&out_dir).join(SNIPPET_NAME);
     fs::write(dest_path, api).unwrap();
 
+    // Tell Cargo that rustler_unstable is a valid cfg
+    println!("cargo::rustc-check-cfg=cfg(rustler_unstable)");
+
     // The following lines are important to tell Cargo to recompile if something changes.
     println!("cargo:rerun-if-changed=build.rs");
 }
