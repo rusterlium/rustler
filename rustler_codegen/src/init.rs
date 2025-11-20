@@ -1,51 +1,22 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::spanned::Spanned;
 use syn::{Ident, Result, Token};
 
 #[derive(Debug)]
 pub struct InitMacroInput {
     name: syn::Lit,
     load: TokenStream,
-    maybe_warning: TokenStream,
 }
 
 impl Parse for InitMacroInput {
     fn parse(input: ParseStream) -> Result<Self> {
         let name = syn::Lit::parse(input)?;
 
-        let maybe_warning = if input.peek(syn::token::Comma) && input.peek2(syn::token::Bracket) {
-            // peeked, must be there
-            let _ = syn::token::Comma::parse(input).unwrap();
-            if let Ok(funcs) = syn::ExprArray::parse(input) {
-                quote_spanned!(funcs.span() =>
-                    #[allow(dead_code)]
-                    fn rustler_init() {
-                        #[deprecated(
-                            since = "0.34.0",
-                            note = "Passing NIF functions explicitly is deprecated and this argument is ignored, please remove it"
-                        )]
-                        #[allow(non_upper_case_globals)]
-                        const explicit_nif_functions: () = ();
-                        let _ = explicit_nif_functions;
-                    }
-                )
-            } else {
-                quote!()
-            }
-        } else {
-            quote!()
-        };
-
         let options = parse_expr_assigns(input);
         let load = extract_option(options, "load");
 
-        Ok(InitMacroInput {
-            name,
-            load,
-            maybe_warning,
-        })
+        Ok(InitMacroInput { name, load })
     }
 }
 
@@ -81,7 +52,6 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
     fn from(input: InitMacroInput) -> Self {
         let name = input.name;
         let load = input.load;
-        let maybe_warning = input.maybe_warning;
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
@@ -166,8 +136,6 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
         };
 
         quote! {
-            #maybe_warning
-
             #[cfg(not(windows))]
             #[no_mangle]
             extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
