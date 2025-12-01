@@ -90,6 +90,7 @@ defmodule RustlerTest do
   def realloc_grow(), do: err()
   def encode_string(), do: err()
   def decode_iolist(_), do: err()
+  def first_four_bytes_of_iolist(_), do: err()
 
   def atom_to_string(_), do: err()
   def atom_equals_ok(_), do: err()

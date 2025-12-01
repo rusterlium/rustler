@@ -77,3 +77,10 @@ pub fn encode_string() -> (String, &'static str) {
 pub fn decode_iolist(binary: Term) -> NifResult<Binary> {
     binary.decode_as_binary()
 }
+
+#[rustler::nif]
+pub fn first_four_bytes_of_iolist<'a>(term: Term<'a>) -> Binary<'a> {
+    let bin = Binary::from_iolist(term).unwrap();
+    let sub = bin.make_subbinary(0, 4).unwrap();
+    sub
+}
