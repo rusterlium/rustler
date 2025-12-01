@@ -346,19 +346,20 @@ impl<'a> Binary<'a> {
     /// If `term` is not an `iolist`, an error will be returned.
     #[inline]
     pub fn from_iolist(term: Term<'a>) -> Result<Self, Error> {
+        let env = term.get_env();
         let mut binary = MaybeUninit::uninit();
         if unsafe {
-            enif_inspect_iolist_as_binary(
-                term.get_env().as_c_arg(),
-                term.as_c_arg(),
-                binary.as_mut_ptr(),
-            )
+            enif_inspect_iolist_as_binary(env.as_c_arg(), term.as_c_arg(), binary.as_mut_ptr())
         } == 0
         {
             return Err(Error::BadArg);
         }
 
-        let binary = unsafe { binary.assume_init() };
+        let mut binary = unsafe { binary.assume_init() };
+
+        // Create a new binary term to own the data
+        let term = unsafe { Term::new(env, enif_make_binary(env.as_c_arg(), &mut binary)) };
+
         Ok(Binary {
             buf: binary.data,
             size: binary.size,
