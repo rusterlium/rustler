@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## 0.37.2 - 2025-12-02
+
+### Fixed
+
+- Fix `Binary::from_iolist` creating an invalid `Binary` (#714, #715)
+- Fix CI to use the newest Elixir and OTP versions (#713)
+
+### Changed
+
+- Bump MSRV (Minimum Supported Rust Version) to 1.91 (#711)
+
 ## 0.37.1 - 2025-09-10
 
 ### Fixed
