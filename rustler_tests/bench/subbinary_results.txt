@@ -1,0 +1,20 @@
+Benchmarking make_subbinary (Binary struct) ...
+Benchmarking make_subbinary_term (Term direct) ...
+Calculating statistics...
+Formatting results...
+
+Name                                        ips        average  deviation         median         99th %
+make_subbinary_term (Term direct)        108.65        9.20 ms     ±9.34%        8.99 ms       10.99 ms
+make_subbinary (Binary struct)            92.06       10.86 ms     ±8.90%       10.72 ms       12.52 ms
+
+Comparison: 
+make_subbinary_term (Term direct)        108.65
+make_subbinary (Binary struct)            92.06 - 1.18x slower +1.66 ms
+
+Memory usage statistics:
+
+Name                                 Memory usage
+make_subbinary_term (Term direct)         1.56 KB
+make_subbinary (Binary struct)            1.56 KB - 1.00x memory usage +0 KB
+
+**All measurements for memory usage were the same**

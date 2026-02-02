@@ -19,7 +19,8 @@ defmodule RustlerTest.Mixfile do
   defp deps do
     [
       {:rustler, path: "../rustler_mix", runtime: false},
-      {:map_diff, "~> 1.3"}
+      {:map_diff, "~> 1.3"},
+      {:benchee, "~> 1.0", only: :dev}
     ]
   end
 end

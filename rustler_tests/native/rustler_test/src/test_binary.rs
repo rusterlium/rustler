@@ -89,3 +89,28 @@ pub fn first_four_bytes_of_iolist<'a>(term: Term<'a>) -> Binary<'a> {
 pub fn subbinary_as_term<'a>(binary: Binary<'a>, offset: usize, length: usize) -> NifResult<Term<'a>> {
     binary.make_subbinary_term(offset, length)
 }
+
+/// Benchmark: create N sub-binaries using make_subbinary (returns Binary, then .to_term())
+/// Returns a single term to avoid Vec allocation / GC noise in measurements.
+#[rustler::nif]
+pub fn bench_make_subbinary<'a>(env: Env<'a>, binary: Binary<'a>, n: usize) -> Term<'a> {
+    let len = binary.as_slice().len();
+    let mut last = binary.to_term(env);
+    for _ in 0..n {
+        let sub = binary.make_subbinary(0, len).unwrap();
+        last = sub.to_term(env);
+    }
+    last
+}
+
+/// Benchmark: create N sub-binaries using make_subbinary_term (returns Term directly)
+/// Returns a single term to avoid Vec allocation / GC noise in measurements.
+#[rustler::nif]
+pub fn bench_make_subbinary_term<'a>(binary: Binary<'a>, n: usize) -> Term<'a> {
+    let len = binary.as_slice().len();
+    let mut last = binary.make_subbinary_term(0, len).unwrap();
+    for _ in 0..n {
+        last = binary.make_subbinary_term(0, len).unwrap();
+    }
+    last
+}
