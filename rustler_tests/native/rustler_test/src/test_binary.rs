@@ -84,3 +84,8 @@ pub fn first_four_bytes_of_iolist<'a>(term: Term<'a>) -> Binary<'a> {
     let sub = bin.make_subbinary(0, 4).unwrap();
     sub
 }
+
+#[rustler::nif]
+pub fn subbinary_as_term<'a>(binary: Binary<'a>, offset: usize, length: usize) -> NifResult<Term<'a>> {
+    binary.make_subbinary_term(offset, length)
+}

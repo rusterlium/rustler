@@ -50,6 +50,24 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.decode_iolist([[?h, ?i], ~c" ", ["there"]]) == "hi there"
   end
 
+  test "subbinary as term returns correct slice" do
+    assert RustlerTest.subbinary_as_term("hello world", 6, 5) == "world"
+    assert RustlerTest.subbinary_as_term("hello world", 0, 5) == "hello"
+    assert RustlerTest.subbinary_as_term("hello", 0, 0) == ""
+    assert RustlerTest.subbinary_as_term("hello", 0, 5) == "hello"
+  end
+
+  test "subbinary as term rejects out of bounds" do
+    assert_raise ArgumentError, fn -> RustlerTest.subbinary_as_term("hello", 3, 5) end
+    assert_raise ArgumentError, fn -> RustlerTest.subbinary_as_term("hello", 6, 0) end
+  end
+
+  test "subbinary as term matches make_subbinary" do
+    input = "abcdefghij"
+    # Both methods should produce identical binary content
+    assert RustlerTest.subbinary_as_term(input, 1, 8) == RustlerTest.make_shorter_subbinary(input)
+  end
+
   test "iolist decode returns binary" do
     assert RustlerTest.first_four_bytes_of_iolist("hi there") == "hi t"
     assert RustlerTest.first_four_bytes_of_iolist(["hi there"]) == "hi t"

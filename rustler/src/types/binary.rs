@@ -398,6 +398,34 @@ impl<'a> Binary<'a> {
         Ok(unsafe { self.make_subbinary_unchecked(offset, length) })
     }
 
+    /// Returns a new sub-binary term referencing the same underlying data.
+    ///
+    /// This is similar to [`make_subbinary`](Self::make_subbinary), but returns a
+    /// [`Term`] directly instead of a [`Binary`]. This avoids constructing an
+    /// intermediate `Binary` struct when only the term representation is needed,
+    /// which can be beneficial in hot paths that create many sub-binaries.
+    ///
+    /// # Errors
+    ///
+    /// If `offset + length` is out of bounds, an error will be returned.
+    #[inline]
+    pub fn make_subbinary_term(&self, offset: usize, length: usize) -> NifResult<Term<'a>> {
+        let min_len = length.checked_add(offset);
+        if min_len.ok_or(Error::BadArg)? > self.size {
+            return Err(Error::BadArg);
+        }
+
+        let raw_term = unsafe {
+            enif_make_sub_binary(
+                self.term.get_env().as_c_arg(),
+                self.term.as_c_arg(),
+                offset,
+                length,
+            )
+        };
+        Ok(unsafe { Term::new(self.term.get_env(), raw_term) })
+    }
+
     /// Returns a new view into the same binary.
     ///
     /// This method is an unsafe variant of `Binary::make_subbinary` in that it does not check for
