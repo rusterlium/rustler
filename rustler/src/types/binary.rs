@@ -408,6 +408,7 @@ impl<'a> Binary<'a> {
     /// If `offset + length` is out of bounds, this call results in *undefined behavior*. The
     /// caller has to ensure that `offset + length < self.len()`.
     #[allow(unused_unsafe)]
+    #[inline]
     pub unsafe fn make_subbinary_unchecked(&self, offset: usize, length: usize) -> Binary<'a> {
         let raw_term = unsafe {
             enif_make_sub_binary(
@@ -438,7 +439,6 @@ impl Deref for Binary<'_> {
         self.as_slice()
     }
 }
-
 impl<'a> Decoder<'a> for Binary<'a> {
     fn decode(term: Term<'a>) -> Result<Self, Error> {
         Binary::from_term(term)
@@ -470,6 +470,13 @@ impl PartialEq<OwnedBinary> for Binary<'_> {
 impl<'a> Term<'a> {
     pub fn into_binary(self) -> NifResult<Binary<'a>> {
         Binary::from_term(self)
+    }
+}
+
+impl<'a> From<Binary<'a>> for Term<'a> {
+    #[inline]
+    fn from(binary: Binary<'a>) -> Self {
+        binary.term
     }
 }
 
