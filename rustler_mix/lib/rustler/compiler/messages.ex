@@ -54,6 +54,13 @@ defmodule Rustler.Compiler.Messages do
     """
   end
 
+  def message(:no_artifacts) do
+    """
+    Cargo did not produce any build artifacts for this crate.
+    Ensure your crate has `crate-type = ["cdylib"]` and rustler/rustler_codegen dependencies.
+    """
+  end
+
   def message({:unknown_target, target}) do
     """
     #{target} is not in the support list yet. Please report it on https://github.com/rusterlium/rustler/issues."
