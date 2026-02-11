@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## 0.37.3 - 2026-02-11
+
+### Added
+
+- Add missing inline and `From<Binary>` for `Term` (#719)
+
+### Fixed
+
+- Add no_artifacts compiler message (#721, thanks @chgeuer)
+
 ## 0.37.2 - 2025-12-02
 
 ### Fixed
