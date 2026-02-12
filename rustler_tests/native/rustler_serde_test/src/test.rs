@@ -113,6 +113,7 @@ pub fn test<'a>(
         // Sequences
         "sequences (empty)" => run_test!(Vec::new() as Vec<u8>),
         "sequences (primitive)" => run_test!(vec!["hello", "world"]),
+        "sequences (byte)" => run_test!(vec![2, 3, 5, 7, 11, 13]),
         "sequences (complex)" => {
             let a = NewtypeStruct(u8::min_value());
             let b = NewtypeStruct(u8::max_value());

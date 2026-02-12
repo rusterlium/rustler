@@ -275,6 +275,16 @@ defmodule SerdeRustlerTests.NifTest do
       run_tests("sequences (primitive)", ["hello", "world"], ctx)
     end
 
+    test "sequences (byte)", ctx do
+      test_name = "sequences (byte)"
+      expected_term = <<2, 3, 5, 7, 11, 13>>
+      Helpers.run_de(test_name, expected_term)
+
+      if ctx[:skip] != :transcode do
+        Helpers.run_transcode(test_name, expected_term)
+      end
+    end
+
     test "sequences (complex)", ctx do
       test_case = [NewtypeStruct.record(num: 0), NewtypeStruct.record(num: 255)]
       transcoded = [[~s"#{NewtypeStruct}", 0], [~s"#{NewtypeStruct}", 255]]
