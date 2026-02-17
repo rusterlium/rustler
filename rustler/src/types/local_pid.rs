@@ -9,6 +9,11 @@ pub struct LocalPid {
     c: ErlNifPid,
 }
 
+// Safe: LocalPid is just a process identifier that can be safely sent across threads.
+// PIDs are used for message passing in BEAM, which is inherently thread-safe.
+unsafe impl Send for LocalPid {}
+unsafe impl Sync for LocalPid {}
+
 impl LocalPid {
     #[inline]
     pub fn as_c_arg(&self) -> &ErlNifPid {

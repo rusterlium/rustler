@@ -11,7 +11,7 @@ rust-version = "1.91"
 
 [features]
 big_integer = ["dep:num-bigint"]
-default = ["nif_version_2_15"]
+default = ["nif_version_2_15", "async-rt", "tokio-rt"]
 derive = []
 allocator = []
 nif_version_2_14 = []
@@ -19,12 +19,17 @@ nif_version_2_15 = ["nif_version_2_14"]
 nif_version_2_16 = ["nif_version_2_15"]
 nif_version_2_17 = ["nif_version_2_16"]
 serde = ["dep:serde"]
+async-rt = []
+tokio-rt = ["async-rt", "dep:tokio", "dep:futures-core"]
 
 [dependencies]
 inventory = "0.3"
 rustler_codegen = { path = "../rustler_codegen", version = "0.37.3"}
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
+tokio = { version = "1", optional = true, features = ["rt", "rt-multi-thread", "sync"] }
+futures-core = { version = "0.3", optional = true }
+once_cell = "1"
 
 [target.'cfg(not(windows))'.dependencies]
 libloading = "0.9"
