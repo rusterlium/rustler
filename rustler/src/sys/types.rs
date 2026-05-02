@@ -141,18 +141,21 @@ pub type ErlNifResourceDynCall =
     unsafe extern "C" fn(env: *mut ErlNifEnv, obj: *mut c_void, call_data: *const c_void) -> ();
 
 /// See [ErlNifResourceTypeInit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifResourceTypeInit) in the Erlang docs.
-///
-/// On NIF version < 2.16 (OTP < 24), the struct only has three fields (dtor, stop, down = 24
-/// bytes). `members` and `dyncall` were added in NIF 2.16.  Rustler must report the correct
-/// struct size via `sizeof_ErlNifResourceTypeInit` in the NIF entry, otherwise OTP's
-/// `sys_memcpy` in `open_resource_type` overflows the `new_callbacks` field in
-/// `opened_resource_type`, causing heap corruption.
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifResourceTypeInit {
     pub dtor: *const ErlNifResourceDtor,
     pub stop: *const ErlNifResourceStop, // at ERL_NIF_SELECT_STOP event
     pub down: *const ErlNifResourceDown, // enif_monitor_process
+
+    // On NIF version <2.16 (OTP <24), the struct only has three fields (dtor,
+    // stop, and down). `members` and `dyncall` were added in NIF 2.16, and with
+    // this change, the fields are now copied one-by-one, making future
+    // additions safe. In older versions, OTP instead uses memcpy with *our*
+    // sizeof, as reported in the NIF init, for this struct to copy it into its
+    // own instance of `ErlNifResourceTypeInit`, which will overflow and corrupt
+    // the heap. Thus we have to cfg-gate all new fields as long as we still
+    // support NIF versions below 2.16.
     #[cfg(feature = "nif_version_2_16")]
     pub members: c_int,
     #[cfg(feature = "nif_version_2_16")]

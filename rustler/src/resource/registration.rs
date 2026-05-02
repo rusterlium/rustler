@@ -238,6 +238,8 @@ static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = crate::sys::enif_init_resource_t
 #[cfg(not(feature = "nif_version_2_16"))]
 static OPEN_RESOURCE_TYPE: OpenResourceTypeFn = crate::sys::enif_open_resource_type_x;
 
+// Only used in NIF versions 2.16 and onwards
+#[allow(unused)]
 const fn max(i: i32, j: i32) -> i32 {
     if i > j {
         i
