@@ -55,7 +55,9 @@ impl Registration {
                 dtor: ptr::null(),
                 stop: ptr::null(),
                 down: ptr::null(),
+                #[cfg(feature = "nif_version_2_16")]
                 members: 0,
+                #[cfg(feature = "nif_version_2_16")]
                 dyncall: ptr::null(),
             },
             get_type_name: std::any::type_name::<T>,
@@ -79,6 +81,7 @@ impl Registration {
             Self {
                 init: ErlNifResourceTypeInit {
                     dtor: resource_destructor::<T> as *const ErlNifResourceDtor,
+                    #[cfg(feature = "nif_version_2_16")]
                     members: max(self.init.members, 1),
                     ..self.init
                 },
@@ -94,6 +97,7 @@ impl Registration {
             Self {
                 init: ErlNifResourceTypeInit {
                     down: resource_down::<T> as *const ErlNifResourceDown,
+                    #[cfg(feature = "nif_version_2_16")]
                     members: max(self.init.members, 3),
                     ..self.init
                 },
