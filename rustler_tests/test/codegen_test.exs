@@ -45,6 +45,11 @@ defmodule RustlerTest.CodegenTest do
       assert value == RustlerTest.map_echo(value)
     end
 
+    test "renamed fields" do
+      value = %{type: :import, start: 0, end: 12, async: true}
+      assert value == RustlerTest.renamed_map_echo(value)
+    end
+
     test "with invalid map" do
       value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
 
@@ -328,6 +333,11 @@ defmodule RustlerTest.CodegenTest do
              assert_raise(ErlangError, fn ->
                RustlerTest.tagged_enum_4_echo(nil)
              end)
+  end
+
+  test "renamed tagged enum variants and fields" do
+    value = {:renamed, %{end: 1, y: 2}}
+    assert value == RustlerTest.renamed_tagged_enum_echo(value)
   end
 
   test "untagged enum transcoder" do
