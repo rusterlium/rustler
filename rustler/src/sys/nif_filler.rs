@@ -49,7 +49,7 @@ mod internal {
 // that handle DOES find the statically-linked-in BEAM exports.
 #[cfg(target_os = "android")]
 mod internal {
-    
+
     use std::os::raw::{c_char, c_int, c_void};
 
     use super::DynNifFiller;
@@ -111,11 +111,7 @@ mod internal {
                 let err_str = if err.is_null() {
                     String::from("unknown")
                 } else {
-                    unsafe {
-                        std::ffi::CStr::from_ptr(err)
-                            .to_string_lossy()
-                            .into_owned()
-                    }
+                    unsafe { std::ffi::CStr::from_ptr(err).to_string_lossy().into_owned() }
                 };
                 let fname = unsafe {
                     std::ffi::CStr::from_ptr(info.dli_fname)
