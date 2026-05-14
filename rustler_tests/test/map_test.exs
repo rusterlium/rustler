@@ -54,6 +54,10 @@ defmodule RustlerTest.MapTest do
              RustlerTest.map_from_pairs(pairs)
   end
 
+  test "map from macro" do
+    assert %{code: "console.log(1)", css: nil, errors: []} == RustlerTest.map_from_macro()
+  end
+
   test "map from pairs with incorrect type" do
     pairs = [{"a", 1}, {"b", 7}, {"c", 6}, {"d", 0}, nil]
 

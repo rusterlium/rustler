@@ -2,6 +2,12 @@ use rustler::types::map::MapIterator;
 use rustler::types::tuple::make_tuple;
 use rustler::{Atom, Encoder, Env, Error, ListIterator, NifResult, Term};
 
+rustler::atoms! {
+    code,
+    css,
+    errors,
+}
+
 #[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
     let res: NifResult<Vec<i64>> = iter.map(|(_key, value)| value.decode::<i64>()).collect();
@@ -54,6 +60,15 @@ pub fn map_from_pairs<'a>(env: Env<'a>, pairs: ListIterator<'a>) -> NifResult<Te
     let res: Result<Vec<(Term, Term)>, Error> = pairs.map(|x| x.decode()).collect();
 
     res.and_then(|v| Term::map_from_pairs(env, &v))
+}
+
+#[rustler::nif]
+pub fn map_from_macro<'a>(env: Env<'a>) -> Term<'a> {
+    rustler::term_map!(env, {
+        code() => "console.log(1)",
+        css() => Option::<String>::None,
+        errors() => Vec::<String>::new(),
+    })
 }
 
 #[rustler::nif]
