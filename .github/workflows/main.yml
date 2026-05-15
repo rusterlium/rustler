@@ -89,11 +89,12 @@ jobs:
     strategy:
       matrix:
         pair:
+          - { erlang: "29", elixir: "1.19" }
           - { erlang: "28", elixir: "1.19", latest: true }
           - { erlang: "27", elixir: "1.19" }
           - { erlang: "27", elixir: "1.18" }
-          - { erlang: "26", elixir: "1.18" }
           - { erlang: "27", elixir: "1.17" }
+          - { erlang: "26", elixir: "1.18" }
           - { erlang: "26", elixir: "1.17" }
           - { erlang: "26", elixir: "1.16" }
           - { erlang: "26", elixir: "1.15" }
