@@ -142,7 +142,9 @@ where
 }
 
 pub const fn min_erts() -> &'static [u8] {
-    if cfg!(feature = "nif_version_2_17") {
+    if cfg!(feature = "nif_version_2_18") {
+        b"OTP-29.0\0"
+    } else if cfg!(feature = "nif_version_2_17") {
         b"OTP-26.0\0"
     } else if cfg!(feature = "nif_version_2_16") {
         b"OTP-24.0\0"
