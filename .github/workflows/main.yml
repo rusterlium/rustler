@@ -9,12 +9,16 @@ on:
   schedule:
     - cron: '0 0 * * 3'
 
+env:
+  # Bump if the cached instance is broken due to a runner image update
+  RUST_CACHE_KEY: rustler-2026-05
+
 jobs:
   format:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -45,7 +49,7 @@ jobs:
         os: [ubuntu, windows, macos]
         toolchain: [stable, nightly]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -54,7 +58,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
 
       - run: cargo build
 
@@ -66,7 +70,7 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -74,7 +78,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
           save-if: false
 
       - run: cargo clippy --all-targets --all-features -- -D warnings
@@ -85,11 +89,12 @@ jobs:
     strategy:
       matrix:
         pair:
+          - { erlang: "29", elixir: "1.19" }
           - { erlang: "28", elixir: "1.19", latest: true }
           - { erlang: "27", elixir: "1.19" }
           - { erlang: "27", elixir: "1.18" }
-          - { erlang: "26", elixir: "1.18" }
           - { erlang: "27", elixir: "1.17" }
+          - { erlang: "26", elixir: "1.18" }
           - { erlang: "26", elixir: "1.17" }
           - { erlang: "26", elixir: "1.16" }
           - { erlang: "26", elixir: "1.15" }
@@ -105,10 +110,10 @@ jobs:
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Erlang/Elixir
-        uses: erlef/setup-beam@main
+        uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.pair.erlang}}
           elixir-version: ${{matrix.pair.elixir}}
@@ -121,7 +126,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
           save-if: false
 
       - run: cargo test
