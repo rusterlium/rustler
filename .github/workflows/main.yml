@@ -9,6 +9,10 @@ on:
   schedule:
     - cron: '0 0 * * 3'
 
+env:
+  # Bump if the cached instance is broken due to a runner image update
+  RUST_CACHE_KEY: rustler-2026-05
+
 jobs:
   format:
     name: Format
@@ -54,7 +58,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
 
       - run: cargo build
 
@@ -74,7 +78,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
           save-if: false
 
       - run: cargo clippy --all-targets --all-features -- -D warnings
@@ -121,7 +125,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: rustler
+          shared-key: ${{ env.RUST_CACHE_KEY }}
           save-if: false
 
       - run: cargo test
