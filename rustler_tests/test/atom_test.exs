@@ -7,6 +7,24 @@ defmodule RustlerTest.AtomTest do
     assert RustlerTest.atom_to_string(:erlang.list_to_atom([197])) == "Å"
   end
 
+  test "utf8 atom roundtrip" do
+    utf8 = "ÀrgerÖ"
+
+    utf8_atom = RustlerTest.binary_to_atom_utf8(utf8)
+    assert utf8_atom == String.to_atom(utf8)
+    assert RustlerTest.atom_to_string(utf8_atom) == utf8
+  end
+
+  test "utf8 atom roundtrip on nif 2.17+" do
+    if RustlerTest.Helper.has_nif_version("2.17") do
+      utf8 = "こんにちは"
+
+      utf8_atom = RustlerTest.binary_to_atom_utf8(utf8)
+      assert utf8_atom == String.to_atom(utf8)
+      assert RustlerTest.atom_to_string(utf8_atom) == utf8
+    end
+  end
+
   test "binary to atom" do
     assert RustlerTest.binary_to_atom("test_atom") == :test_atom
   end
