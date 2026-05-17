@@ -9,7 +9,7 @@ use std::path::Path;
 use std::{env, fs};
 
 pub const MIN_SUPPORTED_VERSION: (u32, u32) = (2, 14);
-pub const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 17);
+pub const MAX_SUPPORTED_VERSION: (u32, u32) = (2, 18);
 
 const SNIPPET_NAME: &str = "nif_api.snippet.rs";
 
@@ -830,6 +830,16 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
             "enif_set_option",
             "env: *mut ErlNifEnv, opt: ErlNifOption",
         );
+    }
+
+    if opts.nif_version >= (2, 18) {
+        b.func("usize", "enif_term_size", "term: ERL_NIF_TERM");
+        b.func(
+            "c_int",
+            "enif_get_atom_cache_index",
+            "env: *mut ErlNifEnv, term: ERL_NIF_TERM, index: *mut c_uint",
+        );
+        b.func("c_uint", "enif_max_atom_cache_index", "");
     }
 
     // If new functions are added for a new OTP version, ensure that *all* functions are added in
