@@ -71,3 +71,9 @@ pub fn term_type(term: Term) -> Atom {
         rustler::TermType::Unknown => atoms::unknown(),
     }
 }
+
+#[cfg(feature = "nif_version_2_18")]
+#[rustler::nif]
+pub fn term_size(term: Term) -> usize {
+    term.size()
+}
