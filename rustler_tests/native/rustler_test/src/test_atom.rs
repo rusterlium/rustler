@@ -26,10 +26,10 @@ pub fn binary_to_atom_utf8(env: Env, binary: Binary) -> NifResult<Atom> {
 
 #[rustler::nif]
 pub fn binary_to_existing_atom(env: Env, binary: Binary) -> Option<Atom> {
-    Atom::try_from_bytes(env, binary.as_slice()).ok()
+    Atom::existing_from_bytes(env, binary.as_slice()).ok()
 }
 
 #[rustler::nif]
 pub fn binary_to_existing_atom_utf8(env: Env, binary: Binary) -> Option<Atom> {
-    Atom::try_from_utf8_bytes(env, binary.as_slice()).ok()
+    Atom::existing_from_utf8_bytes(env, binary.as_slice()).ok()
 }
