@@ -19,11 +19,10 @@ atoms! {
 /**
  * Attempts to create an atom term from the provided string (if the atom already exists in the atom table). If not, returns a string term.
  */
-pub fn str_to_term<'a>(env: &Env<'a>, string: &str) -> Result<Term<'a>, Error> {
-    match Atom::try_from_bytes(*env, string.as_bytes()) {
-        Ok(Some(term)) => Ok(term.encode(*env)),
-        Ok(None) => Ok(string.encode(*env)),
-        _ => Err(Error::InvalidStringable),
+pub fn str_to_term<'a>(env: Env<'a>, string: &str) -> Term<'a> {
+    match Atom::try_from_str(env, string) {
+        Ok(term) => term.encode(env),
+        Err(_) => string.encode(env),
     }
 }
 

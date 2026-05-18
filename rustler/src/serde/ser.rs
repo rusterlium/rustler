@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::serde::{atoms, error::Error, util};
+use crate::serde::{atoms, error::Error};
 use crate::wrapper::list::make_list;
 use crate::{types::tuple, Encoder, Env, OwnedBinary, Term};
 use serde::ser::{self, Serialize};
@@ -184,7 +184,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
         _variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        atoms::str_to_term(&self.env, variant).or(Err(Error::InvalidVariantName))
+        Ok(atoms::str_to_term(self.env, variant))
     }
 
     #[inline]
@@ -199,7 +199,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
     where
         T: ?Sized + ser::Serialize,
     {
-        let name_term = atoms::str_to_term(&self.env, name).or(Err(Error::InvalidVariantName))?;
+        let name_term = atoms::str_to_term(self.env, name);
         let mut ser = SequenceSerializer::new(self, Some(2), Some(name_term));
         ser.add(value.serialize(self)?);
         ser.to_tuple()
@@ -247,7 +247,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
         name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeTupleStruct, Self::Error> {
-        let name_term = atoms::str_to_term(&self.env, name).or(Err(Error::InvalidVariantName))?;
+        let name_term = atoms::str_to_term(self.env, name);
         Ok(SequenceSerializer::new(self, Some(len), Some(name_term)))
     }
 
@@ -279,7 +279,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
         name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
-        let name_term = util::str_to_term(&self.env, name).or(Err(Error::InvalidStructName))?;
+        let name_term = atoms::str_to_term(self.env, name);
         Ok(MapSerializer::new(self, Some(len), Some(name_term)))
     }
 
@@ -510,7 +510,7 @@ impl<'a> ser::SerializeStruct for MapSerializer<'a> {
     where
         T: ?Sized + Serialize,
     {
-        let key_term = atoms::str_to_term(&self.ser.env, key).or(Err(Error::InvalidStructKey))?;
+        let key_term = atoms::str_to_term(self.ser.env, key);
         self.add_key(key_term);
         self.add_val(value.serialize(self.ser)?);
         Ok(())

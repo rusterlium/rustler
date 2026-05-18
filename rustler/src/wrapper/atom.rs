@@ -8,12 +8,25 @@ use crate::wrapper::{c_char, c_uint, NIF_ENV, NIF_TERM};
 use crate::Error;
 
 #[cfg(not(feature = "nif_version_2_17"))]
-pub unsafe fn make_atom(env: NIF_ENV, name: &[u8], _encoding: ErlNifCharEncoding) -> NIF_TERM {
-    enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len())
+pub unsafe fn make_atom(
+    env: NIF_ENV,
+    name: &[u8],
+    _encoding: ErlNifCharEncoding,
+) -> Result<NIF_TERM, Error> {
+    let res = enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len());
+    if res != 0 {
+        Ok(res)
+    } else {
+        Err(Error::BadArg)
+    }
 }
 
 #[cfg(feature = "nif_version_2_17")]
-pub unsafe fn make_atom(env: NIF_ENV, name: &[u8], encoding: ErlNifCharEncoding) -> NIF_TERM {
+pub unsafe fn make_atom(
+    env: NIF_ENV,
+    name: &[u8],
+    encoding: ErlNifCharEncoding,
+) -> Result<NIF_TERM, Error> {
     let mut atom_out: NIF_TERM = 0;
 
     // Create a new atom with the requested encoding.
@@ -26,29 +39,31 @@ pub unsafe fn make_atom(env: NIF_ENV, name: &[u8], encoding: ErlNifCharEncoding)
         encoding,
     ) != 0
     {
-        return atom_out;
+        Ok(atom_out)
+    } else {
+        Err(Error::BadArg)
     }
-
-    0
 }
 
 pub unsafe fn make_existing_atom(
     env: NIF_ENV,
     name: &[u8],
     encoding: ErlNifCharEncoding,
-) -> Option<NIF_TERM> {
+) -> Result<NIF_TERM, Error> {
     let mut atom_out: NIF_TERM = 0;
-    let success = enif_make_existing_atom_len(
+
+    if enif_make_existing_atom_len(
         env,
         name.as_ptr() as *const c_char,
         name.len(),
         &mut atom_out as *mut NIF_TERM,
         encoding,
-    );
-    if success == 0 {
-        return None;
+    ) != 0
+    {
+        Ok(atom_out)
+    } else {
+        Err(Error::BadArg)
     }
-    Some(atom_out)
 }
 
 /// Get the contents of this atom as a string.

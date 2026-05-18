@@ -16,24 +16,20 @@ pub fn atom_equals_ok(atom: Atom) -> bool {
 
 #[rustler::nif]
 pub fn binary_to_atom(env: Env, binary: Binary) -> NifResult<Atom> {
-    let atom = Atom::from_bytes(env, binary.as_slice())?;
-    Ok(atom)
+    Atom::from_bytes(env, binary.as_slice())
 }
 
 #[rustler::nif]
 pub fn binary_to_atom_utf8(env: Env, binary: Binary) -> NifResult<Atom> {
-    let atom = Atom::from_utf8_bytes(env, binary.as_slice())?;
-    Ok(atom)
+    Atom::from_utf8_bytes(env, binary.as_slice())
 }
 
 #[rustler::nif]
-pub fn binary_to_existing_atom(env: Env, binary: Binary) -> NifResult<Option<Atom>> {
-    let atom = Atom::try_from_bytes(env, binary.as_slice())?;
-    Ok(atom)
+pub fn binary_to_existing_atom(env: Env, binary: Binary) -> Option<Atom> {
+    Atom::try_from_bytes(env, binary.as_slice()).ok()
 }
 
 #[rustler::nif]
-pub fn binary_to_existing_atom_utf8(env: Env, binary: Binary) -> NifResult<Option<Atom>> {
-    let atom = Atom::try_from_utf8_bytes(env, binary.as_slice())?;
-    Ok(atom)
+pub fn binary_to_existing_atom_utf8(env: Env, binary: Binary) -> Option<Atom> {
+    Atom::try_from_utf8_bytes(env, binary.as_slice()).ok()
 }
