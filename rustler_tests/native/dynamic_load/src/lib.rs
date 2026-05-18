@@ -22,6 +22,7 @@ fn initialize_dataset(mut asset_path: PathBuf) {
 #[rustler::nif]
 fn get_dataset() -> &'static str {
     // Safety: see `initialize_dataset()`
+    #[allow(static_mut_refs)]
     unsafe { DATASET.as_ref() }.expect("Dataset is not initialized")
 }
 
