@@ -226,6 +226,7 @@ pub fn tuplestruct_record_echo(tuplestruct: TupleStructRecord) -> TupleStructRec
     tuplestruct
 }
 
+#[allow(unused)]
 mod check_if_only_decode_is_enough {
     // Regression test, failed to compile
     // TODO: Move this test to the trybuild tests in rustler_codegen
