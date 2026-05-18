@@ -44,4 +44,36 @@ defmodule RustlerTest.AtomTest do
     refute RustlerTest.atom_equals_ok(:fish)
     assert catch_error(RustlerTest.atom_equals_ok("ok")) == :badarg
   end
+
+  test "binary to existing atom utf8" do
+    utf8 = "test_non_existing_ÀrgerÖ"
+
+    assert RustlerTest.binary_to_existing_atom_utf8(utf8) == nil
+    assert RustlerTest.binary_to_atom_utf8(utf8)
+    assert RustlerTest.binary_to_existing_atom_utf8(utf8) != nil
+
+    if RustlerTest.Helper.has_nif_version("2.17") do
+      utf8 = "test_non_existing_こんにちは"
+
+      assert RustlerTest.binary_to_existing_atom_utf8(utf8) == nil
+      assert RustlerTest.binary_to_atom_utf8(utf8)
+      assert RustlerTest.binary_to_existing_atom_utf8(utf8) != nil
+    end
+  end
+
+  test "reject invalid utf8" do
+    invalid_utf8 = <<0xE5>>
+
+    assert catch_error(RustlerTest.binary_to_atom_utf8(invalid_utf8)) == :badarg
+    assert RustlerTest.binary_to_existing_atom_utf8(invalid_utf8) == nil
+  end
+
+  test "reject not-latin1-encodable string" do
+    unless RustlerTest.Helper.has_nif_version("2.17") do
+      non_latin1_utf8 = "こんにちは"
+
+      assert catch_error(RustlerTest.binary_to_atom_utf8(non_latin1_utf8)) == :badarg
+      assert RustlerTest.binary_to_existing_atom_utf8(non_latin1_utf8) == nil
+    end
+  end
 end
