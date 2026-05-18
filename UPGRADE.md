@@ -2,6 +2,13 @@
 
 This document is intended to simplify upgrading to newer versions by extending the changelog.
 
+## 0.37 -> 0.38
+
+The following deprecated codegen features have been dropped:
+
+- `resource!` macro, please use `resource_impl`
+- Explicit NIF function listing in `init!`, please remove the list
+
 ## 0.34 -> 0.35
 
 `rustler_sys` as a standalone library has been replaced by an embedded
