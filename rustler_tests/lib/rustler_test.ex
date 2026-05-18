@@ -85,6 +85,8 @@ defmodule RustlerTest do
   def binary_new(), do: err()
   def owned_binary_new(), do: err()
   def new_binary_new(), do: err()
+  def new_binary_from_iter(), do: err()
+  def owned_binary_from_iter(), do: err()
   def unowned_to_owned(_), do: err()
   def realloc_shrink(), do: err()
   def realloc_grow(), do: err()

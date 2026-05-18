@@ -498,6 +498,7 @@ impl<'a> NewBinary<'a> {
         let (buf, term) = unsafe { new_binary(env, size) };
         NewBinary { buf, term, size }
     }
+
     /// Extracts a slice containing the entire binary.
     #[inline]
     pub fn as_slice(&self) -> &[u8] {

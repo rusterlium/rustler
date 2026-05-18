@@ -37,6 +37,18 @@ pub fn new_binary_new(env: Env) -> Binary {
 }
 
 #[rustler::nif]
+pub fn new_binary_from_iter(env: Env) -> Binary {
+    let binary = NewBinary::from_iter(env, vec![1, 2, 3, 4].into_iter());
+    binary.into()
+}
+
+#[rustler::nif]
+pub fn owned_binary_from_iter(env: Env) -> Binary {
+    let binary = OwnedBinary::from_iter(vec![1, 2, 3, 4].into_iter());
+    binary.release(env)
+}
+
+#[rustler::nif]
 pub fn unowned_to_owned<'a>(env: Env<'a>, binary: Binary<'a>) -> NifResult<Binary<'a>> {
     // Do nothing and suppress panic message. From https://stackoverflow.com/a/35559417
     panic::set_hook(Box::new(|_info| {}));
