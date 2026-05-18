@@ -80,4 +80,11 @@ defmodule RustlerTest.TermTest do
     assert RustlerTest.term_type(& &1) == :fun
     assert RustlerTest.term_type(make_ref()) == :reference
   end
+
+  if RustlerTest.Helper.has_nif_version("2.18") do
+    test "term size" do
+      assert RustlerTest.term_size(%{}) > 0
+      assert RustlerTest.term_size(%{a: 1, c: 2}) > RustlerTest.term_size(%{})
+    end
+  end
 end

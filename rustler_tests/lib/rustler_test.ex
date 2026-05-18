@@ -158,4 +158,8 @@ defmodule RustlerTest do
   if Helper.has_nif_version("2.16") do
     def perform_dyncall(_res, _a, _b, _c), do: err()
   end
+
+  if Helper.has_nif_version("2.18") do
+    def term_size(_term), do: err()
+  end
 end

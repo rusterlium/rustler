@@ -64,7 +64,7 @@ defmodule Rustler.Compiler do
     artifacts =
       case compile_result do
         {build_results, 0} -> build_results.artifacts
-        {_, code} -> raise "Rust NIF compile error (rustc exit code #{code})"
+        {_, code} -> raise "Failed to compile #{config.crate} (rustc exit code #{code})"
       end
 
     handle_artifacts(artifacts, config)

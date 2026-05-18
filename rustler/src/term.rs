@@ -125,6 +125,11 @@ impl<'a> Term<'a> {
     pub fn get_erl_type(&self) -> ErlNifTermType {
         unsafe { enif_term_type(self.env.as_c_arg(), self.as_c_arg()) }
     }
+
+    #[cfg(feature = "nif_version_2_18")]
+    pub fn size(&self) -> usize {
+        unsafe { enif_term_size(self.as_c_arg()) }
+    }
 }
 
 impl PartialEq for Term<'_> {
