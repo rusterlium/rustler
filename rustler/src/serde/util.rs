@@ -1,10 +1,5 @@
 use crate::serde::{atoms, Error};
-use crate::{types::tuple, Binary, Decoder, Encoder, Env, Term};
-
-/// Converts an `&str` to either an existing atom or an Elixir bitstring.
-pub fn str_to_term<'a>(env: &Env<'a>, string: &str) -> Result<Term<'a>, Error> {
-    atoms::str_to_term(env, string).or_else(|_| Ok(string.encode(*env)))
-}
+use crate::{types::tuple, Binary, Decoder, Term};
 
 /// Attempts to convert a stringable term into a `String`.
 pub fn term_to_str(term: &Term) -> Result<String, Error> {
@@ -85,8 +80,7 @@ pub fn validate_struct<'a>(term: &Term<'a>, name: Option<&str>) -> Result<Term<'
 
     match name {
         Some(name) => {
-            let name_term =
-                atoms::str_to_term(&term.get_env(), name).or(Err(Error::InvalidStructName))?;
+            let name_term = atoms::str_to_term(term.get_env(), name);
 
             if struct_name_term.eq(&name_term) {
                 Ok(struct_name_term)

@@ -1,3 +1,4 @@
+use crate::sys::ErlNifCharEncoding;
 use crate::wrapper::atom;
 use crate::wrapper::NIF_TERM;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
@@ -22,64 +23,150 @@ impl Atom {
     }
 
     unsafe fn from_nif_term(term: NIF_TERM) -> Self {
-        Atom { term }
+        Self { term }
     }
 
     pub fn from_term(term: Term) -> NifResult<Self> {
         if term.is_atom() {
-            Ok(unsafe { Atom::from_nif_term(term.as_c_arg()) })
+            Ok(unsafe { Self::from_nif_term(term.as_c_arg()) })
         } else {
             Err(Error::BadArg)
         }
     }
 
-    /// Return the atom whose text representation is `bytes`, like `erlang:binary_to_atom/2`.
+    /// Return the atom whose text representation is Latin1 `bytes`.
     ///
     /// # Errors
-    /// `Error::BadArg` if `bytes.len() > 255`.
-    pub fn from_bytes(env: Env, bytes: &[u8]) -> NifResult<Atom> {
-        if bytes.len() > 255 {
-            return Err(Error::BadArg);
-        }
-        unsafe { Ok(Atom::from_nif_term(atom::make_atom(env.as_c_arg(), bytes))) }
+    /// `Error::BadArg` if atom creation fails.
+    ///
+    /// This function uses Latin-1 encoding for compatibility.
+    pub fn from_bytes(env: Env, bytes: &[u8]) -> NifResult<Self> {
+        Self::from_encoded_bytes(env, bytes, ErlNifCharEncoding::ERL_NIF_LATIN1)
     }
 
-    /// Return the atom whose text representation is `bytes`, like `erlang:binary_to_existing_atom/2`, if atom with given text representation exists.
+    /// Return the atom whose text representation is UTF-8 `bytes`.
     ///
     /// # Errors
-    /// `Error::BadArg` if `bytes.len() > 255`.
-    pub fn try_from_bytes(env: Env, bytes: &[u8]) -> NifResult<Option<Atom>> {
-        if bytes.len() > 255 {
-            return Err(Error::BadArg);
-        }
-        unsafe {
-            match atom::make_existing_atom(env.as_c_arg(), bytes) {
-                Some(term) => Ok(Some(Atom::from_nif_term(term))),
-                None => Ok(None),
-            }
-        }
-    }
+    /// `Error::BadArg` if atom creation fails. Before NIF 2.17, it will also
+    /// return `Error::BadArg` if the atom can not be encoded to Latin1.
+    ///
+    /// On NIF 2.17+ (`OTP 26+`), this uses UTF-8 atom APIs directly.
+    /// On older NIF versions, UTF-8 is transcoded to Latin-1 before atom creation.
+    pub fn from_utf8_bytes(env: Env, bytes: &[u8]) -> NifResult<Self> {
+        use ErlNifCharEncoding::*;
 
-    /// Return the atom whose text representation is the given `string`, like `erlang:list_to_atom/2`.
-    ///
-    /// # Errors
-    /// `Error::BadArg` if `string` contains characters that aren't in Latin-1, or if it's too
-    /// long. The maximum length is 255 characters.
-    pub fn from_str(env: Env, string: &str) -> NifResult<Atom> {
-        if string.is_ascii() {
-            // Fast path.
-            Atom::from_bytes(env, string.as_bytes())
-        } else {
-            // Convert from Rust UTF-8 to Latin-1.
-            let mut bytes = Vec::with_capacity(string.len());
+        #[cfg(feature = "nif_version_2_17")]
+        {
+            Self::from_encoded_bytes(env, bytes, ERL_NIF_UTF8)
+        }
+
+        #[cfg(not(feature = "nif_version_2_17"))]
+        {
+            let string = std::str::from_utf8(bytes).map_err(|_| Error::BadArg)?;
+            let mut latin1 = Vec::with_capacity(string.len());
             for c in string.chars() {
                 if (c as u32) >= 256 {
                     return Err(Error::BadArg);
                 }
-                bytes.push(c as u8);
+                latin1.push(c as u8);
             }
-            Atom::from_bytes(env, &bytes)
+            Self::from_encoded_bytes(env, &latin1, ERL_NIF_LATIN1)
         }
+    }
+
+    fn from_encoded_bytes(env: Env, bytes: &[u8], encoding: ErlNifCharEncoding) -> NifResult<Self> {
+        unsafe {
+            atom::make_atom(env.as_c_arg(), bytes, encoding).map(|term| Self::from_nif_term(term))
+        }
+    }
+
+    /// Return the atom whose text representation is Latin1 `bytes`, like `erlang:binary_to_existing_atom/1`,
+    /// if atom with given text representation exists.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if the bytes are incorrectly encoded, the array is too long (255 bytes before
+    /// NIF 2.17, 255 characters later), or the atom does not exist.
+    pub fn existing_from_bytes(env: Env, bytes: &[u8]) -> NifResult<Self> {
+        Self::existing_from_encoded_bytes(env, bytes, ErlNifCharEncoding::ERL_NIF_LATIN1)
+    }
+
+    /// Return the atom whose text representation is Latin1 `bytes`, like `erlang:binary_to_existing_atom/1`,
+    /// if atom with given text representation exists.
+    #[deprecated(since = "0.38.0", note = "Use existing_from_(utf8_)bytes")]
+    pub fn try_from_bytes(env: Env, bytes: &[u8]) -> NifResult<Option<Self>> {
+        Self::existing_from_bytes(env, bytes).map(Some)
+    }
+
+    /// Return the atom whose text representation is UTF8 `bytes`, like `erlang:binary_to_existing_atom/2`,
+    /// if atom with given text representation exists.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if the bytes are incorrectly encoded, the array is too long (255 bytes before
+    /// NIF 2.17, 255 characters later), or the atom does not exist.
+    ///
+    /// On NIF 2.17+ (`OTP 26+`), this uses UTF-8 atom APIs directly.
+    /// On older NIF versions, UTF-8 is transcoded to Latin-1 before lookup.
+    pub fn existing_from_utf8_bytes(env: Env, bytes: &[u8]) -> NifResult<Self> {
+        use ErlNifCharEncoding::*;
+
+        #[cfg(feature = "nif_version_2_17")]
+        {
+            Self::existing_from_encoded_bytes(env, bytes, ERL_NIF_UTF8)
+        }
+
+        #[cfg(not(feature = "nif_version_2_17"))]
+        {
+            let string = std::str::from_utf8(bytes).map_err(|_| Error::BadArg)?;
+            let mut latin1 = Vec::with_capacity(string.len());
+            for c in string.chars() {
+                if (c as u32) >= 256 {
+                    return Err(Error::BadArg);
+                }
+                latin1.push(c as u8);
+            }
+            Self::existing_from_encoded_bytes(env, &latin1, ERL_NIF_LATIN1)
+        }
+    }
+
+    /// Return the atom whose text representation is `bytes`, like `erlang:binary_to_existing_atom/2`,
+    /// if atom with given text representation exists.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if the bytes are incorrectly encoded, the array is too long (255 bytes before
+    /// NIF 2.17, 255 characters later), or the atom does not exist.
+    fn existing_from_encoded_bytes(
+        env: Env,
+        bytes: &[u8],
+        encoding: ErlNifCharEncoding,
+    ) -> NifResult<Self> {
+        unsafe {
+            atom::make_existing_atom(env.as_c_arg(), bytes, encoding)
+                .map(|term| Self::from_nif_term(term))
+        }
+    }
+
+    /// Return the atom whose text representation is the given `string`.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if atom creation fails.
+    pub fn from_str(env: Env, string: &str) -> NifResult<Self> {
+        Self::from_utf8_bytes(env, string.as_bytes())
+    }
+
+    /// Return the atom whose text representation is the given `string`.
+    ///
+    /// # Errors
+    /// `Error::BadArg` if atom lookup fails.
+    pub fn existing_from_str(env: Env, string: &str) -> NifResult<Self> {
+        Self::existing_from_utf8_bytes(env, string.as_bytes())
+    }
+
+    /// Return the atom whose text representation is the given `string`.
+    ///
+    /// Deprecated in favor of [`Atom::from_str_existing`].
+    #[deprecated(since = "0.38.0", note = "Use existing_from_str")]
+    pub fn try_from_str(env: Env, string: &str) -> NifResult<Option<Self>> {
+        Self::existing_from_str(env, string).map(Some)
     }
 }
 
