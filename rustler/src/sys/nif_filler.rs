@@ -83,9 +83,41 @@ mod internal {
 
     impl DlsymNifFiller {
         pub(crate) fn new() -> Self {
-            // Get the file path of the shared object we're inside. `Self::new`
-            // is statically linked into the same .so as the rest of rustler
-            // (and as libbeam.a's enif_* exports — that's why this works).
+            // RUSTLER_NIF_LIB_PATH lets the host process explicitly tell us
+            // the path of the .so containing the BEAM's enif_* exports. This
+            // generalises the fix: setups where rustler is statically linked
+            // alongside the BEAM (e.g. Mob) hit the same Bionic dlopen(NULL)
+            // blind spot, but setups where rustler and the BEAM live in
+            // different .so files would not be helped by the dladdr-self
+            // fallback below. When the env var is set we use it; otherwise
+            // we self-resolve, which is the right default for any single-.so
+            // deployment. See rusterlium/rustler#726.
+            if let Ok(path) = std::env::var("RUSTLER_NIF_LIB_PATH") {
+                if !path.is_empty() {
+                    let c_path = std::ffi::CString::new(path.clone()).expect(
+                        "rustler: RUSTLER_NIF_LIB_PATH must not contain interior NUL bytes",
+                    );
+                    let handle = unsafe { dlopen(c_path.as_ptr(), RTLD_NOW | RTLD_NOLOAD) };
+                    if handle.is_null() {
+                        let err = unsafe { dlerror() };
+                        let err_str = if err.is_null() {
+                            String::from("unknown")
+                        } else {
+                            unsafe { std::ffi::CStr::from_ptr(err).to_string_lossy().into_owned() }
+                        };
+                        panic!(
+                            "rustler: dlopen({:?}, RTLD_NOW | RTLD_NOLOAD) failed for \
+                             RUSTLER_NIF_LIB_PATH: {}",
+                            path, err_str
+                        );
+                    }
+                    return DlsymNifFiller { handle };
+                }
+            }
+
+            // Fallback: identify our own .so via dladdr, then dlopen it with
+            // RTLD_NOLOAD to get an explicit handle. Works for single-.so
+            // static-link deployments without any host setup.
             let mut info = DlInfo {
                 dli_fname: std::ptr::null(),
                 dli_fbase: std::ptr::null_mut(),
