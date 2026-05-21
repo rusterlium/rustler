@@ -4,10 +4,14 @@ pub(crate) trait DynNifFiller {
 
 #[cfg(not(target_os = "windows"))]
 mod internal {
-    use std::ffi::OsStr;
-
     use super::DynNifFiller;
-    use libloading::os::unix::{Library, RTLD_GLOBAL, RTLD_NOW};
+    use libc::{RTLD_GLOBAL, RTLD_NOLOAD, RTLD_NOW};
+    use libloading::os::unix::Library;
+
+    const FLAGS: i32 = RTLD_GLOBAL | RTLD_NOLOAD | RTLD_NOW;
+
+    // Path to the shared object that contains the BEAM
+    const BEAM_LOC: &str = "RUSTLER_BEAM_LIBRARY_PATH";
 
     pub(crate) struct DlsymNifFiller {
         lib: libloading::Library,
@@ -15,7 +19,11 @@ mod internal {
 
     impl DlsymNifFiller {
         pub(crate) fn new() -> Self {
-            let lib = unsafe { Library::open(None::<&OsStr>, RTLD_NOW | RTLD_GLOBAL) };
+            let beam_location = match std::env::var(BEAM_LOC) {
+                Ok(val) if !val.is_empty() => Some(val),
+                _ => None,
+            };
+            let lib = unsafe { Library::open(beam_location, FLAGS) };
             DlsymNifFiller {
                 lib: lib.unwrap().into(),
             }
