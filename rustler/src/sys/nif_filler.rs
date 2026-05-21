@@ -5,7 +5,10 @@ pub(crate) trait DynNifFiller {
 #[cfg(not(target_os = "windows"))]
 mod internal {
     use super::DynNifFiller;
-    use libloading::os::unix::{Library, RTLD_GLOBAL, RTLD_NOW};
+    use libc::{RTLD_GLOBAL, RTLD_NOLOAD, RTLD_NOW};
+    use libloading::os::unix::Library;
+
+    const FLAGS: i32 = RTLD_GLOBAL | RTLD_NOLOAD | RTLD_NOW;
 
     // Path to the shared object that contains the BEAM
     const BEAM_LOC: &str = "RUSTLER_BEAM_LIBRARY_PATH";
@@ -20,7 +23,7 @@ mod internal {
                 Ok(val) if !val.is_empty() => Some(val),
                 _ => None,
             };
-            let lib = unsafe { Library::open(beam_location, RTLD_NOW | RTLD_GLOBAL) };
+            let lib = unsafe { Library::open(beam_location, FLAGS) };
             DlsymNifFiller {
                 lib: lib.unwrap().into(),
             }
