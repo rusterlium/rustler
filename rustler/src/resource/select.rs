@@ -7,32 +7,70 @@ use crate::sys::{
     ERL_NIF_SELECT_WRITE_CANCELLED,
 };
 use crate::types::atom::undefined;
-use crate::{Encoder, Env, LocalPid, Reference, Resource, ResourceArc, Term};
-
-#[derive(Clone, Copy, Debug)]
-pub struct SelectResult(c_int);
+use crate::{Encoder, Env, LocalPid, Reference, Resource, ResourceArc};
 
 macro_rules! getter {
-    ($name:ident, $flag:ident) => {
+    (pub $name:ident, $flag:ident) => {
+        #[inline]
         pub fn $name(self) -> bool {
+            self.0 & $flag != 0
+        }
+    };
+    ($name:ident, $flag:ident) => {
+        #[inline]
+        fn $name(self) -> bool {
             self.0 & $flag != 0
         }
     };
 }
 
-impl SelectResult {
-    getter! {stop_called, ERL_NIF_SELECT_STOP_CALLED}
-    getter! {stop_scheduled, ERL_NIF_SELECT_STOP_SCHEDULED}
+#[derive(Clone, Copy, Debug)]
+pub struct SelectReturn(c_int);
+
+pub type SelectResult = Result<SelectReturn, SelectError>;
+
+impl From<SelectReturn> for SelectResult {
+    fn from(val: SelectReturn) -> Self {
+        use SelectError::*;
+
+        if val.0 < 0 {
+            if val.invalid_event() {
+                Err(InvalidEvent)
+            } else if val.failed() {
+                Err(Failed)
+            } else if val.not_supported() {
+                Err(NotSupported)
+            } else {
+                Err(Unknown)
+            }
+        } else {
+            Ok(val)
+        }
+    }
+}
+
+impl SelectReturn {
+    pub fn cancelled(self) -> bool {
+        self.read_cancelled() || self.write_cancelled() || self.error_cancelled()
+    }
+
+    getter! {pub stop_called, ERL_NIF_SELECT_STOP_CALLED}
+    getter! {pub stop_scheduled, ERL_NIF_SELECT_STOP_SCHEDULED}
+    getter! {pub read_cancelled, ERL_NIF_SELECT_READ_CANCELLED}
+    getter! {pub write_cancelled, ERL_NIF_SELECT_WRITE_CANCELLED}
+    getter! {pub error_cancelled, ERL_NIF_SELECT_ERROR_CANCELLED}
     getter! {invalid_event, ERL_NIF_SELECT_INVALID_EVENT}
     getter! {failed, ERL_NIF_SELECT_FAILED}
-    getter! {read_cancelled, ERL_NIF_SELECT_READ_CANCELLED}
-    getter! {write_cancelled, ERL_NIF_SELECT_WRITE_CANCELLED}
-    getter! {error_cancelled, ERL_NIF_SELECT_ERROR_CANCELLED}
     getter! {not_supported, ERL_NIF_SELECT_NOTSUP}
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum SelectError {}
+pub enum SelectError {
+    InvalidEvent,
+    Failed,
+    NotSupported,
+    Unknown,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Event(ErlNifEvent);
@@ -77,7 +115,7 @@ where
         mode: SelectMode,
         pid: LocalPid,
         reference: Option<Reference>,
-    ) {
+    ) -> SelectResult {
         let reference = match reference {
             Some(reference) => reference.encode(env),
             None => undefined().encode(env),
@@ -95,10 +133,12 @@ where
             )
         };
 
-        unimplemented!()
+        SelectReturn(res).into()
     }
 
-    pub fn cancel<'a>(&mut self, env: Env<'a>, event: &Event, mode: SelectMode) {
+    // TODO: select_read/select_write with an optional custom message
+
+    pub fn cancel<'a>(&mut self, env: Env<'a>, event: &Event, mode: SelectMode) -> SelectResult {
         let res = unsafe {
             enif_select(
                 env.as_c_arg(),
@@ -110,10 +150,10 @@ where
             )
         };
 
-        unimplemented!()
+        SelectReturn(res).into()
     }
 
-    pub fn stop<'a>(&mut self, env: Env<'a>, event: &Event) {
+    pub fn stop<'a>(&mut self, env: Env<'a>, event: &Event) -> SelectResult {
         let res = unsafe {
             enif_select(
                 env.as_c_arg(),
@@ -124,6 +164,7 @@ where
                 0usize,
             )
         };
-        unimplemented!()
+
+        SelectReturn(res).into()
     }
 }
