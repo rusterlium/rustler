@@ -3,8 +3,9 @@ use super::util::align_alloced_mem_for_struct;
 use super::ResourceInitError;
 use crate::env::EnvKind;
 use crate::sys::{
-    c_char, c_void, ErlNifEnv, ErlNifMonitor, ErlNifPid, ErlNifResourceDown, ErlNifResourceDtor,
-    ErlNifResourceFlags, ErlNifResourceType, ErlNifResourceTypeInit,
+    c_char, c_int, c_void, ErlNifEnv, ErlNifEvent, ErlNifMonitor, ErlNifPid, ErlNifResourceDown,
+    ErlNifResourceDtor, ErlNifResourceFlags, ErlNifResourceStop, ErlNifResourceType,
+    ErlNifResourceTypeInit,
 };
 use crate::{Env, LocalPid, Monitor, Resource};
 use std::any::TypeId;
@@ -65,6 +66,7 @@ impl Registration {
             type_name: None,
         }
         .maybe_add_destructor_callback::<T>()
+        .maybe_add_stop_callback::<T>()
         .maybe_add_down_callback::<T>()
         .maybe_add_dyncall_callback::<T>()
     }
@@ -83,6 +85,22 @@ impl Registration {
                     dtor: resource_destructor::<T> as *const ErlNifResourceDtor,
                     #[cfg(feature = "nif_version_2_16")]
                     members: max(self.init.members, 1),
+                    ..self.init
+                },
+                ..self
+            }
+        } else {
+            self
+        }
+    }
+
+    const fn maybe_add_stop_callback<T: Resource>(self) -> Self {
+        if T::IMPLEMENTS_STOP {
+            Self {
+                init: ErlNifResourceTypeInit {
+                    stop: resource_stop::<T> as *const ErlNifResourceStop,
+                    #[cfg(feature = "nif_version_2_16")]
+                    members: max(self.init.members, 2),
                     ..self.init
                 },
                 ..self
@@ -170,6 +188,23 @@ where
     let obj = ptr::read::<T>(aligned as *mut T);
     if T::IMPLEMENTS_DESTRUCTOR {
         obj.destructor(env);
+    }
+}
+
+unsafe extern "C" fn resource_stop<T>(
+    caller_env: *mut ErlNifEnv,
+    handle: *mut c_void,
+    event: ErlNifEvent,
+    is_direct_call: c_int,
+) where
+    T: Resource,
+{
+    let env = Env::new_internal(&caller_env, caller_env, EnvKind::Callback);
+    let aligned = align_alloced_mem_for_struct::<T>(handle);
+    let obj = ptr::read::<T>(aligned as *mut T);
+    let is_direct_call = is_direct_call == 1;
+    if T::IMPLEMENTS_STOP {
+        obj.stop(env, event, is_direct_call);
     }
 }
 
