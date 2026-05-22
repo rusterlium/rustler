@@ -115,7 +115,7 @@ where
         env: Env<'a>,
         event: &Event,
         mode: SelectMode,
-        pid: LocalPid,
+        pid: Option<LocalPid>,
         reference: Option<Reference>,
     ) -> SelectResult {
         let reference = match reference {
@@ -124,13 +124,15 @@ where
         }
         .as_c_arg();
 
+        let pid = pid.map_or(std::ptr::null(), |p| p.as_c_arg());
+
         let res = unsafe {
             enif_select(
                 env.as_c_arg(),
                 event.0,
                 mode.to_flags(),
                 self.as_c_arg(),
-                pid.as_c_arg(),
+                pid,
                 reference,
             )
         };
