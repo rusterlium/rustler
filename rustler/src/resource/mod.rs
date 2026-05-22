@@ -8,6 +8,7 @@ mod arc;
 mod error;
 mod monitor;
 mod registration;
+mod select;
 mod term;
 mod traits;
 mod util;
