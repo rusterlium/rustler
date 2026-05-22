@@ -75,6 +75,18 @@ pub enum SelectError {
 #[derive(Clone, Copy, Debug)]
 pub struct Event(ErlNifEvent);
 
+impl From<ErlNifEvent> for Event {
+    fn from(evt: ErlNifEvent) -> Self {
+        Self(evt)
+    }
+}
+
+impl From<Event> for ErlNifEvent {
+    fn from(val: Event) -> Self {
+        val.0
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum SelectMode {
     Read,
@@ -91,16 +103,6 @@ impl SelectMode {
             SelectMode::Write => ERL_NIF_SELECT_WRITE as c_int,
             SelectMode::ReadWrite => ERL_NIF_SELECT_READ as c_int | ERL_NIF_SELECT_WRITE as c_int,
         }
-    }
-}
-
-impl Event {
-    pub fn from_system(obj: ErlNifEvent) -> Self {
-        Self(obj)
-    }
-
-    pub fn to_system(self) -> ErlNifEvent {
-        self.0
     }
 }
 
