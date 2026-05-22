@@ -47,7 +47,10 @@ pub use crate::types::{
 pub use crate::types::BigInt;
 
 mod resource;
-pub use crate::resource::{Monitor, Resource, ResourceArc, ResourceInitError};
+pub use crate::resource::{
+    Event, Monitor, Resource, ResourceArc, ResourceInitError, SelectError, SelectMode,
+    SelectResult, SelectReturn,
+};
 
 #[doc(hidden)]
 pub mod dynamic;
