@@ -2,7 +2,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use crate::sys::ErlNifResourceType;
+use crate::sys::{ErlNifEvent, ErlNifResourceType};
 use crate::{Env, LocalPid, Monitor};
 
 type NifResourcePtr = *const ErlNifResourceType;
@@ -35,6 +35,7 @@ pub(crate) unsafe fn register_resource_type(type_id: TypeId, resource_type: NifR
 /// to take it into account. All callbacks provide (empty) default implementations.
 pub trait Resource: Sized + Send + Sync + 'static {
     const IMPLEMENTS_DESTRUCTOR: bool = false;
+    const IMPLEMENTS_STOP: bool = false;
     const IMPLEMENTS_DOWN: bool = false;
 
     #[cfg(feature = "nif_version_2_16")]
@@ -48,6 +49,10 @@ pub trait Resource: Sized + Send + Sync + 'static {
     /// requires access to a NIF env, e.g. to send messages.
     #[allow(unused_mut, unused)]
     fn destructor(mut self, env: Env<'_>) {}
+
+    /// Callback function to handle stop calls from `enif_select`.
+    #[allow(unused_mut, unused)]
+    fn stop(mut self, env: Env<'_>, event: ErlNifEvent, direct_call: bool) {}
 
     /// Callback function to handle process monitoring.
     ///
