@@ -69,6 +69,10 @@ defmodule Rustler do
       `{:my_app, "priv/native/<artifact>"}`. Due to the way `:erlang.load_nif/2`
       works, the artifact should not include the file extension (i.e. `.so`, `.dll`).
 
+    * `:lib` - Specify whether Rustler should compile and load the crate as a NIF
+      library (default: `true`). Set this to `false` for crates that only produce
+      binaries via the `:binaries` option and do not expose a NIF library.
+
     * `:mode` - Specify which mode to compile the crate with (default: `:release`)
 
     * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
