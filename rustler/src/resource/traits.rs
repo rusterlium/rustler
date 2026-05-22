@@ -57,7 +57,7 @@ pub trait Resource: Sized + Send + Sync + 'static {
     /// - event is the OS event
     /// - is_direct_call is true if the call is made directly from enif_select or false if it is a scheduled call (potentially from another thread).
     #[allow(unused_mut, unused)]
-    fn stop(mut self, env: Env<'_>, event: Event, direct_call: bool) {}
+    fn stop<'a>(&'a self, env: Env<'a>, event: Event, direct_call: bool) {}
 
     /// Callback function to handle process monitoring.
     ///
