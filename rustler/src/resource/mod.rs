@@ -17,5 +17,6 @@ pub use arc::ResourceArc;
 pub use error::*;
 pub use monitor::Monitor;
 pub use registration::Registration;
+pub use select::{Event, SelectError, SelectMode, SelectResult, SelectReturn};
 pub use traits::Resource;
 use traits::ResourceExt;
