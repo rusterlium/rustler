@@ -104,7 +104,12 @@ where
         unsafe { Term::new(env, enif_make_resource(env.as_c_arg(), self.raw)) }
     }
 
-    fn as_c_arg(&mut self) -> *const c_void {
+    /// Return a pointer to the memory area allocated by the erlang VM.
+    ///
+    /// Note that this pointer does not necessarily point to the contained type but is commonly used
+    /// as an object identifier for an allocated resource when interacting with low-level VM functions
+    /// like [`enif_select()`](crate::sys::enif_select).
+    pub fn as_c_arg(&mut self) -> *const c_void {
         self.raw
     }
 
