@@ -14,12 +14,14 @@ big_integer = ["dep:num-bigint"]
 default = ["nif_version_2_15"]
 derive = []
 allocator = []
+serde = ["dep:serde"]
+# for nif versions and their changes see
+# https://github.com/erlang/otp/blob/master/erts/emulator/beam/erl_nif.h
 nif_version_2_14 = []
 nif_version_2_15 = ["nif_version_2_14"]
 nif_version_2_16 = ["nif_version_2_15"]
 nif_version_2_17 = ["nif_version_2_16"]
 nif_version_2_18 = ["nif_version_2_17"]
-serde = ["dep:serde"]
 
 [dependencies]
 inventory = "0.3"
