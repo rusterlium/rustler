@@ -111,9 +111,9 @@ where
     T: Resource,
 {
     pub fn select<'a>(
-        &mut self,
+        &self,
         env: Env<'a>,
-        event: &Event,
+        event: Event,
         mode: SelectMode,
         pid: Option<LocalPid>,
         reference: Option<Reference>,
@@ -142,7 +142,7 @@ where
 
     // TODO: select_read/select_write with an optional custom message
 
-    pub fn cancel<'a>(&mut self, env: Env<'a>, event: &Event, mode: SelectMode) -> SelectResult {
+    pub fn cancel<'a>(&self, env: Env<'a>, event: &Event, mode: SelectMode) -> SelectResult {
         let res = unsafe {
             enif_select(
                 env.as_c_arg(),
@@ -157,7 +157,7 @@ where
         SelectReturn(res).into()
     }
 
-    pub fn stop<'a>(&mut self, env: Env<'a>, event: &Event) -> SelectResult {
+    pub fn stop<'a>(&self, env: Env<'a>, event: &Event) -> SelectResult {
         let res = unsafe {
             enif_select(
                 env.as_c_arg(),
