@@ -338,7 +338,7 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
                 .map(|x| x.encode(self.term.get_env()));
             visitor.visit_seq(SequenceDeserializer::new(iter))
         } else {
-            return Err(Error::ExpectedList);
+            Err(Error::ExpectedList)
         }
     }
 
