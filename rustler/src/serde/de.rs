@@ -324,7 +324,7 @@ impl<'de, 'a: 'de> de::Deserializer<'de> for Deserializer<'a> {
     where
         V: Visitor<'de>,
     {
-        if self.term.is_list() | self.term.is_empty_list() {
+        if self.term.is_list() || self.term.is_empty_list() {
             let iter: ListIterator = self.term.decode().or(Err(Error::ExpectedList))?;
             visitor.visit_seq(SequenceDeserializer::new(iter))
         } else if self.term.is_binary() {
