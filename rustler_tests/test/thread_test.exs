@@ -13,14 +13,14 @@ defmodule RustlerTest.ThreadTest do
     RustlerTest.threaded_sleep(200)
 
     receive do
-      _ -> raise "timeout_expected"
+      {:threaded_sleep, _} -> raise "timeout_expected"
     after
       100 ->
         nil
     end
 
     receive do
-      x -> assert x == 200
+      {:threaded_sleep, x} -> assert x == 200
     after
       1000 ->
         raise "message_expected"
@@ -36,7 +36,7 @@ defmodule RustlerTest.ThreadTest do
     results =
       Enum.map(times, fn _ ->
         receive do
-          y -> y
+          {:threaded_sleep, y} -> y
         after
           1000 ->
             :timeout
