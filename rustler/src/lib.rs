@@ -72,6 +72,18 @@ pub use nif::Nif;
 
 pub type NifResult<T> = Result<T, Error>;
 
+#[macro_export]
+macro_rules! term_map {
+    ($env:expr, { $($key:expr => $value:expr),* $(,)? }) => {{
+        $crate::Term::map_from_term_arrays(
+            $env,
+            &[$($crate::Encoder::encode(&$key, $env)),*],
+            &[$($crate::Encoder::encode(&$value, $env)),*],
+        )
+        .expect("failed to create map")
+    }};
+}
+
 pub use rustler_codegen::{
     init, nif, resource_impl, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple,
     NifUnitEnum, NifUntaggedEnum,
