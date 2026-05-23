@@ -10,19 +10,16 @@ defmodule RustlerTest.ThreadTest do
   end
 
   test "sleeping nif" do
+    start = System.monotonic_time(:millisecond)
     RustlerTest.threaded_sleep(200)
 
     receive do
-      _ -> raise "timeout_expected"
+      {:threaded_sleep, x} ->
+        elapsed = System.monotonic_time(:millisecond) - start
+        assert x == 200
+        assert elapsed >= 200
     after
-      100 ->
-        nil
-    end
-
-    receive do
-      x -> assert x == 200
-    after
-      1000 ->
+      1500 ->
         raise "message_expected"
     end
   end
@@ -36,7 +33,7 @@ defmodule RustlerTest.ThreadTest do
     results =
       Enum.map(times, fn _ ->
         receive do
-          y -> y
+          {:threaded_sleep, y} -> y
         after
           1000 ->
             :timeout

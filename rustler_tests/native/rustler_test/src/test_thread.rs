@@ -1,8 +1,14 @@
 use rustler::thread;
-use rustler::types::atom;
 use rustler::{Atom, Encoder, Env};
 
 use std::panic;
+
+mod atom {
+    rustler::atoms! {
+        ok,
+        threaded_sleep
+    }
+}
 
 #[rustler::nif]
 pub fn threaded_fac(env: Env, n: u64) -> Atom {
@@ -28,9 +34,10 @@ pub fn threaded_fac(env: Env, n: u64) -> Atom {
 pub fn threaded_sleep(env: Env, msec: u64) -> Atom {
     let q = msec / 1000;
     let r = (msec % 1000) as u32;
+
     thread::spawn::<thread::ThreadSpawner, _>(env, move |thread_env| {
         std::thread::sleep(std::time::Duration::new(q, r * 1_000_000));
-        msec.encode(thread_env)
+        (atom::threaded_sleep(), msec).encode(thread_env)
     });
 
     atom::ok()
