@@ -1,3 +1,6 @@
+default:
+    @just --choose
+
 setup:
     cargo binstall rustdoc-md
     cd rustler_mix && mix deps.get
