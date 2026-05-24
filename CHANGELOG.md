@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## Unreleased
+
+### Added
+
+- Add `Term::size` on Erlang 29 = `nif_version_2_18` (#731)
+- Add `from_iter` to `NewBinary` (#704)
+- Use direct UTF-8 atom support on `nif_version_2_17` (#732)
+- Allow the path to the binary that carries the `enif_*` symbols to be passed
+  directly to work around Android's broken `RTLD_GLOBAL` (#733)
+- Allow `deserialize_seq` to deserialize binaries (#708)
+
+### Fixed
+
+### Changed
+
+- Along with UTF-8 support, introduce new signatures for atom creation and
+  deprecate the old ones (#732)
+
+### Removed
+
+- Drop deprecated codegen features (#701)
+
+## 0.37.4 - 2026-05-02
+
+### Fixed
+
+- Gate `ErlNifResourceTypeInit` `members` on `nif_version_2_16` (#725)
+
 ## 0.37.3 - 2026-02-11
 
 ### Added
