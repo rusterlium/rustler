@@ -2,7 +2,7 @@
 name = "rustler"
 description = "Safe Rust wrappers for creating Erlang NIF functions"
 repository = "https://github.com/rusterlium/rustler"
-version = "0.37.4" # rustler version
+version = "0.38.0" # rustler version
 authors = ["Hansihe <me@hansihe.com>"]
 license = "MIT/Apache-2.0"
 readme = "../README.md"
@@ -25,7 +25,7 @@ nif_version_2_18 = ["nif_version_2_17"]
 
 [dependencies]
 inventory = "0.3"
-rustler_codegen = { path = "../rustler_codegen", version = "0.37.4" }
+rustler_codegen = { path = "../rustler_codegen", version = "0.38.0"}
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1", optional = true }
 
