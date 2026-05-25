@@ -1,4 +1,5 @@
 use std::ffi::c_int;
+use std::os::fd::AsRawFd;
 
 use crate::sys::{
     enif_select, ErlNifEvent, ErlNifSelectFlags, ERL_NIF_SELECT_ERROR_CANCELLED,
@@ -8,6 +9,25 @@ use crate::sys::{
 };
 use crate::types::atom::undefined;
 use crate::{Encoder, Env, LocalPid, Reference, Resource, ResourceArc};
+
+macro_rules! as_raw {
+    () => {
+        AsRawFd
+    };
+}
+
+#[cfg(windows)]
+macro_rules! as_raw {
+    () => {
+        AsRawHandle
+    };
+}
+
+macro_rules!  {
+    () => {
+        
+    };
+}
 
 macro_rules! getter {
     (pub $name:ident, $flag:ident) => {
@@ -72,15 +92,6 @@ pub enum SelectError {
     Unknown,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Event(ErlNifEvent);
-
-impl From<ErlNifEvent> for Event {
-    fn from(evt: ErlNifEvent) -> Self {
-        Self(evt)
-    }
-}
-
 impl From<Event> for ErlNifEvent {
     fn from(val: Event) -> Self {
         val.0
@@ -110,10 +121,10 @@ impl<T> ResourceArc<T>
 where
     T: Resource,
 {
-    pub fn select<'a>(
+    fn select_internal<'a, E: AsRawFd>(
         &self,
         env: Env<'a>,
-        event: Event,
+        event: E,
         mode: SelectMode,
         pid: Option<LocalPid>,
         reference: Option<Reference>,
