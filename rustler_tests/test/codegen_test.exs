@@ -50,6 +50,11 @@ defmodule RustlerTest.CodegenTest do
       assert value == RustlerTest.renamed_map_echo(value)
     end
 
+    test "renamed fields with unicode atoms" do
+      value = %{"name_ä": 1, "name_ö": 2}
+      assert value == RustlerTest.unicode_renamed_map_echo(value)
+    end
+
     test "with invalid map" do
       value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
 

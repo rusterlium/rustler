@@ -111,6 +111,7 @@ defmodule RustlerTest do
   def record_echo(_), do: err()
   def map_echo(_), do: err()
   def renamed_map_echo(_), do: err()
+  def unicode_renamed_map_echo(_), do: err()
   def exception_echo(_), do: err()
   def struct_echo(_), do: err()
   def unit_enum_echo(_), do: err()

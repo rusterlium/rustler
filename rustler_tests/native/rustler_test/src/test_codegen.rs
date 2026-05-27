@@ -70,6 +70,19 @@ pub fn renamed_map_echo(map: RenamedMap) -> RenamedMap {
     map
 }
 
+#[derive(NifMap)]
+pub struct UnicodeRenamedMap {
+    #[rustler(rename = "name_ä")]
+    name_a_umlaut: u32,
+    #[rustler(rename = "name_ö")]
+    name_o_umlaut: u32,
+}
+
+#[rustler::nif]
+pub fn unicode_renamed_map_echo(map: UnicodeRenamedMap) -> UnicodeRenamedMap {
+    map
+}
+
 #[derive(Debug, NifStruct)]
 #[must_use] // Added to test Issue #152
 #[module = "AddStruct"]

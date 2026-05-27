@@ -147,8 +147,9 @@ impl<'a> Context<'a> {
 
     fn atom_fun(atom_name: &str) -> Ident {
         let suffix = atom_name
-            .chars()
-            .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+            .as_bytes()
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
             .collect::<String>();
 
         Ident::new(&format!("atom_{}", suffix), Span::call_site())
