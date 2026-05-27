@@ -42,9 +42,7 @@ pub fn build(args: &BuildArgs) -> Vec<PathBuf> {
     //     command.arg("--release")
     // };
 
-    let mut proc = command
-        .spawn()
-        .expect("Failed to execute cargo build");
+    let mut proc = command.spawn().expect("Failed to execute cargo build");
 
     let reader = BufReader::new(proc.stdout.take().unwrap());
 

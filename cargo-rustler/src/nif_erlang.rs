@@ -38,7 +38,7 @@ impl fmt::Display for LibAsErlang {
         if count > 0 {
             for (n, name, arity) in &nifs {
                 write!(f, "    {name}/{arity}")?;
-                if *n+1 != count {
+                if *n + 1 != count {
                     write!(f, ",")?;
                 }
                 writeln!(f)?;
@@ -49,7 +49,7 @@ impl fmt::Display for LibAsErlang {
         let count = optional_nifs.len();
         for (n, name, arity) in &optional_nifs {
             write!(f, "    {name}/{arity}")?;
-            if *n +1 != count {
+            if *n + 1 != count {
                 write!(f, ",")?;
             }
             writeln!(f)?;
@@ -60,7 +60,7 @@ impl fmt::Display for LibAsErlang {
         writeln!(f, "-nifs([")?;
         for (n, name, arity) in &nifs {
             write!(f, "    {name}/{arity}")?;
-            if *n + 1!= count {
+            if *n + 1 != count {
                 write!(f, ",")?;
             }
             writeln!(f)?;

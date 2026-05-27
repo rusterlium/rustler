@@ -1,3 +1,4 @@
+mod download;
 mod erl_build;
 #[cfg(unix)]
 mod fake_symbols;
@@ -6,13 +7,12 @@ mod nif_elixir;
 mod nif_erlang;
 mod nif_types;
 mod rust_build;
-mod download;
 
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use rust_build::BuildArgs;
 use download::DownloadArgs;
+use rust_build::BuildArgs;
 
 use crate::nif::NifLibrary;
 
@@ -82,7 +82,6 @@ fn main() {
                 erl_build::build(&module_name, &module, &args.out);
             }
         }
-        Commands::Download(args) => {
-        }
+        Commands::Download(args) => {}
     }
 }
