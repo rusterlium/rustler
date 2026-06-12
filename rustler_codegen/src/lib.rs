@@ -2,6 +2,7 @@
 
 use proc_macro::TokenStream;
 
+pub(crate) mod attrs;
 mod context;
 mod encode_decode_templates;
 mod ex_struct;
@@ -14,14 +15,6 @@ mod tagged_enum;
 mod tuple;
 mod unit_enum;
 mod untagged_enum;
-
-#[derive(Debug)]
-enum RustlerAttr {
-    Encode,
-    Decode,
-    Module(String),
-    Tag(String),
-}
 
 /// Initialise the Native Implemented Function (NIF) environment
 /// and register NIF functions in an Elixir module.

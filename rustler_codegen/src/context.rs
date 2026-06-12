@@ -1,9 +1,9 @@
 use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{Data, Field, Fields, Ident, Lifetime, Lit, Meta, TypeParam, Variant};
+use syn::{Data, Field, Fields, Ident, Lifetime, TypeParam, Variant};
 
-use super::RustlerAttr;
+use crate::attrs::{RustlerAttr, TryFromRustlerNestedAttr};
 
 ///
 /// A parsing context struct.
@@ -168,67 +168,18 @@ impl<'a> Context<'a> {
     }
 
     fn get_rustler_attrs(attr: &syn::Attribute) -> Vec<RustlerAttr> {
+        Self::parse_attr::<RustlerAttr>(attr)
+    }
+
+    fn parse_attr<T: TryFromRustlerNestedAttr>(attr: &syn::Attribute) -> Vec<T> {
         attr.path()
             .segments
             .iter()
             .filter_map(|segment| {
                 let meta = &attr.meta;
-                match segment.ident.to_string().as_ref() {
-                    "rustler" => Some(Context::parse_rustler(meta)),
-                    "tag" => Context::try_parse_tag(meta),
-                    "module" => Context::try_parse_module(meta),
-                    _ => None,
-                }
+                T::collect_attrs_for_ident(&segment.ident, meta)
             })
             .flatten()
             .collect()
-    }
-
-    fn parse_rustler(meta: &Meta) -> Vec<RustlerAttr> {
-        if let Meta::List(ref list) = meta {
-            let mut attrs: Vec<RustlerAttr> = vec![];
-            let _ = list.parse_nested_meta(|nested_meta| {
-                if nested_meta.path.is_ident("encode") {
-                    attrs.push(RustlerAttr::Encode);
-                    Ok(())
-                } else if nested_meta.path.is_ident("decode") {
-                    attrs.push(RustlerAttr::Decode);
-                    Ok(())
-                } else {
-                    Err(nested_meta.error("Expected encode and/or decode in rustler attribute"))
-                }
-            });
-
-            return attrs;
-        }
-
-        panic!("Expected encode and/or decode in rustler attribute");
-    }
-
-    fn try_parse_tag(meta: &Meta) -> Option<Vec<RustlerAttr>> {
-        if let Meta::NameValue(ref name_value) = meta {
-            let expr = &name_value.value;
-
-            if let syn::Expr::Lit(lit_expr) = expr {
-                if let Lit::Str(ref tag) = lit_expr.lit {
-                    return Some(vec![RustlerAttr::Tag(tag.value())]);
-                }
-            }
-        }
-        panic!("Cannot parse tag")
-    }
-
-    fn try_parse_module(meta: &Meta) -> Option<Vec<RustlerAttr>> {
-        if let Meta::NameValue(name_value) = meta {
-            let expr = &name_value.value;
-
-            if let syn::Expr::Lit(lit_expr) = expr {
-                if let Lit::Str(ref module) = lit_expr.lit {
-                    let ident = format!("Elixir.{}", module.value());
-                    return Some(vec![RustlerAttr::Module(ident)]);
-                }
-            }
-        }
-        panic!("Cannot parse module")
     }
 }
