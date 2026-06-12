@@ -38,4 +38,19 @@ pub mod lifetimes {
         pub i: Binary<'a>,
         pub j: Binary<'b>,
     }
+
+    #[derive(NifMap)]
+    #[rustler(optional_decode)]
+    pub struct GenericMapWithOptional<'a, 'b> {
+        pub i: Binary<'a>,
+        pub j: Binary<'b>,
+    }
+
+    #[derive(NifMap)]
+    pub struct GenericMapWithOptionalField<'a, 'b> {
+        #[rustler(optional_decode)]
+        pub i: Option<Binary<'a>>,
+        pub j: Binary<'b>,
+        pub k: Option<Binary<'a>>,
+    }
 }
