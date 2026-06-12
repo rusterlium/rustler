@@ -1,7 +1,9 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
-use syn::{self, spanned::Spanned, Field, Ident};
+use syn::{self, spanned::Spanned, Ident};
+
+use crate::context::StructField;
 
 use super::context::Context;
 
@@ -50,12 +52,12 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[StructField], atoms_module_name: &Ident) -> TokenStream {
     let struct_name = ctx.ident;
 
     let idents: Vec<_> = fields
         .iter()
-        .map(|field| field.ident.as_ref().unwrap())
+        .map(|field| field.field.ident.as_ref().unwrap())
         .collect();
 
     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
@@ -63,10 +65,10 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         .zip(idents.iter())
         .enumerate()
         .map(|(index, (field, ident))| {
-            let atom_fun = Context::field_to_atom_fun(field);
+            let atom_fun = Context::field_to_atom_fun(field.field);
             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
-            let assignment = quote_spanned! { field.span() =>
+            let assignment = quote_spanned! { field.field.span() =>
             let #variable = try_decode_field(term, #atom_fun())?;
             };
 
@@ -106,12 +108,12 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     )
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[StructField], atoms_module_name: &Ident) -> TokenStream {
     let (keys, values): (Vec<_>, Vec<_>) = fields
         .iter()
         .map(|field| {
-            let field_ident = field.ident.as_ref().unwrap();
-            let atom_fun = Context::field_to_atom_fun(field);
+            let field_ident = field.field.ident.as_ref().unwrap();
+            let atom_fun = Context::field_to_atom_fun(field.field);
             (
                 quote! { ::rustler::Encoder::encode(&#atom_fun(), env) },
                 quote! { ::rustler::Encoder::encode(&self.#field_ident, env) },

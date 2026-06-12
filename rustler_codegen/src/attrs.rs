@@ -36,6 +36,7 @@ pub(crate) trait TryFromRustlerNestedAttr: Sized {
 pub(crate) enum RustlerAttr {
     Encode,
     Decode,
+    OptionalDecode,
     Module(String),
     Tag(String),
 }
@@ -71,7 +72,7 @@ impl RustlerAttr {
 
 impl TryFromRustlerNestedAttr for RustlerAttr {
     fn parse_failure_message() -> impl Display {
-        "Expected encode, decode and/or optional in rustler attribute"
+        "Expected encode, decode and/or optional_decode in rustler attribute"
     }
 
     fn collect_attrs_for_ident(ident: &Ident, meta: &Meta) -> Option<Vec<Self>> {
@@ -87,6 +88,32 @@ impl TryFromRustlerNestedAttr for RustlerAttr {
         match ident.to_string().as_ref() {
             "encode" => Some(Self::Encode),
             "decode" => Some(Self::Decode),
+            "optional_decode" => Some(Self::OptionalDecode),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum RustlerFieldAttr {
+    OptionalDecode,
+}
+
+impl TryFromRustlerNestedAttr for RustlerFieldAttr {
+    fn parse_failure_message() -> impl Display {
+        "Expected optional_decode in rustler field attribute"
+    }
+
+    fn collect_attrs_for_ident(ident: &Ident, meta: &Meta) -> Option<Vec<Self>> {
+        match ident.to_string().as_ref() {
+            "rustler" => Some(Self::parse_rustler(meta)),
+            _ => None,
+        }
+    }
+
+    fn try_from_rustler_nested_attr(ident: &Ident) -> Option<Self> {
+        match ident.to_string().as_ref() {
+            "optional_decode" => Some(Self::OptionalDecode),
             _ => None,
         }
     }

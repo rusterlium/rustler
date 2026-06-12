@@ -185,7 +185,7 @@ pub fn nif_exception(input: TokenStream) -> TokenStream {
 /// ```
 ///
 /// And vice versa, decoding this map would result in `value`.
-#[proc_macro_derive(NifMap, attributes(rustler))]
+#[proc_macro_derive(NifMap, attributes(rustler, optional_decode))]
 pub fn nif_map(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     map::transcoder_decorator(&ast).into()
