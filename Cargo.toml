@@ -16,10 +16,3 @@ default-members = [
   "rustler",
   "rustler_codegen",
 ]
-
-[profile.dev]
-panic = "unwind"
-
-[profile.release]
-panic = "unwind"
-

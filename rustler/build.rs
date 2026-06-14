@@ -866,6 +866,11 @@ fn get_nif_version_from_features() -> (u32, u32) {
 }
 
 fn main() {
+    let panic_cfg = env::var("CARGO_CFG_PANIC").expect("CARGO_CFG_PANIC not set by cargo");
+    if panic_cfg != "unwind" {
+        panic!("Rustler requires panic=unwind to safely run NIFs and callbacks");
+    }
+
     let nif_version = get_nif_version_from_features();
     let target_family_or_current =
         env::var("CARGO_CFG_TARGET_FAMILY").unwrap_or_else(|_| env::consts::FAMILY.to_string());
