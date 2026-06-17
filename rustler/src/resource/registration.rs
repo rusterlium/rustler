@@ -167,10 +167,12 @@ where
     let aligned = align_alloced_mem_for_struct::<T>(handle);
     // Destructor takes ownership, thus the resource object will be dropped after the function has
     // run.
-    let obj = ptr::read::<T>(aligned as *mut T);
-    if T::IMPLEMENTS_DESTRUCTOR {
-        obj.destructor(env);
-    }
+    let _ = std::panic::catch_unwind(|| {
+        let obj = ptr::read::<T>(aligned as *mut T);
+        if T::IMPLEMENTS_DESTRUCTOR {
+            obj.destructor(env);
+        }
+    });
 }
 
 unsafe extern "C" fn resource_down<T: Resource>(
@@ -181,11 +183,13 @@ unsafe extern "C" fn resource_down<T: Resource>(
 ) {
     let env = Env::new_internal(&env, env, EnvKind::Callback);
     let aligned = align_alloced_mem_for_struct::<T>(obj);
-    let res = &*(aligned as *const T);
     let pid = LocalPid::from_c_arg(*pid);
     let mon = Monitor::from_c_arg(*mon);
 
-    res.down(env, pid, mon);
+    let _ = std::panic::catch_unwind(|| {
+        let res = &*(aligned as *const T);
+        res.down(env, pid, mon);
+    });
 }
 
 #[cfg(feature = "nif_version_2_16")]
@@ -196,9 +200,11 @@ unsafe extern "C" fn resource_dyncall<T: Resource>(
 ) {
     let env = Env::new_internal(&env, env, EnvKind::Callback);
     let aligned = align_alloced_mem_for_struct::<T>(obj);
-    let res = &*(aligned as *const T);
 
-    res.dyncall(env, call_data);
+    let _ = std::panic::catch_unwind(|| {
+        let res = &*(aligned as *const T);
+        res.dyncall(env, call_data);
+    });
 }
 
 pub unsafe fn open_resource_type(
