@@ -805,8 +805,8 @@ fn build_api(b: &mut dyn ApiBuilder, opts: &GenerateOptions) {
             "enif_make_monitor_term",
             "env: *mut ErlNifEnv, mon: *const ErlNifMonitor",
         );
-        b.func("c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid");
         b.func("", "enif_set_pid_undefined", "pid: *mut ErlNifPid");
+        b.func("c_int", "enif_is_pid_undefined", "pid: *const ErlNifPid");
         b.func(
             "ErlNifTermType",
             "enif_term_type",
