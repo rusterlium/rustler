@@ -105,10 +105,10 @@ jobs:
           - stable
           - nightly
         os:
-          - macos
-          - windows
-          - ubuntu
-    runs-on: ${{matrix.os}}-latest
+          - macos-latest
+          - windows-2022
+          - ubuntu-latest
+    runs-on: ${{matrix.os}}
 
     steps:
       - name: Checkout sources
