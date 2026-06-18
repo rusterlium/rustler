@@ -92,7 +92,7 @@ pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> Result<String, Error> {
     let nbytes = enif_get_atom(
         env,
         term,
-        bytes.as_mut_ptr(),
+        bytes.as_mut_ptr() as *mut c_char,
         len + 1,
         ErlNifCharEncoding::ERL_NIF_UTF8,
     );
@@ -120,7 +120,7 @@ pub unsafe fn get_atom(env: NIF_ENV, term: NIF_TERM) -> Result<String, Error> {
     let nbytes = enif_get_atom(
         env,
         term,
-        bytes.as_mut_ptr(),
+        bytes.as_mut_ptr() as *mut c_char,
         len + 1,
         ErlNifCharEncoding::ERL_NIF_LATIN1,
     );

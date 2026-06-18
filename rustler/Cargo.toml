@@ -34,8 +34,6 @@ libloading = "0.9"
 # For RTLD_NOLOAD
 libc = "0.2"
 
-[build-dependencies]
-regex-lite = "0.1"
 
 [package.metadata.release]
 

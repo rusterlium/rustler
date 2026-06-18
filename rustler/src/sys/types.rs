@@ -293,7 +293,7 @@ pub struct ErlNifPort {
 // ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L155
 
 /// See [ErlNifBinaryToTerm](http://erlang.org/doc/man/erl_nif.html#ErlNifBinaryToTerm) in the Erlang docs.
-pub type ErlNifBinaryToTerm = c_int;
+pub type ErlNifBinaryToTerm = c_uint;
 pub const ERL_NIF_BIN2TERM_SAFE: ErlNifBinaryToTerm = 0x2000_0000;
 
 pub const ERL_NIF_THR_UNDEFINED: c_int = 0;
@@ -343,4 +343,57 @@ pub enum ErlNifOption {
     // from https://github.com/erlang/otp/blob/1b3c6214d4bf359f7e5c143bef5c5ad9c90c5536/erts/emulator/beam/erl_nif.h#L333
     ERL_NIF_OPT_DELAY_HALT = 1,
     ERL_NIF_OPT_ON_HALT = 2,
+}
+
+const ERL_NIF_IOVEC_SIZE: usize = 16;
+
+#[cfg(not(windows))]
+pub type SysIOVec = libc::iovec;
+
+#[cfg(windows)]
+pub struct SysIOVec {
+    pub iov_len: c_ulong,
+    pub iov_base: *mut c_char,
+}
+
+const ERTS_SMALL_IO_QUEUE: usize = 5;
+
+/// See [ErlNifIOQueue](http://www.erlang.org/doc/man/erl_nif.html#ErlNifIOQueue]
+#[repr(C)]
+pub struct ErlNifIOQueue {
+    alct: c_int,
+    driver: c_int,
+    size: c_uint,
+
+    v_start: *mut SysIOVec,
+    v_end: *mut SysIOVec,
+    v_head: *mut SysIOVec,
+    v_tail: *mut SysIOVec,
+
+    v_small: [SysIOVec; ERTS_SMALL_IO_QUEUE],
+
+    b_start: *mut *mut ErlNifBinary,
+    b_end: *mut *mut ErlNifBinary,
+    b_head: *mut *mut ErlNifBinary,
+    b_tail: *mut *mut ErlNifBinary,
+
+    b_small: [*mut ErlNifBinary; ERTS_SMALL_IO_QUEUE],
+}
+
+#[repr(C)]
+pub struct ErlNifIOVec {
+    iovcnt: c_int,
+    size: usize,
+    iov: *mut SysIOVec,
+
+    ref_bins: *mut *mut c_void,
+    flags: c_int,
+
+    small_iov: [SysIOVec; ERL_NIF_IOVEC_SIZE],
+    small_ref_bin: [*mut c_void; ERL_NIF_IOVEC_SIZE],
+}
+
+#[repr(C)]
+pub enum ErlNifIOQueueOpts {
+    ERL_NIF_IOQ_NORMAL = 1,
 }
