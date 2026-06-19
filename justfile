@@ -21,3 +21,7 @@ format:
 lint:
     cargo clippy --all-targets --all-features
     cd rustler_mix && mix credo --strict
+
+build-with-tool:
+    cd cargo-rustler && cargo build
+    RUST_BACKTRACE=1 target/debug/cargo-rustler build rustler_tests/native/rustler_test
