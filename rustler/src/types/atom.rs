@@ -163,7 +163,7 @@ impl Atom {
 
     /// Return the atom whose text representation is the given `string`.
     ///
-    /// Deprecated in favor of [`Atom::from_str_existing`].
+    /// Deprecated in favor of [`Atom::existing_from_str`].
     #[deprecated(since = "0.38.0", note = "Use existing_from_str")]
     pub fn try_from_str(env: Env, string: &str) -> NifResult<Option<Self>> {
         Self::existing_from_str(env, string).map(Some)
