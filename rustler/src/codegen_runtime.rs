@@ -58,6 +58,14 @@ unsafe impl NifReturnable for OwnedBinary {
     }
 }
 
+// Allow returning NifReturned directly from NIFs
+// This is useful for advanced use cases like yielding NIFs
+unsafe impl NifReturnable for NifReturned {
+    unsafe fn into_returned(self, _env: Env) -> NifReturned {
+        self
+    }
+}
+
 pub enum NifReturned {
     Term(NIF_TERM),
     Raise(NIF_TERM),

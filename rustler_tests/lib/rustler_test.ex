@@ -40,6 +40,22 @@ defmodule RustlerTest do
   def compare_local_pids(_, _), do: err()
   def are_equal_local_pids(_, _), do: err()
 
+  def async_add(_, _), do: err()
+  def async_sleep_and_return(_, _), do: err()
+  def async_tuple_multiply(_), do: err()
+  def async_with_progress(_), do: err()
+  def async_spawned_work(_), do: err()
+  def async_channel_echo(), do: err()
+  def channel_send_string(_, _), do: err()
+  def stateful_worker(), do: err()
+  def worker_send_command(_, _), do: err()
+
+  # Yielding runtime NIFs (true cooperative yielding)
+  def yielding_immediate(), do: err()
+  def yielding_sum(_), do: err()
+  def yielding_work_with_sleeps(), do: err()
+  def yielding_tuple_result(_, _), do: err()
+
   def term_debug(_), do: err()
 
   def term_debug_and_reparse(term) do
