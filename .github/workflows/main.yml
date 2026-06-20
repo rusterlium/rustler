@@ -65,7 +65,6 @@ jobs:
   clippy:
     name: Clippy ${{matrix.os}}
     runs-on: ${{matrix.os}}-latest
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu, windows, macos]
@@ -85,7 +84,6 @@ jobs:
 
   test:
     name: OTP ${{matrix.pair.erlang}} / Elixir ${{matrix.pair.elixir}} / Rust ${{matrix.rust}} / OS ${{matrix.os}}
-    needs: [build]
     strategy:
       matrix:
         pair:
@@ -149,3 +147,22 @@ jobs:
         working-directory: rustler_mix
         run: ./test.sh
         if: "startsWith(matrix.os, 'ubuntu') && matrix.pair.latest"
+
+  regenerate:
+    name: Check that the generated API files are up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Just
+        uses: extractions/setup-just@v2
+
+      - name: Run just regenerate
+        run: just regenerate
+
+      - name: Check for differences
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::Generated files are out of date. Please run 'just regenerate' and commit the changes."
+            exit 1
+          fi
