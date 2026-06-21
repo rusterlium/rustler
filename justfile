@@ -21,3 +21,6 @@ format:
 lint:
     cargo clippy --all-targets --all-features
     cd rustler_mix && mix credo --strict
+
+regenerate:
+    rustler/otp_headers/update.sh

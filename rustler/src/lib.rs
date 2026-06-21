@@ -96,3 +96,6 @@ pub mod serde;
 pub use crate::serde::SerdeTerm;
 
 pub mod sys;
+
+#[cfg(not(panic = "unwind"))]
+compile_error!("Rustler relies on unwinding (panic = \"unwind\") for callback safety");

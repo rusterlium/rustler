@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "rustler",
+  "rustler/otp_headers/codegen",
   "rustler_codegen",
   "rustler_tests/native/binary_example",
   "rustler_tests/native/rustler_test",
