@@ -206,6 +206,7 @@ pub struct OwnedEnv {
 }
 
 unsafe impl Send for OwnedEnv {}
+unsafe impl Sync for OwnedEnv {}
 
 impl OwnedEnv {
     /// Allocates a new process-independent environment.
