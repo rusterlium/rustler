@@ -45,11 +45,42 @@ defmodule RustlerTest.CodegenTest do
       assert value == RustlerTest.map_echo(value)
     end
 
+    test "transcoder 2" do
+      value = %{x: 1, y: 2}
+      assert value == RustlerTest.map_with_optional_echo(value)
+
+      value = %{x: 1}
+      expected_value = %{x: 1, y: nil}
+      assert expected_value == RustlerTest.map_with_optional_echo(value)
+    end
+
+    test "transcoder 3" do
+      value = %{x: 1, y: 2, z: nil}
+      assert value == RustlerTest.map_with_optional_field_echo(value)
+      value = %{x: 1, y: 2, z: 3}
+      assert value == RustlerTest.map_with_optional_field_echo(value)
+
+      value = %{x: 1, z: nil}
+      expected_value = %{x: 1, y: nil, z: nil}
+      assert expected_value == RustlerTest.map_with_optional_field_echo(value)
+      value = %{x: 1, z: 3}
+      expected_value = %{x: 1, y: nil, z: 3}
+      assert expected_value == RustlerTest.map_with_optional_field_echo(value)
+    end
+
     test "with invalid map" do
       value = %{lhs: "invalid", rhs: 2, loc: {57, 15}}
 
       assert_raise ErlangError, "Erlang error: \"Could not decode field :lhs on %{}\"", fn ->
         assert value == RustlerTest.map_echo(value)
+      end
+    end
+
+    test "with invalid map with optional field" do
+      value = %{x: 1}
+
+      assert_raise ArgumentError, fn ->
+        assert value == RustlerTest.map_with_optional_field_echo(value)
       end
     end
   end
