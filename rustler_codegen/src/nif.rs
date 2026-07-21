@@ -57,7 +57,21 @@ pub fn transcoder_decorator(
     }
 
     if is_async {
-        if is_task {
+        // Async NIFs are an unstable feature. They are only available when the
+        // consuming crate is built with the `rustler_unstable` cfg flag set (e.g.
+        // `RUSTFLAGS="--cfg rustler_unstable"`) alongside a runtime backend feature
+        // such as `tokio-rt`. Emit a clear error rather than a cryptic missing-symbol
+        // error when the flag is absent.
+        let unstable_guard = quote! {
+            #[cfg(not(rustler_unstable))]
+            const _: () = compile_error!(
+                "async NIFs are an unstable rustler feature; build with \
+                 `RUSTFLAGS=\"--cfg rustler_unstable\"` and enable a runtime backend \
+                 feature (e.g. `tokio-rt`) to use them"
+            );
+        };
+
+        let generated = if is_task {
             // #[rustler::task] - message-based async NIF
             generate_task(
                 erl_func_name,
@@ -79,6 +93,11 @@ pub fn transcoder_decorator(
                 inputs.clone(),
                 &sig.output,
             )
+        };
+
+        quote! {
+            #unstable_guard
+            #generated
         }
     } else {
         generate_nif(erl_func_name, name, flags, arity, function, inputs.clone())
