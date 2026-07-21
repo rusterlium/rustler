@@ -86,9 +86,15 @@ macro_rules! term_map {
 }
 
 pub use rustler_codegen::{
-    init, nif, resource_impl, task, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum,
-    NifTuple, NifUnitEnum, NifUntaggedEnum,
+    init, nif, resource_impl, NifException, NifMap, NifRecord, NifStruct, NifTaggedEnum, NifTuple,
+    NifUnitEnum, NifUntaggedEnum,
 };
+
+// The async NIF surface is unstable and only exposed when the `rustler_unstable`
+// cfg flag is explicitly set (e.g. via `RUSTFLAGS="--cfg rustler_unstable"`), in
+// addition to selecting a runtime backend via the `async-rt`/`tokio-rt` features.
+#[cfg(all(rustler_unstable, feature = "async-rt"))]
+pub use rustler_codegen::task;
 
 #[cfg(feature = "serde")]
 pub mod serde;
@@ -96,7 +102,7 @@ pub mod serde;
 #[cfg(feature = "serde")]
 pub use crate::serde::SerdeTerm;
 
-#[cfg(feature = "async-rt")]
+#[cfg(all(rustler_unstable, feature = "async-rt"))]
 pub mod runtime;
 
 /// Spawn an async task on the global runtime.
@@ -118,7 +124,7 @@ pub mod runtime;
 /// # Panics
 ///
 /// Panics if the runtime fails to spawn the task.
-#[cfg(feature = "tokio-rt")]
+#[cfg(all(rustler_unstable, feature = "tokio-rt"))]
 pub fn spawn<F>(future: F) -> tokio::task::JoinHandle<F::Output>
 where
     F: std::future::Future + Send + 'static,
