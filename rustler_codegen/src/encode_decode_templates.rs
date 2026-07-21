@@ -1,6 +1,12 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{GenericArgument, PathSegment, TraitBound};
+use syn::{
+    punctuated::Punctuated,
+    token::{Colon, PathSep},
+    AngleBracketedGenericArguments, GenericArgument, GenericParam, Ident, Lifetime, LifetimeParam,
+    Path, PathArguments, PathSegment, PredicateLifetime, PredicateType, TraitBound, Type,
+    TypeParamBound, TypePath, WherePredicate,
+};
 
 use super::context::Context;
 
@@ -13,65 +19,70 @@ pub(crate) fn decoder(ctx: &Context, inner: TokenStream) -> TokenStream {
     // other lifetimes are bound to this lifetime: As we decode from a term (which has a lifetime),
     // references to that term may not outlive the term itself.
     let mut impl_generics = generics.clone();
-    let decode_lifetime = syn::Lifetime::new("'__rustler_decode_lifetime", Span::call_site());
-    let lifetime_def = syn::LifetimeParam::new(decode_lifetime.clone());
+    let decode_lifetime = Lifetime::new("'__rustler_decode_lifetime", Span::call_site());
+    let lifetime_def = LifetimeParam::new(decode_lifetime.clone());
     impl_generics
         .params
-        .push(syn::GenericParam::Lifetime(lifetime_def));
+        .push(GenericParam::Lifetime(lifetime_def));
 
     let where_clause = impl_generics.make_where_clause();
 
     for lifetime in ctx.lifetimes.iter() {
-        let mut punctuated = syn::punctuated::Punctuated::new();
+        let mut punctuated = Punctuated::new();
         punctuated.push(lifetime.clone());
-        let predicate = syn::PredicateLifetime {
+        let predicate = PredicateLifetime {
             lifetime: decode_lifetime.clone(),
-            colon_token: syn::token::Colon {
+            colon_token: Colon {
                 spans: [Span::call_site()],
             },
             bounds: punctuated,
+            attrs: vec![],
         };
-        where_clause.predicates.push(predicate.into());
+        where_clause
+            .predicates
+            .push(WherePredicate::Lifetime(predicate));
 
-        let mut punctuated = syn::punctuated::Punctuated::new();
+        let mut punctuated = Punctuated::new();
         punctuated.push(decode_lifetime.clone());
-        let predicate = syn::PredicateLifetime {
+        let predicate = PredicateLifetime {
             lifetime: lifetime.clone(),
-            colon_token: syn::token::Colon {
+            colon_token: Colon {
                 spans: [Span::call_site()],
             },
             bounds: punctuated,
+            attrs: vec![],
         };
-        where_clause.predicates.push(predicate.into());
+        where_clause
+            .predicates
+            .push(WherePredicate::Lifetime(predicate));
     }
 
     for type_parameter in ctx.type_parameters.iter() {
-        let mut punctuated = syn::punctuated::Punctuated::new();
-        punctuated.push(decode_lifetime.clone().into());
-        punctuated.push(syn::TypeParamBound::Trait(TraitBound {
+        let mut punctuated = Punctuated::new();
+        punctuated.push(TypeParamBound::Lifetime(decode_lifetime.clone()));
+        punctuated.push(TypeParamBound::Trait(TraitBound {
             paren_token: None,
-            modifier: syn::TraitBoundModifier::None,
+            maybe: None,
+            modifiers: Default::default(),
             lifetimes: None,
-            path: syn::Path {
-                leading_colon: Some(syn::token::PathSep::default()),
+            path: Path {
+                leading_colon: Some(PathSep::default()),
                 segments: [
                     PathSegment {
-                        ident: syn::Ident::new("rustler", Span::call_site()),
-                        arguments: syn::PathArguments::None,
+                        ident: Ident::new("rustler", Span::call_site()),
+                        arguments: PathArguments::None,
                     },
                     PathSegment {
-                        ident: syn::Ident::new("Decoder", Span::call_site()),
-                        arguments: syn::PathArguments::AngleBracketed(
-                            syn::AngleBracketedGenericArguments {
-                                colon2_token: None,
-                                lt_token: Default::default(),
-                                args: std::iter::once(GenericArgument::Lifetime(
-                                    decode_lifetime.clone(),
-                                ))
-                                .collect(),
-                                gt_token: Default::default(),
-                            },
-                        ),
+                        ident: Ident::new("Decoder", Span::call_site()),
+                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                            colon2_token: None,
+                            lt_token: Default::default(),
+                            args: std::iter::once(GenericArgument::Lifetime(
+                                decode_lifetime.clone(),
+                            ))
+                            .collect(),
+                            gt_token: Default::default(),
+                        }),
                     },
                 ]
                 .iter()
@@ -79,18 +90,22 @@ pub(crate) fn decoder(ctx: &Context, inner: TokenStream) -> TokenStream {
                 .collect(),
             },
         }));
-        let predicate = syn::PredicateType {
+        let predicate = PredicateType {
+            attrs: Default::default(),
             lifetimes: None,
-            bounded_ty: syn::Type::Path(syn::TypePath {
+            bounded_ty: Type::Path(TypePath {
+                attrs: vec![],
                 qself: None,
                 path: type_parameter.clone().ident.into(),
             }),
-            colon_token: syn::token::Colon {
+            colon_token: Colon {
                 spans: [Span::call_site()],
             },
             bounds: punctuated,
         };
-        where_clause.predicates.push(predicate.into());
+        where_clause
+            .predicates
+            .push(WherePredicate::Type(predicate));
     }
 
     let (impl_generics, _, where_clause) = impl_generics.split_for_impl();
@@ -112,21 +127,22 @@ pub(crate) fn encoder(ctx: &Context, inner: TokenStream) -> TokenStream {
     let where_clause = generics.make_where_clause();
 
     for type_parameter in ctx.type_parameters.iter() {
-        let mut punctuated = syn::punctuated::Punctuated::new();
-        punctuated.push(syn::TypeParamBound::Trait(TraitBound {
+        let mut punctuated = Punctuated::new();
+        punctuated.push(TypeParamBound::Trait(TraitBound {
+            maybe: None,
             paren_token: None,
-            modifier: syn::TraitBoundModifier::None,
+            modifiers: Default::default(),
             lifetimes: None,
-            path: syn::Path {
-                leading_colon: Some(syn::token::PathSep::default()),
+            path: Path {
+                leading_colon: Some(PathSep::default()),
                 segments: [
                     PathSegment {
-                        ident: syn::Ident::new("rustler", Span::call_site()),
-                        arguments: syn::PathArguments::None,
+                        ident: Ident::new("rustler", Span::call_site()),
+                        arguments: PathArguments::None,
                     },
                     PathSegment {
-                        ident: syn::Ident::new("Encoder", Span::call_site()),
-                        arguments: syn::PathArguments::None,
+                        ident: Ident::new("Encoder", Span::call_site()),
+                        arguments: PathArguments::None,
                     },
                 ]
                 .iter()
@@ -134,18 +150,22 @@ pub(crate) fn encoder(ctx: &Context, inner: TokenStream) -> TokenStream {
                 .collect(),
             },
         }));
-        let predicate = syn::PredicateType {
+        let predicate = PredicateType {
+            attrs: Default::default(),
             lifetimes: None,
-            bounded_ty: syn::Type::Path(syn::TypePath {
+            bounded_ty: Type::Path(TypePath {
+                attrs: Default::default(),
                 qself: None,
                 path: type_parameter.ident.clone().into(),
             }),
-            colon_token: syn::token::Colon {
+            colon_token: Colon {
                 spans: [Span::call_site()],
             },
             bounds: punctuated,
         };
-        where_clause.predicates.push(predicate.into());
+        where_clause
+            .predicates
+            .push(WherePredicate::Type(predicate));
     }
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
