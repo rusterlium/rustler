@@ -238,10 +238,13 @@ defmodule RustlerTest.YieldingTest do
       parent = self()
       counter = :counters.new(1, [:atomics])
 
-      # Start a process that increments a counter in a tight loop
+      iterations = 200
+
+      # Start a process that increments a counter in a loop, sleeping between
+      # increments so the work spans the NIF's runtime.
       _counter_task =
         spawn(fn ->
-          for _ <- 1..1000 do
+          for _ <- 1..iterations do
             :counters.add(counter, 1, 1)
             Process.sleep(1)
           end
@@ -256,15 +259,20 @@ defmodule RustlerTest.YieldingTest do
           send(parent, {:nif_done, result})
         end)
 
-      # Wait for both to complete
-      assert_receive :counter_done, 10_000
-      assert_receive {:nif_done, 4_999_950_000}, 10_000
+      # Wait for both to complete. `Process.sleep(1)` only guarantees "at least
+      # 1ms"; on Windows the system timer granularity (~15ms) makes each sleep
+      # much longer, so the timeout must budget generously per iteration rather
+      # than assume ~1ms sleeps (otherwise the counter loop can outlast a fixed
+      # 10s deadline on Windows).
+      timeout = iterations * 20 + 5_000
+      assert_receive :counter_done, timeout
+      assert_receive {:nif_done, 4_999_950_000}, timeout
 
       # The counter should have made good progress despite the NIF running
       # This shows the NIF yielded and let other work run
       count = :counters.get(counter, 1)
       # Should have counted most of the iterations
-      assert count > 500
+      assert count > div(iterations, 2)
     end
   end
 
