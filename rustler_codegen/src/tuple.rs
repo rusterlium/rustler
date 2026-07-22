@@ -1,7 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 
-use syn::{self, spanned::Spanned, Field, Index};
+use syn::{self, spanned::Spanned, Index};
+
+use crate::context::StructField;
 
 use super::context::Context;
 
@@ -33,7 +35,7 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[StructField]) -> TokenStream {
     let struct_name = ctx.ident;
     let struct_name_str = struct_name.to_string();
 
@@ -42,7 +44,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
         .iter()
         .enumerate()
         .map(|(index, field)| {
-            let ident = field.ident.as_ref();
+            let ident = field.field.ident.as_ref();
             let pos_in_struct = if let Some(ident) = ident {
                 ident.to_string()
             } else {
@@ -51,7 +53,7 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
 
             let variable = Context::escape_ident(&pos_in_struct, "struct");
 
-            let assignment = quote_spanned! { field.span() =>
+            let assignment = quote_spanned! { field.field.span() =>
                 let #variable = try_decode_index(&terms, #pos_in_struct, #index)?;
             };
 
@@ -105,19 +107,19 @@ fn gen_decoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
     )
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field]) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[StructField]) -> TokenStream {
     // Make a field encoder expression for each of the items in the struct.
     let field_encoders: Vec<TokenStream> = fields
         .iter()
         .enumerate()
         .map(|(index, field)| {
             let literal_index = Index::from(index);
-            let field_source = match field.ident.as_ref() {
+            let field_source = match field.field.ident.as_ref() {
                 None => quote! { self.#literal_index },
                 Some(ident) => quote! { self.#ident },
             };
 
-            quote_spanned! { field.span() => ::rustler::Encoder::encode(&#field_source, env) }
+            quote_spanned! { field.field.span() => ::rustler::Encoder::encode(&#field_source, env) }
         })
         .collect();
 
