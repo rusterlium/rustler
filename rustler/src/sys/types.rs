@@ -163,16 +163,29 @@ pub struct ErlNifResourceTypeInit {
 }
 
 /// See [ErlNifSelectFlags](http://erlang.org/doc/man/erl_nif.html#ErlNifSelectFlags) in the Erlang docs.
-pub type ErlNifSelectFlags = c_int;
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+pub enum ErlNifSelectFlags {
+    ERL_NIF_SELECT_READ = 1 << 0,
+    ERL_NIF_SELECT_WRITE = 1 << 1,
+    ERL_NIF_SELECT_STOP = 1 << 2,
+    ERL_NIF_SELECT_CANCEL = 1 << 3,
+    ERL_NIF_SELECT_CUSTOM_MSG = 1 << 4,
+    ERL_NIF_SELECT_ERROR = 1 << 5,
+}
+
+/// See [enif_select](https://www.erlang.org/doc/apps/erts/erl_nif.html#enif_select) in the Erlang docs.
 #[allow(clippy::identity_op)]
-pub const ERL_NIF_SELECT_READ: ErlNifSelectFlags = 1 << 0;
-pub const ERL_NIF_SELECT_WRITE: ErlNifSelectFlags = 1 << 1;
-pub const ERL_NIF_SELECT_STOP: ErlNifSelectFlags = 1 << 2;
-pub const ERL_NIF_SELECT_FAILED: ErlNifSelectFlags = 1 << 3;
-pub const ERL_NIF_SELECT_READ_CANCELLED: ErlNifSelectFlags = 1 << 4;
-pub const ERL_NIF_SELECT_WRITE_CANCELLED: ErlNifSelectFlags = 1 << 5;
-pub const ERL_NIF_SELECT_ERROR_CANCELLED: ErlNifSelectFlags = 1 << 6;
-pub const ERL_NIF_SELECT_NOTSUP: ErlNifSelectFlags = 1 << 7;
+pub type ErlNifSelectReturnType = c_int;
+
+pub const ERL_NIF_SELECT_STOP_CALLED: ErlNifSelectReturnType = 1 << 0;
+pub const ERL_NIF_SELECT_STOP_SCHEDULED: ErlNifSelectReturnType = 1 << 1;
+pub const ERL_NIF_SELECT_INVALID_EVENT: ErlNifSelectReturnType = 1 << 2;
+pub const ERL_NIF_SELECT_FAILED: ErlNifSelectReturnType = 1 << 3;
+pub const ERL_NIF_SELECT_READ_CANCELLED: ErlNifSelectReturnType = 1 << 4;
+pub const ERL_NIF_SELECT_WRITE_CANCELLED: ErlNifSelectReturnType = 1 << 5;
+pub const ERL_NIF_SELECT_ERROR_CANCELLED: ErlNifSelectReturnType = 1 << 6;
+pub const ERL_NIF_SELECT_NOTSUP: ErlNifSelectReturnType = 1 << 7;
 
 /// See [ErlNifMonitor](http://www.erlang.org/doc/man/erl_nif.html#ErlNifMonitor) in the Erlang docs.
 #[derive(Debug, Copy, Clone)]
