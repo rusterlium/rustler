@@ -1,7 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
-use heck::ToSnakeCase;
 use std::collections::HashMap;
 use syn::{self, spanned::Spanned, Field, Fields, FieldsNamed, FieldsUnnamed, Ident, Variant};
 
@@ -18,28 +17,25 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     let atoms = variants
         .iter()
         .flat_map(|variant| {
-            let mut ret = if let Fields::Named(fields) = &variant.fields {
+            let fields = if let Fields::Named(fields) = &variant.fields {
                 fields
                     .named
                     .iter()
                     .map(|field| {
-                        field
-                            .ident
-                            .as_ref()
-                            .expect("Named fields must have an ident.")
+                        (
+                            Context::field_atom_name(field),
+                            Context::field_to_atom_fun(field),
+                        )
                     })
                     .collect::<Vec<_>>()
             } else {
                 vec![]
             };
 
-            ret.push(&variant.ident);
-            ret
-        })
-        .map(|atom_ident| {
-            let atom_str = atom_ident.to_string().to_snake_case();
-            let atom_fn = Context::ident_to_atom_fun(atom_ident);
-            (atom_str, atom_fn)
+            fields.into_iter().chain(std::iter::once((
+                Context::variant_atom_name(variant),
+                Context::variant_to_atom_fun(variant),
+            )))
         })
         .collect::<HashMap<_, _>>()
         .into_iter()
@@ -89,7 +85,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .iter()
         .filter_map(|variant| {
             let variant_ident = &variant.ident;
-            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            let atom_fn = Context::variant_to_atom_fun(variant);
             match &variant.fields {
                 Fields::Unit => Some(gen_unit_decoder(enum_name, variant_ident, atom_fn)),
                 _ => None,
@@ -100,7 +96,7 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .iter()
         .filter_map(|variant| {
             let variant_ident = &variant.ident;
-            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            let atom_fn = Context::variant_to_atom_fun(variant);
             match &variant.fields {
                 Fields::Unnamed(fields) => Some(gen_unnamed_decoder(
                     enum_name,
@@ -161,7 +157,7 @@ fn gen_encoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
         .iter()
         .map(|variant| {
             let variant_ident = &variant.ident;
-            let atom_fn = Context::ident_to_atom_fun(variant_ident);
+            let atom_fn = Context::variant_to_atom_fun(variant);
 
             match &variant.fields {
                 Fields::Unit => gen_unit_encoder(enum_name, variant_ident, atom_fn),
