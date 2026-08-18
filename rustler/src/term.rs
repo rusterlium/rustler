@@ -102,15 +102,9 @@ impl<'a> Term<'a> {
     /// Non-portable hash function that only guarantees the same hash for the same term within
     /// one Erlang VM instance.
     ///
-    /// It takes 32-bit salt values and generates hashes within 0..2^32-1.
-    pub fn hash_internal(&self, salt: u32) -> u32 {
-        unsafe {
-            enif_hash(
-                ErlNifHash::ERL_NIF_INTERNAL_HASH,
-                self.as_c_arg(),
-                salt as u64,
-            ) as u32
-        }
+    /// It takes 64-bit salt values and generates hashes within 0..2^64-1 (0..2^32-1 before OTP 27).
+    pub fn hash_internal(&self, salt: u64) -> u64 {
+        unsafe { enif_hash(ErlNifHash::ERL_NIF_INTERNAL_HASH, self.as_c_arg(), salt) }
     }
 
     /// Portable hash function that gives the same hash for the same Erlang term regardless of
@@ -164,7 +158,7 @@ impl Hash for Term<'_> {
         // As far as I can see, there is really no way
         // to get a seed from the hasher. This is definitely
         // not optimal, but it's the best we can do for now.
-        state.write_u32(self.hash_internal(0));
+        state.write_u64(self.hash_internal(0));
     }
 }
 
