@@ -96,6 +96,14 @@ defmodule RustlerTest do
   def decode_iolist(_), do: err()
   def first_four_bytes_of_iolist(_), do: err()
 
+  def array_into_binary(), do: err()
+  def vec_into_binary(), do: err()
+  def slice_into_binary(), do: err()
+  def str_into_binary(), do: err()
+  def string_into_binary(), do: err()
+
+  def binary_from_str(), do: err()
+
   def atom_to_string(_), do: err()
   def atom_equals_ok(_), do: err()
   def binary_to_atom(_), do: err()

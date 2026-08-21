@@ -262,6 +262,17 @@ impl FromIterator<u8> for OwnedBinary {
     }
 }
 
+impl<T: AsRef<[u8]>> From<T> for OwnedBinary {
+    fn from(data: T) -> Self {
+        let buf = data.as_ref();
+        let mut bin = Self::new(buf.len()).expect("Allocation failed");
+
+        bin.as_mut_slice().copy_from_slice(buf);
+
+        bin
+    }
+}
+
 /// An immutable smart-pointer to an Erlang binary.
 ///
 /// See [module-level doc](index.html) for more information.

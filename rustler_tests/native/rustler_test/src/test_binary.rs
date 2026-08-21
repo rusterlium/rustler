@@ -96,3 +96,33 @@ pub fn first_four_bytes_of_iolist<'a>(term: Term<'a>) -> Binary<'a> {
     let sub = bin.make_subbinary(0, 4).unwrap();
     sub
 }
+
+#[rustler::nif]
+pub fn array_into_binary() -> OwnedBinary {
+    [1, 2, 3].into()
+}
+
+#[rustler::nif]
+pub fn vec_into_binary() -> OwnedBinary {
+    vec![1, 2, 3].into()
+}
+
+#[rustler::nif]
+pub fn slice_into_binary() -> OwnedBinary {
+    [1, 2, 3][..].into()
+}
+
+#[rustler::nif]
+pub fn str_into_binary() -> OwnedBinary {
+    "foobar".into()
+}
+
+#[rustler::nif]
+pub fn string_into_binary() -> OwnedBinary {
+    String::from("foobar").into()
+}
+
+#[rustler::nif]
+pub fn binary_from_str() -> OwnedBinary {
+    OwnedBinary::from("foobar")
+}
