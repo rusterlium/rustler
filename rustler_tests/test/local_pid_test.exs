@@ -32,4 +32,10 @@ defmodule RustlerTest.LocalPidTest do
       assert RustlerTest.are_equal_local_pids(lhs, rhs) == expected
     end
   end
+
+  test "local pid hash" do
+    pid = make_pid()
+
+    assert is_number(RustlerTest.pid_hash(pid))
+  end
 end

@@ -2,6 +2,7 @@ use crate::sys::{enif_compare_pids, enif_is_process_alive, enif_self};
 use crate::wrapper::{pid, ErlNifPid};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use std::mem::MaybeUninit;
 
 #[derive(Copy, Clone)]
@@ -86,5 +87,13 @@ impl Env<'_> {
     pub fn is_process_alive(self, pid: LocalPid) -> bool {
         let res = unsafe { enif_is_process_alive(self.as_c_arg(), pid.as_c_arg()) };
         res != 0
+    }
+}
+
+impl Hash for LocalPid {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        use crate::sys::{enif_hash, ErlNifHash};
+        let hash = unsafe { enif_hash(ErlNifHash::ERL_NIF_INTERNAL_HASH, self.as_c_arg().pid, 0) };
+        state.write_u64(hash);
     }
 }

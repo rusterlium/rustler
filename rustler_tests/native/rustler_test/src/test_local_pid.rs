@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use rustler::LocalPid;
 
@@ -14,4 +15,13 @@ pub fn compare_local_pids(lhs: LocalPid, rhs: LocalPid) -> i32 {
 #[rustler::nif]
 pub fn are_equal_local_pids(lhs: LocalPid, rhs: LocalPid) -> bool {
     lhs == rhs
+}
+
+#[rustler::nif]
+pub fn pid_hash(pid: LocalPid) -> u64 {
+    let mut s = DefaultHasher::new();
+
+    pid.hash(&mut s);
+
+    return s.finish();
 }

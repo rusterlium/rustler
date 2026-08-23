@@ -39,6 +39,7 @@ defmodule RustlerTest do
 
   def compare_local_pids(_, _), do: err()
   def are_equal_local_pids(_, _), do: err()
+  def pid_hash(_), do: err()
 
   def term_debug(_), do: err()
 
