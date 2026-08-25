@@ -17,14 +17,14 @@ pub fn parse_integer(string: &str) -> NifResult<i64> {
 
 #[rustler::nif]
 pub fn binary_new(env: Env) -> Binary {
-    let mut binary = OwnedBinary::new(4).unwrap();
+    let mut binary = OwnedBinary::new(4);
     binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     binary.release(env)
 }
 
 #[rustler::nif]
 pub fn owned_binary_new() -> OwnedBinary {
-    let mut binary = OwnedBinary::new(4).unwrap();
+    let mut binary = OwnedBinary::new(4);
     binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     binary
 }
@@ -53,14 +53,14 @@ pub fn unowned_to_owned<'a>(env: Env<'a>, binary: Binary<'a>) -> NifResult<Binar
     // Do nothing and suppress panic message. From https://stackoverflow.com/a/35559417
     panic::set_hook(Box::new(|_info| {}));
 
-    let mut copied = binary.to_owned().unwrap();
+    let mut copied = binary.to_owned();
     copied.as_mut_slice()[0] = 1;
     Ok(copied.release(env))
 }
 
 #[rustler::nif]
 pub fn realloc_shrink(env: Env) -> Binary {
-    let mut binary = OwnedBinary::new(8).unwrap();
+    let mut binary = OwnedBinary::new(8);
     binary
         .as_mut_slice()
         .write_all(&[1, 2, 3, 4, 5, 6, 7, 8])
@@ -73,7 +73,7 @@ pub fn realloc_shrink(env: Env) -> Binary {
 
 #[rustler::nif]
 pub fn realloc_grow(env: Env) -> Binary {
-    let mut binary = OwnedBinary::new(4).unwrap();
+    let mut binary = OwnedBinary::new(4);
     binary.as_mut_slice().write_all(&[1, 2, 3, 4]).unwrap();
     binary.realloc_or_copy(5);
     binary.as_mut_slice()[4] = 5;

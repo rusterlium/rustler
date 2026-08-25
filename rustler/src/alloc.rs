@@ -9,6 +9,14 @@ const MAX_ALIGN: usize = 8;
 #[global_allocator]
 static ALLOCATOR: EnifAllocator = EnifAllocator;
 
+/// Safe array layout with Erlang's allocator alignment.
+#[inline]
+pub(crate) fn array_layout<T>(n: usize) -> Layout {
+    let element_size = std::mem::size_of::<T>();
+    let size = element_size.saturating_mul(n).clamp(1, isize::MAX as usize);
+    unsafe { Layout::from_size_align_unchecked(size, MAX_ALIGN) }
+}
+
 /// Allocator implementation that forwards all allocation calls to Erlang's allocator. Allows the
 /// memory usage to be tracked by the BEAM.
 pub struct EnifAllocator;

@@ -143,10 +143,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
         let env = self.env;
         let str_len = v.len();
-        let mut bin = match OwnedBinary::new(str_len) {
-            Some(bin) => bin,
-            None => panic!("binary term allocation fail"),
-        };
+        let mut bin = OwnedBinary::new(str_len);
         bin.as_mut_slice()
             .write_all(v.as_bytes())
             .expect("memory copy of string failed");
@@ -155,7 +152,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
     #[inline]
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        let mut binary = OwnedBinary::new(v.len()).unwrap();
+        let mut binary = OwnedBinary::new(v.len());
         binary
             .as_mut_slice()
             .write_all(v)
