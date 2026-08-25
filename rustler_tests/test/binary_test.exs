@@ -64,4 +64,16 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.first_four_bytes_of_iolist(["hi", " ", "there"]) == "hi t"
     assert RustlerTest.first_four_bytes_of_iolist([[?h, ?i], ~c" ", ["there"]]) == "hi t"
   end
+
+  test "trait Into" do
+    assert RustlerTest.array_into_binary() == <<1, 2, 3>>
+    assert RustlerTest.vec_into_binary() == <<1, 2, 3>>
+    assert RustlerTest.slice_into_binary() == <<1, 2, 3>>
+    assert RustlerTest.str_into_binary() == "foobar"
+    assert RustlerTest.string_into_binary() == "foobar"
+  end
+
+  test "trait From" do
+    assert RustlerTest.binary_from_str() == "foobar"
+  end
 end

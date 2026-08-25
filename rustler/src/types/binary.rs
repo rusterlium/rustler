@@ -135,6 +135,14 @@ impl OwnedBinary {
         })
     }
 
+    /// Copies 'data''s data into a new `OwnedBinary`.
+    pub fn from_slice(data: impl AsRef<[u8]>) -> Self {
+        let data = data.as_ref();
+        let mut bin = OwnedBinary::new(data.len()).expect("allocation failed");
+        bin.as_mut_slice().copy_from_slice(data);
+        bin
+    }
+
     /// Attempts to reallocate `self` with the new size.
     ///
     /// Memory outside the range of the original binary will not be initialized. If
@@ -259,6 +267,12 @@ impl FromIterator<u8> for OwnedBinary {
                 }
             }
         }
+    }
+}
+
+impl<T: AsRef<[u8]>> From<T> for OwnedBinary {
+    fn from(data: T) -> Self {
+        Self::from_slice(data)
     }
 }
 
