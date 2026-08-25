@@ -69,11 +69,11 @@ defmodule RustlerTest.BinaryTest do
     assert RustlerTest.array_into_binary() == <<1, 2, 3>>
     assert RustlerTest.vec_into_binary() == <<1, 2, 3>>
     assert RustlerTest.slice_into_binary() == <<1, 2, 3>>
-    assert RustlerTest.str_into_binary() == <<1, 2, 3>>
-    assert RustlerTest.string_into_binary() == <<1, 2, 3>>
+    assert RustlerTest.str_into_binary() == "foobar"
+    assert RustlerTest.string_into_binary() == "foobar"
   end
 
   test "trait From" do
-    assert RustlerTest.binary_from_str() == <<1, 2, 3>>
+    assert RustlerTest.binary_from_str() == "foobar"
   end
 end
