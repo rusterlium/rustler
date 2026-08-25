@@ -19,7 +19,7 @@ pub use crate::wrapper::{
     NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
 };
 
-pub use crate::sys::{internal_set_symbols, internal_write_symbols, DynNifCallbacks};
+pub use crate::sys::{internal_set_symbols, internal_write_symbols};
 
 pub unsafe trait NifReturnable {
     unsafe fn into_returned(self, env: Env) -> NifReturned;

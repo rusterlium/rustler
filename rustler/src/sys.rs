@@ -7,6 +7,12 @@ Low level Rust bindings to the [Erlang NIF API](http://www.erlang.org/doc/man/er
 #![allow(clippy::missing_safety_doc)]
 
 mod functions;
+// Also enabled automatically for statically-linked musl builds - see
+// `sys/functions.rs`.
+#[cfg(not(any(
+    feature = "static_nif",
+    all(target_env = "musl", target_feature = "crt-static")
+)))]
 mod nif_filler;
 mod types;
 

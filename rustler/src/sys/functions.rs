@@ -1,18 +1,42 @@
 #![allow(clippy::type_complexity)]
+#![allow(dead_code)]
+// `DYN_NIF_CALLBACKS` (defined in the generated `api.*.rs`, only compiled
+// in when not using direct symbols) is a mutable static accessed directly;
+// see `internal_set_symbols`/`internal_write_symbols` below.
+#![allow(static_mut_refs)]
 
-use super::{
-    nif_filler::{self, DynNifFiller},
-    types::*,
-};
+// Statically-linked musl builds link the BEAM directly into the final
+// binary, so the real NIF API symbols are available at link time just like
+// with the `static_nif` feature - no need for a runtime dlsym-based filler
+// there either. This condition (or its negation) is the single place that
+// decides between the two code paths; the generated `api.*.rs`/
+// `api.*.direct.rs` files are self-contained and cfg-free.
+#[cfg(all(
+    not(windows),
+    not(feature = "static_nif"),
+    not(all(target_env = "musl", target_feature = "crt-static"))
+))]
+use super::nif_filler;
+#[cfg(all(
+    not(feature = "static_nif"),
+    not(all(target_env = "musl", target_feature = "crt-static"))
+))]
+use super::nif_filler::DynNifFiller;
+use super::types::*;
 
 static mut DYN_NIF_CALLBACKS: DynNifCallbacks =
     unsafe { std::mem::MaybeUninit::zeroed().assume_init() };
 
-pub unsafe fn internal_set_symbols(callbacks: DynNifCallbacks) {
-    DYN_NIF_CALLBACKS = callbacks;
+pub unsafe fn internal_set_symbols(callbacks: *mut DynNifCallbacks) {
+    if !callbacks.is_null() {
+        DYN_NIF_CALLBACKS = *callbacks;
+    }
 }
 
-#[allow(static_mut_refs)]
+/// Write symbols to `DYN_NIF_CALLBACKS`. This function is not called on Windows
+/// as the symbols are filled directly via `internal_set_symbols` from `init!`,
+/// and it is a no-op if directly linked symbols are used, as we do by default
+/// on Linux.
 pub unsafe fn internal_write_symbols() {
     let filler = nif_filler::new();
     DYN_NIF_CALLBACKS.write_symbols(filler);
@@ -45,6 +69,7 @@ macro_rules! use_snippet {
     };
 
     (include, $version:expr, $sizeof_long:expr) => {
+        #[cfg(not(target_os = "linux"))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",
@@ -53,6 +78,17 @@ macro_rules! use_snippet {
             "api.",
             $sizeof_long,
             ".rs"
+        ));
+
+        #[cfg(target_os = "linux")]
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/otp_headers/",
+            $version,
+            "/",
+            "api.",
+            $sizeof_long,
+            ".direct.rs"
         ));
     };
 }
