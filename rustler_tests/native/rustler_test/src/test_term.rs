@@ -45,7 +45,7 @@ pub fn term_cmp<'a>(a: Term<'a>, b: Term<'a>) -> Atom {
 }
 
 #[rustler::nif]
-pub fn term_internal_hash(term: Term, salt: u32) -> u32 {
+pub fn term_internal_hash(term: Term, salt: u64) -> u64 {
     term.hash_internal(salt)
 }
 
