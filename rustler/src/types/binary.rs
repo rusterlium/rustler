@@ -96,7 +96,6 @@ use crate::{
 use std::{
     borrow::{Borrow, BorrowMut},
     hash::{Hash, Hasher},
-    io::Write,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
 };
@@ -129,7 +128,7 @@ impl OwnedBinary {
 
     /// Copies 'data''s data into a new `OwnedBinary`.
     pub fn from_slice(data: &[u8]) -> Self {
-        let mut bin = OwnedBinary::new(data.len()).expect("allocation failed");
+        let mut bin = OwnedBinary::new(data.len());
         bin.as_mut_slice().copy_from_slice(data);
         bin
     }
@@ -156,14 +155,8 @@ impl OwnedBinary {
     pub fn realloc_or_copy(&mut self, size: usize) {
         if !self.realloc(size) {
             let mut new = OwnedBinary::new(size);
-            if let Ok(num_written) = new.as_mut_slice().write(self.as_slice()) {
-                if !(num_written == self.len() || num_written == new.len()) {
-                    panic!("Could not copy binary");
-                }
-                ::std::mem::swap(&mut self.0, &mut new.0);
-            } else {
-                panic!("Could not copy binary");
-            }
+            new.as_mut_slice().copy_from_slice(self);
+            ::std::mem::swap(&mut self.0, &mut new.0);
         }
     }
 
