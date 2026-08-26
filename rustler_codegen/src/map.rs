@@ -1,7 +1,9 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 
-use syn::{self, spanned::Spanned, Field, Ident};
+use syn::{self, spanned::Spanned, Ident};
+
+use crate::context::StructField;
 
 use super::context::Context;
 
@@ -50,24 +52,28 @@ pub fn transcoder_decorator(ast: &syn::DeriveInput) -> TokenStream {
     gen
 }
 
-fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_decoder(ctx: &Context, fields: &[StructField], atoms_module_name: &Ident) -> TokenStream {
     let struct_name = ctx.ident;
 
-    let idents: Vec<_> = fields
-        .iter()
-        .map(|field| field.ident.as_ref().unwrap())
-        .collect();
-
+    let has_global_optional = ctx.optional_decode();
     let (assignments, field_defs): (Vec<TokenStream>, Vec<TokenStream>) = fields
         .iter()
-        .zip(idents.iter())
         .enumerate()
-        .map(|(index, (field, ident))| {
-            let atom_fun = Context::field_to_atom_fun(field);
+        .map(|(index, field)| {
+            let ident = field.field.ident.as_ref().unwrap();
+            let is_optional = has_global_optional || field.optional_decode();
+
+            let atom_fun = Context::field_to_atom_fun(field.field);
             let variable = Context::escape_ident_with_index(&ident.to_string(), index, "map");
 
-            let assignment = quote_spanned! { field.span() =>
-            let #variable = try_decode_field(term, #atom_fun())?;
+            let assignment = if field.is_option_type {
+                quote_spanned! { field.field.span() =>
+                let #variable = try_decode_field_optional(term, #atom_fun(), #is_optional)?;
+                }
+            } else {
+                quote_spanned! { field.field.span() =>
+                let #variable = try_decode_field(term, #atom_fun())?;
+                }
             };
 
             let field_def = quote! {
@@ -82,22 +88,38 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
         quote! {
             use #atoms_module_name::*;
 
+            fn try_decode_field_optional<'a, T>(
+                term: ::rustler::Term<'a>,
+                field: ::rustler::Atom,
+                is_optional: bool,
+            ) -> ::rustler::NifResult<Option<T>>
+            where
+                T: ::rustler::Decoder<'a>,
+            {
+                let field_is_missing = term.map_get(&field).is_err();
+                if is_optional && field_is_missing {
+                    Ok(None)
+                } else {
+                    try_decode_field(term, field)
+                }
+            }
+
             fn try_decode_field<'a, T>(
-                term: rustler::Term<'a>,
-                field: rustler::Atom,
-                ) -> ::rustler::NifResult<T>
-                where
-                    T: rustler::Decoder<'a>,
-                {
-                    use rustler::Encoder;
-                    match ::rustler::Decoder::decode(term.map_get(&field)?) {
-                        Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
-                                        "Could not decode field :{:?} on %{{}}",
-                                        field
-                        )))),
-                        Ok(value) => Ok(value),
-                    }
-                };
+                term: ::rustler::Term<'a>,
+                field: ::rustler::Atom,
+            ) -> ::rustler::NifResult<T>
+            where
+                T: ::rustler::Decoder<'a>,
+            {
+                use rustler::Encoder;
+                match ::rustler::Decoder::decode(term.map_get(&field)?) {
+                    Err(_) => Err(::rustler::Error::RaiseTerm(Box::new(format!(
+                        "Could not decode field :{:?} on %{{}}",
+                        field
+                    )))),
+                    Ok(value) => Ok(value),
+                }
+            }
 
             #(#assignments);*
 
@@ -106,12 +128,12 @@ fn gen_decoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> T
     )
 }
 
-fn gen_encoder(ctx: &Context, fields: &[&Field], atoms_module_name: &Ident) -> TokenStream {
+fn gen_encoder(ctx: &Context, fields: &[StructField], atoms_module_name: &Ident) -> TokenStream {
     let (keys, values): (Vec<_>, Vec<_>) = fields
         .iter()
         .map(|field| {
-            let field_ident = field.ident.as_ref().unwrap();
-            let atom_fun = Context::field_to_atom_fun(field);
+            let field_ident = field.field.ident.as_ref().unwrap();
+            let atom_fun = Context::field_to_atom_fun(field.field);
             (
                 quote! { ::rustler::Encoder::encode(&#atom_fun(), env) },
                 quote! { ::rustler::Encoder::encode(&self.#field_ident, env) },
