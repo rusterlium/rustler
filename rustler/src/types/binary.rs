@@ -513,6 +513,15 @@ impl<'a> NewBinary<'a> {
         NewBinary { buf, term, size }
     }
 
+    /// Allocates a new `NewBinary` for `data` and copies its contents.
+    #[inline]
+    pub fn from_slice(env: Env<'a>, data: impl AsRef<[u8]>) -> Self {
+        let data = data.as_ref();
+        let mut bin = Self::new(env, data.len());
+        bin.as_mut_slice().copy_from_slice(data);
+        bin
+    }
+
     /// Extracts a slice containing the entire binary.
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
@@ -525,6 +534,7 @@ impl<'a> NewBinary<'a> {
         unsafe { ::std::slice::from_raw_parts_mut(self.buf, self.size) }
     }
 
+    /// Create a `NewBinary` from an iterator
     pub fn from_iter(env: Env<'a>, iter: impl ExactSizeIterator<Item = u8>) -> Self {
         let mut bin = Self::new(env, iter.len());
         for (src, dst) in ::std::iter::zip(iter, bin.iter_mut()) {
