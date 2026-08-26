@@ -27,7 +27,7 @@ impl Encoder for &str {
 
 impl Encoder for str {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-        NewBinary::from_slice(env, self).into()
+        NewBinary::from_slice(env, self.as_bytes()).into()
     }
 }
 
