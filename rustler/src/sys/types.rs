@@ -19,6 +19,7 @@ pub type ERL_NIF_TERM = ERL_NIF_UINT;
 //#[derive(Debug, Copy, Clone)]
 //#[repr(C)]
 //pub struct ERL_NIF_TERM(ERL_NIF_UINT);  // Don't do this, 32 bit calling convention is different for structs and ints.
+// Would work with repr(transparent)!
 
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
 #[derive(Debug)]

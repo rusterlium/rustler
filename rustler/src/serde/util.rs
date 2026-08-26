@@ -1,5 +1,5 @@
 use crate::serde::{atoms, Error};
-use crate::{types::tuple, Binary, Decoder, Term};
+use crate::{Binary, Decoder, Encoder, Env, Term, Tuple};
 
 /// Attempts to convert a stringable term into a `String`.
 pub fn term_to_str(term: &Term) -> Result<String, Error> {
@@ -57,7 +57,10 @@ pub fn validate_tuple(term: Term, len: Option<usize>) -> Result<Vec<Term>, Error
         return Err(Error::ExpectedTuple);
     }
 
-    let tuple = tuple::get_tuple(term).or(Err(Error::ExpectedTuple))?;
+    let tuple = Tuple::try_from(term)
+        .or(Err(Error::ExpectedTuple))?
+        .to_vec();
+
     match len {
         None => Ok(tuple),
         Some(len) => {

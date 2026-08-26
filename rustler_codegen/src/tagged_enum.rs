@@ -141,10 +141,10 @@ fn gen_decoder(ctx: &Context, variants: &[&Variant], atoms_module_name: &Ident) 
 
             if let Ok(unit) = ::rustler::types::atom::Atom::from_term(term) {
                 #(#unit_decoders)*
-            } else if let Ok(tuple) = ::rustler::types::tuple::get_tuple(term) {
+            } else if let Ok(tuple) = ::rustler::Tuple::try_from(term) {
                 let name = tuple
                             .get(0)
-                            .and_then(|&first| ::rustler::types::atom::Atom::from_term(first).ok())
+                            .and_then(|first| ::rustler::types::atom::Atom::from_term(first).ok())
                             .ok_or(::rustler::Error::RaiseAtom("invalid_variant"))?;
                 #(#named_unnamed_decoders)*
             }
@@ -208,7 +208,7 @@ fn gen_unnamed_decoder<'a>(
             let i = i + 1;
             let ty = &f.ty;
             quote! {
-                <#ty as ::rustler::Decoder>::decode(tuple[#i]).map_err(|_| ::rustler::Error::RaiseTerm(
+                <#ty as ::rustler::Decoder>::decode(tuple.get(#i).unwrap()).map_err(|_| ::rustler::Error::RaiseTerm(
                     Box::new(format!("Could not decode field on position {}", #i))
                 ))?
             }
@@ -250,7 +250,7 @@ fn gen_named_decoder(
             let enum_name_string = enum_name.to_string();
 
             let assignment = quote_spanned! { field.span() =>
-                let #variable = try_decode_field(tuple[1], #atom_fun()).map_err(|_|{
+                let #variable = try_decode_field(tuple.get(1).unwrap(), #atom_fun()).map_err(|_|{
                     ::rustler::Error::RaiseTerm(Box::new(format!(
                         "Could not decode field '{}' on Enum '{}'",
                         #ident_string, #enum_name_string
@@ -267,7 +267,7 @@ fn gen_named_decoder(
 
     quote! {
         if tuple.len() == 2 && name == #atom_fn() {
-            let len = tuple[1].map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
+            let len = tuple.get(1).unwrap().map_size().map_err(|_| ::rustler::Error::RaiseTerm(Box::new(
                 "The second element of the tuple must be a map"
             )))?;
             #(#assignments)*
@@ -334,7 +334,7 @@ fn gen_named_encoder(
         } => {
             let map = ::rustler::Term::map_from_term_arrays(env, &[#(#keys),*], &[#(#values),*])
                 .expect("Failed to create map");
-            ::rustler::types::tuple::make_tuple(env, &[::rustler::Encoder::encode(&#atom_fn(), env), map])
+            env.make_tuple(&[::rustler::Encoder::encode(&#atom_fn(), env), map]).into()
         }
     }
 }
