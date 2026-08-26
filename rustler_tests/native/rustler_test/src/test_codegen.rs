@@ -54,6 +54,35 @@ pub fn map_echo(map: AddMap) -> AddMap {
     map
 }
 
+#[derive(NifMap)]
+pub struct RenamedMap {
+    #[rustler(rename = "type")]
+    type_: rustler::Atom,
+    start: u32,
+    #[rustler(rename = "end")]
+    end_: u32,
+    #[rustler(rename = "async")]
+    async_: bool,
+}
+
+#[rustler::nif]
+pub fn renamed_map_echo(map: RenamedMap) -> RenamedMap {
+    map
+}
+
+#[derive(NifMap)]
+pub struct UnicodeRenamedMap {
+    #[rustler(rename = "name_ä")]
+    name_a_umlaut: u32,
+    #[rustler(rename = "name_ö")]
+    name_o_umlaut: u32,
+}
+
+#[rustler::nif]
+pub fn unicode_renamed_map_echo(map: UnicodeRenamedMap) -> UnicodeRenamedMap {
+    map
+}
+
 #[derive(Debug, NifStruct)]
 #[must_use] // Added to test Issue #152
 #[module = "AddStruct"]
@@ -153,6 +182,21 @@ pub enum TaggedEnum4 {
 
 #[rustler::nif]
 pub fn tagged_enum_4_echo(tagged_enum: TaggedEnum4) -> TaggedEnum4 {
+    tagged_enum
+}
+
+#[derive(NifTaggedEnum)]
+pub enum RenamedTaggedEnum {
+    #[rustler(rename = "renamed")]
+    Named {
+        #[rustler(rename = "end")]
+        end_: i32,
+        y: i32,
+    },
+}
+
+#[rustler::nif]
+pub fn renamed_tagged_enum_echo(tagged_enum: RenamedTaggedEnum) -> RenamedTaggedEnum {
     tagged_enum
 }
 
