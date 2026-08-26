@@ -136,8 +136,7 @@ impl OwnedBinary {
     }
 
     /// Copies 'data''s data into a new `OwnedBinary`.
-    pub fn from_slice(data: impl AsRef<[u8]>) -> Self {
-        let data = data.as_ref();
+    pub fn from_slice(data: &[u8]) -> Self {
         let mut bin = OwnedBinary::new(data.len()).expect("allocation failed");
         bin.as_mut_slice().copy_from_slice(data);
         bin
@@ -272,7 +271,7 @@ impl FromIterator<u8> for OwnedBinary {
 
 impl<T: AsRef<[u8]>> From<T> for OwnedBinary {
     fn from(data: T) -> Self {
-        Self::from_slice(data)
+        Self::from_slice(data.as_ref())
     }
 }
 
@@ -515,8 +514,7 @@ impl<'a> NewBinary<'a> {
 
     /// Allocates a new `NewBinary` for `data` and copies its contents.
     #[inline]
-    pub fn from_slice(env: Env<'a>, data: impl AsRef<[u8]>) -> Self {
-        let data = data.as_ref();
+    pub fn from_slice(env: Env<'a>, data: &[u8]) -> Self {
         let mut bin = Self::new(env, data.len());
         bin.as_mut_slice().copy_from_slice(data);
         bin
