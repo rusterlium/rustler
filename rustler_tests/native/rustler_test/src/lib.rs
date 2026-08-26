@@ -15,12 +15,22 @@ mod test_path;
 mod test_primitives;
 mod test_range;
 mod test_resource;
+mod test_tasks;
 mod test_term;
 mod test_thread;
 mod test_tuple;
+mod test_yielding;
 
 rustler::init!("Elixir.RustlerTest", load = load);
 
-fn load(env: rustler::Env, _: rustler::Term) -> bool {
+fn load(env: rustler::Env, load_info: rustler::Term) -> bool {
+    // Configure runtime from Elixir load_data
+    #[cfg(feature = "tokio-rt")]
+    {
+        if let Ok(config) = load_info.decode::<rustler::runtime::RuntimeConfig>() {
+            rustler::runtime::configure(config).ok();
+        }
+    }
+
     test_resource::on_load(env)
 }
