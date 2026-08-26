@@ -14,7 +14,6 @@ defmodule SerdeRustlerTests.Readme.Animal do
   alias SerdeRustlerTests.Readme.AnimalType
   alias AnimalType.{Cat, Dog}
   require Cat
-  require Dog
 
   @type t :: %__MODULE__{
           type: Cat.t() | Dog.t(),
