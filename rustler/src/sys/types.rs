@@ -351,6 +351,7 @@ const ERL_NIF_IOVEC_SIZE: usize = 16;
 pub type SysIOVec = libc::iovec;
 
 #[cfg(windows)]
+#[repr(C)]
 pub struct SysIOVec {
     pub iov_len: c_ulong,
     pub iov_base: *mut c_char,
