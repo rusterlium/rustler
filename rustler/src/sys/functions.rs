@@ -5,23 +5,7 @@
 // see `internal_set_symbols`/`internal_write_symbols` below.
 #![allow(static_mut_refs)]
 
-// Statically-linked musl builds link the BEAM directly into the final
-// binary, so the real NIF API symbols are available at link time just like
-// with the `static_nif` feature - no need for a runtime dlsym-based filler
-// there either. This condition (or its negation) is the single place that
-// decides between the two code paths; the generated `api.*.rs`/
-// `api.*.direct.rs` files are self-contained and cfg-free.
-#[cfg(all(
-    not(windows),
-    not(feature = "static_nif"),
-    not(all(target_env = "musl", target_feature = "crt-static"))
-))]
-use super::nif_filler;
-#[cfg(all(
-    not(feature = "static_nif"),
-    not(all(target_env = "musl", target_feature = "crt-static"))
-))]
-use super::nif_filler::DynNifFiller;
+use super::nif_filler::{self, DynNifFiller};
 use super::types::*;
 
 static mut DYN_NIF_CALLBACKS: DynNifCallbacks =

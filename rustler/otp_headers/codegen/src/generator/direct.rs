@@ -12,6 +12,14 @@ pub(super) struct DirectSymbolsApiBuilder<'a, W: Write>(pub(super) &'a mut W);
 
 impl<W: Write> ApiBuilder for DirectSymbolsApiBuilder<'_, W> {
     fn init(&mut self) -> Res {
+        writeln!(self.0, "#[allow(dead_code)]")?;
+        writeln!(self.0, "#[derive(Default, Copy, Clone)]")?;
+        writeln!(self.0, "pub struct DynNifCallbacks {{}}")?;
+        writeln!(
+            self.0,
+            "impl DynNifCallbacks {{ fn write_symbols(&mut self, _: impl DynNifFiller) {{}} }}"
+        )?;
+
         writeln!(self.0, "extern \"C\" {{")
     }
 

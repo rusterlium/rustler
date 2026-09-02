@@ -1,4 +1,8 @@
 pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;
+#[allow(dead_code)]
+#[derive(Default, Copy, Clone)]
+pub struct DynNifCallbacks {}
+impl DynNifCallbacks { fn write_symbols(&mut self, _: impl DynNifFiller) {} }
 extern "C" {
     pub fn enif_priv_data(arg1: *mut ErlNifEnv) -> *mut c_void;
     pub fn enif_alloc(size: size_t) -> *mut c_void;

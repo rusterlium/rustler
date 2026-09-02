@@ -150,7 +150,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             #[no_mangle]
             extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
                 unsafe {
-                    ::rustler::codegen_runtime::internal_set_symbols(*callbacks);
+                    ::rustler::codegen_runtime::internal_set_symbols(callbacks);
                 }
 
                 #inner
