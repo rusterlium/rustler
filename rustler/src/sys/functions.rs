@@ -39,16 +39,10 @@ pub unsafe fn enif_compare_pids(pid1: *const ErlNifPid, pid2: *const ErlNifPid) 
 
 macro_rules! use_snippet {
     ($version:expr) => {
-        #[cfg(all(
-                                            feature = $version,
-                                            any(windows, all(unix, target_pointer_width = "32"))
-                                        ))]
+        #[cfg(all(feature = $version, any(windows, all(unix, target_pointer_width = "32"))))]
         use_snippet! {include, $version, "4"}
 
-        #[cfg(all(
-                                            feature = $version,
-                                            all(unix, target_pointer_width = "64")
-                                        ))]
+        #[cfg(all(feature = $version, all(unix, target_pointer_width = "64")))]
         use_snippet! {include, $version, "8"}
     };
 
