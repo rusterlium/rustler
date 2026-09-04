@@ -1,5 +1,6 @@
 pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;
 #[allow(dead_code)]
+#[repr(C)]
 #[derive(Default, Copy, Clone)]
 pub struct DynNifCallbacks {
     enif_priv_data: Option<extern "C" fn (arg1: *mut ErlNifEnv) -> *mut c_void>,

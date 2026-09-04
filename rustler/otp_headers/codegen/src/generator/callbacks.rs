@@ -8,6 +8,7 @@ pub(super) struct CallbacksApiBuilder<'a, W: Write>(pub(super) &'a mut W);
 impl<W: Write> ApiBuilder for CallbacksApiBuilder<'_, W> {
     fn init(&mut self) -> Res {
         writeln!(self.0, "#[allow(dead_code)]")?;
+        writeln!(self.0, "#[repr(C)]")?;
         writeln!(self.0, "#[derive(Default, Copy, Clone)]")?;
         writeln!(self.0, "pub struct DynNifCallbacks {{")
     }
