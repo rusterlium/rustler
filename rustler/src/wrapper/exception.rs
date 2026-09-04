@@ -1,7 +1,4 @@
-use crate::{
-    sys::{enif_make_badarg, enif_raise_exception},
-    wrapper::{NIF_ENV, NIF_TERM},
-};
+use crate::sys::{enif_make_badarg, enif_raise_exception, ErlNifEnv, ERL_NIF_TERM};
 
 /// Raise an "error exception".
 ///
@@ -12,7 +9,7 @@ use crate::{
 /// `enif_is_exception`, but not to any other NIF API function."
 ///
 /// And of course the usual rules about `env` and `term` still apply.
-pub unsafe fn raise_exception(env: NIF_ENV, term: NIF_TERM) -> NIF_TERM {
+pub unsafe fn raise_exception(env: *mut ErlNifEnv, term: ERL_NIF_TERM) -> ERL_NIF_TERM {
     enif_raise_exception(env, term)
 }
 
@@ -25,6 +22,6 @@ pub unsafe fn raise_exception(env: NIF_ENV, term: NIF_TERM) -> NIF_TERM {
 /// `enif_is_exception`, but not to any other NIF API function."
 ///
 /// And of course `env` must be a valid environment.
-pub unsafe fn raise_badarg(env: NIF_ENV) -> NIF_TERM {
+pub unsafe fn raise_badarg(env: *mut ErlNifEnv) -> ERL_NIF_TERM {
     enif_make_badarg(env)
 }

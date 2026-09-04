@@ -62,10 +62,10 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
                 flags: #flags as rustler::codegen_runtime::c_uint,
                 raw_func: {
                     unsafe extern "C" fn nif_func(
-                        nif_env: rustler::codegen_runtime::NIF_ENV,
+                        nif_env: *mut rustler::sys::ErlNifEnv,
                         argc: rustler::codegen_runtime::c_int,
-                        argv: *const rustler::codegen_runtime::NIF_TERM
-                    ) -> rustler::codegen_runtime::NIF_TERM {
+                        argv: *const rustler::sys::ERL_NIF_TERM
+                    ) -> rustler::sys::ERL_NIF_TERM {
                         let lifetime = ();
                         let env = rustler::Env::new(&lifetime, nif_env);
 

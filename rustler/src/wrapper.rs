@@ -28,8 +28,6 @@ pub use crate::sys::{
 pub use crate::sys::{c_char, c_double, c_int, c_uchar, c_uint, c_void};
 pub type size_t = usize;
 
-pub type NIF_ENV = *mut crate::sys::ErlNifEnv;
-pub type NIF_TERM = size_t;
 pub type NIF_RESOURCE_TYPE = *const crate::sys::ErlNifResourceType;
 
 pub fn get_nif_resource_type_init_size() -> usize {

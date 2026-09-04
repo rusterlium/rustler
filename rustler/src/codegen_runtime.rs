@@ -16,10 +16,12 @@ pub use crate::resource::Registration as ResourceRegistration;
 pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
     c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
-    NIF_ENV, NIF_MAJOR_VERSION, NIF_MINOR_VERSION, NIF_TERM,
+    NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
 };
 
-pub use crate::sys::{internal_set_symbols, internal_write_symbols, DynNifCallbacks};
+pub use crate::sys::{
+    internal_set_symbols, internal_write_symbols, DynNifCallbacks, ErlNifEnv, ERL_NIF_TERM,
+};
 
 pub unsafe trait NifReturnable {
     unsafe fn into_returned(self, env: Env) -> NifReturned;
@@ -59,19 +61,19 @@ unsafe impl NifReturnable for OwnedBinary {
 }
 
 pub enum NifReturned {
-    Term(NIF_TERM),
-    Raise(NIF_TERM),
+    Term(ERL_NIF_TERM),
+    Raise(ERL_NIF_TERM),
     BadArg,
     Reschedule {
         fun_name: CString,
         flags: crate::schedule::SchedulerFlags,
-        fun: unsafe extern "C" fn(NIF_ENV, i32, *const NIF_TERM) -> NIF_TERM,
-        args: Vec<NIF_TERM>,
+        fun: unsafe extern "C" fn(*mut ErlNifEnv, i32, *const ERL_NIF_TERM) -> ERL_NIF_TERM,
+        args: Vec<ERL_NIF_TERM>,
     },
 }
 
 impl NifReturned {
-    pub unsafe fn apply(self, env: Env) -> NIF_TERM {
+    pub unsafe fn apply(self, env: Env) -> ERL_NIF_TERM {
         match self {
             NifReturned::Term(inner) => inner,
             NifReturned::BadArg => crate::wrapper::exception::raise_badarg(env.as_c_arg()),

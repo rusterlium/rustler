@@ -1,9 +1,14 @@
-use crate::sys::{enif_binary_to_term, enif_term_to_binary};
-use crate::wrapper::binary::ErlNifBinary;
-use crate::wrapper::{ERL_NIF_BIN2TERM_SAFE, NIF_ENV, NIF_TERM};
+use crate::sys::{
+    enif_binary_to_term, enif_term_to_binary, ErlNifBinary, ErlNifEnv, ERL_NIF_BIN2TERM_SAFE,
+    ERL_NIF_TERM,
+};
 use std::mem::MaybeUninit;
 
-pub unsafe fn binary_to_term(env: NIF_ENV, data: &[u8], safe: bool) -> Option<(NIF_TERM, usize)> {
+pub unsafe fn binary_to_term(
+    env: *mut ErlNifEnv,
+    data: &[u8],
+    safe: bool,
+) -> Option<(ERL_NIF_TERM, usize)> {
     let opts = if safe { ERL_NIF_BIN2TERM_SAFE } else { 0 };
 
     let mut result = MaybeUninit::uninit();
@@ -16,7 +21,7 @@ pub unsafe fn binary_to_term(env: NIF_ENV, data: &[u8], safe: bool) -> Option<(N
     Some((result.assume_init(), read_count))
 }
 
-pub unsafe fn term_to_binary(env: NIF_ENV, term: NIF_TERM) -> Option<ErlNifBinary> {
+pub unsafe fn term_to_binary(env: *mut ErlNifEnv, term: ERL_NIF_TERM) -> Option<ErlNifBinary> {
     let mut binary = MaybeUninit::uninit();
     let success = enif_term_to_binary(env, term, binary.as_mut_ptr());
 

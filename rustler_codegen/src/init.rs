@@ -68,9 +68,9 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 funcs: nif_funcs.as_ptr(),
                 load: {
                     extern "C" fn nif_load(
-                        env: rustler::codegen_runtime::NIF_ENV,
+                        env: *mut rustler::sys::ErlNifEnv,
                         _priv_data: *mut *mut rustler::codegen_runtime::c_void,
-                        load_info: rustler::codegen_runtime::NIF_TERM
+                        load_info: rustler::sys::ERL_NIF_TERM
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
                             let mut env = rustler::Env::new_init_env(&env, env);

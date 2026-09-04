@@ -1,11 +1,9 @@
-pub use crate::wrapper::ErlNifMapIterator;
-use crate::{
-    sys::{
-        enif_get_map_size, enif_get_map_value, enif_make_map_from_arrays, enif_make_map_put,
-        enif_make_map_remove, enif_make_map_update, enif_make_new_map, enif_map_iterator_prev,
-    },
-    wrapper::{ErlNifMapIteratorEntry, NIF_ENV, NIF_TERM},
+use crate::sys::{
+    enif_get_map_size, enif_get_map_value, enif_make_map_from_arrays, enif_make_map_put,
+    enif_make_map_remove, enif_make_map_update, enif_make_new_map, enif_map_iterator_prev,
+    ErlNifEnv, ErlNifMapIteratorEntry, ERL_NIF_TERM,
 };
+pub use crate::wrapper::ErlNifMapIterator;
 use std::mem::MaybeUninit;
 
 use super::{
@@ -13,7 +11,11 @@ use super::{
     enif_map_iterator_next,
 };
 
-pub unsafe fn get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
+pub unsafe fn get_map_value(
+    env: *mut ErlNifEnv,
+    map: ERL_NIF_TERM,
+    key: ERL_NIF_TERM,
+) -> Option<ERL_NIF_TERM> {
     let mut result = MaybeUninit::uninit();
     let success = enif_get_map_value(env, map, key, result.as_mut_ptr());
 
@@ -23,7 +25,7 @@ pub unsafe fn get_map_value(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Optio
     Some(result.assume_init())
 }
 
-pub unsafe fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Option<usize> {
+pub unsafe fn get_map_size(env: *mut ErlNifEnv, map: ERL_NIF_TERM) -> Option<usize> {
     let mut size = MaybeUninit::uninit();
     let success = enif_get_map_size(env, map, size.as_mut_ptr());
 
@@ -33,16 +35,16 @@ pub unsafe fn get_map_size(env: NIF_ENV, map: NIF_TERM) -> Option<usize> {
     Some(size.assume_init())
 }
 
-pub unsafe fn map_new(env: NIF_ENV) -> NIF_TERM {
+pub unsafe fn map_new(env: *mut ErlNifEnv) -> ERL_NIF_TERM {
     enif_make_new_map(env)
 }
 
 pub unsafe fn map_put(
-    env: NIF_ENV,
-    map: NIF_TERM,
-    key: NIF_TERM,
-    value: NIF_TERM,
-) -> Option<NIF_TERM> {
+    env: *mut ErlNifEnv,
+    map: ERL_NIF_TERM,
+    key: ERL_NIF_TERM,
+    value: ERL_NIF_TERM,
+) -> Option<ERL_NIF_TERM> {
     let mut result = MaybeUninit::uninit();
     let success = enif_make_map_put(env, map, key, value, result.as_mut_ptr());
 
@@ -52,7 +54,11 @@ pub unsafe fn map_put(
     Some(result.assume_init())
 }
 
-pub unsafe fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<NIF_TERM> {
+pub unsafe fn map_remove(
+    env: *mut ErlNifEnv,
+    map: ERL_NIF_TERM,
+    key: ERL_NIF_TERM,
+) -> Option<ERL_NIF_TERM> {
     let mut result = MaybeUninit::uninit();
     let success = enif_make_map_remove(env, map, key, result.as_mut_ptr());
 
@@ -63,11 +69,11 @@ pub unsafe fn map_remove(env: NIF_ENV, map: NIF_TERM, key: NIF_TERM) -> Option<N
 }
 
 pub unsafe fn map_update(
-    env: NIF_ENV,
-    map: NIF_TERM,
-    key: NIF_TERM,
-    new_value: NIF_TERM,
-) -> Option<NIF_TERM> {
+    env: *mut ErlNifEnv,
+    map: ERL_NIF_TERM,
+    key: ERL_NIF_TERM,
+    new_value: ERL_NIF_TERM,
+) -> Option<ERL_NIF_TERM> {
     let mut result = MaybeUninit::uninit();
     let success = enif_make_map_update(env, map, key, new_value, result.as_mut_ptr());
 
@@ -84,8 +90,8 @@ pub enum MapIteratorEntry {
 }
 
 pub unsafe fn map_iterator_create(
-    env: NIF_ENV,
-    map: NIF_TERM,
+    env: *mut ErlNifEnv,
+    map: ERL_NIF_TERM,
     entry: MapIteratorEntry,
 ) -> Option<ErlNifMapIterator> {
     let mut iter = MaybeUninit::uninit();
@@ -105,14 +111,14 @@ pub unsafe fn map_iterator_create(
     }
 }
 
-pub unsafe fn map_iterator_destroy(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
+pub unsafe fn map_iterator_destroy(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_destroy(env, iter);
 }
 
 pub unsafe fn map_iterator_get_pair(
-    env: NIF_ENV,
+    env: *mut ErlNifEnv,
     iter: &mut ErlNifMapIterator,
-) -> Option<(NIF_TERM, NIF_TERM)> {
+) -> Option<(ERL_NIF_TERM, ERL_NIF_TERM)> {
     let mut key = MaybeUninit::uninit();
     let mut value = MaybeUninit::uninit();
     if enif_map_iterator_get_pair(env, iter, key.as_mut_ptr(), value.as_mut_ptr()) == 0 {
@@ -123,20 +129,20 @@ pub unsafe fn map_iterator_get_pair(
 }
 
 #[inline]
-pub unsafe fn map_iterator_next(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
+pub unsafe fn map_iterator_next(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_next(env, iter);
 }
 
-pub unsafe fn map_iterator_prev(env: NIF_ENV, iter: &mut ErlNifMapIterator) {
+pub unsafe fn map_iterator_prev(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_prev(env, iter);
 }
 
 #[inline]
 pub unsafe fn make_map_from_arrays(
-    env: NIF_ENV,
-    keys: &[NIF_TERM],
-    values: &[NIF_TERM],
-) -> Option<NIF_TERM> {
+    env: *mut ErlNifEnv,
+    keys: &[ERL_NIF_TERM],
+    values: &[ERL_NIF_TERM],
+) -> Option<ERL_NIF_TERM> {
     let mut map = MaybeUninit::uninit();
     if enif_make_map_from_arrays(
         env,

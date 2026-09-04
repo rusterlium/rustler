@@ -1,7 +1,6 @@
 use crate::sys::*;
 use crate::types::binary::OwnedBinary;
 use crate::wrapper::env::term_to_binary;
-use crate::wrapper::NIF_TERM;
 use crate::{Binary, Decoder, Env, NifResult};
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
@@ -13,7 +12,7 @@ use std::hash::{Hash, Hasher};
 /// that owns it.
 #[derive(Clone, Copy)]
 pub struct Term<'a> {
-    term: NIF_TERM,
+    term: ERL_NIF_TERM,
     env: Env<'a>,
 }
 
@@ -24,19 +23,19 @@ impl Debug for Term<'_> {
 }
 
 impl<'a> Term<'a> {
-    /// Create a `Term` from a raw `NIF_TERM`.
+    /// Create a `Term` from a raw `ERL_NIF_TERM`.
     ///
     /// # Unsafe
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
     /// unless `inner` is an atom term.
     #[inline]
-    pub unsafe fn new(env: Env<'a>, inner: NIF_TERM) -> Self {
+    pub unsafe fn new(env: Env<'a>, inner: ERL_NIF_TERM) -> Self {
         Term { term: inner, env }
     }
     /// This extracts the raw term pointer. It is usually used in order to obtain a type that can
     /// be passed to calls into the erlang vm.
     #[inline]
-    pub fn as_c_arg(&self) -> NIF_TERM {
+    pub fn as_c_arg(&self) -> ERL_NIF_TERM {
         self.term
     }
 
