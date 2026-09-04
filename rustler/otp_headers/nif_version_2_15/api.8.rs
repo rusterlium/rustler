@@ -339,23 +339,9 @@ pub unsafe extern "C" fn enif_make_existing_atom(env: *mut ErlNifEnv, name: *con
     (DYN_NIF_CALLBACKS.enif_make_existing_atom.unwrap_unchecked())(env, name, atom, arg4)
 }
 
-#[macro_export] macro_rules! enif_make_tuple {
-    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_tuple()($($arg),*) };
-    ( $( $arg:expr ),+, ) => { enif_make_tuple!($($arg),*) };
-}
-
-pub use enif_make_tuple;
-
 pub unsafe fn get_enif_make_tuple() -> extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
     DYN_NIF_CALLBACKS.enif_make_tuple.unwrap_unchecked()
 }
-
-#[macro_export] macro_rules! enif_make_list {
-    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_list()($($arg),*) };
-    ( $( $arg:expr ),+, ) => { enif_make_list!($($arg),*) };
-}
-
-pub use enif_make_list;
 
 pub unsafe fn get_enif_make_list() -> extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
     DYN_NIF_CALLBACKS.enif_make_list.unwrap_unchecked()
@@ -395,13 +381,6 @@ pub unsafe extern "C" fn enif_system_info(sip: *mut ErlNifSysInfo, si_size: size
 {
     (DYN_NIF_CALLBACKS.enif_system_info.unwrap_unchecked())(sip, si_size)
 }
-
-#[macro_export] macro_rules! enif_fprintf {
-    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_fprintf()($($arg),*) };
-    ( $( $arg:expr ),+, ) => { enif_fprintf!($($arg),*) };
-}
-
-pub use enif_fprintf;
 
 pub unsafe fn get_enif_fprintf() -> extern "C" fn (filep: *mut c_void, format: *const c_char, ...) -> c_int {
     DYN_NIF_CALLBACKS.enif_fprintf.unwrap_unchecked()
@@ -932,13 +911,6 @@ pub unsafe extern "C" fn enif_thread_type()
     (DYN_NIF_CALLBACKS.enif_thread_type.unwrap_unchecked())()
 }
 
-#[macro_export] macro_rules! enif_snprintf {
-    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_snprintf()($($arg),*) };
-    ( $( $arg:expr ),+, ) => { enif_snprintf!($($arg),*) };
-}
-
-pub use enif_snprintf;
-
 pub unsafe fn get_enif_snprintf() -> extern "C" fn (buffer: *mut c_char, size: size_t, format: *const c_char, ...) -> c_int {
     DYN_NIF_CALLBACKS.enif_snprintf.unwrap_unchecked()
 }
@@ -1110,6 +1082,34 @@ pub unsafe extern "C" fn enif_term_type(env: *mut ErlNifEnv, term: ERL_NIF_TERM)
  -> ErlNifTermType{
     (DYN_NIF_CALLBACKS.enif_term_type.unwrap_unchecked())(env, term)
 }
+
+#[macro_export] macro_rules! enif_make_tuple {
+    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_tuple()($($arg),*) };
+    ( $( $arg:expr ),+, ) => { enif_make_tuple!($($arg),*) };
+}
+
+pub use enif_make_tuple;
+
+#[macro_export] macro_rules! enif_make_list {
+    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_list()($($arg),*) };
+    ( $( $arg:expr ),+, ) => { enif_make_list!($($arg),*) };
+}
+
+pub use enif_make_list;
+
+#[macro_export] macro_rules! enif_fprintf {
+    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_fprintf()($($arg),*) };
+    ( $( $arg:expr ),+, ) => { enif_fprintf!($($arg),*) };
+}
+
+pub use enif_fprintf;
+
+#[macro_export] macro_rules! enif_snprintf {
+    ( $( $arg:expr ),* ) => { $crate::sys::get_enif_snprintf()($($arg),*) };
+    ( $( $arg:expr ),+, ) => { enif_snprintf!($($arg),*) };
+}
+
+pub use enif_snprintf;
 
 impl DynNifCallbacks {
     fn write_symbols<T: DynNifFiller>(&mut self, filler: T) {

@@ -1,17 +1,20 @@
 mod callbacks;
 mod direct;
 mod forwarders;
+mod variadic_macros;
 mod writer;
 
+use crate::generator::direct::DirectVariadicGettersApiBuilder;
 use crate::overrides::apply_api_signature_fixes;
 use crate::parser::{
     ApiArg, CBaseType, CParam, CPrimitiveType, CType, parse_api_declarations_source,
 };
 use callbacks::CallbacksApiBuilder;
-use direct::{DirectSymbolsApiBuilder, DirectVariadicApiBuilder};
+use direct::DirectSymbolsApiBuilder;
 use forwarders::ForwardersApiBuilder;
 use std::fmt::Write as _;
 use std::io::Write;
+use variadic_macros::VariadicApiBuilder;
 use writer::WriterBuilder;
 
 /// Which complete API implementation to emit: `Main` is the default,
@@ -43,9 +46,15 @@ trait ApiBuilder {
         DONE
     }
 
-    fn func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res;
-    fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res;
-    fn dummy(&mut self, name: &str) -> Res;
+    fn func(&mut self, _ret: &CType, _name: &str, _args: &[ApiArg]) -> Res {
+        DONE
+    }
+    fn variadic_func(&mut self, _ret: &CType, _name: &str, _args: &[ApiArg]) -> Res {
+        DONE
+    }
+    fn dummy(&mut self, _name: &str) -> Res {
+        DONE
+    }
 }
 
 fn render_arg_name(name: &str) -> String {
@@ -187,11 +196,13 @@ pub fn generate<W: Write>(out: &mut W, opts: &GenerateOptions) -> Res {
         Emit::Main => {
             build_api(&mut CallbacksApiBuilder(out), opts)?;
             build_api(&mut ForwardersApiBuilder(out), opts)?;
+            build_api(&mut VariadicApiBuilder(out), opts)?;
             build_api(&mut WriterBuilder(out), opts)?;
         }
         Emit::Direct => {
             build_api(&mut DirectSymbolsApiBuilder(out), opts)?;
-            build_api(&mut DirectVariadicApiBuilder(out), opts)?;
+            build_api(&mut DirectVariadicGettersApiBuilder(out), opts)?;
+            build_api(&mut VariadicApiBuilder(out), opts)?;
         }
     }
 

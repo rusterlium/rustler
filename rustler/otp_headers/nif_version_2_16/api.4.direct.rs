@@ -149,16 +149,28 @@ extern "C" {
     pub fn enif_dynamic_resource_call(arg1: *mut ErlNifEnv, mod_: ERL_NIF_TERM, name: ERL_NIF_TERM, rsrc: ERL_NIF_TERM, call_data: *mut c_void) -> c_int;
 }
 
+pub unsafe fn get_enif_make_tuple() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
+    std::mem::transmute(__variadic_enif_make_tuple as *const ())
+}
+
+pub unsafe fn get_enif_make_list() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
+    std::mem::transmute(__variadic_enif_make_list as *const ())
+}
+
+pub unsafe fn get_enif_fprintf() -> unsafe extern "C" fn (filep: *mut c_void, format: *const c_char, ...) -> c_int {
+    std::mem::transmute(__variadic_enif_fprintf as *const ())
+}
+
+pub unsafe fn get_enif_snprintf() -> unsafe extern "C" fn (buffer: *mut c_char, size: size_t, format: *const c_char, ...) -> c_int {
+    std::mem::transmute(__variadic_enif_snprintf as *const ())
+}
+
 #[macro_export] macro_rules! enif_make_tuple {
     ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_tuple()($($arg),*) };
     ( $( $arg:expr ),+, ) => { enif_make_tuple!($($arg),*) };
 }
 
 pub use enif_make_tuple;
-
-pub unsafe fn get_enif_make_tuple() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
-    std::mem::transmute(__variadic_enif_make_tuple as *const ())
-}
 
 #[macro_export] macro_rules! enif_make_list {
     ( $( $arg:expr ),* ) => { $crate::sys::get_enif_make_list()($($arg),*) };
@@ -167,10 +179,6 @@ pub unsafe fn get_enif_make_tuple() -> unsafe extern "C" fn (env: *mut ErlNifEnv
 
 pub use enif_make_list;
 
-pub unsafe fn get_enif_make_list() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
-    std::mem::transmute(__variadic_enif_make_list as *const ())
-}
-
 #[macro_export] macro_rules! enif_fprintf {
     ( $( $arg:expr ),* ) => { $crate::sys::get_enif_fprintf()($($arg),*) };
     ( $( $arg:expr ),+, ) => { enif_fprintf!($($arg),*) };
@@ -178,18 +186,10 @@ pub unsafe fn get_enif_make_list() -> unsafe extern "C" fn (env: *mut ErlNifEnv,
 
 pub use enif_fprintf;
 
-pub unsafe fn get_enif_fprintf() -> unsafe extern "C" fn (filep: *mut c_void, format: *const c_char, ...) -> c_int {
-    std::mem::transmute(__variadic_enif_fprintf as *const ())
-}
-
 #[macro_export] macro_rules! enif_snprintf {
     ( $( $arg:expr ),* ) => { $crate::sys::get_enif_snprintf()($($arg),*) };
     ( $( $arg:expr ),+, ) => { enif_snprintf!($($arg),*) };
 }
 
 pub use enif_snprintf;
-
-pub unsafe fn get_enif_snprintf() -> unsafe extern "C" fn (buffer: *mut c_char, size: size_t, format: *const c_char, ...) -> c_int {
-    std::mem::transmute(__variadic_enif_snprintf as *const ())
-}
 

@@ -1,3 +1,6 @@
+default:
+    @just --choose
+
 build:
     cargo build
     cd rustler_mix && mix deps.get && mix compile

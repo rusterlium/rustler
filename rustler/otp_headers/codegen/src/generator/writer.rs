@@ -1,7 +1,6 @@
-use crate::parser::{ApiArg, CType};
 use std::io::Write;
 
-use super::{ApiBuilder, DONE, Res};
+use super::{ApiArg, ApiBuilder, CType, Res};
 
 /// Builds `DynNifCallbacks::write_symbols`, which fills in the callback
 /// table at runtime (e.g. via `dlsym`). Part of the `Main` emit, used only
@@ -26,10 +25,8 @@ impl<W: Write> ApiBuilder for WriterBuilder<'_, W> {
             "        filler.write(&mut self.{name}, \"{name}\0\");"
         )
     }
+
     fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
         self.func(ret, name, args)
-    }
-    fn dummy(&mut self, _name: &str) -> Res {
-        DONE
     }
 }

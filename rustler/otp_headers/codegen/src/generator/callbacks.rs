@@ -1,7 +1,9 @@
-use crate::parser::{ApiArg, CBaseType, CPrimitiveType, CType};
 use std::io::Write;
 
-use super::{ApiBuilder, Res, render_type_args, write_fn_type, write_variadic_fn_type};
+use super::{
+    ApiArg, ApiBuilder, CBaseType, CPrimitiveType, CType, Res, render_type_args, write_fn_type,
+    write_variadic_fn_type,
+};
 
 pub(super) struct CallbacksApiBuilder<'a, W: Write>(pub(super) &'a mut W);
 

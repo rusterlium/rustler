@@ -1,10 +1,6 @@
-use crate::{
-    generator::DONE,
-    parser::{ApiArg, CType},
-};
 use std::io::Write;
 
-use super::{ApiBuilder, Res, render_type_args, write_ret, write_variadic_fn_type};
+use super::{ApiArg, ApiBuilder, CType, Res, render_type_args, write_ret, write_variadic_fn_type};
 
 /// Builds the `extern "C"` block declaring direct links against the real
 /// NIF API symbols, under their original names.
@@ -47,48 +43,19 @@ impl<W: Write> ApiBuilder for DirectSymbolsApiBuilder<'_, W> {
         write_ret(self.0, ret)?;
         writeln!(self.0, ";")
     }
-
-    fn dummy(&mut self, _name: &str) -> Res {
-        DONE
-    }
 }
 
-/// Builds `get_{name}` accessors (outside of the `extern "C"` block) and
-/// call macros for variadic functions: a variadic C function pointer can't
-/// be named directly as a value, only called, so this wraps it in a plain
-/// function that returns its address.
-pub(super) struct DirectVariadicApiBuilder<'a, W: Write>(pub(super) &'a mut W);
-
-impl<W: Write> ApiBuilder for DirectVariadicApiBuilder<'_, W> {
-    fn func(&mut self, _ret: &CType, _name: &str, _args: &[ApiArg]) -> Res {
-        DONE
-    }
-
+pub(super) struct DirectVariadicGettersApiBuilder<'a, W: Write>(pub(super) &'a mut W);
+impl<W: Write> ApiBuilder for DirectVariadicGettersApiBuilder<'_, W> {
     fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        let args_sig = render_type_args(args);
-        writeln!(self.0, "#[macro_export] macro_rules! {name} {{")?;
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),* ) => {{ $crate::sys::get_{name}()($($arg),*) }};"
-        )?;
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),+, ) => {{ {name}!($($arg),*) }};"
-        )?;
-        writeln!(self.0, "}}\n")?;
-        writeln!(self.0, "pub use {name};\n")?;
-
+        let args = render_type_args(args);
         write!(self.0, "pub unsafe fn get_{name}() -> unsafe ")?;
-        write_variadic_fn_type(self.0, &args_sig, ret)?;
+        write_variadic_fn_type(self.0, &args, ret)?;
         writeln!(self.0, " {{")?;
         writeln!(
             self.0,
             "    std::mem::transmute(__variadic_{name} as *const ())"
         )?;
         writeln!(self.0, "}}\n")
-    }
-
-    fn dummy(&mut self, _name: &str) -> Res {
-        DONE
     }
 }
