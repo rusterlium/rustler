@@ -1,7 +1,6 @@
 #![allow(clippy::type_complexity)]
 #![allow(dead_code)]
-// `DYN_NIF_CALLBACKS` (defined in the generated `api.*.rs`, only compiled
-// in when not using direct symbols) is a mutable static accessed directly;
+// `DYN_NIF_CALLBACKS` is a mutable static accessed directly;
 // see `internal_set_symbols`/`internal_write_symbols` below.
 #![allow(static_mut_refs)]
 
