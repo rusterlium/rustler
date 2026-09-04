@@ -78,7 +78,7 @@ impl<W: Write> ApiBuilder for DirectVariadicApiBuilder<'_, W> {
         writeln!(self.0, "}}\n")?;
         writeln!(self.0, "pub use {name};\n")?;
 
-        write!(self.0, "pub unsafe fn get_{name}() -> ")?;
+        write!(self.0, "pub unsafe fn get_{name}() -> unsafe ")?;
         write_variadic_fn_type(self.0, &args_sig, ret)?;
         writeln!(self.0, " {{")?;
         writeln!(

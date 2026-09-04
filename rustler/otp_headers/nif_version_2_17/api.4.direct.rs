@@ -161,7 +161,7 @@ extern "C" {
 
 pub use enif_make_tuple;
 
-pub unsafe fn get_enif_make_tuple() -> extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
+pub unsafe fn get_enif_make_tuple() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
     std::mem::transmute(__variadic_enif_make_tuple as *const ())
 }
 
@@ -172,7 +172,7 @@ pub unsafe fn get_enif_make_tuple() -> extern "C" fn (env: *mut ErlNifEnv, cnt: 
 
 pub use enif_make_list;
 
-pub unsafe fn get_enif_make_list() -> extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
+pub unsafe fn get_enif_make_list() -> unsafe extern "C" fn (env: *mut ErlNifEnv, cnt: c_uint, ...) -> ERL_NIF_TERM {
     std::mem::transmute(__variadic_enif_make_list as *const ())
 }
 
@@ -183,7 +183,7 @@ pub unsafe fn get_enif_make_list() -> extern "C" fn (env: *mut ErlNifEnv, cnt: c
 
 pub use enif_fprintf;
 
-pub unsafe fn get_enif_fprintf() -> extern "C" fn (filep: *mut c_void, format: *const c_char, ...) -> c_int {
+pub unsafe fn get_enif_fprintf() -> unsafe extern "C" fn (filep: *mut c_void, format: *const c_char, ...) -> c_int {
     std::mem::transmute(__variadic_enif_fprintf as *const ())
 }
 
@@ -194,7 +194,7 @@ pub unsafe fn get_enif_fprintf() -> extern "C" fn (filep: *mut c_void, format: *
 
 pub use enif_snprintf;
 
-pub unsafe fn get_enif_snprintf() -> extern "C" fn (buffer: *mut c_char, size: size_t, format: *const c_char, ...) -> c_int {
+pub unsafe fn get_enif_snprintf() -> unsafe extern "C" fn (buffer: *mut c_char, size: size_t, format: *const c_char, ...) -> c_int {
     std::mem::transmute(__variadic_enif_snprintf as *const ())
 }
 
@@ -205,7 +205,7 @@ pub unsafe fn get_enif_snprintf() -> extern "C" fn (buffer: *mut c_char, size: s
 
 pub use enif_set_option;
 
-pub unsafe fn get_enif_set_option() -> extern "C" fn (env: *mut ErlNifEnv, opt: ErlNifOption, ...) -> c_int {
+pub unsafe fn get_enif_set_option() -> unsafe extern "C" fn (env: *mut ErlNifEnv, opt: ErlNifOption, ...) -> c_int {
     std::mem::transmute(__variadic_enif_set_option as *const ())
 }
 
