@@ -1,10 +1,17 @@
+#[allow(dead_code)]
 pub(crate) trait DynNifFiller {
     fn write<T: Copy>(&self, field: &mut Option<T>, name: &str);
 }
 
-#[cfg(not(target_os = "windows"))]
-mod internal {
-    use super::DynNifFiller;
+#[allow(unused)]
+pub(crate) struct NoopNifFiller;
+
+impl DynNifFiller for NoopNifFiller {
+    fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
+}
+
+#[cfg(target_os = "macos")]
+mod dlsym_filler {
     use libc::{RTLD_GLOBAL, RTLD_NOLOAD, RTLD_NOW};
     use libloading::os::unix::Library;
 
@@ -30,30 +37,24 @@ mod internal {
         }
     }
 
-    impl DynNifFiller for DlsymNifFiller {
+    impl super::DynNifFiller for DlsymNifFiller {
         fn write<T: Copy>(&self, field: &mut Option<T>, name: &str) {
             let symbol = unsafe { self.lib.get::<T>(name.as_bytes()).unwrap() };
             *field = Some(*symbol);
         }
     }
-
-    pub(crate) fn new() -> impl DynNifFiller {
-        DlsymNifFiller::new()
-    }
 }
 
-#[cfg(target_os = "windows")]
-mod internal {
-    use super::*;
-
-    pub struct NullNifFiller;
-    impl DynNifFiller for NullNifFiller {
-        fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
-    }
-
-    pub fn new() -> impl DynNifFiller {
-        NullNifFiller
-    }
+// On Windows the callback table is always supplied directly by the caller
+// via `internal_set_symbols`, so no dlsym-based (or otherwise) filler is
+// ever actually needed there. For Linux, we use direct symbol lookups again.
+// Thus, the DlSym filler is only used on macos for now
+#[cfg(not(target_os = "macos"))]
+pub(crate) fn new() -> impl DynNifFiller {
+    NoopNifFiller
 }
 
-pub(crate) use internal::new;
+#[cfg(target_os = "macos")]
+pub(crate) fn new() -> impl DynNifFiller {
+    dlsym_filler::DlsymNifFiller::new()
+}

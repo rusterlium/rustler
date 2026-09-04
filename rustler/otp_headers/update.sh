@@ -38,14 +38,24 @@ for nif_version in "${!versions[@]}"; do
     for sizeof_long in 4 8
     do
         echo "   Generating Rust API for SIZEOF_LONG=$sizeof_long..."
-        output="$this_dir/api.$sizeof_long.rs"
 
-        # Run the header through the C preprocessor and then our codegen script
-        cpp -D "SIZEOF_LONG=$sizeof_long" \
+        # Run the header through the C preprocessor once and feed the
+        # result to the codegen tool once per output file, since it's a
+        # single stdin -> stdout transform.
+        preprocessed=$(cpp -D "SIZEOF_LONG=$sizeof_long" \
             --include "$script_dir/preamble.h" \
-            <<<"$section" \
-            | cargo run --quiet --manifest-path "$script_dir/codegen/Cargo.toml" -- \
-              --ulong-size="$sizeof_long" \
-            > "$output"
+            <<<"$section")
+
+        for emit in main direct
+        do
+            output="$this_dir/api.$sizeof_long.$emit.rs"
+            [ "$emit" = "main" ] && output="$this_dir/api.$sizeof_long.rs"
+
+            cargo run --quiet --manifest-path "$script_dir/codegen/Cargo.toml" -- \
+                --ulong-size="$sizeof_long" \
+                --emit="$emit" \
+                <<<"$preprocessed" \
+                > "$output"
+        done
     done
 done

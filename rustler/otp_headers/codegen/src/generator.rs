@@ -1,13 +1,38 @@
+mod callbacks;
+mod direct;
+mod forwarders;
+mod variadic_macros;
+mod writer;
+
+use crate::generator::direct::DirectVariadicGettersApiBuilder;
 use crate::overrides::apply_api_signature_fixes;
 use crate::parser::{
     ApiArg, CBaseType, CParam, CPrimitiveType, CType, parse_api_declarations_source,
 };
+use callbacks::CallbacksApiBuilder;
+use direct::DirectSymbolsApiBuilder;
+use forwarders::ForwardersApiBuilder;
 use std::fmt::Write as _;
 use std::io::Write;
+use variadic_macros::VariadicApiBuilder;
+use writer::WriterBuilder;
+
+/// Which complete API implementation to emit: `Main` is the default,
+/// callback-table-based implementation (symbols filled in at runtime, e.g.
+/// via `dlsym`); `Direct` links directly against the real NIF API symbols
+/// under their original names. Both are self-contained (each includes the
+/// shared consts/macros/aliases), so `sys` can pick whichever one it needs
+/// via `cfg` with a single `include!` and no extra module wrapping.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Emit {
+    Main,
+    Direct,
+}
 
 pub struct GenerateOptions {
     pub declarations_source: String,
     pub ulong_size: usize,
+    pub emit: Emit,
 }
 
 type Res = std::io::Result<()>;
@@ -21,9 +46,15 @@ trait ApiBuilder {
         DONE
     }
 
-    fn func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res;
-    fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res;
-    fn dummy(&mut self, name: &str) -> Res;
+    fn func(&mut self, _ret: &CType, _name: &str, _args: &[ApiArg]) -> Res {
+        DONE
+    }
+    fn variadic_func(&mut self, _ret: &CType, _name: &str, _args: &[ApiArg]) -> Res {
+        DONE
+    }
+    fn dummy(&mut self, _name: &str) -> Res {
+        DONE
+    }
 }
 
 fn render_arg_name(name: &str) -> String {
@@ -155,128 +186,25 @@ fn render_function_type(ret: &CType, params: &[CParam], variadic: bool, spaced: 
     out
 }
 
-struct CallbacksApiBuilder<'a, W: Write>(&'a mut W);
-impl<W: Write> ApiBuilder for CallbacksApiBuilder<'_, W> {
-    fn init(&mut self) -> Res {
-        writeln!(self.0, "#[allow(dead_code)]")?;
-        writeln!(self.0, "#[derive(Default, Copy, Clone)]")?;
-        writeln!(self.0, "pub struct DynNifCallbacks {{")
-    }
-
-    fn finish(&mut self) -> Res {
-        writeln!(self.0, "}}")
-    }
-
-    fn func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        let args = render_type_args(args);
-        write!(self.0, "    {name}: Option<")?;
-        write_fn_type(self.0, &args, ret)?;
-        writeln!(self.0, ">,")
-    }
-
-    fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        let args = render_type_args(args);
-        write!(self.0, "    {name}: Option<")?;
-        write_variadic_fn_type(self.0, &args, ret)?;
-        writeln!(self.0, ">,")
-    }
-    fn dummy(&mut self, name: &str) -> Res {
-        write!(self.0, "    {name}: Option<")?;
-        write_fn_type(
-            self.0,
-            "",
-            &CType::Base {
-                base: CBaseType::Primitive(CPrimitiveType::Void),
-                is_const: false,
-            },
-        )?;
-        writeln!(self.0, ">,")
-    }
-}
-
-struct ForwardersApiBuilder<'a, W: Write>(&'a mut W);
-impl<W: Write> ApiBuilder for ForwardersApiBuilder<'_, W> {
-    fn func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        let args_sig = render_type_args(args);
-        let args_names = render_arg_names(args);
-
-        writeln!(
-            self.0,
-            "/// See [{name}](http://www.erlang.org/doc/man/erl_nif.html#{name}) in the Erlang docs."
-        )?;
-        writeln!(self.0, "#[inline]")?;
-        writeln!(self.0, "pub unsafe extern \"C\" fn {name}({args_sig})")?;
-        write_ret(self.0, ret)?;
-        writeln!(self.0, "{{")?;
-        writeln!(
-            self.0,
-            "    (DYN_NIF_CALLBACKS.{name}.unwrap_unchecked())({args_names})"
-        )?;
-        writeln!(self.0, "}}\n")
-    }
-
-    fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        let args_sig = render_type_args(args);
-        writeln!(self.0, "#[macro_export] macro_rules! {name} {{")?;
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),* ) => {{ $crate::sys::get_{name}()($($arg),*) }};"
-        )?;
-        writeln!(
-            self.0,
-            "    ( $( $arg:expr ),+, ) => {{ {name}!($($arg),*) }};"
-        )?;
-        writeln!(self.0, "}}\n")?;
-        writeln!(self.0, "pub use {name};\n")?;
-
-        write!(self.0, "pub unsafe fn get_{name}() -> ")?;
-        write_variadic_fn_type(self.0, &args_sig, ret)?;
-        writeln!(self.0, " {{")?;
-        writeln!(self.0, "    DYN_NIF_CALLBACKS.{name}.unwrap_unchecked()")?;
-        writeln!(self.0, "}}\n")
-    }
-    fn dummy(&mut self, _name: &str) -> Res {
-        DONE
-    }
-}
-
-struct WriterBuilder<'a, W: Write>(&'a mut W);
-
-impl<W: Write> ApiBuilder for WriterBuilder<'_, W> {
-    fn init(&mut self) -> Res {
-        write!(
-            self.0,
-            "impl DynNifCallbacks {{\n    fn write_symbols<T: DynNifFiller>(&mut self, filler: T) {{\n"
-        )
-    }
-
-    fn finish(&mut self) -> Res {
-        writeln!(self.0, "    }}\n}}")
-    }
-
-    fn func(&mut self, _ret: &CType, name: &str, _args: &[ApiArg]) -> Res {
-        writeln!(
-            self.0,
-            "        filler.write(&mut self.{name}, \"{name}\0\");"
-        )
-    }
-    fn variadic_func(&mut self, ret: &CType, name: &str, args: &[ApiArg]) -> Res {
-        self.func(ret, name, args)
-    }
-    fn dummy(&mut self, _name: &str) -> Res {
-        DONE
-    }
-}
-
 pub fn generate<W: Write>(out: &mut W, opts: &GenerateOptions) -> Res {
     writeln!(
         out,
         "pub const ERL_NIF_ENTRY_OPTIONS: c_uint = ERL_NIF_DIRTY_NIF_OPTION;"
     )?;
 
-    build_api(&mut CallbacksApiBuilder(out), opts)?;
-    build_api(&mut ForwardersApiBuilder(out), opts)?;
-    build_api(&mut WriterBuilder(out), opts)?;
+    match opts.emit {
+        Emit::Main => {
+            build_api(&mut CallbacksApiBuilder(out), opts)?;
+            build_api(&mut ForwardersApiBuilder(out), opts)?;
+            build_api(&mut VariadicApiBuilder(out), opts)?;
+            build_api(&mut WriterBuilder(out), opts)?;
+        }
+        Emit::Direct => {
+            build_api(&mut DirectSymbolsApiBuilder(out), opts)?;
+            build_api(&mut DirectVariadicGettersApiBuilder(out), opts)?;
+            build_api(&mut VariadicApiBuilder(out), opts)?;
+        }
+    }
 
     if opts.ulong_size != 4 {
         write!(

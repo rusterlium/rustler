@@ -1,18 +1,25 @@
 #![allow(clippy::type_complexity)]
+#![allow(dead_code)]
+// `DYN_NIF_CALLBACKS` is a mutable static accessed directly;
+// see `internal_set_symbols`/`internal_write_symbols` below.
+#![allow(static_mut_refs)]
 
-use super::{
-    nif_filler::{self, DynNifFiller},
-    types::*,
-};
+use super::nif_filler::{self, DynNifFiller};
+use super::types::*;
 
 static mut DYN_NIF_CALLBACKS: DynNifCallbacks =
     unsafe { std::mem::MaybeUninit::zeroed().assume_init() };
 
-pub unsafe fn internal_set_symbols(callbacks: DynNifCallbacks) {
-    DYN_NIF_CALLBACKS = callbacks;
+pub unsafe fn internal_set_symbols(callbacks: *mut DynNifCallbacks) {
+    if !callbacks.is_null() {
+        DYN_NIF_CALLBACKS = *callbacks;
+    }
 }
 
-#[allow(static_mut_refs)]
+/// Write symbols to `DYN_NIF_CALLBACKS`. This function is not called on Windows
+/// as the symbols are filled directly via `internal_set_symbols` from `init!`,
+/// and it is a no-op if directly linked symbols are used, as we do by default
+/// on Linux.
 pub unsafe fn internal_write_symbols() {
     let filler = nif_filler::new();
     DYN_NIF_CALLBACKS.write_symbols(filler);
@@ -31,20 +38,15 @@ pub unsafe fn enif_compare_pids(pid1: *const ErlNifPid, pid2: *const ErlNifPid) 
 
 macro_rules! use_snippet {
     ($version:expr) => {
-        #[cfg(all(
-                                            feature = $version,
-                                            any(windows, all(unix, target_pointer_width = "32"))
-                                        ))]
+        #[cfg(all(feature = $version, any(windows, all(unix, target_pointer_width = "32"))))]
         use_snippet! {include, $version, "4"}
 
-        #[cfg(all(
-                                            feature = $version,
-                                            all(unix, target_pointer_width = "64")
-                                        ))]
+        #[cfg(all(feature = $version, all(unix, target_pointer_width = "64")))]
         use_snippet! {include, $version, "8"}
     };
 
     (include, $version:expr, $sizeof_long:expr) => {
+        #[cfg(any(target_os = "macos", windows))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",
@@ -53,6 +55,17 @@ macro_rules! use_snippet {
             "api.",
             $sizeof_long,
             ".rs"
+        ));
+
+        #[cfg(not(any(target_os = "macos", windows)))]
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/otp_headers/",
+            $version,
+            "/",
+            "api.",
+            $sizeof_long,
+            ".direct.rs"
         ));
     };
 }
