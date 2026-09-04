@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 #[allow(dead_code)]
 pub(crate) trait DynNifFiller {
     fn write<T: Copy>(&self, field: &mut Option<T>, name: &str);
@@ -8,7 +6,7 @@ pub(crate) trait DynNifFiller {
 pub(crate) struct NoopNifFiller;
 
 impl DynNifFiller for NoopNifFiller {
-    fn write<T: Copy>(&self, field: &mut Option<T>, name: &str) {}
+    fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
 }
 
 #[cfg(target_os = "macos")]
