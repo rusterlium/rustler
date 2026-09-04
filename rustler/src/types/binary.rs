@@ -28,7 +28,7 @@
 //! ```no_run
 //! # use rustler::OwnedBinary;
 //! {
-//!     let mut bin = OwnedBinary::new(5).expect("allocation failed");
+//!     let mut bin = OwnedBinary::new(5);
 //!     bin.as_mut_slice().copy_from_slice("hello".as_bytes());
 //! } // <- `bin` is dropped here
 //! ```
@@ -37,10 +37,10 @@
 //! where each element is exclusive-or'ed with a constant:
 //!
 //! ```no_run
-//! # use rustler::{Env, OwnedBinary, Binary, NifResult, Error};
+//! # use rustler::{Env, OwnedBinary, Binary, NifResult};
 //! #[rustler::nif]
 //! fn xor_example<'a>(env: Env<'a>, bin: Binary<'a>) -> NifResult<Binary<'a>> {
-//!     let mut owned: OwnedBinary = bin.to_owned().ok_or(Error::Term(Box::new("no mem")))?;
+//!     let mut owned: OwnedBinary = bin.to_owned();
 //!     for byte in owned.as_mut_slice() {
 //!         *byte ^= 0xAA;
 //!     }
@@ -63,10 +63,10 @@
 //! #         if *elem == 0 { *elem = 1 } else { panic!("Not a zero!") }
 //! #     }
 //! # }
-//! # use rustler::{Env, OwnedBinary, Binary, NifResult, Error};
+//! # use rustler::{Env, OwnedBinary, Binary, NifResult};
 //! #[rustler::nif]
 //! fn wrapper_for_some_<'a>(env: Env<'a>) -> NifResult<Binary<'a>> {
-//!     let mut owned = OwnedBinary::new(100).ok_or(Error::Term(Box::new("no mem")))?;
+//!     let mut owned = OwnedBinary::new(100);
 //!     for byte in owned.as_mut_slice() {
 //!         *byte = 0;
 //!     }
@@ -96,7 +96,6 @@ use crate::{
 use std::{
     borrow::{Borrow, BorrowMut},
     hash::{Hash, Hasher},
-    io::Write,
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
 };
@@ -116,28 +115,20 @@ impl OwnedBinary {
     /// Memory is not initialized. If uninitialized memory is undesirable, set it
     /// manually.
     ///
-    /// # Errors
-    ///
-    /// If allocation fails, `None` is returned.
-    pub fn new(size: usize) -> Option<OwnedBinary> {
-        unsafe { alloc(size) }.map(OwnedBinary)
+    pub fn new(size: usize) -> OwnedBinary {
+        OwnedBinary(unsafe { alloc(size) })
     }
 
     /// Copies `src`'s data into a new `OwnedBinary`.
-    ///
-    /// # Errors
-    ///
-    /// If allocation fails, `None` is returned.
-    pub fn from_unowned(src: &Binary) -> Option<OwnedBinary> {
-        OwnedBinary::new(src.len()).map(|mut b| {
-            b.as_mut_slice().copy_from_slice(src);
-            b
-        })
+    pub fn from_unowned(src: &Binary) -> OwnedBinary {
+        let mut b = OwnedBinary::new(src.len());
+        b.as_mut_slice().copy_from_slice(src);
+        b
     }
 
     /// Copies 'data''s data into a new `OwnedBinary`.
     pub fn from_slice(data: &[u8]) -> Self {
-        let mut bin = OwnedBinary::new(data.len()).expect("allocation failed");
+        let mut bin = OwnedBinary::new(data.len());
         bin.as_mut_slice().copy_from_slice(data);
         bin
     }
@@ -163,15 +154,9 @@ impl OwnedBinary {
     /// uninitialized memory is undesirable, set it manually.
     pub fn realloc_or_copy(&mut self, size: usize) {
         if !self.realloc(size) {
-            let mut new = OwnedBinary::new(size).unwrap();
-            if let Ok(num_written) = new.as_mut_slice().write(self.as_slice()) {
-                if !(num_written == self.len() || num_written == new.len()) {
-                    panic!("Could not copy binary");
-                }
-                ::std::mem::swap(&mut self.0, &mut new.0);
-            } else {
-                panic!("Could not copy binary");
-            }
+            let mut new = OwnedBinary::new(size);
+            new.as_mut_slice().copy_from_slice(self);
+            ::std::mem::swap(&mut self.0, &mut new.0);
         }
     }
 
@@ -247,7 +232,8 @@ impl FromIterator<u8> for OwnedBinary {
     fn from_iter<T: IntoIterator<Item = u8>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
         let (lower, upper) = iter.size_hint();
-        let mut bin = OwnedBinary::new(upper.unwrap_or(lower)).expect("Allocation failed");
+        let size = upper.unwrap_or(lower);
+        let mut bin = OwnedBinary::new(size);
         let mut i = 0;
         loop {
             match iter.next() {
@@ -305,12 +291,9 @@ impl<'a> Binary<'a> {
 
     /// Copies `self`'s data into a new `OwnedBinary`.
     ///
-    /// # Errors
-    ///
-    /// If allocation fails, an error will be returned.
     #[allow(clippy::wrong_self_convention)]
     #[inline]
-    pub fn to_owned(&self) -> Option<OwnedBinary> {
+    pub fn to_owned(&self) -> OwnedBinary {
         OwnedBinary::from_unowned(self)
     }
 

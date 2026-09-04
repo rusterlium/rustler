@@ -4,10 +4,20 @@ This document is intended to simplify upgrading to newer versions by extending t
 
 ## 0.37 -> 0.38
 
-The following deprecated codegen features have been dropped:
+1. The following deprecated codegen features have been dropped:
+   - `resource!` macro, please use `resource_impl`
+   - Explicit NIF function listing in `init!`, please remove the list
 
-- `resource!` macro, please use `resource_impl`
-- Explicit NIF function listing in `init!`, please remove the list
+2. The following methods are now infallible, returning the result directly
+   instead of an `Option` or `Result` that would require matching or handling:
+
+   - `OwnedBinary::new`
+   - `OwnedBinary::from_unowned`
+   - `Binary::to_owned`
+
+   Instead, allocation errors will now call `std::alloc::handle_alloc_error`.
+   This is the same behaviour that the Rust standard library applies (e.g. for
+   `Vec`) and in line with other allocating functions in `rustler`.
 
 ## 0.34 -> 0.35
 
@@ -60,9 +70,11 @@ documentation on how to convert from the old to the new set of macros.
 2. `Env::send` and `OwnedEnv::send_and_clear` will now return a `Result`.
    Updating will thus introduce warnings about unused `Result`s. To remove the
    warnings without changing behaviour, the `Result`s can be "used" as
+
    ```rust
    let _ = env.send(...)
    ```
+
    Neither the `Ok` nor the `Err` case carry additional information so far. An
    error is returned if either the receiving or the sending process is dead.
    See also
@@ -81,6 +93,7 @@ documentation on how to convert from the old to the new set of macros.
    use a compiled NIF with an older version than OTP22, disable the default
    features and expliictly use the `nif_version_2_14` feature in the library's
    `Cargo.toml`:
+
    ```toml
    rustler = { version = "0.30", default-features = false, features = ["derive", "nif_version_2_14"] }
    ```
