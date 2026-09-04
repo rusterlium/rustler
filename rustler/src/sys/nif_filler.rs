@@ -3,6 +3,7 @@ pub(crate) trait DynNifFiller {
     fn write<T: Copy>(&self, field: &mut Option<T>, name: &str);
 }
 
+#[allow(unused)]
 pub(crate) struct NoopNifFiller;
 
 impl DynNifFiller for NoopNifFiller {
