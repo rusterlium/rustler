@@ -1,7 +1,9 @@
-use crate::sys::{enif_alloc_env, enif_clear_env, enif_free_env, enif_send, enif_whereis_pid};
+use crate::sys::{
+    enif_alloc_env, enif_clear_env, enif_free_env, enif_send, enif_whereis_pid, ErlNifEnv,
+    ERL_NIF_TERM,
+};
 use crate::thread::is_scheduler_thread;
 use crate::types::LocalPid;
-use crate::wrapper::{NIF_ENV, NIF_TERM};
 use crate::{Encoder, Term};
 use std::marker::PhantomData;
 use std::ptr;
@@ -28,11 +30,11 @@ pub(crate) enum EnvKind {
 #[derive(Clone, Copy)]
 pub struct Env<'a> {
     pub(crate) kind: EnvKind,
-    env: NIF_ENV,
+    env: *mut ErlNifEnv,
     id: EnvId<'a>,
 }
 
-/// Two environments are equal if they're the same `NIF_ENV` value.
+/// Two environments are equal if they're the same `*mut ErlNifEnv` pointer value.
 ///
 /// A `Env<'a>` is equal to a `Env<'b>` if and only if `'a` and `'b` are the same lifetime.
 impl<'b> PartialEq<Env<'b>> for Env<'_> {
@@ -51,7 +53,7 @@ impl<'a> Env<'a> {
     #[inline]
     pub(crate) unsafe fn new_internal<T>(
         _lifetime_marker: &'a T,
-        env: NIF_ENV,
+        env: *mut ErlNifEnv,
         kind: EnvKind,
     ) -> Env<'a> {
         Env {
@@ -71,17 +73,17 @@ impl<'a> Env<'a> {
     /// # Unsafe
     /// Don't create multiple `Env`s with the same lifetime.
     #[inline]
-    pub unsafe fn new<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
+    pub unsafe fn new<T>(_lifetime_marker: &'a T, env: *mut ErlNifEnv) -> Env<'a> {
         Self::new_internal(_lifetime_marker, env, EnvKind::ProcessBound)
     }
 
     #[doc(hidden)]
     #[inline]
-    pub unsafe fn new_init_env<T>(_lifetime_marker: &'a T, env: NIF_ENV) -> Env<'a> {
+    pub unsafe fn new_init_env<T>(_lifetime_marker: &'a T, env: *mut ErlNifEnv) -> Env<'a> {
         Self::new_internal(_lifetime_marker, env, EnvKind::Init)
     }
 
-    pub fn as_c_arg(self) -> NIF_ENV {
+    pub fn as_c_arg(self) -> *mut ErlNifEnv {
         self.env
     }
 
@@ -202,7 +204,7 @@ impl<'a> Env<'a> {
 /// There's no way to run Erlang code in an `OwnedEnv`. It's not a process. It's just a workspace
 /// for building terms.
 pub struct OwnedEnv {
-    env: Arc<NIF_ENV>,
+    env: Arc<*mut ErlNifEnv>,
 }
 
 unsafe impl Send for OwnedEnv {}
@@ -331,8 +333,8 @@ impl Drop for OwnedEnv {
 /// example.
 #[derive(Clone)]
 pub struct SavedTerm {
-    env_generation: Weak<NIF_ENV>,
-    term: NIF_TERM,
+    env_generation: Weak<*mut ErlNifEnv>,
+    term: ERL_NIF_TERM,
 }
 
 unsafe impl Send for SavedTerm {}

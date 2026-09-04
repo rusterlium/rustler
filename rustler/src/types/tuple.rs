@@ -1,4 +1,5 @@
-use crate::wrapper::{tuple, NIF_TERM};
+use crate::sys::ERL_NIF_TERM;
+use crate::wrapper::tuple;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 /// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
@@ -22,7 +23,7 @@ pub fn get_tuple(term: Term) -> Result<Vec<Term>, Error> {
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
 pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Term<'a> {
-    let c_terms: Vec<NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
+    let c_terms: Vec<ERL_NIF_TERM> = terms.iter().map(|term| term.as_c_arg()).collect();
     unsafe { Term::new(env, tuple::make_tuple(env.as_c_arg(), &c_terms)) }
 }
 

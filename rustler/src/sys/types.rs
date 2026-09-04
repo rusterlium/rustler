@@ -13,12 +13,28 @@ pub type size_t = usize;
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
 #[allow(non_camel_case_types)]
-pub type ERL_NIF_TERM = ERL_NIF_UINT;
+pub struct ERL_NIF_TERM(pub ERL_NIF_UINT);
 
-//#[derive(Debug, Copy, Clone)]
-//#[repr(C)]
-//pub struct ERL_NIF_TERM(ERL_NIF_UINT);  // Don't do this, 32 bit calling convention is different for structs and ints.
+impl std::fmt::Display for ERL_NIF_TERM {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<ERL_NIF_UINT> for ERL_NIF_TERM {
+    fn from(val: ERL_NIF_UINT) -> Self {
+        ERL_NIF_TERM(val)
+    }
+}
+
+impl From<ERL_NIF_TERM> for ERL_NIF_UINT {
+    fn from(val: ERL_NIF_TERM) -> Self {
+        val.0
+    }
+}
 
 /// See [ErlNifEnv](http://www.erlang.org/doc/man/erl_nif.html#ErlNifEnv) in the Erlang docs.
 #[derive(Debug)]

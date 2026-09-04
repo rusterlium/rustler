@@ -1,6 +1,5 @@
-use crate::sys::ErlNifCharEncoding;
+use crate::sys::{ErlNifCharEncoding, ERL_NIF_TERM};
 use crate::wrapper::atom;
-use crate::wrapper::NIF_TERM;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -9,11 +8,11 @@ use std::hash::{Hash, Hasher};
 // it lives and when it is created.
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Atom {
-    term: NIF_TERM,
+    term: ERL_NIF_TERM,
 }
 
 impl Atom {
-    pub fn as_c_arg(self) -> NIF_TERM {
+    pub fn as_c_arg(self) -> ERL_NIF_TERM {
         self.term
     }
 
@@ -22,7 +21,7 @@ impl Atom {
         unsafe { Term::new(env, self.term) }
     }
 
-    unsafe fn from_nif_term(term: NIF_TERM) -> Self {
+    unsafe fn from_nif_term(term: ERL_NIF_TERM) -> Self {
         Self { term }
     }
 
