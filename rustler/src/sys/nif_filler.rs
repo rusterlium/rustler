@@ -11,7 +11,7 @@ impl DynNifFiller for NoopNifFiller {
     fn write<T: Copy>(&self, field: &mut Option<T>, name: &str) {}
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 mod dlsym_filler {
     use libc::{RTLD_GLOBAL, RTLD_NOLOAD, RTLD_NOW};
     use libloading::os::unix::Library;
@@ -48,13 +48,14 @@ mod dlsym_filler {
 
 // On Windows the callback table is always supplied directly by the caller
 // via `internal_set_symbols`, so no dlsym-based (or otherwise) filler is
-// ever actually needed there.
-#[cfg(windows)]
+// ever actually needed there. For Linux, we use direct symbol lookups again.
+// Thus, the DlSym filler is only used on macos for now
+#[cfg(not(target_os = "macos"))]
 pub(crate) fn new() -> impl DynNifFiller {
     NoopNifFiller
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
 pub(crate) fn new() -> impl DynNifFiller {
     dlsym_filler::DlsymNifFiller::new()
 }

@@ -347,15 +347,7 @@ pub enum ErlNifOption {
 
 const ERL_NIF_IOVEC_SIZE: usize = 16;
 
-#[cfg(not(windows))]
-pub type SysIOVec = libc::iovec;
-
-#[cfg(windows)]
-#[repr(C)]
-pub struct SysIOVec {
-    pub iov_len: c_ulong,
-    pub iov_base: *mut c_char,
-}
+pub type SysIOVec = std::io::IoSliceMut<'static>;
 
 const ERTS_SMALL_IO_QUEUE: usize = 5;
 
