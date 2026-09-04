@@ -47,7 +47,7 @@ macro_rules! use_snippet {
     };
 
     (include, $version:expr, $sizeof_long:expr) => {
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(any(target_os = "macos", windows))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",
@@ -58,7 +58,7 @@ macro_rules! use_snippet {
             ".rs"
         ));
 
-        #[cfg(target_os = "linux")]
+        #[cfg(not(any(target_os = "macos", windows)))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",
