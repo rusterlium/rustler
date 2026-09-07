@@ -1,6 +1,6 @@
 use crate::sys::{
     enif_alloc_env, enif_clear_env, enif_free_env, enif_send, enif_whereis_pid, ErlNifEnv,
-    ERL_NIF_TERM,
+    ErlNifTerm,
 };
 use crate::thread::is_scheduler_thread;
 use crate::types::LocalPid;
@@ -334,7 +334,7 @@ impl Drop for OwnedEnv {
 #[derive(Clone)]
 pub struct SavedTerm {
     env_generation: Weak<*mut ErlNifEnv>,
-    term: ERL_NIF_TERM,
+    term: ErlNifTerm,
 }
 
 unsafe impl Send for SavedTerm {}

@@ -1,13 +1,13 @@
 use std::mem::MaybeUninit;
 
-#[cfg(not(feature = "nif_version_2_17"))]
-use crate::sys::enif_make_atom_len;
 #[cfg(feature = "nif_version_2_17")]
 use crate::sys::enif_make_new_atom_len;
 use crate::sys::{
     c_char, c_uint, enif_get_atom, enif_get_atom_length, enif_make_existing_atom_len,
-    ErlNifCharEncoding, ErlNifEnv, ERL_NIF_TERM,
+    ErlNifCharEncoding, ErlNifEnv, ErlNifTerm,
 };
+#[cfg(not(feature = "nif_version_2_17"))]
+use crate::sys::{enif_is_exception, enif_make_atom_len};
 use crate::Error;
 
 #[cfg(not(feature = "nif_version_2_17"))]
@@ -15,12 +15,13 @@ pub unsafe fn make_atom(
     env: *mut ErlNifEnv,
     name: &[u8],
     _encoding: ErlNifCharEncoding,
-) -> Result<ERL_NIF_TERM, Error> {
+) -> Result<ErlNifTerm, Error> {
     let res = enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len());
-    if res.0 != 0 {
-        Ok(res)
-    } else {
+
+    if enif_is_exception(env, res) != 0 {
         Err(Error::BadArg)
+    } else {
+        Ok(res)
     }
 }
 
@@ -29,7 +30,7 @@ pub unsafe fn make_atom(
     env: *mut ErlNifEnv,
     name: &[u8],
     encoding: ErlNifCharEncoding,
-) -> Result<ERL_NIF_TERM, Error> {
+) -> Result<ErlNifTerm, Error> {
     let mut atom_out = MaybeUninit::uninit();
 
     // Create a new atom with the requested encoding.
@@ -52,7 +53,7 @@ pub unsafe fn make_existing_atom(
     env: *mut ErlNifEnv,
     name: &[u8],
     encoding: ErlNifCharEncoding,
-) -> Result<ERL_NIF_TERM, Error> {
+) -> Result<ErlNifTerm, Error> {
     let mut atom_out = MaybeUninit::uninit();
 
     if enif_make_existing_atom_len(
@@ -79,7 +80,7 @@ pub unsafe fn make_existing_atom(
 /// `Error::BadArg` if `term` is not an atom.
 ///
 #[cfg(feature = "nif_version_2_17")]
-pub unsafe fn get_atom(env: *mut ErlNifEnv, term: ERL_NIF_TERM) -> Result<String, Error> {
+pub unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
     // Determine the length of the atom, in bytes.
     let mut len = 0;
     let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_UTF8);
@@ -108,7 +109,7 @@ pub unsafe fn get_atom(env: *mut ErlNifEnv, term: ERL_NIF_TERM) -> Result<String
 }
 
 #[cfg(not(feature = "nif_version_2_17"))]
-pub unsafe fn get_atom(env: *mut ErlNifEnv, term: ERL_NIF_TERM) -> Result<String, Error> {
+pub unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
     // Determine the length of the atom, in bytes.
     let mut len = 0;
     let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_LATIN1);

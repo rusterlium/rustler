@@ -8,31 +8,16 @@ use std::os;
 #[allow(non_camel_case_types)]
 pub type size_t = usize;
 
-//use std::mem::size_of;
-
 #[allow(non_camel_case_types)]
 pub type ERL_NIF_UINT = size_t;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-#[allow(non_camel_case_types)]
-pub struct ERL_NIF_TERM(pub ERL_NIF_UINT);
+pub struct ErlNifTerm(ERL_NIF_UINT);
 
-impl std::fmt::Display for ERL_NIF_TERM {
+impl std::fmt::Display for ErlNifTerm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl From<ERL_NIF_UINT> for ERL_NIF_TERM {
-    fn from(val: ERL_NIF_UINT) -> Self {
-        ERL_NIF_TERM(val)
-    }
-}
-
-impl From<ERL_NIF_TERM> for ERL_NIF_UINT {
-    fn from(val: ERL_NIF_TERM) -> Self {
-        val.0
     }
 }
 
@@ -59,8 +44,8 @@ pub struct ErlNifFunc {
     pub function: unsafe extern "C" fn(
         env: *mut ErlNifEnv,
         argc: c_int,
-        argv: *const ERL_NIF_TERM,
-    ) -> ERL_NIF_TERM,
+        argv: *const ErlNifTerm,
+    ) -> ErlNifTerm,
     pub flags: c_uint,
 }
 
@@ -79,14 +64,14 @@ pub struct ErlNifEntry {
         unsafe extern "C" fn(
             env: *mut ErlNifEnv,
             priv_data: *mut *mut c_void,
-            load_info: ERL_NIF_TERM,
+            load_info: ErlNifTerm,
         ) -> c_int,
     >,
     pub reload: Option<
         unsafe extern "C" fn(
             env: *mut ErlNifEnv,
             priv_data: *mut *mut c_void,
-            load_info: ERL_NIF_TERM,
+            load_info: ErlNifTerm,
         ) -> c_int,
     >,
     pub upgrade: Option<
@@ -94,7 +79,7 @@ pub struct ErlNifEntry {
             env: *mut ErlNifEnv,
             priv_data: *mut *mut c_void,
             old_priv_data: *mut *mut c_void,
-            load_info: ERL_NIF_TERM,
+            load_info: ErlNifTerm,
         ) -> c_int,
     >,
     pub unload: Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
@@ -220,7 +205,7 @@ pub enum ErlNifCharEncoding {
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifPid {
-    pub(crate) pid: ERL_NIF_TERM,
+    pub(crate) pid: ErlNifTerm,
 }
 
 /// See [ErlNifSysInfo](http://www.erlang.org/doc/man/erl_nif.html#ErlNifSysInfo) in the Erlang docs.
@@ -256,11 +241,11 @@ pub const ERL_NIF_DIRTY_JOB_IO_BOUND: ErlNifDirtyTaskFlags = 2;
 #[allow(missing_copy_implementations)]
 #[repr(C)]
 pub struct ErlNifMapIterator {
-    map: ERL_NIF_TERM,
+    map: ErlNifTerm,
     t_limit: ERL_NIF_UINT,
     idx: ERL_NIF_UINT,
-    ks: *mut ERL_NIF_TERM,
-    vs: *mut ERL_NIF_TERM,
+    ks: *mut ErlNifTerm,
+    vs: *mut ErlNifTerm,
     __spare__: [*mut c_void; 2],
 }
 
@@ -304,7 +289,7 @@ pub const ERL_NIF_UNIQUE_MONOTONIC: ErlNifUniqueInteger = 1 << 1;
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ErlNifPort {
-    port_id: ERL_NIF_TERM, // internal, may change
+    port_id: ErlNifTerm, // internal, may change
 }
 // ref https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl_nif.h#L155
 

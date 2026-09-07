@@ -3,6 +3,7 @@
 use std::ffi::CString;
 use std::fmt;
 
+use crate::sys::{enif_make_badarg, enif_raise_exception, enif_schedule_nif};
 use crate::types::atom;
 use crate::{Encoder, Env, OwnedBinary, Term};
 
@@ -13,14 +14,14 @@ pub use inventory;
 pub use crate::resource::Registration as ResourceRegistration;
 
 // Names used by the `rustler::init!` macro or other generated code.
-pub use crate::wrapper::exception::raise_exception;
 pub use crate::wrapper::{
-    c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, DEF_NIF_ENTRY, DEF_NIF_FUNC,
-    NIF_MAJOR_VERSION, NIF_MINOR_VERSION,
+    c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, NIF_MAJOR_VERSION,
+    NIF_MINOR_VERSION,
 };
 
 pub use crate::sys::{
-    internal_set_symbols, internal_write_symbols, DynNifCallbacks, ErlNifEnv, ERL_NIF_TERM,
+    internal_set_symbols, internal_write_symbols, DynNifCallbacks, ErlNifEntry, ErlNifEnv,
+    ErlNifFunc, ErlNifTerm,
 };
 
 pub unsafe trait NifReturnable {
@@ -61,31 +62,29 @@ unsafe impl NifReturnable for OwnedBinary {
 }
 
 pub enum NifReturned {
-    Term(ERL_NIF_TERM),
-    Raise(ERL_NIF_TERM),
+    Term(ErlNifTerm),
+    Raise(ErlNifTerm),
     BadArg,
     Reschedule {
         fun_name: CString,
         flags: crate::schedule::SchedulerFlags,
-        fun: unsafe extern "C" fn(*mut ErlNifEnv, i32, *const ERL_NIF_TERM) -> ERL_NIF_TERM,
-        args: Vec<ERL_NIF_TERM>,
+        fun: unsafe extern "C" fn(*mut ErlNifEnv, i32, *const ErlNifTerm) -> ErlNifTerm,
+        args: Vec<ErlNifTerm>,
     },
 }
 
 impl NifReturned {
-    pub unsafe fn apply(self, env: Env) -> ERL_NIF_TERM {
+    pub unsafe fn apply(self, env: Env) -> ErlNifTerm {
         match self {
             NifReturned::Term(inner) => inner,
-            NifReturned::BadArg => crate::wrapper::exception::raise_badarg(env.as_c_arg()),
-            NifReturned::Raise(inner) => {
-                crate::wrapper::exception::raise_exception(env.as_c_arg(), inner)
-            }
+            NifReturned::BadArg => enif_make_badarg(env.as_c_arg()),
+            NifReturned::Raise(inner) => enif_raise_exception(env.as_c_arg(), inner),
             NifReturned::Reschedule {
                 fun_name,
                 flags,
                 fun,
                 args,
-            } => crate::sys::enif_schedule_nif(
+            } => enif_schedule_nif(
                 env.as_c_arg(),
                 fun_name.as_ptr() as *const c_char,
                 flags as i32,

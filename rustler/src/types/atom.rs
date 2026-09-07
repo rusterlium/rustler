@@ -1,4 +1,4 @@
-use crate::sys::{ErlNifCharEncoding, ERL_NIF_TERM};
+use crate::sys::{ErlNifCharEncoding, ErlNifTerm};
 use crate::wrapper::atom;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::fmt;
@@ -7,12 +7,13 @@ use std::hash::{Hash, Hasher};
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
 #[derive(PartialEq, Eq, Clone, Copy)]
+#[repr(transparent)]
 pub struct Atom {
-    term: ERL_NIF_TERM,
+    term: ErlNifTerm,
 }
 
 impl Atom {
-    pub fn as_c_arg(self) -> ERL_NIF_TERM {
+    pub fn as_c_arg(self) -> ErlNifTerm {
         self.term
     }
 
@@ -21,7 +22,7 @@ impl Atom {
         unsafe { Term::new(env, self.term) }
     }
 
-    unsafe fn from_nif_term(term: ERL_NIF_TERM) -> Self {
+    unsafe fn from_nif_term(term: ErlNifTerm) -> Self {
         Self { term }
     }
 

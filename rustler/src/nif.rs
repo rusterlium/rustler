@@ -1,5 +1,4 @@
-use crate::codegen_runtime::{c_char, c_int, c_uint, DEF_NIF_FUNC};
-use crate::sys::{ErlNifEnv, ERL_NIF_TERM};
+use crate::sys::{c_char, c_int, c_uint, ErlNifEnv, ErlNifFunc, ErlNifTerm};
 
 pub struct Nif {
     pub name: *const c_char,
@@ -9,13 +8,13 @@ pub struct Nif {
     pub raw_func: unsafe extern "C" fn(
         nif_env: *mut ErlNifEnv,
         argc: c_int,
-        argv: *const ERL_NIF_TERM,
-    ) -> ERL_NIF_TERM,
+        argv: *const ErlNifTerm,
+    ) -> ErlNifTerm,
 }
 
 impl Nif {
-    pub fn get_def(&self) -> DEF_NIF_FUNC {
-        DEF_NIF_FUNC {
+    pub fn get_def(&self) -> ErlNifFunc {
+        ErlNifFunc {
             arity: self.arity,
             flags: self.flags,
             function: self.raw_func,

@@ -2,7 +2,7 @@
 //!
 //! Right now the only supported way to read lists are through the ListIterator.
 
-use crate::sys::ERL_NIF_TERM;
+use crate::sys::ErlNifTerm;
 use crate::wrapper::list;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
@@ -91,7 +91,7 @@ impl<'a> Decoder<'a> for ListIterator<'a> {
 
 //impl<'a, T> Encoder for Iterator<Item = T> where T: Encoder {
 //    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-//        let term_arr: Vec<ERL_NIF_TERM> =
+//        let term_arr: Vec<ErlNifTerm> =
 //            self.map(|x| x.encode(env).as_c_arg()).collect();
 //    }
 //}
@@ -123,7 +123,7 @@ where
 {
     #[inline]
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-        let term_array: Vec<ERL_NIF_TERM> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
+        let term_array: Vec<ErlNifTerm> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
@@ -134,7 +134,7 @@ where
 {
     #[inline]
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
-        let term_array: Vec<ERL_NIF_TERM> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
+        let term_array: Vec<ErlNifTerm> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
         unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
     }
 }
