@@ -52,15 +52,15 @@ defmodule RustlerTest.PrimitivesTest do
     assert i == RustlerTest.echo_i128(i)
     assert -i == RustlerTest.echo_i128(-i)
 
-    # i128::min_value()
+    # i128::MIN
     i = -170_141_183_460_469_231_731_687_303_715_884_105_728
     assert i == RustlerTest.echo_i128(i)
 
-    # i128::max_value()
+    # i128::MAX
     i = 170_141_183_460_469_231_731_687_303_715_884_105_727
     assert i == RustlerTest.echo_i128(i)
 
-    # u128::max_value()
+    # u128::MAX
     i = 0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
     assert_raise ArgumentError, fn -> RustlerTest.echo_i128(:non_int) end
     assert_raise ArgumentError, fn -> RustlerTest.echo_i128(123.45) end
@@ -80,7 +80,7 @@ defmodule RustlerTest.PrimitivesTest do
     i = 1 <<< 127
     assert i == RustlerTest.echo_u128(i)
 
-    # u128::max_value()
+    # u128::MAX
     i = 0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF
     assert i == RustlerTest.echo_u128(i)
 
