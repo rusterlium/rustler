@@ -32,33 +32,33 @@ pub fn test<'a>(
         "false" => run_test!(false),
 
         // Signed Integers
-        "i8 (min)" => run_test!(i8::min_value()),
+        "i8 (min)" => run_test!(i8::MIN),
         "i8 (0)" => run_test!(0_i8),
-        "i8 (max)" => run_test!(i8::max_value()),
-        "i16 (min)" => run_test!(i16::min_value()),
+        "i8 (max)" => run_test!(i8::MAX),
+        "i16 (min)" => run_test!(i16::MIN),
         "i16 (0)" => run_test!(0_i16),
-        "i16 (max)" => run_test!(i16::max_value()),
-        "i32 (min)" => run_test!(i32::min_value()),
+        "i16 (max)" => run_test!(i16::MAX),
+        "i32 (min)" => run_test!(i32::MIN),
         "i32 (0)" => run_test!(0_i32),
-        "i32 (max)" => run_test!(i32::max_value()),
-        "i64 (min)" => run_test!(i64::min_value()),
+        "i32 (max)" => run_test!(i32::MAX),
+        "i64 (min)" => run_test!(i64::MIN),
         "i64 (0)" => run_test!(0_i64),
-        "i64 (max)" => run_test!(i64::max_value()),
-        "i128 (min)" => run_test!(i128::min_value()),
+        "i64 (max)" => run_test!(i64::MAX),
+        "i128 (min)" => run_test!(i128::MIN),
         "i128 (0)" => run_test!(0_i128),
-        "i128 (max)" => run_test!(i128::max_value()),
+        "i128 (max)" => run_test!(i128::MAX),
 
         // Unsigned Integers
-        "u8 (min)" => run_test!(u8::min_value()),
-        "u8 (max)" => run_test!(u8::max_value()),
-        "u16 (min)" => run_test!(u16::min_value()),
-        "u16 (max)" => run_test!(u16::max_value()),
-        "u32 (min)" => run_test!(u32::min_value()),
-        "u32 (max)" => run_test!(u32::max_value()),
-        "u64 (min)" => run_test!(u64::min_value()),
-        "u64 (max)" => run_test!(u64::max_value()),
-        "u128 (min)" => run_test!(u128::min_value()),
-        "u128 (max)" => run_test!(u128::max_value()),
+        "u8 (min)" => run_test!(u8::MIN),
+        "u8 (max)" => run_test!(u8::MAX),
+        "u16 (min)" => run_test!(u16::MIN),
+        "u16 (max)" => run_test!(u16::MAX),
+        "u32 (min)" => run_test!(u32::MIN),
+        "u32 (max)" => run_test!(u32::MAX),
+        "u64 (min)" => run_test!(u64::MIN),
+        "u64 (max)" => run_test!(u64::MAX),
+        "u128 (min)" => run_test!(u128::MIN),
+        "u128 (max)" => run_test!(u128::MAX),
 
         // Float32
         "f32 (0)" => run_test!(f32::from_bits(0x0000_0000)),
@@ -99,10 +99,10 @@ pub fn test<'a>(
         "unit variant" => run_test!(UnitVariant::A),
 
         // Newtype Types
-        "newtype struct" => run_test!(NewtypeStruct(u8::max_value())),
-        "newtype variant" => run_test!(NewtypeVariant::N(u8::max_value())),
+        "newtype struct" => run_test!(NewtypeStruct(u8::MAX)),
+        "newtype variant" => run_test!(NewtypeVariant::N(u8::MAX)),
         "newtype variant (ok tuple)" => {
-            let ok: Result<u8, String> = Ok(u8::max_value());
+            let ok: Result<u8, String> = Ok(u8::MAX);
             run_test!(ok)
         }
         "newtype variant (error tuple)" => {
@@ -115,8 +115,8 @@ pub fn test<'a>(
         "sequences (primitive)" => run_test!(vec!["hello", "world"]),
         "sequences (byte)" => run_test!(vec![2, 3, 5, 7, 11, 13]),
         "sequences (complex)" => {
-            let a = NewtypeStruct(u8::min_value());
-            let b = NewtypeStruct(u8::max_value());
+            let a = NewtypeStruct(u8::MIN);
+            let b = NewtypeStruct(u8::MAX);
             run_test!(vec![a, b])
         }
 

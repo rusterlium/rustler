@@ -260,8 +260,7 @@ pub enum ErlNifMapIteratorEntry {
 pub type ErlNifTime = i64;
 
 /// Error return value for `enif_monotonic_time()`, `enif_time_offset()`, and `enif_convert_time_unit()`.
-pub const ERL_NIF_TIME_ERROR: i64 = -9_223_372_036_854_775_808;
-//const ERL_NIF_TIME_ERROR:i64 = i64::min_value();  "error: const fn's not yet stable"
+pub const ERL_NIF_TIME_ERROR: i64 = i64::MIN;
 
 /// See [ErlNifTimeUnit](http://www.erlang.org/doc/man/erl_nif.html#ErlNifTimeUnit) in the Erlang docs.
 #[derive(Copy, Clone)]
