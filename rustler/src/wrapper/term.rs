@@ -1,8 +1,7 @@
-use crate::sys::{c_char, enif_snprintf};
-use crate::wrapper::NIF_TERM;
+use crate::sys::{c_char, enif_snprintf, ErlNifTerm};
 use std::fmt;
 
-pub fn fmt(term: NIF_TERM, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+pub fn fmt(term: ErlNifTerm, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     const SIZE: usize = 1024;
     let mut bytes: Vec<u8> = Vec::with_capacity(SIZE);
 

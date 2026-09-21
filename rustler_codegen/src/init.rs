@@ -54,13 +54,13 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
         let load = input.load;
 
         let inner = quote! {
-            static mut NIF_ENTRY: Option<rustler::codegen_runtime::DEF_NIF_ENTRY> = None;
+            static mut NIF_ENTRY: Option<rustler::codegen_runtime::ErlNifEntry> = None;
             let nif_funcs: Box<[_]> =
                 rustler::codegen_runtime::inventory::iter::<rustler::Nif>()
                 .map(rustler::Nif::get_def)
                 .collect();
 
-            let entry = rustler::codegen_runtime::DEF_NIF_ENTRY {
+            let entry = rustler::codegen_runtime::ErlNifEntry {
                 major: rustler::codegen_runtime::NIF_MAJOR_VERSION,
                 minor: rustler::codegen_runtime::NIF_MINOR_VERSION,
                 name: concat!(#name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char,
@@ -68,9 +68,9 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 funcs: nif_funcs.as_ptr(),
                 load: {
                     extern "C" fn nif_load(
-                        env: rustler::codegen_runtime::NIF_ENV,
+                        env: *mut rustler::sys::ErlNifEnv,
                         _priv_data: *mut *mut rustler::codegen_runtime::c_void,
-                        load_info: rustler::codegen_runtime::NIF_TERM
+                        load_info: rustler::sys::ErlNifTerm
                     ) -> rustler::codegen_runtime::c_int {
                         unsafe {
                             let mut env = rustler::Env::new_init_env(&env, env);
@@ -121,13 +121,13 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             quote! {
                 #[cfg(not(windows))]
                 #[no_mangle]
-                fn nif_init() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                fn nif_init() -> *const ::rustler::codegen_runtime::ErlNifEntry {
                     #nif_init_name()
                 }
 
                 #[cfg(windows)]
                 #[no_mangle]
-                fn nif_init(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+                fn nif_init(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::ErlNifEntry {
                     #nif_init_name(callbacks)
                 }
             }
@@ -138,7 +138,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
         quote! {
             #[cfg(not(windows))]
             #[no_mangle]
-            extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn #nif_init_name() -> *const ::rustler::codegen_runtime::ErlNifEntry {
                 unsafe {
                     ::rustler::codegen_runtime::internal_write_symbols()
                 }
@@ -148,7 +148,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
 
             #[cfg(windows)]
             #[no_mangle]
-            extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::DEF_NIF_ENTRY {
+            extern "C" fn #nif_init_name(callbacks: *mut ::rustler::codegen_runtime::DynNifCallbacks) -> *const ::rustler::codegen_runtime::ErlNifEntry {
                 unsafe {
                     ::rustler::codegen_runtime::internal_set_symbols(callbacks);
                 }

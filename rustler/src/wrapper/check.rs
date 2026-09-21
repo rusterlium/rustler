@@ -1,8 +1,8 @@
-use crate::wrapper::{NIF_ENV, NIF_TERM};
+use crate::sys::{ErlNifEnv, ErlNifTerm};
 
 macro_rules! impl_check_fun {
     ($name:ident, $inner:ident) => {
-        pub unsafe fn $name(env: NIF_ENV, term: NIF_TERM) -> bool {
+        pub unsafe fn $name(env: *mut ErlNifEnv, term: ErlNifTerm) -> bool {
             crate::sys::$inner(env, term) == 1
         }
     };

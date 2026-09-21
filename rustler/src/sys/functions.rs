@@ -7,6 +7,9 @@
 use super::nif_filler::{self, DynNifFiller};
 use super::types::*;
 
+#[allow(non_camel_case_types)]
+type ERL_NIF_TERM = ErlNifTerm;
+
 static mut DYN_NIF_CALLBACKS: DynNifCallbacks =
     unsafe { std::mem::MaybeUninit::zeroed().assume_init() };
 
@@ -26,7 +29,7 @@ pub unsafe fn internal_write_symbols() {
 }
 
 /// See [enif_make_pid](http://erlang.org/doc/man/erl_nif.html#enif_make_pid) in the Erlang docs
-pub unsafe fn enif_make_pid(_env: *mut ErlNifEnv, pid: ErlNifPid) -> ERL_NIF_TERM {
+pub unsafe fn enif_make_pid(_env: *mut ErlNifEnv, pid: ErlNifPid) -> ErlNifTerm {
     pid.pid
 }
 

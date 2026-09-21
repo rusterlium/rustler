@@ -1,17 +1,20 @@
-use crate::codegen_runtime::{c_char, c_int, c_uint, DEF_NIF_FUNC, NIF_ENV, NIF_TERM};
+use crate::sys::{c_char, c_int, c_uint, ErlNifEnv, ErlNifFunc, ErlNifTerm};
 
 pub struct Nif {
     pub name: *const c_char,
     pub arity: c_uint,
     pub flags: c_uint,
     // pub func: DEF_NIF_FUNC,
-    pub raw_func:
-        unsafe extern "C" fn(nif_env: NIF_ENV, argc: c_int, argv: *const NIF_TERM) -> NIF_TERM,
+    pub raw_func: unsafe extern "C" fn(
+        nif_env: *mut ErlNifEnv,
+        argc: c_int,
+        argv: *const ErlNifTerm,
+    ) -> ErlNifTerm,
 }
 
 impl Nif {
-    pub fn get_def(&self) -> DEF_NIF_FUNC {
-        DEF_NIF_FUNC {
+    pub fn get_def(&self) -> ErlNifFunc {
+        ErlNifFunc {
             arity: self.arity,
             flags: self.flags,
             function: self.raw_func,

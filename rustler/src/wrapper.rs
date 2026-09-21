@@ -11,7 +11,6 @@ pub mod atom;
 pub mod binary;
 pub mod check;
 pub mod env;
-pub mod exception;
 pub mod list;
 pub mod map;
 pub mod pid;
@@ -28,20 +27,12 @@ pub use crate::sys::{
 pub use crate::sys::{c_char, c_double, c_int, c_uchar, c_uint, c_void};
 pub type size_t = usize;
 
-pub type NIF_ENV = *mut crate::sys::ErlNifEnv;
-pub type NIF_TERM = size_t;
 pub type NIF_RESOURCE_TYPE = *const crate::sys::ErlNifResourceType;
 
 pub fn get_nif_resource_type_init_size() -> usize {
     std::mem::size_of::<crate::sys::ErlNifResourceTypeInit>()
 }
 
-pub enum NIF_ERROR {
-    BAD_ARG,
-}
-
-pub type DEF_NIF_FUNC = crate::sys::ErlNifFunc;
-pub type DEF_NIF_ENTRY = crate::sys::ErlNifEntry;
 pub use crate::sys::NIF_MAJOR_VERSION;
 pub use crate::sys::NIF_MINOR_VERSION;
 
