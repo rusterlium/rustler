@@ -5,5 +5,5 @@ authors = []
 edition = "2021"
 
 [[bin]]
-name = "binary_example"
+name = "binary-example"
 path = "src/main.rs"

@@ -10,7 +10,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [[bin]]
-name = "hello_rust"
+name = "hello-rust"
 path = "src/main.rs"
 
 [features]
