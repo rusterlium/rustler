@@ -2,9 +2,12 @@
 //!
 //! Right now the only supported way to read lists are through the ListIterator.
 
-use crate::sys::ErlNifTerm;
-use crate::wrapper::list;
+use crate::sys::{
+    enif_get_list_cell, enif_get_list_length, enif_make_list_cell, enif_make_list_from_array,
+    enif_make_reverse_list, ErlNifEnv, ErlNifTerm,
+};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::mem::MaybeUninit;
 
 /// Enables iteration over the items in the list.
 ///
@@ -60,7 +63,7 @@ impl<'a> Iterator for ListIterator<'a> {
     #[inline]
     fn next(&mut self) -> Option<Term<'a>> {
         let env = self.term.get_env();
-        let cell = unsafe { list::get_list_cell(env.as_c_arg(), self.term.as_c_arg()) };
+        let cell = unsafe { get_list_cell(env.as_c_arg(), self.term.as_c_arg()) };
 
         match cell {
             Some((head, tail)) => unsafe {
@@ -124,7 +127,7 @@ where
     #[inline]
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<ErlNifTerm> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+        unsafe { Term::new(env, make_list(env.as_c_arg(), &term_array)) }
     }
 }
 
@@ -135,7 +138,7 @@ where
     #[inline]
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         let term_array: Vec<ErlNifTerm> = self.iter().map(|x| x.encode(env).as_c_arg()).collect();
-        unsafe { Term::new(env, list::make_list(env.as_c_arg(), &term_array)) }
+        unsafe { Term::new(env, make_list(env.as_c_arg(), &term_array)) }
     }
 }
 
@@ -167,8 +170,7 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn list_length(self) -> NifResult<usize> {
-        unsafe { list::get_list_length(self.get_env().as_c_arg(), self.as_c_arg()) }
-            .ok_or(Error::BadArg)
+        unsafe { get_list_length(self.get_env().as_c_arg(), self.as_c_arg()) }.ok_or(Error::BadArg)
     }
 
     /// Unpacks a single cell at the head of a list term,
@@ -185,7 +187,7 @@ impl<'a> Term<'a> {
     pub fn list_get_cell(self) -> NifResult<(Term<'a>, Term<'a>)> {
         let env = self.get_env();
         unsafe {
-            list::get_list_cell(env.as_c_arg(), self.as_c_arg())
+            get_list_cell(env.as_c_arg(), self.as_c_arg())
                 .map(|(t1, t2)| (Term::new(env, t1), Term::new(env, t2)))
                 .ok_or(Error::BadArg)
         }
@@ -198,7 +200,7 @@ impl<'a> Term<'a> {
     pub fn list_reverse(self) -> NifResult<Term<'a>> {
         let env = self.get_env();
         unsafe {
-            list::make_reverse_list(env.as_c_arg(), self.as_c_arg())
+            make_reverse_list(env.as_c_arg(), self.as_c_arg())
                 .map(|t| Term::new(env, t))
                 .ok_or(Error::BadArg)
         }
@@ -209,8 +211,52 @@ impl<'a> Term<'a> {
         let env = self.get_env();
         let head = head.encode(env);
         unsafe {
-            let term = list::make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
+            let term = make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
             Term::new(env, term)
         }
     }
+}
+
+#[inline]
+unsafe fn get_list_cell(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<(ErlNifTerm, ErlNifTerm)> {
+    let mut head = MaybeUninit::uninit();
+    let mut tail = MaybeUninit::uninit();
+    let success = enif_get_list_cell(env, list, head.as_mut_ptr(), tail.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some((head.assume_init(), tail.assume_init()))
+}
+
+#[inline]
+unsafe fn get_list_length(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<usize> {
+    let mut len: u32 = 0;
+    let success = enif_get_list_length(env, list, &mut len);
+
+    if success != 1 {
+        return None;
+    }
+    Some(len as usize)
+}
+
+#[inline]
+pub(crate) unsafe fn make_list(env: *mut ErlNifEnv, arr: &[ErlNifTerm]) -> ErlNifTerm {
+    enif_make_list_from_array(env, arr.as_ptr(), arr.len() as u32)
+}
+
+#[inline]
+unsafe fn make_list_cell(env: *mut ErlNifEnv, head: ErlNifTerm, tail: ErlNifTerm) -> ErlNifTerm {
+    enif_make_list_cell(env, head, tail)
+}
+
+#[inline]
+unsafe fn make_reverse_list(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<ErlNifTerm> {
+    let mut list_out = MaybeUninit::uninit();
+    let success = enif_make_reverse_list(env, list, list_out.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(list_out.assume_init())
 }

@@ -1,5 +1,7 @@
-use crate::sys::{enif_compare_pids, enif_is_process_alive, enif_self};
-use crate::wrapper::{pid, ErlNifPid};
+use crate::sys::{
+    enif_compare_pids, enif_get_local_pid, enif_is_process_alive, enif_make_pid, enif_self,
+    ErlNifPid,
+};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -30,16 +32,23 @@ impl LocalPid {
 impl<'a> Decoder<'a> for LocalPid {
     #[inline]
     fn decode(term: Term<'a>) -> NifResult<LocalPid> {
-        unsafe { pid::get_local_pid(term.get_env().as_c_arg(), term.as_c_arg()) }
-            .map(|pid| LocalPid { c: pid })
-            .ok_or(Error::BadArg)
+        let mut pid = MaybeUninit::uninit();
+        if unsafe {
+            enif_get_local_pid(term.get_env().as_c_arg(), term.as_c_arg(), pid.as_mut_ptr())
+        } == 0
+        {
+            return Err(Error::BadArg);
+        }
+        Ok(LocalPid {
+            c: unsafe { pid.assume_init() },
+        })
     }
 }
 
 impl Encoder for LocalPid {
     #[inline]
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        unsafe { Term::new(env, pid::make_pid(env.as_c_arg(), self.c)) }
+        unsafe { Term::new(env, enif_make_pid(env.as_c_arg(), self.c)) }
     }
 }
 

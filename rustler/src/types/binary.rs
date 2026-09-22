@@ -86,19 +86,44 @@
 //! [`OwnedBinary`]: struct.OwnedBinary.html
 
 use crate::{
+    alloc::array_layout,
     sys::{
-        enif_inspect_binary, enif_inspect_iolist_as_binary, enif_make_binary, enif_make_sub_binary,
-        enif_release_binary,
+        enif_alloc_binary, enif_inspect_binary, enif_inspect_iolist_as_binary, enif_make_binary,
+        enif_make_new_binary, enif_make_sub_binary, enif_realloc_binary, enif_release_binary,
+        ErlNifBinary,
     },
-    wrapper::binary::{alloc, new_binary, realloc, ErlNifBinary},
     Decoder, Encoder, Env, Error, NifResult, Term,
 };
 use std::{
+    alloc::handle_alloc_error,
     borrow::{Borrow, BorrowMut},
     hash::{Hash, Hasher},
     mem::MaybeUninit,
     ops::{Deref, DerefMut},
 };
+
+unsafe fn alloc(size: usize) -> ErlNifBinary {
+    let mut binary = MaybeUninit::uninit();
+    let success = enif_alloc_binary(size, binary.as_mut_ptr());
+    if success == 0 {
+        handle_alloc_error(array_layout::<u8>(size));
+    }
+    binary.assume_init()
+}
+
+unsafe fn realloc(binary: &mut ErlNifBinary, size: usize) -> bool {
+    let success = enif_realloc_binary(binary, size);
+    success != 0
+}
+
+unsafe fn new_binary(env: Env, size: usize) -> (*mut u8, Term) {
+    let mut term = MaybeUninit::uninit();
+    let buf = enif_make_new_binary(env.as_c_arg(), size, term.as_mut_ptr());
+    if buf.is_null() {
+        handle_alloc_error(array_layout::<u8>(size));
+    }
+    (buf, Term::new(env, term.assume_init()))
+}
 
 /// An mutable smart-pointer to an Erlang binary.
 ///

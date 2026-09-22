@@ -24,9 +24,6 @@
 //! rustler](https://hexdocs.pm/rustler).
 
 #[doc(hidden)]
-pub mod wrapper;
-
-#[doc(hidden)]
 pub mod codegen_runtime;
 
 mod alloc;

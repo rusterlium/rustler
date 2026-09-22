@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use crate::serde::{atoms, error::Error};
-use crate::wrapper::list::make_list;
+use crate::types::list::make_list;
 use crate::{types::tuple, Encoder, Env, OwnedBinary, Term};
 use serde::ser::{self, Serialize};
 

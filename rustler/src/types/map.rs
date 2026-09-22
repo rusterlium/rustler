@@ -1,13 +1,19 @@
 //! Utilities used to access and create Erlang maps.
 
 use super::atom;
-use crate::wrapper::map;
+use crate::sys::{
+    enif_get_map_size, enif_get_map_value, enif_make_map_from_arrays, enif_make_map_put,
+    enif_make_map_remove, enif_make_map_update, enif_make_new_map, enif_map_iterator_create,
+    enif_map_iterator_destroy, enif_map_iterator_get_pair, enif_map_iterator_next,
+    enif_map_iterator_prev, ErlNifEnv, ErlNifMapIterator, ErlNifMapIteratorEntry, ErlNifTerm,
+};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use std::mem::MaybeUninit;
 use std::ops::RangeInclusive;
 
 #[inline]
 pub fn map_new(env: Env) -> Term {
-    unsafe { Term::new(env, map::map_new(env.as_c_arg())) }
+    unsafe { Term::new(env, enif_make_new_map(env.as_c_arg())) }
 }
 
 /// ## Map terms
@@ -42,7 +48,7 @@ impl<'a> Term<'a> {
             let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
 
             unsafe {
-                map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                make_map_from_arrays(env.as_c_arg(), &keys, &values)
                     .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
             }
         } else {
@@ -65,7 +71,7 @@ impl<'a> Term<'a> {
             let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
 
             unsafe {
-                map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+                make_map_from_arrays(env.as_c_arg(), &keys, &values)
                     .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
             }
         } else {
@@ -94,7 +100,7 @@ impl<'a> Term<'a> {
             .unzip();
 
         unsafe {
-            map::make_map_from_arrays(env.as_c_arg(), &keys, &values)
+            make_map_from_arrays(env.as_c_arg(), &keys, &values)
                 .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
         }
     }
@@ -111,9 +117,8 @@ impl<'a> Term<'a> {
     #[inline]
     pub fn map_get(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
-        match unsafe {
-            map::get_map_value(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg())
-        } {
+        match unsafe { get_map_value(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg()) }
+        {
             Some(value) => Ok(unsafe { Term::new(env, value) }),
             None => Err(Error::BadArg),
         }
@@ -130,7 +135,7 @@ impl<'a> Term<'a> {
     #[inline]
     pub fn map_size(self) -> NifResult<usize> {
         let env = self.get_env();
-        unsafe { map::get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(Error::BadArg) }
+        unsafe { get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(Error::BadArg) }
     }
 
     /// Makes a copy of the self map term and sets key to value.
@@ -147,7 +152,7 @@ impl<'a> Term<'a> {
         let env = self.get_env();
 
         match unsafe {
-            map::map_put(
+            map_put(
                 env.as_c_arg(),
                 self.as_c_arg(),
                 key.encode(env).as_c_arg(),
@@ -172,9 +177,7 @@ impl<'a> Term<'a> {
     pub fn map_remove(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
-        match unsafe {
-            map::map_remove(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg())
-        } {
+        match unsafe { map_remove(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg()) } {
             Some(inner) => Ok(unsafe { Term::new(env, inner) }),
             None => Err(Error::BadArg),
         }
@@ -189,7 +192,7 @@ impl<'a> Term<'a> {
         let env = self.get_env();
 
         match unsafe {
-            map::map_update(
+            map_update(
                 env.as_c_arg(),
                 self.as_c_arg(),
                 key.encode(env).as_c_arg(),
@@ -204,8 +207,8 @@ impl<'a> Term<'a> {
 
 struct SimpleMapIterator<'a> {
     map: Term<'a>,
-    entry: map::MapIteratorEntry,
-    iter: Option<map::ErlNifMapIterator>,
+    entry: MapIteratorEntry,
+    iter: Option<ErlNifMapIterator>,
     last_key: Option<Term<'a>>,
     done: bool,
 }
@@ -220,7 +223,7 @@ impl<'a> SimpleMapIterator<'a> {
             match self.iter.as_mut() {
                 None => {
                     match unsafe {
-                        map::map_iterator_create(
+                        map_iterator_create(
                             self.map.get_env().as_c_arg(),
                             self.map.as_c_arg(),
                             self.entry,
@@ -245,14 +248,14 @@ impl<'a> SimpleMapIterator<'a> {
         let env = self.map.get_env();
 
         unsafe {
-            match map::map_iterator_get_pair(env.as_c_arg(), iter) {
+            match map_iterator_get_pair(env.as_c_arg(), iter) {
                 Some((key, value)) => {
                     match self.entry {
-                        map::MapIteratorEntry::First => {
-                            map::map_iterator_next(env.as_c_arg(), iter);
+                        MapIteratorEntry::First => {
+                            map_iterator_next(env.as_c_arg(), iter);
                         }
-                        map::MapIteratorEntry::Last => {
-                            map::map_iterator_prev(env.as_c_arg(), iter);
+                        MapIteratorEntry::Last => {
+                            map_iterator_prev(env.as_c_arg(), iter);
                         }
                     }
                     let key = Term::new(env, key);
@@ -272,7 +275,7 @@ impl Drop for SimpleMapIterator<'_> {
     fn drop(&mut self) {
         if let Some(iter) = self.iter.as_mut() {
             unsafe {
-                map::map_iterator_destroy(self.map.get_env().as_c_arg(), iter);
+                map_iterator_destroy(self.map.get_env().as_c_arg(), iter);
             }
         }
     }
@@ -289,14 +292,14 @@ impl<'a> MapIterator<'a> {
             Some(MapIterator {
                 forward: SimpleMapIterator {
                     map,
-                    entry: map::MapIteratorEntry::First,
+                    entry: MapIteratorEntry::First,
                     iter: None,
                     last_key: None,
                     done: false,
                 },
                 reverse: SimpleMapIterator {
                     map,
-                    entry: map::MapIteratorEntry::Last,
+                    entry: MapIteratorEntry::Last,
                     iter: None,
                     last_key: None,
                     done: false,
@@ -368,4 +371,144 @@ where
 
         Ok(first..=last)
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum MapIteratorEntry {
+    First,
+    Last,
+}
+
+unsafe fn get_map_value(
+    env: *mut ErlNifEnv,
+    map: ErlNifTerm,
+    key: ErlNifTerm,
+) -> Option<ErlNifTerm> {
+    let mut result = MaybeUninit::uninit();
+    let success = enif_get_map_value(env, map, key, result.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(result.assume_init())
+}
+
+unsafe fn get_map_size(env: *mut ErlNifEnv, map: ErlNifTerm) -> Option<usize> {
+    let mut size = MaybeUninit::uninit();
+    let success = enif_get_map_size(env, map, size.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(size.assume_init())
+}
+
+unsafe fn map_put(
+    env: *mut ErlNifEnv,
+    map: ErlNifTerm,
+    key: ErlNifTerm,
+    value: ErlNifTerm,
+) -> Option<ErlNifTerm> {
+    let mut result = MaybeUninit::uninit();
+    let success = enif_make_map_put(env, map, key, value, result.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(result.assume_init())
+}
+
+unsafe fn map_remove(env: *mut ErlNifEnv, map: ErlNifTerm, key: ErlNifTerm) -> Option<ErlNifTerm> {
+    let mut result = MaybeUninit::uninit();
+    let success = enif_make_map_remove(env, map, key, result.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(result.assume_init())
+}
+
+unsafe fn map_update(
+    env: *mut ErlNifEnv,
+    map: ErlNifTerm,
+    key: ErlNifTerm,
+    new_value: ErlNifTerm,
+) -> Option<ErlNifTerm> {
+    let mut result = MaybeUninit::uninit();
+    let success = enif_make_map_update(env, map, key, new_value, result.as_mut_ptr());
+
+    if success != 1 {
+        return None;
+    }
+    Some(result.assume_init())
+}
+
+unsafe fn map_iterator_create(
+    env: *mut ErlNifEnv,
+    map: ErlNifTerm,
+    entry: MapIteratorEntry,
+) -> Option<ErlNifMapIterator> {
+    let mut iter = MaybeUninit::uninit();
+    let success = enif_map_iterator_create(
+        env,
+        map,
+        iter.as_mut_ptr(),
+        match entry {
+            MapIteratorEntry::First => ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_HEAD,
+            MapIteratorEntry::Last => ErlNifMapIteratorEntry::ERL_NIF_MAP_ITERATOR_TAIL,
+        },
+    );
+    if success == 0 {
+        None
+    } else {
+        Some(iter.assume_init())
+    }
+}
+
+unsafe fn map_iterator_destroy(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
+    enif_map_iterator_destroy(env, iter);
+}
+
+unsafe fn map_iterator_get_pair(
+    env: *mut ErlNifEnv,
+    iter: &mut ErlNifMapIterator,
+) -> Option<(ErlNifTerm, ErlNifTerm)> {
+    let mut key = MaybeUninit::uninit();
+    let mut value = MaybeUninit::uninit();
+    if enif_map_iterator_get_pair(env, iter, key.as_mut_ptr(), value.as_mut_ptr()) == 0 {
+        None
+    } else {
+        Some((key.assume_init(), value.assume_init()))
+    }
+}
+
+#[inline]
+unsafe fn map_iterator_next(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
+    enif_map_iterator_next(env, iter);
+}
+
+#[inline]
+unsafe fn map_iterator_prev(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
+    enif_map_iterator_prev(env, iter);
+}
+
+#[inline]
+unsafe fn make_map_from_arrays(
+    env: *mut ErlNifEnv,
+    keys: &[ErlNifTerm],
+    values: &[ErlNifTerm],
+) -> Option<ErlNifTerm> {
+    let mut map = MaybeUninit::uninit();
+    if enif_make_map_from_arrays(
+        env,
+        keys.as_ptr(),
+        values.as_ptr(),
+        keys.len(),
+        map.as_mut_ptr(),
+    ) == 0
+    {
+        return None;
+    }
+
+    Some(map.assume_init())
 }
