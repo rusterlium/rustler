@@ -1,7 +1,7 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::upper_case_acronyms)]
 
-pub use std::ffi::{c_char, c_double, c_int, c_long, c_uchar, c_uint, c_ulong, c_void};
+pub use std::ffi::{c_char, c_double, c_int, c_long, c_uchar, c_uint, c_ulong, c_void, CStr};
 
 use std::os;
 
@@ -49,6 +49,21 @@ pub struct ErlNifFunc {
     pub flags: c_uint,
 }
 
+type LoadFun = unsafe extern "C" fn(
+    env: *mut ErlNifEnv,
+    priv_data: *mut *mut c_void,
+    load_info: ErlNifTerm,
+) -> c_int;
+
+type UpgradeFun = unsafe extern "C" fn(
+    env: *mut ErlNifEnv,
+    priv_data: *mut *mut c_void,
+    old_priv_data: *mut *mut c_void,
+    load_info: ErlNifTerm,
+) -> c_int;
+
+type UnloadFun = unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ();
+
 // #[allow(missing_copy_implementations)]
 #[doc(hidden)]
 #[derive(Debug)]
@@ -60,33 +75,46 @@ pub struct ErlNifEntry {
     pub name: *const c_char,
     pub num_of_funcs: c_int,
     pub funcs: *const ErlNifFunc,
-    pub load: Option<
-        unsafe extern "C" fn(
-            env: *mut ErlNifEnv,
-            priv_data: *mut *mut c_void,
-            load_info: ErlNifTerm,
-        ) -> c_int,
-    >,
-    pub reload: Option<
-        unsafe extern "C" fn(
-            env: *mut ErlNifEnv,
-            priv_data: *mut *mut c_void,
-            load_info: ErlNifTerm,
-        ) -> c_int,
-    >,
-    pub upgrade: Option<
-        unsafe extern "C" fn(
-            env: *mut ErlNifEnv,
-            priv_data: *mut *mut c_void,
-            old_priv_data: *mut *mut c_void,
-            load_info: ErlNifTerm,
-        ) -> c_int,
-    >,
-    pub unload: Option<unsafe extern "C" fn(env: *mut ErlNifEnv, priv_data: *mut c_void) -> ()>,
+    pub load: Option<LoadFun>,
+    pub reload: Option<LoadFun>,
+    pub upgrade: Option<UpgradeFun>,
+    pub unload: Option<UnloadFun>,
     pub vm_variant: *const c_char,
     pub options: c_uint,                      // added in 2.7
     pub sizeof_ErlNifResourceTypeInit: usize, // added in 2.12
     pub min_erts: *const c_char,              // added in 2.14
+}
+
+impl ErlNifEntry {
+    pub const fn new(name: &CStr, nif_funcs: &[ErlNifFunc], load: LoadFun) -> Self {
+        let min_erts = if cfg!(feature = "nif_version_2_18") {
+            c"OTP-29.0"
+        } else if cfg!(feature = "nif_version_2_17") {
+            c"OTP-26.0"
+        } else if cfg!(feature = "nif_version_2_16") {
+            c"OTP-24.0"
+        } else if cfg!(feature = "nif_version_2_15") {
+            c"OTP-22.0"
+        } else {
+            c"OTP-21.0"
+        };
+
+        Self {
+            major: super::NIF_MAJOR_VERSION,
+            minor: super::NIF_MINOR_VERSION,
+            name: name.as_ptr(),
+            num_of_funcs: nif_funcs.len() as c_int,
+            funcs: nif_funcs.as_ptr(),
+            load: Some(load),
+            reload: None,
+            upgrade: None,
+            unload: None,
+            vm_variant: c"beam.vanilla".as_ptr(),
+            options: 0,
+            sizeof_ErlNifResourceTypeInit: std::mem::size_of::<ErlNifResourceTypeInit>(),
+            min_erts: min_erts.as_ptr(),
+        }
+    }
 }
 
 pub const ERL_NIF_DIRTY_NIF_OPTION: c_uint = 1;
@@ -234,6 +262,7 @@ pub struct ErlNifSysInfo {
 // }
 
 pub type ErlNifDirtyTaskFlags = c_uint;
+pub const ERL_NIF_NORMAL_JOB: ErlNifDirtyTaskFlags = 0;
 pub const ERL_NIF_DIRTY_JOB_CPU_BOUND: ErlNifDirtyTaskFlags = 1;
 pub const ERL_NIF_DIRTY_JOB_IO_BOUND: ErlNifDirtyTaskFlags = 2;
 

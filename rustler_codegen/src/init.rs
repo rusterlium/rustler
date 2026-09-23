@@ -60,43 +60,36 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 .map(rustler::Nif::get_def)
                 .collect();
 
-            let entry = rustler::codegen_runtime::ErlNifEntry {
-                major: rustler::codegen_runtime::NIF_MAJOR_VERSION,
-                minor: rustler::codegen_runtime::NIF_MINOR_VERSION,
-                name: concat!(#name, "\0").as_ptr() as *const rustler::codegen_runtime::c_char,
-                num_of_funcs: nif_funcs.len() as rustler::codegen_runtime::c_int,
-                funcs: nif_funcs.as_ptr(),
-                load: {
-                    extern "C" fn nif_load(
-                        env: *mut rustler::sys::ErlNifEnv,
-                        _priv_data: *mut *mut rustler::codegen_runtime::c_void,
-                        load_info: rustler::sys::ErlNifTerm
-                    ) -> rustler::codegen_runtime::c_int {
-                        unsafe {
-                            let mut env = rustler::Env::new_init_env(&env, env);
-                            let load_info = rustler::Term::new(env, load_info);
+            let load = {
+                extern "C" fn nif_load(
+                    env: *mut rustler::sys::ErlNifEnv,
+                    _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    load_info: rustler::sys::ErlNifTerm
+                ) -> rustler::codegen_runtime::c_int {
+                    unsafe {
+                        let mut env = rustler::Env::new_init_env(&env, env);
+                        let load_info = rustler::Term::new(env, load_info);
 
-                            if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
-                                return 1;
-                            }
-
-                            #load.map_or(0, |inner| {
-                                rustler::codegen_runtime::handle_nif_init_call(
-                                    inner, env, load_info
-                                )
-                            })
+                        if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
+                            return 1;
                         }
+
+                        #load.map_or(0, |inner| {
+                            rustler::codegen_runtime::handle_nif_init_call(
+                                inner, env, load_info
+                            )
+                        })
                     }
-                    Some(nif_load)
-                },
-                reload: None,
-                upgrade: None,
-                unload: None,
-                vm_variant: b"beam.vanilla\0".as_ptr() as *const rustler::codegen_runtime::c_char,
-                options: 0,
-                sizeof_ErlNifResourceTypeInit: rustler::codegen_runtime::get_nif_resource_type_init_size(),
-                min_erts: rustler::codegen_runtime::min_erts().as_ptr() as *const rustler::codegen_runtime::c_char,
+                };
+
+                nif_load
             };
+
+            let entry = rustler::codegen_runtime::ErlNifEntry::new(
+                unsafe { ::core::ffi::CStr::from_bytes_with_nul_unchecked(concat!(#name, "\0").as_bytes()) },
+                &nif_funcs,
+                load
+            );
 
             unsafe {
                 // Leak nif_funcs
