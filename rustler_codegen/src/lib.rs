@@ -2,6 +2,7 @@
 
 use proc_macro::TokenStream;
 
+pub(crate) mod attrs;
 mod context;
 mod encode_decode_templates;
 mod ex_struct;
@@ -14,14 +15,6 @@ mod tagged_enum;
 mod tuple;
 mod unit_enum;
 mod untagged_enum;
-
-#[derive(Debug)]
-enum RustlerAttr {
-    Encode,
-    Decode,
-    Module(String),
-    Tag(String),
-}
 
 /// Initialise the Native Implemented Function (NIF) environment
 /// and register NIF functions in an Elixir module.
@@ -192,7 +185,77 @@ pub fn nif_exception(input: TokenStream) -> TokenStream {
 /// ```
 ///
 /// And vice versa, decoding this map would result in `value`.
-#[proc_macro_derive(NifMap, attributes(rustler))]
+///
+/// By default, any fields with type `Option` need to be present in the map, otherwise decoding will fail:
+///
+/// ```ignore
+/// #[derive(NifMap)]
+/// struct MapWithOption {
+///     x: i32,
+///     y: Option<i32>,
+///     z: Option<i32>,
+/// }
+/// ```
+///
+/// ```elixir
+/// # Both of these will successfully decode into MapWithOption:
+/// %{x: 1, y: 2, z: 3}
+/// %{x: 1, y: nil, z: 3}
+/// # These will not:
+/// %{x: 1}
+/// %{x: 1, y: 2}
+/// %{x: 1, y: nil}
+/// %{x: 1, z: 3}
+/// %{x: 1, z: nil}
+/// ```
+///
+/// If you wish to treat missing keys in an Elixir map as `None` in the struct, use the `#[rustler(optional_decode)]` attribute:
+///
+/// ```ignore
+/// #[derive(NifMap)]
+/// #[rustler(optional_decode)] // Allows any fields with type Option to be missing in the map.
+/// struct MapWithOption {
+///     x: i32,
+///     y: Option<i32>,
+///     z: Option<i32>,
+/// }
+/// ```
+///
+/// ```elixir
+/// # All of these will successfully decode into MapWithOption:
+/// %{x: 1, y: 2, z: 3}
+/// %{x: 1, y: nil, z: 3}
+/// %{x: 1}
+/// %{x: 1, y: 2}
+/// %{x: 1, y: nil}
+/// %{x: 1, z: 3}
+/// %{x: 1, z: nil}
+/// ```
+///
+/// `#[rustler(optional_decode)]` can also be applied only to specific fields:
+///
+/// ```ignore
+/// #[derive(NifMap)]
+/// struct MapWithOption {
+///     x: i32,
+///     #[rustler(optional_decode)]
+///     y: Option<i32>,
+///     z: Option<i32>,
+/// }
+/// ```
+///
+/// ```elixir
+/// # These will successfully decode into MapWithOption:
+/// %{x: 1, y: 2, z: 3}
+/// %{x: 1, y: nil, z: 3}
+/// %{x: 1, z: 3}
+/// %{x: 1, z: nil}
+/// # These will not:
+/// %{x: 1}
+/// %{x: 1, y: 2}
+/// %{x: 1, y: nil}
+/// ```
+#[proc_macro_derive(NifMap, attributes(rustler, optional_decode))]
 pub fn nif_map(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     map::transcoder_decorator(&ast).into()
