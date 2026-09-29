@@ -3,7 +3,6 @@ use std::ffi::c_double;
 #[cfg(feature = "nif_version_2_15")]
 use crate::sys::ErlNifTermType;
 
-use crate::wrapper::check;
 use crate::Term;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -77,9 +76,9 @@ pub fn get_type(term: Term) -> TermType {
 }
 
 macro_rules! impl_check {
-    ($check_fun:ident) => {
+    ($check_fun:ident, $sys_fun:ident) => {
         pub fn $check_fun(self) -> bool {
-            unsafe { check::$check_fun(self.get_env().as_c_arg(), self.as_c_arg()) }
+            unsafe { crate::sys::$sys_fun(self.get_env().as_c_arg(), self.as_c_arg()) == 1 }
         }
     };
 }
@@ -93,17 +92,17 @@ impl Term<'_> {
         get_type(self)
     }
 
-    impl_check!(is_atom);
-    impl_check!(is_binary);
-    impl_check!(is_empty_list);
-    impl_check!(is_fun);
-    impl_check!(is_list);
-    impl_check!(is_map);
-    impl_check!(is_number);
-    impl_check!(is_pid);
-    impl_check!(is_port);
-    impl_check!(is_ref);
-    impl_check!(is_tuple);
+    impl_check!(is_atom, enif_is_atom);
+    impl_check!(is_binary, enif_is_binary);
+    impl_check!(is_empty_list, enif_is_empty_list);
+    impl_check!(is_fun, enif_is_fun);
+    impl_check!(is_list, enif_is_list);
+    impl_check!(is_map, enif_is_map);
+    impl_check!(is_number, enif_is_number);
+    impl_check!(is_pid, enif_is_pid);
+    impl_check!(is_port, enif_is_port);
+    impl_check!(is_ref, enif_is_ref);
+    impl_check!(is_tuple, enif_is_tuple);
 
     pub fn is_float(self) -> bool {
         let mut val: c_double = 0.0;

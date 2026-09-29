@@ -1,8 +1,15 @@
-use crate::sys::{ErlNifCharEncoding, ErlNifTerm};
-use crate::wrapper::atom;
+#[cfg(feature = "nif_version_2_17")]
+use crate::sys::enif_make_new_atom_len;
+use crate::sys::{
+    c_char, c_uint, enif_get_atom, enif_get_atom_length, enif_make_existing_atom_len,
+    ErlNifCharEncoding, ErlNifEnv, ErlNifTerm,
+};
+#[cfg(not(feature = "nif_version_2_17"))]
+use crate::sys::{enif_is_exception, enif_make_atom_len};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::mem::MaybeUninit;
 
 // Atoms are a special case of a term. They can be stored and used on all envs regardless of where
 // it lives and when it is created.
@@ -75,9 +82,7 @@ impl Atom {
     }
 
     fn from_encoded_bytes(env: Env, bytes: &[u8], encoding: ErlNifCharEncoding) -> NifResult<Self> {
-        unsafe {
-            atom::make_atom(env.as_c_arg(), bytes, encoding).map(|term| Self::from_nif_term(term))
-        }
+        unsafe { make_atom(env.as_c_arg(), bytes, encoding).map(|term| Self::from_nif_term(term)) }
     }
 
     /// Return the atom whose text representation is Latin1 `bytes`, like `erlang:binary_to_existing_atom/1`,
@@ -140,7 +145,7 @@ impl Atom {
         encoding: ErlNifCharEncoding,
     ) -> NifResult<Self> {
         unsafe {
-            atom::make_existing_atom(env.as_c_arg(), bytes, encoding)
+            make_existing_atom(env.as_c_arg(), bytes, encoding)
                 .map(|term| Self::from_nif_term(term))
         }
     }
@@ -172,7 +177,7 @@ impl Atom {
 
 impl fmt::Debug for Atom {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        crate::wrapper::term::fmt(self.as_c_arg(), f)
+        crate::term::fmt(self.as_c_arg(), f)
     }
 }
 
@@ -203,7 +208,7 @@ impl Term<'_> {
     ///
     /// Will return None if the term is not an atom.
     pub fn atom_to_string(&self) -> NifResult<String> {
-        unsafe { atom::get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
+        unsafe { get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
     }
 }
 
@@ -372,4 +377,118 @@ atoms! {
 
     /// The `step` atom used by `Elixir.Range` vor Elixir >= v1.12
     step,
+}
+
+#[cfg(not(feature = "nif_version_2_17"))]
+unsafe fn make_atom(
+    env: *mut ErlNifEnv,
+    name: &[u8],
+    _encoding: ErlNifCharEncoding,
+) -> Result<ErlNifTerm, Error> {
+    let res = enif_make_atom_len(env, name.as_ptr() as *const c_char, name.len());
+
+    if enif_is_exception(env, res) != 0 {
+        Err(Error::BadArg)
+    } else {
+        Ok(res)
+    }
+}
+
+#[cfg(feature = "nif_version_2_17")]
+unsafe fn make_atom(
+    env: *mut ErlNifEnv,
+    name: &[u8],
+    encoding: ErlNifCharEncoding,
+) -> Result<ErlNifTerm, Error> {
+    let mut atom_out = MaybeUninit::uninit();
+
+    if enif_make_new_atom_len(
+        env,
+        name.as_ptr() as *const c_char,
+        name.len(),
+        atom_out.as_mut_ptr(),
+        encoding,
+    ) != 0
+    {
+        Ok(atom_out.assume_init())
+    } else {
+        Err(Error::BadArg)
+    }
+}
+
+unsafe fn make_existing_atom(
+    env: *mut ErlNifEnv,
+    name: &[u8],
+    encoding: ErlNifCharEncoding,
+) -> Result<ErlNifTerm, Error> {
+    let mut atom_out = MaybeUninit::uninit();
+
+    if enif_make_existing_atom_len(
+        env,
+        name.as_ptr() as *const c_char,
+        name.len(),
+        atom_out.as_mut_ptr(),
+        encoding,
+    ) != 0
+    {
+        Ok(atom_out.assume_init())
+    } else {
+        Err(Error::BadArg)
+    }
+}
+
+#[cfg(feature = "nif_version_2_17")]
+unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
+    let mut len = 0;
+    let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_UTF8);
+    if success == 0 {
+        return Err(Error::BadArg);
+    }
+
+    let mut string = String::with_capacity(len as usize + 1);
+    let bytes = string.as_mut_vec();
+    let nbytes = enif_get_atom(
+        env,
+        term,
+        bytes.as_mut_ptr() as *mut c_char,
+        len + 1,
+        ErlNifCharEncoding::ERL_NIF_UTF8,
+    );
+    assert!(nbytes as c_uint == len + 1);
+
+    bytes.set_len(len as usize);
+
+    Ok(string)
+}
+
+#[cfg(not(feature = "nif_version_2_17"))]
+unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
+    let mut len = 0;
+    let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_LATIN1);
+    if success == 0 {
+        return Err(Error::BadArg);
+    }
+
+    let mut bytes: Vec<u8> = Vec::with_capacity(len as usize + 1);
+    let nbytes = enif_get_atom(
+        env,
+        term,
+        bytes.as_mut_ptr() as *mut c_char,
+        len + 1,
+        ErlNifCharEncoding::ERL_NIF_LATIN1,
+    );
+    assert!(nbytes as c_uint == len + 1);
+
+    bytes.set_len(len as usize);
+
+    let nonascii_count = bytes.iter().filter(|&&b| b >= 128).count();
+    if nonascii_count == 0 {
+        Ok(String::from_utf8_unchecked(bytes))
+    } else {
+        let mut out = String::with_capacity(bytes.len() + nonascii_count);
+        for b in bytes {
+            out.push(b as char);
+        }
+        Ok(out)
+    }
 }

@@ -14,10 +14,7 @@ pub use inventory;
 pub use crate::resource::Registration as ResourceRegistration;
 
 // Names used by the `rustler::init!` macro or other generated code.
-pub use crate::wrapper::{
-    c_char, c_int, c_uint, c_void, get_nif_resource_type_init_size, NIF_MAJOR_VERSION,
-    NIF_MINOR_VERSION,
-};
+pub use crate::sys::{c_char, c_int, c_uint, c_void};
 
 pub use crate::sys::{
     internal_set_symbols, internal_write_symbols, DynNifCallbacks, ErlNifEntry, ErlNifEnv,
@@ -139,19 +136,5 @@ where
                 }
             },
         }
-    }
-}
-
-pub const fn min_erts() -> &'static [u8] {
-    if cfg!(feature = "nif_version_2_18") {
-        b"OTP-29.0\0"
-    } else if cfg!(feature = "nif_version_2_17") {
-        b"OTP-26.0\0"
-    } else if cfg!(feature = "nif_version_2_16") {
-        b"OTP-24.0\0"
-    } else if cfg!(feature = "nif_version_2_15") {
-        b"OTP-22.0\0"
-    } else {
-        b"OTP-21.0\0"
     }
 }

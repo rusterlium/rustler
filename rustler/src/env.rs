@@ -173,7 +173,7 @@ impl<'a> Env<'a> {
     /// [External Term Format](http://erlang.org/doc/apps/erts/erl_ext_dist.html).
     pub fn binary_to_term(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
         unsafe {
-            crate::wrapper::env::binary_to_term(self.as_c_arg(), data, true)
+            binary_to_term(self.as_c_arg(), data, true)
                 .map(|(term, size)| (Term::new(self, term), size))
         }
     }
@@ -181,9 +181,31 @@ impl<'a> Env<'a> {
     /// Like `binary_to_term`, but can only be called on valid
     /// and trusted data.
     pub unsafe fn binary_to_term_trusted(self, data: &[u8]) -> Option<(Term<'a>, usize)> {
-        crate::wrapper::env::binary_to_term(self.as_c_arg(), data, false)
+        binary_to_term(self.as_c_arg(), data, false)
             .map(|(term, size)| (Term::new(self, term), size))
     }
+}
+
+unsafe fn binary_to_term(
+    env: *mut ErlNifEnv,
+    data: &[u8],
+    safe: bool,
+) -> Option<(ErlNifTerm, usize)> {
+    let opts = if safe {
+        crate::sys::ERL_NIF_BIN2TERM_SAFE
+    } else {
+        0
+    };
+
+    let mut result = std::mem::MaybeUninit::uninit();
+    let read_count =
+        crate::sys::enif_binary_to_term(env, data.as_ptr(), data.len(), result.as_mut_ptr(), opts);
+
+    if read_count == 0 {
+        return None;
+    }
+
+    Some((result.assume_init(), read_count))
 }
 
 /// A process-independent environment, a place where Erlang terms can be created outside of a NIF

@@ -1,6 +1,5 @@
 use crate::sys::*;
 use crate::types::binary::OwnedBinary;
-use crate::wrapper::env::term_to_binary;
 use crate::{Binary, Decoder, Env, NifResult};
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
@@ -16,9 +15,50 @@ pub struct Term<'a> {
     env: Env<'a>,
 }
 
+pub(crate) fn fmt(term: ErlNifTerm, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    const SIZE: usize = 1024;
+    let mut bytes: Vec<u8> = Vec::with_capacity(SIZE);
+
+    let mut n = 0;
+    for _ in 0..10 {
+        let i = unsafe {
+            enif_snprintf!(
+                bytes.as_mut_ptr() as *mut c_char,
+                bytes.capacity(),
+                b"%T\x00" as *const u8 as *const c_char,
+                term
+            )
+        };
+        if i < 0 {
+            // Do not propagate an error, because string formatting is
+            // supposed to be infallible.
+            break;
+        }
+
+        n = i as usize;
+        if n >= bytes.capacity() {
+            // Bizarrely, enif_snprintf consistently underestimates the
+            // amount of memory it will need to write long lists. To try to
+            // avoid going around the loop again, double the estimate.
+            bytes.reserve_exact(2 * n + 1);
+
+            // Ensure that the `set_len` call below does not expose
+            // uninitialized bytes if we give up after 10 attempts.
+            n = 0;
+        } else {
+            break;
+        }
+    }
+
+    unsafe {
+        bytes.set_len(n);
+    }
+    f.write_str(&String::from_utf8_lossy(&bytes))
+}
+
 impl Debug for Term<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        crate::wrapper::term::fmt(self.as_c_arg(), f)
+        fmt(self.as_c_arg(), f)
     }
 }
 
@@ -94,7 +134,12 @@ impl<'a> Term<'a> {
 
     #[inline]
     pub fn to_binary(self) -> OwnedBinary {
-        let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
+        let mut binary = std::mem::MaybeUninit::uninit();
+        let success = unsafe {
+            enif_term_to_binary(self.env.as_c_arg(), self.as_c_arg(), binary.as_mut_ptr())
+        };
+        assert_ne!(success, 0, "term_to_binary failed");
+        let raw_binary = unsafe { binary.assume_init() };
         unsafe { OwnedBinary::from_raw(raw_binary) }
     }
 
