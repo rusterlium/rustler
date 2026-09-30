@@ -54,6 +54,31 @@ pub fn map_echo(map: AddMap) -> AddMap {
     map
 }
 
+#[derive(NifMap)]
+#[rustler(optional_decode)]
+pub struct MapWithOptional {
+    x: i32,
+    y: Option<i32>,
+}
+
+#[rustler::nif]
+pub fn map_with_optional_echo(map: MapWithOptional) -> MapWithOptional {
+    map
+}
+
+#[derive(NifMap)]
+pub struct MapWithOptionalField {
+    x: i32,
+    #[rustler(optional_decode)]
+    y: Option<i32>,
+    z: Option<i32>,
+}
+
+#[rustler::nif]
+pub fn map_with_optional_field_echo(map: MapWithOptionalField) -> MapWithOptionalField {
+    map
+}
+
 #[derive(Debug, NifStruct)]
 #[must_use] // Added to test Issue #152
 #[module = "AddStruct"]
