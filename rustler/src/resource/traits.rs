@@ -2,6 +2,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
+use crate::resource::Event;
 use crate::sys::ErlNifResourceType;
 use crate::{Env, LocalPid, Monitor};
 
@@ -30,11 +31,12 @@ pub(crate) unsafe fn register_resource_type(type_id: TypeId, resource_type: NifR
 /// In particular, the type needs to handle all synchronization itself (thus we require it to
 /// implement `Sync`) and callbacks or NIFs can run on arbitrary threads (thus we require `Send`).
 ///
-/// Currently only `destructor` and `down` callbacks are possible. If a callback is implemented,
-/// the respective associated constant `IMPLEMENTS_...` must be set to `true` for the registration
-/// to take it into account. All callbacks provide (empty) default implementations.
+/// If a callback is implemented, the respective associated constant `IMPLEMENTS_...`
+/// must be set to `true` for the registration to take it into account.
+/// All callbacks provide (empty) default implementations.
 pub trait Resource: Sized + Send + Sync + 'static {
     const IMPLEMENTS_DESTRUCTOR: bool = false;
+    const IMPLEMENTS_STOP: bool = false;
     const IMPLEMENTS_DOWN: bool = false;
 
     #[cfg(feature = "nif_version_2_16")]
@@ -48,6 +50,14 @@ pub trait Resource: Sized + Send + Sync + 'static {
     /// requires access to a NIF env, e.g. to send messages.
     #[allow(unused_mut, unused)]
     fn destructor(mut self, env: Env<'_>) {}
+
+    /// The stop callback of a resource.
+    /// It is called on the behalf of [`enif_select()`](crate::sys::enif_select).
+    ///
+    /// - event is the OS event
+    /// - is_direct_call is true if the call is made directly from enif_select or false if it is a scheduled call (potentially from another thread).
+    #[allow(unused_mut, unused)]
+    fn stop<'a>(&'a self, env: Env<'a>, event: Event, direct_call: bool) {}
 
     /// Callback function to handle process monitoring.
     ///
