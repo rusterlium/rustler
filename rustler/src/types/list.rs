@@ -2,12 +2,11 @@
 //!
 //! Right now the only supported way to read lists are through the ListIterator.
 
-use crate::sys::{
-    enif_get_list_cell, enif_get_list_length, enif_make_list_cell, enif_make_list_from_array,
-    enif_make_reverse_list, ErlNifEnv, ErlNifTerm,
-};
+use crate::sys::ErlNifTerm;
+pub(crate) use crate::terms::list::make_list;
+use crate::terms::list::{get_list_cell, make_list_cell};
+use crate::terms::List;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-use std::mem::MaybeUninit;
 
 /// Enables iteration over the items in the list.
 ///
@@ -49,11 +48,16 @@ pub struct ListIterator<'a> {
 impl<'a> ListIterator<'a> {
     fn new(term: Term<'a>) -> Option<Self> {
         if term.is_list() {
-            let iter = ListIterator { term };
+            let iter = unsafe { Self::new_unchecked(term) };
             Some(iter)
         } else {
             None
         }
+    }
+
+    /// `term` must be a list.
+    pub(crate) unsafe fn new_unchecked(term: Term<'a>) -> Self {
+        Self { term }
     }
 }
 
@@ -147,8 +151,7 @@ impl<'a> Term<'a> {
     /// Returns a new empty list.
     #[inline]
     pub fn list_new_empty(env: Env<'a>) -> Term<'a> {
-        let list: &[u8] = &[];
-        list.encode(env)
+        unsafe { List::new_empty(env).to_term(env) }
     }
 
     /// Returns an iterator over a list term.
@@ -157,7 +160,7 @@ impl<'a> Term<'a> {
     /// Returns None if the term is not a list.
     #[inline]
     pub fn into_list_iterator(self) -> NifResult<ListIterator<'a>> {
-        ListIterator::new(self).ok_or(Error::BadArg)
+        Ok(List::from_term(self)?.into_iterator(self.get_env()))
     }
 
     /// Returns the length of a list term.
@@ -170,7 +173,7 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn list_length(self) -> NifResult<usize> {
-        unsafe { get_list_length(self.get_env().as_c_arg(), self.as_c_arg()) }.ok_or(Error::BadArg)
+        List::from_term(self)?.length(self.get_env())
     }
 
     /// Unpacks a single cell at the head of a list term,
@@ -185,12 +188,7 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn list_get_cell(self) -> NifResult<(Term<'a>, Term<'a>)> {
-        let env = self.get_env();
-        unsafe {
-            get_list_cell(env.as_c_arg(), self.as_c_arg())
-                .map(|(t1, t2)| (Term::new(env, t1), Term::new(env, t2)))
-                .ok_or(Error::BadArg)
-        }
+        List::from_term(self)?.get_cell(self.get_env())
     }
 
     /// Makes a copy of the self list term and reverses it.
@@ -199,64 +197,22 @@ impl<'a> Term<'a> {
     #[inline]
     pub fn list_reverse(self) -> NifResult<Term<'a>> {
         let env = self.get_env();
-        unsafe {
-            make_reverse_list(env.as_c_arg(), self.as_c_arg())
-                .map(|t| Term::new(env, t))
-                .ok_or(Error::BadArg)
-        }
+        List::from_term(self)?
+            .reverse(env)
+            .map(|list| unsafe { list.to_term(env) })
     }
 
     /// Adds `head` in a list cell with `self` as tail.
     pub fn list_prepend(self, head: impl Encoder) -> Term<'a> {
         let env = self.get_env();
+        if let Ok(list) = List::from_term(self) {
+            return unsafe { list.prepend(env, head).to_term(env) };
+        }
+        // A Term can be an arbitrary improper tail, unlike a typed List.
         let head = head.encode(env);
         unsafe {
             let term = make_list_cell(env.as_c_arg(), head.as_c_arg(), self.as_c_arg());
             Term::new(env, term)
         }
     }
-}
-
-#[inline]
-unsafe fn get_list_cell(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<(ErlNifTerm, ErlNifTerm)> {
-    let mut head = MaybeUninit::uninit();
-    let mut tail = MaybeUninit::uninit();
-    let success = enif_get_list_cell(env, list, head.as_mut_ptr(), tail.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some((head.assume_init(), tail.assume_init()))
-}
-
-#[inline]
-unsafe fn get_list_length(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<usize> {
-    let mut len: u32 = 0;
-    let success = enif_get_list_length(env, list, &mut len);
-
-    if success != 1 {
-        return None;
-    }
-    Some(len as usize)
-}
-
-#[inline]
-pub(crate) unsafe fn make_list(env: *mut ErlNifEnv, arr: &[ErlNifTerm]) -> ErlNifTerm {
-    enif_make_list_from_array(env, arr.as_ptr(), arr.len() as u32)
-}
-
-#[inline]
-unsafe fn make_list_cell(env: *mut ErlNifEnv, head: ErlNifTerm, tail: ErlNifTerm) -> ErlNifTerm {
-    enif_make_list_cell(env, head, tail)
-}
-
-#[inline]
-unsafe fn make_reverse_list(env: *mut ErlNifEnv, list: ErlNifTerm) -> Option<ErlNifTerm> {
-    let mut list_out = MaybeUninit::uninit();
-    let success = enif_make_reverse_list(env, list, list_out.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(list_out.assume_init())
 }

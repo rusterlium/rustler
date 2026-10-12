@@ -1,17 +1,17 @@
 //! Utilities used to access and create Erlang maps.
 
 use crate::sys::{
-    enif_get_map_size, enif_get_map_value, enif_make_map_from_arrays, enif_make_map_put,
-    enif_make_map_remove, enif_make_map_update, enif_make_new_map, enif_map_iterator_create,
-    enif_map_iterator_destroy, enif_map_iterator_get_pair, enif_map_iterator_next,
-    enif_map_iterator_prev, ErlNifEnv, ErlNifMapIterator, ErlNifMapIteratorEntry, ErlNifTerm,
+    enif_map_iterator_create, enif_map_iterator_destroy, enif_map_iterator_get_pair,
+    enif_map_iterator_next, enif_map_iterator_prev, ErlNifEnv, ErlNifMapIterator,
+    ErlNifMapIteratorEntry, ErlNifTerm,
 };
+use crate::terms::Map;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::mem::MaybeUninit;
 
 #[inline]
 pub fn map_new(env: Env) -> Term {
-    unsafe { Term::new(env, enif_make_new_map(env.as_c_arg())) }
+    unsafe { Map::new(env).to_term(env) }
 }
 
 /// ## Map terms
@@ -41,17 +41,7 @@ impl<'a> Term<'a> {
         keys: &[impl Encoder],
         values: &[impl Encoder],
     ) -> NifResult<Term<'a>> {
-        if keys.len() == values.len() {
-            let keys: Vec<_> = keys.iter().map(|k| k.encode(env).as_c_arg()).collect();
-            let values: Vec<_> = values.iter().map(|v| v.encode(env).as_c_arg()).collect();
-
-            unsafe {
-                make_map_from_arrays(env.as_c_arg(), &keys, &values)
-                    .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
-            }
-        } else {
-            Err(Error::BadArg)
-        }
+        Map::from_arrays(env, keys, values).map(|map| unsafe { map.to_term(env) })
     }
 
     /// Construct a new map from two vectors of terms.
@@ -64,17 +54,7 @@ impl<'a> Term<'a> {
         keys: &[Term<'a>],
         values: &[Term<'a>],
     ) -> NifResult<Term<'a>> {
-        if keys.len() == values.len() {
-            let keys: Vec<_> = keys.iter().map(|k| k.as_c_arg()).collect();
-            let values: Vec<_> = values.iter().map(|v| v.as_c_arg()).collect();
-
-            unsafe {
-                make_map_from_arrays(env.as_c_arg(), &keys, &values)
-                    .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
-            }
-        } else {
-            Err(Error::BadArg)
-        }
+        Map::from_term_arrays(env, keys, values).map(|map| unsafe { map.to_term(env) })
     }
 
     /// Construct a new map from pairs of terms
@@ -92,15 +72,7 @@ impl<'a> Term<'a> {
         env: Env<'a>,
         pairs: &[(impl Encoder, impl Encoder)],
     ) -> NifResult<Term<'a>> {
-        let (keys, values): (Vec<_>, Vec<_>) = pairs
-            .iter()
-            .map(|(k, v)| (k.encode(env).as_c_arg(), v.encode(env).as_c_arg()))
-            .unzip();
-
-        unsafe {
-            make_map_from_arrays(env.as_c_arg(), &keys, &values)
-                .map_or_else(|| Err(Error::BadArg), |map| Ok(Term::new(env, map)))
-        }
+        Map::from_pairs(env, pairs).map(|map| unsafe { map.to_term(env) })
     }
 
     /// Gets the value corresponding to a key in a map term.
@@ -114,12 +86,7 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn map_get(self, key: impl Encoder) -> NifResult<Term<'a>> {
-        let env = self.get_env();
-        match unsafe { get_map_value(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg()) }
-        {
-            Some(value) => Ok(unsafe { Term::new(env, value) }),
-            None => Err(Error::BadArg),
-        }
+        Map::from_term(self)?.get(self.get_env(), key)
     }
 
     /// Gets the size of a map term.
@@ -132,8 +99,7 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn map_size(self) -> NifResult<usize> {
-        let env = self.get_env();
-        unsafe { get_map_size(env.as_c_arg(), self.as_c_arg()).ok_or(Error::BadArg) }
+        Map::from_term(self)?.size(self.get_env())
     }
 
     /// Makes a copy of the self map term and sets key to value.
@@ -149,17 +115,9 @@ impl<'a> Term<'a> {
     pub fn map_put(self, key: impl Encoder, value: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
-        match unsafe {
-            map_put(
-                env.as_c_arg(),
-                self.as_c_arg(),
-                key.encode(env).as_c_arg(),
-                value.encode(env).as_c_arg(),
-            )
-        } {
-            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
-            None => Err(Error::BadArg),
-        }
+        Map::from_term(self)?
+            .put(env, key, value)
+            .map(|map| unsafe { map.to_term(env) })
     }
 
     /// Makes a copy of the self map term and removes key. If the key
@@ -175,10 +133,9 @@ impl<'a> Term<'a> {
     pub fn map_remove(self, key: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
-        match unsafe { map_remove(env.as_c_arg(), self.as_c_arg(), key.encode(env).as_c_arg()) } {
-            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
-            None => Err(Error::BadArg),
-        }
+        Map::from_term(self)?
+            .remove(env, key)
+            .map(|map| unsafe { map.to_term(env) })
     }
 
     /// Makes a copy of the self map term where key is set to value.
@@ -189,17 +146,9 @@ impl<'a> Term<'a> {
     pub fn map_update(self, key: impl Encoder, new_value: impl Encoder) -> NifResult<Term<'a>> {
         let env = self.get_env();
 
-        match unsafe {
-            map_update(
-                env.as_c_arg(),
-                self.as_c_arg(),
-                key.encode(env).as_c_arg(),
-                new_value.encode(env).as_c_arg(),
-            )
-        } {
-            Some(inner) => Ok(unsafe { Term::new(env, inner) }),
-            None => Err(Error::BadArg),
-        }
+        Map::from_term(self)?
+            .update(env, key, new_value)
+            .map(|map| unsafe { map.to_term(env) })
     }
 }
 
@@ -287,24 +236,29 @@ pub struct MapIterator<'a> {
 impl<'a> MapIterator<'a> {
     pub fn new(map: Term<'a>) -> Option<MapIterator<'a>> {
         if map.is_map() {
-            Some(MapIterator {
-                forward: SimpleMapIterator {
-                    map,
-                    entry: MapIteratorEntry::First,
-                    iter: None,
-                    last_key: None,
-                    done: false,
-                },
-                reverse: SimpleMapIterator {
-                    map,
-                    entry: MapIteratorEntry::Last,
-                    iter: None,
-                    last_key: None,
-                    done: false,
-                },
-            })
+            Some(unsafe { Self::new_unchecked(map) })
         } else {
             None
+        }
+    }
+
+    /// `map` must be a map.
+    pub(crate) unsafe fn new_unchecked(map: Term<'a>) -> Self {
+        MapIterator {
+            forward: SimpleMapIterator {
+                map,
+                entry: MapIteratorEntry::First,
+                iter: None,
+                last_key: None,
+                done: false,
+            },
+            reverse: SimpleMapIterator {
+                map,
+                entry: MapIteratorEntry::Last,
+                iter: None,
+                last_key: None,
+                done: false,
+            },
         }
     }
 }
@@ -350,70 +304,6 @@ impl<'a> Decoder<'a> for MapIterator<'a> {
 enum MapIteratorEntry {
     First,
     Last,
-}
-
-unsafe fn get_map_value(
-    env: *mut ErlNifEnv,
-    map: ErlNifTerm,
-    key: ErlNifTerm,
-) -> Option<ErlNifTerm> {
-    let mut result = MaybeUninit::uninit();
-    let success = enif_get_map_value(env, map, key, result.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(result.assume_init())
-}
-
-unsafe fn get_map_size(env: *mut ErlNifEnv, map: ErlNifTerm) -> Option<usize> {
-    let mut size = MaybeUninit::uninit();
-    let success = enif_get_map_size(env, map, size.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(size.assume_init())
-}
-
-unsafe fn map_put(
-    env: *mut ErlNifEnv,
-    map: ErlNifTerm,
-    key: ErlNifTerm,
-    value: ErlNifTerm,
-) -> Option<ErlNifTerm> {
-    let mut result = MaybeUninit::uninit();
-    let success = enif_make_map_put(env, map, key, value, result.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(result.assume_init())
-}
-
-unsafe fn map_remove(env: *mut ErlNifEnv, map: ErlNifTerm, key: ErlNifTerm) -> Option<ErlNifTerm> {
-    let mut result = MaybeUninit::uninit();
-    let success = enif_make_map_remove(env, map, key, result.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(result.assume_init())
-}
-
-unsafe fn map_update(
-    env: *mut ErlNifEnv,
-    map: ErlNifTerm,
-    key: ErlNifTerm,
-    new_value: ErlNifTerm,
-) -> Option<ErlNifTerm> {
-    let mut result = MaybeUninit::uninit();
-    let success = enif_make_map_update(env, map, key, new_value, result.as_mut_ptr());
-
-    if success != 1 {
-        return None;
-    }
-    Some(result.assume_init())
 }
 
 unsafe fn map_iterator_create(
@@ -463,25 +353,4 @@ unsafe fn map_iterator_next(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
 #[inline]
 unsafe fn map_iterator_prev(env: *mut ErlNifEnv, iter: &mut ErlNifMapIterator) {
     enif_map_iterator_prev(env, iter);
-}
-
-#[inline]
-unsafe fn make_map_from_arrays(
-    env: *mut ErlNifEnv,
-    keys: &[ErlNifTerm],
-    values: &[ErlNifTerm],
-) -> Option<ErlNifTerm> {
-    let mut map = MaybeUninit::uninit();
-    if enif_make_map_from_arrays(
-        env,
-        keys.as_ptr(),
-        values.as_ptr(),
-        keys.len(),
-        map.as_mut_ptr(),
-    ) == 0
-    {
-        return None;
-    }
-
-    Some(map.assume_init())
 }
