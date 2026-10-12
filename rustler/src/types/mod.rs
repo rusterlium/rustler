@@ -35,9 +35,6 @@ pub use self::reference::Reference;
 pub mod i128;
 pub mod path;
 
-pub mod truthy;
-
-pub mod elixir_struct;
-
-pub mod erlang_option;
-pub use self::erlang_option::ErlOption;
+pub use crate::elixir::{r#struct as elixir_struct, truthy};
+pub use crate::erlang::option as erlang_option;
+pub use crate::erlang::ErlOption;

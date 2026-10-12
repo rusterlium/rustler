@@ -1,4 +1,4 @@
-use super::atom;
+use crate::types::atom;
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 
 use std::ops::{Deref, DerefMut};

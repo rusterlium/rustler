@@ -212,9 +212,7 @@ impl Term<'_> {
     }
 }
 
-pub fn is_truthy(term: Term) -> bool {
-    !((term.as_c_arg() == false_().as_c_arg()) || (term.as_c_arg() == nil().as_c_arg()))
-}
+pub use crate::elixir::truthy::is_truthy;
 
 pub(in crate::types) fn decode_bool(term: Term) -> NifResult<bool> {
     let as_c_arg = term.as_c_arg();
