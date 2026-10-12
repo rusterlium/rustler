@@ -6,6 +6,34 @@ defmodule RustlerTest.MapTest do
     assert 0 == RustlerTest.sum_map_values(%{})
   end
 
+  test "Term map adapters preserve typed operation results and errors" do
+    map = %{a: ["one"], b: {"two", 2}}
+
+    for {operation, key, value} <- [
+          {"get", :a, nil},
+          {"size", nil, nil},
+          {"put", :c, ["three"]},
+          {"update", :a, ["three"]},
+          {"remove", :a, nil},
+          {"remove", :missing, nil}
+        ] do
+      assert RustlerTest.term_map_operation(operation, map, key, value) ==
+               RustlerTest.typed_map_operation(operation, map, key, value)
+    end
+
+    for operation <- ["get", "size", "put", "remove", "update"] do
+      assert_raise ArgumentError, fn ->
+        RustlerTest.term_map_operation(operation, :not_a_map, :a, 1)
+      end
+    end
+
+    for operation <- ["get", "update"] do
+      assert_raise ArgumentError, fn ->
+        RustlerTest.term_map_operation(operation, map, :missing, nil)
+      end
+    end
+  end
+
   test "map iteration with keys" do
     entries = RustlerTest.map_entries(%{"d" => 0, "a" => 1, "b" => 7, "e" => 4, "c" => 6})
 
