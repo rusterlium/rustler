@@ -1,7 +1,7 @@
 use crate::serde::{atoms, error::Error, util};
 use crate::{
-    types::{Encoder, ListIterator, MapIterator},
-    Term, TermType,
+    types::{ListIterator, MapIterator},
+    Encoder, Term, TermType,
 };
 use serde::{
     de::{

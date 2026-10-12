@@ -15,6 +15,11 @@
 //! This crate provides the entire runtime library for rustler. Code generators are located in the
 //! rustler_codegen library.
 //!
+//! Language-specific helpers live in [`elixir`] and [`erlang`], while shared term types live
+//! in [`types`].
+//! The [`terms`] module provides transparent raw term wrappers, classified by [`FreeTerm`]
+//! and [`BoundTerm`], alongside the existing higher-level APIs.
+//!
 //! # Getting Started
 //! There is a [`:rustler`](https://hex.pm/packages/rustler) package on hex.pm that provides
 //! functionality which makes working with Rustler easier, including project generators, an
@@ -27,17 +32,25 @@
 pub mod codegen_runtime;
 
 mod alloc;
+pub(crate) mod traits;
 pub use crate::alloc::EnifAllocator;
 
 #[macro_use]
 pub mod types;
 
+pub mod elixir;
+pub mod erlang;
+pub mod terms;
+
 mod term;
 
+pub use crate::traits::{BoundTerm, Decoder, Encoder, FreeTerm};
+
+pub use crate::erlang::ErlOption;
 pub use crate::term::Term;
+pub use crate::terms::TypedTerm;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ErlOption, ListIterator, LocalPid, MapIterator, NewBinary,
-    OwnedBinary, Reference,
+    Atom, Binary, ListIterator, LocalPid, MapIterator, NewBinary, OwnedBinary, Reference,
 };
 
 #[cfg(feature = "big_integer")]

@@ -1,25 +1,5 @@
-use crate::sys::{c_int, enif_get_tuple, enif_make_tuple_from_array, ErlNifEnv, ErlNifTerm};
+use crate::terms::tuple::{get_tuple_raw, make_tuple_raw};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
-use std::mem::MaybeUninit;
-
-unsafe fn get_tuple_raw<'a>(
-    env: *mut ErlNifEnv,
-    term: ErlNifTerm,
-) -> Result<&'a [ErlNifTerm], Error> {
-    let mut arity: c_int = 0;
-    let mut array_ptr = MaybeUninit::uninit();
-    let success = enif_get_tuple(env, term, &mut arity, array_ptr.as_mut_ptr());
-    if success != 1 {
-        return Err(Error::BadArg);
-    }
-    let term_array = ::std::slice::from_raw_parts(array_ptr.assume_init(), arity as usize);
-    Ok(term_array)
-}
-
-#[inline]
-unsafe fn make_tuple_raw(env: *mut ErlNifEnv, terms: &[ErlNifTerm]) -> ErlNifTerm {
-    enif_make_tuple_from_array(env, terms.as_ptr(), terms.len() as u32)
-}
 
 /// Convert an Erlang tuple to a Rust vector. (To convert to a Rust tuple, use `term.decode()`
 /// instead.)
@@ -27,23 +7,13 @@ unsafe fn make_tuple_raw(env: *mut ErlNifEnv, terms: &[ErlNifTerm]) -> ErlNifTer
 /// # Errors
 /// `badarg` if `term` is not a tuple.
 pub fn get_tuple(term: Term) -> Result<Vec<Term>, Error> {
-    let env = term.get_env();
-    unsafe {
-        match get_tuple_raw(env.as_c_arg(), term.as_c_arg()) {
-            Ok(terms) => Ok(terms
-                .iter()
-                .map(|x| Term::new(env, *x))
-                .collect::<Vec<Term>>()),
-            Err(_error) => Err(Error::BadArg),
-        }
-    }
+    crate::terms::Tuple::from_term(term)?.get_tuple(term.get_env())
 }
 
 /// Convert a vector of terms to an Erlang tuple. (To convert from a Rust tuple to an Erlang tuple,
 /// use `Encoder` instead.)
 pub fn make_tuple<'a>(env: Env<'a>, terms: &[Term]) -> Term<'a> {
-    let c_terms: Vec<ErlNifTerm> = terms.iter().map(|term| term.as_c_arg()).collect();
-    unsafe { Term::new(env, make_tuple_raw(env.as_c_arg(), &c_terms)) }
+    unsafe { crate::terms::Tuple::make_tuple(env, terms).to_term(env) }
 }
 
 /// Helper macro to emit tuple-like syntax. Wraps its arguments in parentheses, and adds a comma if

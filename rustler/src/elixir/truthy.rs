@@ -11,6 +11,10 @@ use crate::{Decoder, Encoder, Env, NifResult, Term};
 
 pub struct Truthy(bool);
 
+pub fn is_truthy(term: Term) -> bool {
+    !((term.as_c_arg() == atom::false_().as_c_arg()) || (term.as_c_arg() == atom::nil().as_c_arg()))
+}
+
 impl Encoder for Truthy {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
         self.0.encode(env)
@@ -19,6 +23,6 @@ impl Encoder for Truthy {
 
 impl<'a> Decoder<'a> for Truthy {
     fn decode(term: Term<'a>) -> NifResult<Truthy> {
-        Ok(Truthy(atom::is_truthy(term)))
+        Ok(Truthy(is_truthy(term)))
     }
 }
