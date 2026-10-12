@@ -27,6 +27,7 @@
 pub mod codegen_runtime;
 
 mod alloc;
+pub(crate) mod traits;
 pub use crate::alloc::EnifAllocator;
 
 #[macro_use]
@@ -34,10 +35,11 @@ pub mod types;
 
 mod term;
 
+pub use crate::traits::{Decoder, Encoder};
+
 pub use crate::term::Term;
 pub use crate::types::{
-    Atom, Binary, Decoder, Encoder, ErlOption, ListIterator, LocalPid, MapIterator, NewBinary,
-    OwnedBinary, Reference,
+    Atom, Binary, ErlOption, ListIterator, LocalPid, MapIterator, NewBinary, OwnedBinary, Reference,
 };
 
 #[cfg(feature = "big_integer")]
