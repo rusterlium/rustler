@@ -55,6 +55,114 @@ fn add(a: i64, b: i64) -> i64 {
 rustler::init!("Elixir.Math");
 ```
 
+#### Async NIFs
+
+Async NIFs are unstable and require `RUSTFLAGS="--cfg rustler_unstable"`.
+Cooperative NIFs do not require a runtime backend; `#[rustler::task]` uses
+the configured runtime and requires a backend such as `tokio-rt`.
+
+Async NIFs can yield cooperatively without an external executor:
+
+```rust
+#[rustler::nif]
+async fn echo<'a>(
+    env: rustler::Env<'a, rustler::ProcessIndependent>,
+    term: rustler::Term<'a>,
+) -> rustler::Term<'a> {
+    let result = env.encode((term, "echo"));
+    rustler::yield_now().await;
+    result
+}
+```
+
+Arguments are copied into an `OwnedEnv` that survives every yield. The result
+is copied back into the process environment. The suspended future is retained
+in a BEAM resource and dropped if the calling process terminates.
+
+Futures must be `Send`, because `enif_schedule_nif` can resume on another
+scheduler thread. Async environment handles are not copyable; use
+`env.encode(value)` or a temporary `env.as_env()` for existing encoding APIs.
+The environment is process-independent, so it cannot provide the caller's
+pid or send messages from a scheduler thread. Existing synchronous NIFs are
+unchanged.
+
+Cooperative yielding is recognized through an explicit, private poll-local
+signal, not ordinary waker notifications. A future returning `Pending` without
+`yield_now()` or an enabled executor handoff raises
+`async_nif_pending_without_yield`, even if it wakes itself. This is a runtime
+scheduling policy, not a compile-time restriction on all nested futures.
+
+#### External executors
+
+Opt in with `#[rustler::nif(executor)]` and submit owned work using
+`rustler::on_executor(&adapter, future).await`. The adapter implements
+`rustler::Executor`; Rustler itself has no dependency on a particular runtime.
+For example, an adapter for an existing Tokio runtime:
+
+```rust
+struct TokioExecutor(tokio::runtime::Handle);
+
+impl rustler::Executor for TokioExecutor {
+    fn spawn(&self, task: rustler::ExecutorTask) -> Result<(), rustler::ExecutorError> {
+        self.0.spawn(task);
+        Ok(())
+    }
+}
+```
+
+Keep the runtime alive and supply its adapter to the NIF, for example through
+application-owned static state:
+
+```rust
+#[rustler::nif(executor)]
+async fn delayed_echo(text: String) -> rustler::NifResult<String> {
+    let text = rustler::on_executor(executor(), async move {
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        text
+    })
+    .await?;
+    rustler::yield_now().await;
+    Ok(text)
+}
+```
+
+Here `executor()` is your application's accessor for its adapter. External work
+and its output must be `Send + 'static`; copy borrowed input into owned Rust
+values before handing it off. I/O and timers are constructed/polled inside the
+submitted async block, under the external runtime's context. The outer NIF
+future resumes on the BEAM and retains its owned environment throughout.
+
+Enable the matching Elixir wrappers:
+
+```elixir
+use Rustler,
+  otp_app: :my_app,
+  async_nifs: [delayed_echo: 1]
+```
+
+Do not write NIF stubs for functions in `async_nifs`: Rustler generates their
+public wrappers and internal stubs. Use the exported name when the NIF has a
+`name` override. Cooperative-only NIFs do not need these wrappers.
+
+When external work is pending, the wrapper waits for a correlated message,
+without blocking or busy-polling a scheduler, then calls a continuation NIF.
+Completion before the wrapper starts waiting is handled without losing wakeups.
+Unrelated mailbox messages are left untouched, and results and exceptions retain
+their usual public shape.
+
+Process termination drops the outer future and requests cancellation of
+external work. Cancellation wakes the task for cleanup on its executor; it
+cannot interrupt blocking code or an executor that stops polling. Adapter
+rejection, executor shutdown and task panics are reported as `ExecutorError`,
+which can be propagated with `?` from a `NifResult`.
+
+For Erlang callers, implement the same protocol: call
+`'__rustler_async_<name>'/Arity`, unwrap `{rustler_async_done, Result}`, or receive
+`{rustler_async_ready, Ref}` after `{rustler_async_wait, Ref, Resource}` and call
+`'__rustler_async_continue'/1` with that resource. Repeat until complete. The
+continuation belongs to the originating process. Names prefixed
+`__rustler_async_` are reserved for this protocol.
+
 #### Minimal Supported Rust Version (MSRV)
 
 Rustler currently has a minimal supported Rust version (MSRV) of 1.91. This

@@ -1,3 +1,4 @@
+mod test_async;
 mod test_atom;
 mod test_binary;
 mod test_codegen;

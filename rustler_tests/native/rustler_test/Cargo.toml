@@ -25,5 +25,5 @@ nif_version_2_18 = ["nif_version_2_17", "rustler/nif_version_2_18"]
 
 [dependencies]
 rustler = { path = "../../../rustler", features = ["allocator", "async-rt", "tokio-rt"] }
-tokio = { version = "1", features = ["time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "time", "net", "io-util"] }
 futures-core = "0.3"

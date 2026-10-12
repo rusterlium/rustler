@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## Unreleased
+
+### Added
+
+- Cooperative async NIFs using `rustler::yield_now().await`, a persistent owned
+  environment, and BEAM-managed continuation resources.
+- Typed, non-copyable `Env<'a, ProcessIndependent>` handles for async NIFs.
+- Explicit `on_executor` handoff through executor-neutral adapters, with opt-in
+  Elixir `async_nifs` wrappers, external wait notifications and cancellation.
+- Reject unsupported pending futures even when they wake themselves; only
+  explicit cooperative yields or executor waits authorize suspension.
+
 ## 0.39.0 - 2026-10-12
 
 ### Added

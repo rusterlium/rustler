@@ -3,7 +3,7 @@
 /// This approach makes NIF calls appear synchronous to Elixir while yielding internally.
 use crate::codegen_runtime::NifReturned;
 use crate::schedule::SchedulerFlags;
-use crate::wrapper::NIF_TERM;
+use crate::sys::ErlNifTerm;
 use crate::{Encoder, Env, ResourceArc};
 use std::ffi::CString;
 use std::future::Future;
@@ -12,7 +12,7 @@ use std::sync::Mutex;
 use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 
 // Type-erased poll function that takes Env and returns encoded result
-type PollFn = dyn FnMut(&mut Context<'_>, Env) -> Poll<NIF_TERM> + Send;
+type PollFn = dyn FnMut(&mut Context<'_>, Env) -> Poll<ErlNifTerm> + Send;
 
 /// Saved state for a yielding computation
 pub struct YieldingTaskState {
@@ -176,8 +176,8 @@ fn reschedule_continuation(env: Env, state: ResourceArc<YieldingTaskState>) -> N
 unsafe extern "C" fn yielding_continuation_raw(
     env_ptr: *mut crate::sys::ErlNifEnv,
     argc: i32,
-    argv: *const NIF_TERM,
-) -> NIF_TERM {
+    argv: *const ErlNifTerm,
+) -> ErlNifTerm {
     // Create Env from the pointer
     let env = Env::new_internal(&env_ptr, env_ptr, crate::env::EnvKind::Callback);
 
@@ -281,6 +281,7 @@ impl Future for YieldNow {
             Poll::Ready(())
         } else {
             self.yielded = true;
+            crate::async_context::request_yield();
             Poll::Pending
         }
     }

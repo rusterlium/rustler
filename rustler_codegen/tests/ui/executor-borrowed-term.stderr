@@ -1,0 +1,36 @@
+error: async NIFs are an unstable rustler feature; build with `RUSTFLAGS="--cfg rustler_unstable"` to use them
+  --> tests/ui/executor-borrowed-term.rs:11:1
+   |
+11 | #[rustler::nif(executor)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the attribute macro `rustler::nif` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition name: `rustler_unstable`
+  --> tests/ui/executor-borrowed-term.rs:11:1
+   |
+11 | #[rustler::nif(executor)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: expected names are: `docsrs`, `feature`, and `test` and 32 more
+   = note: using a cfg inside a attribute macro will use the cfgs from the destination crate and not the ones from the defining crate
+   = help: try referring to `rustler::nif` crate for guidance on how handle this unexpected cfg
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+   = note: this warning originates in the attribute macro `rustler::nif` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0521]: borrowed data escapes outside of function
+  --> tests/ui/executor-borrowed-term.rs:13:8
+   |
+12 |   async fn borrowed<'a>(term: Term<'a>) -> NifResult<usize> {
+   |                     --  ---- `term` is a reference that is only valid in the function body
+   |                     |
+   |                     lifetime `'a` defined here
+13 |       Ok(rustler::on_executor(&Adapter, async move {
+   |  ________^
+14 | |         term.decode::<usize>().unwrap()
+15 | |     })
+   | |      ^
+   | |      |
+   | |______`term` escapes the function body here
+   |        argument requires that `'a` must outlive `'static`

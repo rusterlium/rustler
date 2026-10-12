@@ -58,6 +58,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
             let nif_funcs: Box<[_]> =
                 rustler::codegen_runtime::inventory::iter::<rustler::Nif>()
                 .map(rustler::Nif::get_def)
+                .chain(rustler::codegen_runtime::async_nif_function().map(|nif| nif.get_def()))
                 .collect();
 
             let load = {
@@ -71,6 +72,10 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                         let load_info = rustler::Term::new(env, load_info);
 
                         if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
+                            return 1;
+                        }
+
+                        if rustler::codegen_runtime::register_async_nif(env).is_err() {
                             return 1;
                         }
 

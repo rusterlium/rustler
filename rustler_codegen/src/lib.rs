@@ -72,6 +72,45 @@ pub fn init(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
+/// Async NIFs are unstable and require `RUSTFLAGS="--cfg rustler_unstable"`.
+/// Async functions can cooperatively yield to the BEAM using
+/// [`rustler::yield_now`](https://docs.rs/rustler/latest/rustler/fn.yield_now.html).
+/// Their arguments are copied into an owned environment retained for the entire
+/// future, and their result is copied back to the calling process.
+///
+/// ```ignore
+/// #[rustler::nif]
+/// async fn echo<'a>(
+///     env: rustler::Env<'a, rustler::ProcessIndependent>,
+///     term: rustler::Term<'a>,
+/// ) -> rustler::Term<'a> {
+///     let result = env.encode((term, "echo"));
+///     rustler::yield_now().await;
+///     result
+/// }
+/// ```
+///
+/// Async futures must be `Send`, since resumption can occur on another scheduler
+/// thread. The typed environment is not copyable; use `env.encode(value)` or
+/// temporarily use `env.as_env()` with existing encoding APIs. Process-bound
+/// operations such as obtaining the calling pid are unavailable. Synchronous
+/// NIFs retain their existing environment behavior.
+///
+/// Ordinary wakeups do not count as yielding. A pending future must explicitly
+/// yield or wait through `rustler::on_executor`; otherwise the call raises
+/// `async_nif_pending_without_yield`.
+///
+/// External I/O and timers require `#[rustler::nif(executor)]`, an adapter
+/// implementing `rustler::Executor`, and an Erlang-side wait wrapper. In Elixir,
+/// `use Rustler, otp_app: :my_app, async_nifs: [my_function: 1]` generates that
+/// wrapper and its internal NIF stubs. Do not define the public stub yourself.
+/// Executor-enabled functions are exported internally with a
+/// `__rustler_async_` prefix, and share `__rustler_async_continue/1`.
+///
+/// `rustler::on_executor(&adapter, async move { ... }).await` submits a
+/// `Send + 'static` future and returns its owned, `Send + 'static` output.
+/// The outer NIF future retains its environment and resumes on the BEAM.
+///
 /// For functions that may take some time to return - let's say more than 1 millisecond - it is
 /// recommended to use the `schedule` flag. This tells the BEAM to allocate that NIF call
 /// to a special scheduler. These special schedulers are called "dirty" schedulers.

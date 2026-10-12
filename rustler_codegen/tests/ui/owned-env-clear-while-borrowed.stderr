@@ -1,0 +1,10 @@
+error[E0499]: cannot borrow `owned` as mutable more than once at a time
+ --> tests/ui/owned-env-clear-while-borrowed.rs:5:5
+  |
+3 |     let env = owned.borrow();
+  |               ----- first mutable borrow occurs here
+4 |     let term = env.encode("borrowed");
+5 |     owned.clear();
+  |     ^^^^^ second mutable borrow occurs here
+6 |     let _ = term.decode::<String>();
+  |             ---- first borrow later used here
