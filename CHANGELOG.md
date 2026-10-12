@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## 0.39.0 - 2026-10-12
+
+### Added
+
+- Hashing for `localPid` (#756)
+- Implement `From<&[u8]>` for `Binary` (#757, thanks @hauleth)
+
+### Fixed
+
+- Windows callback-table order for `enif_set/is_pid_undefined` (#748, thanks
+  @ldgabbay)
+- Catch and unwind panics in resource callbacks (#747)
+- Enforce `panic = "unwind"` at build time (#747)
+
+### Changed
+
+- Generate `rustler::sys` directly from the upstream header (#749)
+- Change `hash_internal` to return `u64` (#758, thanks @rkalios)
+- Implement `ERL_NIF_TERM` as newtype (#766)
+- Use `NewBinary` for string encoding (#760)
+- Handle allocation errors in the same way for all types (#761)
+
+### Removed
+
+- Unnecessary internal type aliases (#766)
+- `rustler::wrapper` and the semi high-level it contained (#768)
+
 ## 0.38.0 - 2026-05-25
 
 ### Added

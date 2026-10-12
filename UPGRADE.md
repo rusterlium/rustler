@@ -1,14 +1,11 @@
 # Upgrade
 
-This document is intended to simplify upgrading to newer versions by extending the changelog.
+This document is intended to simplify upgrading to newer versions by extending
+the changelog.
 
-## 0.37 -> 0.38
+## 0.38 -> 0.39
 
-1. The following deprecated codegen features have been dropped:
-   - `resource!` macro, please use `resource_impl`
-   - Explicit NIF function listing in `init!`, please remove the list
-
-2. The following methods are now infallible, returning the result directly
+1. The following methods are now infallible, returning the result directly
    instead of an `Option` or `Result` that would require matching or handling:
 
    - `OwnedBinary::new`
@@ -18,6 +15,17 @@ This document is intended to simplify upgrading to newer versions by extending t
    Instead, allocation errors will now call `std::alloc::handle_alloc_error`.
    This is the same behaviour that the Rust standard library applies (e.g. for
    `Vec`) and in line with other allocating functions in `rustler`.
+
+2. `rustler::wrapper` has been removed without replacement. For low-level access
+   to the NIF API functions, please use the unsafe wrappers from `rustler::sys`
+   directly. Safe wrappers are provided in the `rustler` API.
+
+## 0.37 -> 0.38
+
+The following deprecated codegen features have been dropped:
+
+- `resource!` macro, please use `resource_impl`
+- Explicit NIF function listing in `init!`, please remove the list
 
 ## 0.34 -> 0.35
 
