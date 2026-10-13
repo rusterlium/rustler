@@ -7,8 +7,8 @@
 //! `#[derive(NifStruct)]
 //! `#[module = "Elixir.TheStructModule"]`.
 
-use super::atom::{self, Atom};
-use super::map::map_new;
+use crate::types::atom::{self, Atom};
+use crate::types::map::map_new;
 use crate::{Env, NifResult, Term};
 
 pub fn get_ex_struct_name(map: Term) -> NifResult<Atom> {

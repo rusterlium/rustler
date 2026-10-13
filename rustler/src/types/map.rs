@@ -1,6 +1,5 @@
 //! Utilities used to access and create Erlang maps.
 
-use super::atom;
 use crate::sys::{
     enif_get_map_size, enif_get_map_value, enif_make_map_from_arrays, enif_make_map_put,
     enif_make_map_remove, enif_make_map_update, enif_make_new_map, enif_map_iterator_create,
@@ -9,7 +8,6 @@ use crate::sys::{
 };
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
 use std::mem::MaybeUninit;
-use std::ops::RangeInclusive;
 
 #[inline]
 pub fn map_new(env: Env) -> Term {
@@ -345,31 +343,6 @@ impl<'a> Decoder<'a> for MapIterator<'a> {
             Some(iter) => Ok(iter),
             None => Err(Error::BadArg),
         }
-    }
-}
-
-impl<'a, T> Decoder<'a> for RangeInclusive<T>
-where
-    T: Decoder<'a>,
-{
-    fn decode(term: Term<'a>) -> NifResult<Self> {
-        let name = term.map_get(atom::__struct__())?;
-
-        match name.atom_to_string()?.as_ref() {
-            "Elixir.Range" => (),
-            _ => return Err(Error::BadArg),
-        }
-
-        let first = term.map_get(atom::first())?.decode::<T>()?;
-        let last = term.map_get(atom::last())?.decode::<T>()?;
-        if let Ok(step) = term.map_get(atom::step()) {
-            match step.decode::<i64>()? {
-                1 => (),
-                _ => return Err(Error::BadArg),
-            }
-        }
-
-        Ok(first..=last)
     }
 }
 
