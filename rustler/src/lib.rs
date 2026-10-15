@@ -76,6 +76,15 @@ pub use crate::r#return::Return;
 mod nif;
 pub use nif::Nif;
 
+/// Conventional result type for NIFs and other fallible operations.
+///
+/// When used as the return type of a NIF, `NifResult<T>` is NIF control flow,
+/// handled via `NifReturnable` rather than encoded as a normal `Result<T, E>`
+/// value: `Ok(value)` returns `value` directly, while `Err(err)` raises or
+/// returns the error term described by [`Error`].
+///
+/// To return `{:ok, value} | {:error, reason}` tuples to Elixir, return a
+/// plain `Result<T, E: Encoder>` (or encode the tuples explicitly) instead.
 pub type NifResult<T> = Result<T, Error>;
 
 #[macro_export]
