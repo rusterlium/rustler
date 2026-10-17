@@ -11,7 +11,7 @@ rust-version = "1.91"
 
 [features]
 big_integer = ["dep:num-bigint"]
-default = ["nif_version_2_15"]
+default = ["nif_version_2_17"]
 derive = []
 allocator = []
 serde = ["dep:serde"]

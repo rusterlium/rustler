@@ -3,6 +3,16 @@
 This document is intended to simplify upgrading to newer versions by extending
 the changelog.
 
+## 0.39 -> 0.40
+
+The default NIF API version is raised to 2.17 (Erlang/OTP 26). To target an
+older OTP version, disable default features and explicitly enable the
+required NIF version in your `Cargo.toml`, for example:
+
+```toml
+rustler = { version = "0.40", default-features = false, features = ["nif_version_2_15"] }
+```
+
 ## 0.38 -> 0.39
 
 1. The following methods are now infallible, returning the result directly
