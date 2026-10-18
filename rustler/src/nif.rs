@@ -2,6 +2,7 @@ use crate::sys::{c_char, c_int, c_uint, ErlNifEnv, ErlNifFunc, ErlNifTerm};
 
 pub struct Nif {
     pub name: *const c_char,
+    pub signature: &'static str,
     pub arity: c_uint,
     pub flags: c_uint,
     // pub func: DEF_NIF_FUNC,

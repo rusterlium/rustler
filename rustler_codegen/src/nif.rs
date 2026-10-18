@@ -5,6 +5,7 @@ use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::LitStr;
 
+const RUSTLER_TAG: &str = "?RUSTLER-NIF-SIG-V1";
 const VALID_SCHEDULE_OPTIONS: [&str; 3] = ["Normal", "DirtyCpu", "DirtyIo"];
 
 #[derive(Default)]
@@ -53,11 +54,14 @@ pub fn transcoder_decorator(nif_attributes: NifAttributes, fun: syn::ItemFn) -> 
         panic!("Only non-Control ASCII strings are supported as function names");
     }
 
+    let signature_s = format!("<{RUSTLER_TAG}>{erl_func_name}/{arity}</{RUSTLER_TAG}>");
+
     quote! {
         rustler::codegen_runtime::inventory::submit!(
             rustler::Nif {
                 name: concat!(#erl_func_name, "\0").as_ptr()
                     as *const rustler::codegen_runtime::c_char,
+                signature: #signature_s,
                 arity: #arity,
                 flags: #flags as rustler::codegen_runtime::c_uint,
                 raw_func: {
