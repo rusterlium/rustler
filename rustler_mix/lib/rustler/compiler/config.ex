@@ -25,6 +25,7 @@ defmodule Rustler.Compiler.Config do
             mode: :release,
             otp_app: nil,
             path: "",
+            signatures: [],
             skip_compilation?: false,
             target: nil,
             metadata: nil

@@ -101,6 +101,9 @@ defmodule Rustler do
         @external_resource resource
       end
 
+      @rustler_signatures config.signatures
+      @external_resource Rustler.Compiler.signature_file(config)
+
       if config.lib do
         @load_from config.load_from
         @load_data config.load_data
@@ -145,7 +148,21 @@ defmodule Rustler do
           """
       end
 
+    stubs =
+      for {name, arity} <- Module.get_attribute(env.module, :rustler_signatures) || [],
+          fun = String.to_atom(name),
+          not Module.defines?(env.module, {fun, arity}) do
+        args = Macro.generate_arguments(arity, env.module)
+
+        quote do
+          @doc false
+          def unquote(fun)(unquote_splicing(args)), do: :erlang.nif_error(:nif_not_loaded)
+        end
+      end
+
     quote do
+      unquote_splicing(stubs)
+
       @on_load :rustler_init
 
       @doc false
