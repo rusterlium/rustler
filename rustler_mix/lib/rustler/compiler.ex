@@ -32,7 +32,31 @@ defmodule Rustler.Compiler do
       end
     end
 
-    config
+    %{config | signatures: read_signatures(config)}
+  end
+
+  @doc false
+  def signature_file(config) do
+    if config.skip_compilation? do
+      {otp_app, path} = config.load_from
+      :rustler.signature_path(Application.app_dir(otp_app, path))
+    else
+      :rustler.signature_path(
+        Path.join(priv_dir(), output_file(config.crate, :lib, config.target))
+      )
+    end
+  end
+
+  defp read_signatures(config) do
+    if config.lib do
+      case :rustler.read_signatures(signature_file(config)) do
+        {:ok, signatures} -> signatures
+        {:error, :enoent} -> []
+        {:error, reason} -> raise "Failed to read Rustler signatures: #{inspect(reason)}"
+      end
+    else
+      []
+    end
   end
 
   defp do_compile(config, recompile \\ false) do
@@ -155,6 +179,19 @@ defmodule Rustler.Compiler do
         Mix.shell().info("Copying #{artifact.filename} to #{destination_lib}")
         File.rm(destination_lib)
         File.cp!(artifact.filename, destination_lib)
+
+        if artifact.kind == :lib do
+          case :rustler.write_signatures(
+                 destination_lib,
+                 :rustler.signature_path(destination_lib)
+               ) do
+            :ok ->
+              :ok
+
+            {:error, reason} ->
+              raise "Failed to write Rustler signatures: #{inspect(reason)}"
+          end
+        end
       end
     end)
   end
