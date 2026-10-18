@@ -42,18 +42,64 @@ use std::mem::MaybeUninit;
 /// # result
 /// # }
 /// ```
-pub struct ListIterator<'a> {
-    term: Term<'a>,
+pub enum ListIterator<'a> {
+    EmptyList {
+        term: Term<'a>,
+    },
+    ImproperTail {
+        term: Term<'a>,
+    },
+    ListCell {
+        cell: Term<'a>,
+        head: Term<'a>,
+        tail: Term<'a>,
+    },
 }
 
 impl<'a> ListIterator<'a> {
-    fn new(term: Term<'a>) -> Option<Self> {
-        if term.is_list() {
-            let iter = ListIterator { term };
-            Some(iter)
+    pub fn new(term: Term<'a>) -> Result<Self, Error> {
+        if let Some((head, tail)) = get_list_cell(term) {
+            let cell = term;
+            Ok(ListIterator::ListCell { cell, head, tail })
+        } else if term.is_empty_list() {
+            Ok(ListIterator::EmptyList { term })
         } else {
-            None
+            Err(Error::BadArg)
         }
+    }
+
+    pub fn is_finished(&self) -> bool {
+        matches!(
+            self,
+            ListIterator::EmptyList { .. } | ListIterator::ImproperTail { .. }
+        )
+    }
+
+    pub fn is_empty(&self) -> bool {
+        matches!(self, ListIterator::EmptyList { .. })
+    }
+
+    pub fn head(&self) -> Option<Term<'a>> {
+        match self {
+            ListIterator::ListCell { head, .. } => Some(*head),
+            _ => None,
+        }
+    }
+
+    pub fn tail(&self) -> Option<Term<'a>> {
+        match self {
+            ListIterator::ListCell { tail, .. } => Some(*tail),
+            _ => None,
+        }
+    }
+}
+
+#[inline]
+fn get_list_cell<'a>(term: Term<'a>) -> Option<(Term<'a>, Term<'a>)> {
+    let env = term.get_env();
+    unsafe {
+        list::get_list_cell(env.as_c_arg(), term.as_c_arg())
+            .map(|(head, tail)| (Term::new(env, head), Term::new(env, tail)))
     }
 }
 
@@ -62,21 +108,18 @@ impl<'a> Iterator for ListIterator<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<Term<'a>> {
-        let env = self.term.get_env();
-        let cell = unsafe { get_list_cell(env.as_c_arg(), self.term.as_c_arg()) };
-
-        match cell {
-            Some((head, tail)) => unsafe {
-                self.term = Term::new(self.term.get_env(), tail);
-                Some(Term::new(self.term.get_env(), head))
-            },
-            None => {
-                if self.term.is_empty_list() {
-                    // We reached the end of the list, finish the iterator.
-                    None
+        match self {
+            ListIterator::EmptyList { .. } => None,
+            ListIterator::ImproperTail { .. } => None,
+            ListIterator::ListCell { head, tail, .. } => {
+                let result = Some(*head);
+                if let Some((next_head, next_tail)) = get_list_cell(*tail) {
+                    *head = next_head;
+                    *tail = next_tail;
                 } else {
-                    panic!("list iterator found improper list")
+                    *self = ListIterator::ImproperTail { term: *tail };
                 }
+                result
             }
         }
     }
@@ -85,10 +128,7 @@ impl<'a> Iterator for ListIterator<'a> {
 impl<'a> Decoder<'a> for ListIterator<'a> {
     #[inline]
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        match ListIterator::new(term) {
-            Some(iter) => Ok(iter),
-            None => Err(Error::BadArg),
-        }
+        ListIterator::new(term)
     }
 }
 
@@ -157,7 +197,7 @@ impl<'a> Term<'a> {
     /// Returns None if the term is not a list.
     #[inline]
     pub fn into_list_iterator(self) -> NifResult<ListIterator<'a>> {
-        ListIterator::new(self).ok_or(Error::BadArg)
+        ListIterator::new(self)
     }
 
     /// Returns the length of a list term.
@@ -185,12 +225,16 @@ impl<'a> Term<'a> {
     /// ```
     #[inline]
     pub fn list_get_cell(self) -> NifResult<(Term<'a>, Term<'a>)> {
+<<<<<<< HEAD
         let env = self.get_env();
         unsafe {
             get_list_cell(env.as_c_arg(), self.as_c_arg())
                 .map(|(t1, t2)| (Term::new(env, t1), Term::new(env, t2)))
                 .ok_or(Error::BadArg)
         }
+=======
+        get_list_cell(self).ok_or(Error::BadArg)
+>>>>>>> 3ac41a0 (Rework ListIterator)
     }
 
     /// Makes a copy of the self list term and reverses it.
