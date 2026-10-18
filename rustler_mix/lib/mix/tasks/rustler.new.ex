@@ -218,23 +218,8 @@ defmodule Mix.Tasks.Rustler.New do
   end
 
   defp get_versions(data) do
-    cond do
-      # Erlang 27
-      Code.ensure_loaded?(:json) and Kernel.function_exported?(:json, :decode, 1) ->
-        data |> :json.decode() |> versions_from_parsed_json()
-
-      Code.ensure_loaded?(Jason) ->
-        data |> Jason.decode!() |> versions_from_parsed_json()
-
-      true ->
-        # Nasty hack: Instead of parsing the JSON, we use a regex, abusing the
-        # compact nature of the returned data
-        Regex.scan(~r/"num":"([^"]+)"/, data) |> Enum.map(fn [_, res] -> res end)
-    end
-  end
-
-  defp versions_from_parsed_json(parsed) do
-    parsed
+    data
+    |> JSON.decode!()
     |> Map.fetch!("versions")
     |> Enum.filter(fn version -> not version["yanked"] end)
     |> Enum.map(fn version -> version["num"] end)
