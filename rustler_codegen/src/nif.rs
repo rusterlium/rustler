@@ -11,6 +11,7 @@ const VALID_SCHEDULE_OPTIONS: [&str; 3] = ["Normal", "DirtyCpu", "DirtyIo"];
 pub struct NifAttributes {
     schedule: Option<LitStr>,
     custom_name: Option<LitStr>,
+    executor: bool,
 }
 
 impl NifAttributes {
@@ -29,8 +30,12 @@ impl NifAttributes {
         } else if meta.path.is_ident("name") {
             self.custom_name = Some(meta.value()?.parse()?);
             Ok(())
+        } else if meta.path.is_ident("executor") {
+            self.executor = true;
+            Ok(())
         } else {
-            Err(meta.error("Unsupported nif macro attribute. Expecting schedule or name."))
+            Err(meta
+                .error("Unsupported nif macro attribute. Expecting schedule, name or executor."))
         }
     }
 }
@@ -44,6 +49,10 @@ pub fn transcoder_decorator(
     let name = &sig.ident;
     let inputs = &sig.inputs;
     let is_async = sig.asyncness.is_some();
+    let executor = nif_attributes.executor;
+    if executor && !is_async {
+        return syn::Error::new_spanned(sig, "executor requires an async NIF").to_compile_error();
+    }
 
     let flags = schedule_flag(nif_attributes.schedule);
     let function = fun.to_owned().into_token_stream();
@@ -56,69 +65,97 @@ pub fn transcoder_decorator(
         panic!("Only non-Control ASCII strings are supported as function names");
     }
 
-    if is_async {
-        // Async NIFs are an unstable feature. They are only available when the
-        // consuming crate is built with the `rustler_unstable` cfg flag set (e.g.
-        // `RUSTFLAGS="--cfg rustler_unstable"`) alongside a runtime backend feature
-        // such as `tokio-rt`. Emit a clear error rather than a cryptic missing-symbol
-        // error when the flag is absent.
-        let unstable_guard = quote! {
+    let unstable_guard = is_async.then(|| {
+        quote! {
             #[cfg(not(rustler_unstable))]
             const _: () = compile_error!(
                 "async NIFs are an unstable rustler feature; build with \
-                 `RUSTFLAGS=\"--cfg rustler_unstable\"` and enable a runtime backend \
-                 feature (e.g. `tokio-rt`) to use them"
+                 `RUSTFLAGS=\"--cfg rustler_unstable\"` to use them"
             );
-        };
+        }
+    });
 
-        let generated = if is_task {
-            // #[rustler::task] - message-based async NIF
-            generate_task(
-                erl_func_name,
-                name,
-                flags,
-                arity,
-                function,
-                inputs.clone(),
-                &sig.output,
-            )
-        } else {
-            // #[rustler::nif] async - cooperative yielding NIF
-            generate_yielding_nif(
-                erl_func_name,
-                name,
-                flags,
-                arity,
-                function,
-                inputs.clone(),
-                &sig.output,
-            )
-        };
-
-        quote! {
+    if is_task {
+        let generated = generate_task(
+            erl_func_name,
+            name,
+            flags,
+            arity,
+            function,
+            inputs.clone(),
+            &sig.output,
+        );
+        return quote! {
             #unstable_guard
             #generated
+        };
+    }
+
+    let decoded_terms = extract_inputs(inputs.clone());
+    let argument_names = create_function_params(inputs.clone());
+    let raw_func_name = if executor {
+        format!("__rustler_async_{erl_func_name}")
+    } else {
+        erl_func_name.clone()
+    };
+
+    let wrapper = if sig.asyncness.is_some() {
+        quote! {
+            fn factory<'a>(
+                env: rustler::Env<'a, rustler::ProcessIndependent>,
+                args: Vec<rustler::Term<'a>>
+            ) -> rustler::codegen_runtime::AsyncNifFuture<'a> {
+                let result_env = rustler::types::atom::nil().to_term(env.as_env());
+                Box::pin(async move {
+                    let result: Result<_, rustler::Error> = async {
+                        #decoded_terms
+                        #function
+                        Ok(#name(#argument_names).await)
+                    }.await;
+                    rustler::codegen_runtime::handle_nif_result(
+                        Ok(result), result_env.get_env()
+                    )
+                })
+            }
+            rustler::codegen_runtime::start_async_nif(
+                env, &terms, #erl_func_name, #flags, #executor, factory
+            ).apply(env)
         }
     } else {
-        generate_nif(erl_func_name, name, flags, arity, function, inputs.clone())
-    }
-}
+        quote! {
+            fn wrapper<'a>(
+                env: rustler::Env<'a>,
+                args: &[rustler::Term<'a>]
+            ) -> rustler::codegen_runtime::NifReturned {
+                let result: std::thread::Result<_> =
+                    std::panic::catch_unwind(move || {
+                        #decoded_terms
+                        #function
+                        Ok(#name(#argument_names))
+                    });
 
-fn generate_nif(
-    erl_func_name: String,
-    name: &syn::Ident,
-    flags: TokenStream,
-    arity: u32,
-    function: TokenStream,
-    inputs: Punctuated<syn::FnArg, Comma>,
-) -> TokenStream {
-    let decoded_terms = extract_inputs(inputs.clone());
-    let argument_names = create_function_params(inputs);
+                rustler::codegen_runtime::handle_nif_result(
+                    result, env
+                )
+            }
+            wrapper(env, &terms).apply(env)
+        }
+    };
+
+    let registration = sig.asyncness.as_ref().map(|_| {
+        quote! {
+            rustler::codegen_runtime::inventory::submit!(
+                rustler::codegen_runtime::AsyncNifRegistration { executor: #executor }
+            );
+        }
+    });
 
     quote! {
+        #unstable_guard
+        #registration
         rustler::codegen_runtime::inventory::submit!(
             rustler::Nif {
-                name: concat!(#erl_func_name, "\0").as_ptr()
+                name: concat!(#raw_func_name, "\0").as_ptr()
                     as *const rustler::codegen_runtime::c_char,
                 arity: #arity,
                 flags: #flags as rustler::codegen_runtime::c_uint,
@@ -136,22 +173,7 @@ fn generate_nif(
                             .map(|term| rustler::Term::new(env, *term))
                             .collect::<Vec<rustler::Term>>();
 
-                        fn wrapper<'a>(
-                            env: rustler::Env<'a>,
-                            args: &[rustler::Term<'a>]
-                        ) -> rustler::codegen_runtime::NifReturned {
-                            let result: std::thread::Result<_> =
-                                std::panic::catch_unwind(move || {
-                                    #decoded_terms
-                                    #function
-                                    Ok(#name(#argument_names))
-                                });
-
-                            rustler::codegen_runtime::handle_nif_result(
-                                result, env
-                            )
-                        }
-                        wrapper(env, &terms).apply(env)
+                        #wrapper
                     }
                     nif_func
                 }
@@ -240,10 +262,10 @@ fn generate_task(
                 flags: #flags as rustler::codegen_runtime::c_uint,
                 raw_func: {
                     unsafe extern "C" fn nif_func(
-                        nif_env: rustler::codegen_runtime::NIF_ENV,
+                        nif_env: *mut rustler::sys::ErlNifEnv,
                         argc: rustler::codegen_runtime::c_int,
-                        argv: *const rustler::codegen_runtime::NIF_TERM
-                    ) -> rustler::codegen_runtime::NIF_TERM {
+                        argv: *const rustler::sys::ErlNifTerm
+                    ) -> rustler::sys::ErlNifTerm {
                         let lifetime = ();
                         let env = rustler::Env::new(&lifetime, nif_env);
 
@@ -284,73 +306,6 @@ fn generate_task(
                             rustler::codegen_runtime::NifReturned::Term(
                                 channel_sender.encode(env).as_c_arg()
                             )
-                        }
-                        wrapper(env, &terms).apply(env)
-                    }
-                    nif_func
-                }
-            }
-        );
-    }
-}
-
-fn generate_yielding_nif(
-    erl_func_name: String,
-    name: &syn::Ident,
-    flags: TokenStream,
-    arity: u32,
-    function: TokenStream,
-    inputs: Punctuated<syn::FnArg, Comma>,
-    return_type: &syn::ReturnType,
-) -> TokenStream {
-    // Extract inputs for async functions (similar to generate_task)
-    let decoded_terms = extract_inputs_for_async(inputs.clone(), return_type);
-    let argument_names = create_function_params(inputs);
-
-    quote! {
-        // Define the original async function at module level
-        #function
-
-        // Submit the NIF wrapper to inventory
-        rustler::codegen_runtime::inventory::submit!(
-            rustler::Nif {
-                name: concat!(#erl_func_name, "\0").as_ptr()
-                    as *const rustler::codegen_runtime::c_char,
-                arity: #arity,
-                flags: #flags as rustler::codegen_runtime::c_uint,
-                raw_func: {
-                    unsafe extern "C" fn nif_func(
-                        nif_env: rustler::codegen_runtime::NIF_ENV,
-                        argc: rustler::codegen_runtime::c_int,
-                        argv: *const rustler::codegen_runtime::NIF_TERM
-                    ) -> rustler::codegen_runtime::NIF_TERM {
-                        let lifetime = ();
-                        let env = rustler::Env::new(&lifetime, nif_env);
-
-                        let terms = std::slice::from_raw_parts(argv, argc as usize)
-                            .iter()
-                            .map(|term| rustler::Term::new(env, *term))
-                            .collect::<Vec<rustler::Term>>();
-
-                        fn wrapper<'a>(
-                            env: rustler::Env<'a>,
-                            args: &[rustler::Term<'a>]
-                        ) -> rustler::codegen_runtime::NifReturned {
-                            let result: std::thread::Result<_> =
-                                std::panic::catch_unwind(move || {
-                                    // Decode all arguments before creating the future
-                                    #decoded_terms
-
-                                    // Call yielding_nif_run with the async function call
-                                    rustler::runtime::yielding_nif_run(env, async move {
-                                        #name(#argument_names).await
-                                    })
-                                });
-
-                            match result {
-                                Ok(nif_returned) => nif_returned,
-                                Err(_) => rustler::codegen_runtime::NifReturned::BadArg,
-                            }
                         }
                         wrapper(env, &terms).apply(env)
                     }

@@ -19,6 +19,16 @@ defmodule RustlerTest do
   use Rustler,
     otp_app: :rustler_test,
     crate: :rustler_test,
+    async_nifs: [
+      async_executor_echo: 2,
+      async_executor_identity: 1,
+      async_executor_immediate: 1,
+      async_executor_io: 1,
+      async_executor_error: 1,
+      async_executor_pending: 0,
+      async_executor_sleep: 1,
+      async_executor_forever: 1
+    ],
     features: [Helper.nif_feature_from_running_version()]
 
   defp err, do: :erlang.nif_error(:nif_not_loaded)
@@ -160,6 +170,21 @@ defmodule RustlerTest do
 
   def dirty_io(), do: err()
   def dirty_cpu(), do: err()
+
+  def async_echo(_, _), do: err()
+  def async_borrowed(_), do: err()
+  def async_immediate(_), do: err()
+  def async_dirty(_), do: err()
+  def async_error(_), do: err()
+  def async_panic(_), do: err()
+  def async_pending(), do: err()
+  def async_self_waking(), do: err()
+  def async_unwrapped_executor(), do: err()
+  def async_drop_panic(_), do: err()
+  def async_tracker(), do: err()
+  def async_tracker_state(_), do: err()
+  def async_forever(_), do: err()
+  def async_external_dropped(_), do: err()
 
   def sum_range(_), do: err()
 

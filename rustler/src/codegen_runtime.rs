@@ -7,6 +7,12 @@ use crate::sys::{enif_make_badarg, enif_raise_exception, enif_schedule_nif};
 use crate::types::atom;
 use crate::{Encoder, Env, OwnedBinary, Term};
 
+mod async_nif;
+pub use async_nif::{
+    async_nif_function, register_async_nif, start_async_nif, AsyncNifFactory, AsyncNifFuture,
+    AsyncNifRegistration,
+};
+
 // Re-export of inventory
 pub use inventory;
 

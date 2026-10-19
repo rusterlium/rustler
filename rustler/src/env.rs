@@ -23,22 +23,40 @@ pub(crate) enum EnvKind {
     ProcessIndependent,
 }
 
+/// Marker for the default, thread-local environment handle.
+///
+/// This also represents local views of process-independent environments.
+#[derive(Clone, Copy)]
+pub struct ProcessBound;
+
+/// Marker for an exclusively borrowed process-independent environment handle.
+///
+/// Unlike a process-bound handle, this handle can move between scheduler threads.
+/// It is neither `Copy` nor `Clone`.
+pub struct ProcessIndependent;
+
 /// On each NIF call, a Env is passed in. The Env is used for most operations that involve
 /// communicating with the BEAM, like decoding and encoding terms.
 ///
-/// There is no way to allocate a Env at the moment, but this may be possible in the future.
+/// The default handle is thread-local. Async NIFs use
+/// `Env<'a, ProcessIndependent>`, backed by an [`OwnedEnv`].
 #[derive(Clone, Copy)]
-pub struct Env<'a> {
+pub struct Env<'a, K = ProcessBound> {
     pub(crate) kind: EnvKind,
     env: *mut ErlNifEnv,
     id: EnvId<'a>,
+    marker: PhantomData<K>,
 }
+
+// This handle is created only by exclusively borrowing an OwnedEnv. Local, copyable
+// handles obtained from it remain !Send; the owner outlives all associated terms.
+unsafe impl Send for Env<'_, ProcessIndependent> {}
 
 /// Two environments are equal if they're the same `*mut ErlNifEnv` pointer value.
 ///
 /// A `Env<'a>` is equal to a `Env<'b>` if and only if `'a` and `'b` are the same lifetime.
-impl<'b> PartialEq<Env<'b>> for Env<'_> {
-    fn eq(&self, other: &Env<'b>) -> bool {
+impl<'b, K, L> PartialEq<Env<'b, L>> for Env<'_, K> {
+    fn eq(&self, other: &Env<'b, L>) -> bool {
         self.env == other.env
     }
 }
@@ -60,6 +78,7 @@ impl<'a> Env<'a> {
             kind,
             env,
             id: PhantomData,
+            marker: PhantomData,
         }
     }
 
@@ -186,6 +205,54 @@ impl<'a> Env<'a> {
     }
 }
 
+impl<'a> Env<'a, ProcessIndependent> {
+    /// Obtain a thread-local handle for existing encoding and term APIs.
+    ///
+    /// Do not retain this handle across an `.await`; retain the typed handle instead.
+    pub fn as_env(&self) -> Env<'a> {
+        Env {
+            kind: self.kind,
+            env: self.env,
+            id: PhantomData,
+            marker: PhantomData,
+        }
+    }
+
+    /// Encode a value in the persistent environment.
+    pub fn encode(&self, value: impl Encoder) -> Term<'a> {
+        value.encode(self.as_env())
+    }
+
+    pub fn as_c_arg(&self) -> *mut ErlNifEnv {
+        self.env
+    }
+
+    pub fn error_tuple(&self, reason: impl Encoder) -> Term<'a> {
+        self.as_env().error_tuple(reason)
+    }
+
+    pub fn send(&self, pid: &LocalPid, message: impl Encoder) -> Result<(), SendError> {
+        self.as_env().send(pid, message)
+    }
+
+    pub fn whereis_pid(&self, name_or_pid: impl Encoder) -> Option<LocalPid> {
+        self.as_env().whereis_pid(name_or_pid)
+    }
+
+    pub fn binary_to_term(&self, data: &[u8]) -> Option<(Term<'a>, usize)> {
+        self.as_env().binary_to_term(data)
+    }
+
+    /// Decode trusted External Term Format data.
+    ///
+    /// # Safety
+    ///
+    /// `data` must contain a valid, trusted external term.
+    pub unsafe fn binary_to_term_trusted(&self, data: &[u8]) -> Option<(Term<'a>, usize)> {
+        self.as_env().binary_to_term_trusted(data)
+    }
+}
+
 unsafe fn binary_to_term(
     env: *mut ErlNifEnv,
     data: &[u8],
@@ -237,6 +304,20 @@ impl OwnedEnv {
     pub fn new() -> OwnedEnv {
         OwnedEnv {
             env: Arc::new(unsafe { enif_alloc_env() }),
+        }
+    }
+
+    /// Exclusively borrow a handle that can move between threads.
+    ///
+    /// Terms and borrowed data remain valid until this environment is cleared or
+    /// dropped. The exclusive borrow prevents either operation while the handle
+    /// or its terms are in use.
+    pub fn borrow(&mut self) -> Env<'_, ProcessIndependent> {
+        Env {
+            kind: EnvKind::ProcessIndependent,
+            env: *self.env,
+            id: PhantomData,
+            marker: PhantomData,
         }
     }
 

@@ -1,0 +1,31 @@
+error: async NIFs are an unstable rustler feature; build with `RUSTFLAGS="--cfg rustler_unstable"` to use them
+ --> tests/ui/async-nif-copy-owned-env.rs:3:1
+  |
+3 | #[rustler::nif]
+  | ^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `rustler::nif` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition name: `rustler_unstable`
+ --> tests/ui/async-nif-copy-owned-env.rs:3:1
+  |
+3 | #[rustler::nif]
+  | ^^^^^^^^^^^^^^^
+  |
+  = help: expected names are: `docsrs`, `feature`, and `test` and 32 more
+  = note: using a cfg inside a attribute macro will use the cfgs from the destination crate and not the ones from the defining crate
+  = help: try referring to `rustler::nif` crate for guidance on how handle this unexpected cfg
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: `#[warn(unexpected_cfgs)]` on by default
+  = note: this warning originates in the attribute macro `rustler::nif` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0382]: borrow of moved value: `env`
+ --> tests/ui/async-nif-copy-owned-env.rs:7:13
+  |
+4 | async fn copy_owned_env<'a>(env: Env<'a, ProcessIndependent>) -> () {
+  |                             --- move occurs because `env` has type `Env<'_, ProcessIndependent>`, which does not implement the `Copy` trait
+5 |     let other = env;
+  |                 --- value moved here
+6 |     rustler::yield_now().await;
+7 |     let _ = env.error_tuple("moved");
+  |             ^^^ value borrowed here after move

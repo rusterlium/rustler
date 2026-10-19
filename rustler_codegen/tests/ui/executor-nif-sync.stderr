@@ -1,0 +1,5 @@
+error: executor requires an async NIF
+ --> tests/ui/executor-nif-sync.rs:2:1
+  |
+2 | fn invalid() -> usize {
+  | ^^^^^^^^^^^^^^^^^^^^^

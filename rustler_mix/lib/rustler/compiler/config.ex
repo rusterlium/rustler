@@ -11,7 +11,8 @@ defmodule Rustler.Compiler.Config do
   @type load_data :: term()
   @type path :: Path.t()
 
-  defstruct cargo: :system,
+  defstruct async_nifs: [],
+            cargo: :system,
             crate: nil,
             default_features: true,
             env: [],

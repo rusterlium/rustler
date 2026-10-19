@@ -31,6 +31,7 @@
 pub mod codegen_runtime;
 
 mod alloc;
+mod async_context;
 pub(crate) mod traits;
 pub use crate::alloc::EnifAllocator;
 
@@ -61,9 +62,11 @@ pub mod dynamic;
 pub use crate::dynamic::TermType;
 
 pub mod schedule;
-pub use crate::schedule::SchedulerFlags;
+pub use crate::schedule::{yield_now, SchedulerFlags};
+pub mod executor;
+pub use crate::executor::{on_executor, Executor, ExecutorError, ExecutorTask};
 pub mod env;
-pub use crate::env::{Env, OwnedEnv};
+pub use crate::env::{Env, OwnedEnv, ProcessBound, ProcessIndependent};
 pub mod thread;
 pub use crate::thread::{JobSpawner, ThreadSpawner};
 

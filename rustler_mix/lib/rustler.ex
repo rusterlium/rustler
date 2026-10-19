@@ -20,6 +20,12 @@ defmodule Rustler do
 
   ## Configuration options
 
+    * `:async_nifs` - Keyword list of `{name, arity}` pairs for Rust functions
+      marked `#[rustler::nif(executor)]`. Generates public wrappers that wait
+      for external executor tasks without blocking a scheduler. Do not define
+      stubs for these functions yourself; the wrappers and internal NIF stubs
+      are generated automatically.
+
     * `:cargo` - Specify how to envoke the rust compiler. Options are:
         - `:system` (default) - use `cargo` from the system (must be in `$PATH`)
         - `{:system, <channel>}` - use `cargo` from the system with the given channel.
@@ -105,6 +111,7 @@ defmodule Rustler do
         @load_from config.load_from
         @load_data config.load_data
         @load_data_fun config.load_data_fun
+        @rustler_async_nifs config.async_nifs
 
         @before_compile Rustler
       end
@@ -117,6 +124,10 @@ defmodule Rustler do
 
     load_data = Module.get_attribute(env.module, :load_data)
     load_data_fun = Module.get_attribute(env.module, :load_data_fun)
+    async_nifs = Module.get_attribute(env.module, :rustler_async_nifs)
+    validate_async_nifs!(async_nifs)
+    async_wrappers = async_wrappers(env, async_nifs)
+    async_helpers = async_helpers(async_nifs)
 
     load_data =
       case {load_data, load_data_fun} do
@@ -146,6 +157,8 @@ defmodule Rustler do
       end
 
     quote do
+      unquote_splicing(async_wrappers)
+      unquote(async_helpers)
       @on_load :rustler_init
 
       @doc false
@@ -164,6 +177,54 @@ defmodule Rustler do
         load_data = unquote(load_data)
 
         :erlang.load_nif(load_path, load_data)
+      end
+    end
+  end
+
+  defp validate_async_nifs!(async_nifs) do
+    unless Keyword.keyword?(async_nifs) and
+             Enum.all?(async_nifs, fn {_name, arity} ->
+               is_integer(arity) and arity >= 0 and arity <= 255
+             end) and
+             length(async_nifs) == length(Enum.uniq(async_nifs)) do
+      raise ArgumentError, "async_nifs must be a keyword list of unique {name, arity} pairs"
+    end
+  end
+
+  defp async_wrappers(env, async_nifs) do
+    for {name, arity} <- async_nifs do
+      if Module.defines?(env.module, {name, arity}) do
+        raise ArgumentError, "do not define a stub for async NIF #{name}/#{arity}"
+      end
+
+      args = Macro.generate_arguments(arity, __MODULE__)
+      raw_name = String.to_atom("__rustler_async_#{name}")
+
+      quote do
+        def unquote(name)(unquote_splicing(args)) do
+          rustler_async_await(unquote(raw_name)(unquote_splicing(args)))
+        end
+
+        @doc false
+        def unquote(raw_name)(unquote_splicing(args)), do: :erlang.nif_error(:nif_not_loaded)
+      end
+    end
+  end
+
+  defp async_helpers([]), do: nil
+
+  defp async_helpers(_async_nifs) do
+    quote do
+      @doc false
+      def __rustler_async_continue(_resource), do: :erlang.nif_error(:nif_not_loaded)
+
+      defp rustler_async_await({:rustler_async_done, result}), do: result
+
+      defp rustler_async_await({:rustler_async_wait, reference, resource}) do
+        receive do
+          {:rustler_async_ready, ^reference} ->
+            rustler_async_await(__rustler_async_continue(resource))
+        end
       end
     end
   end
