@@ -9,7 +9,7 @@ defmodule Rustler.Mixfile do
       app: :rustler,
       name: "Rustler",
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.18",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -25,8 +25,7 @@ defmodule Rustler.Mixfile do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:credo, "~> 1.0", only: :dev, runtime: false},
-      {:jason, "~> 1.0", runtime: false}
+      {:credo, "~> 1.0", only: :dev, runtime: false}
     ]
   end
 

@@ -128,7 +128,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
   defp read_data(ctx) do
     path = Path.expand("data/" <> ctx[:filename], __DIR__)
     file = File.read!(path)
-    decoded = Jason.decode!(file)
+    decoded = JSON.decode!(file)
 
     %{:jsonfile => file, :json => decoded}
   end
@@ -145,7 +145,7 @@ defmodule SerdeRustlerTests.Json.JsonTest do
 
   defp run_encode(ctx) do
     expected = ctx[:json]
-    actual = Json.encode(expected) |> Jason.decode!()
+    actual = Json.encode(expected) |> JSON.decode!()
 
     assert expected == actual, ~s"""
       ENCODING ERROR :: #{ctx[:filename]}

@@ -53,7 +53,7 @@ defimpl Collectable, for: Rustler.BuildResults do
 
     collector_fun = fn
       acc, {:cont, elem} ->
-        case Jason.decode(elem) do
+        case JSON.decode(elem) do
           {:ok, elem} ->
             maybe_log_msg.(elem)
             update_in(acc.artifacts, &(&1 ++ Rustler.BuildArtifact.from_line(elem)))
