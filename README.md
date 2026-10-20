@@ -67,13 +67,21 @@ Rustler aims to support the newest three major OTP versions as well as newest th
 #### Supported NIF version
 
 The minimal supported NIF version for a library should be defined via Cargo
-features. The default is currently `2.15` (Erlang/OTP 22). To use features from
-NIF version `2.16` (Erlang/OTP 24) or `2.17` (Erlang/OTP 26), the respective
-feature flag has to be enabled on the dependency:
+features. The default is currently `2.17` (Erlang/OTP 26).
+To use features from NIF version `2.18` (Erlang/OTP 29), the respective feature
+flag has to be enabled on the dependency:
 
 ```toml
 [dependencies]
-rustler = { version = "...", features = ["nif_version_2_16"] }
+rustler = { version = "...", features = ["nif_version_2_18"] }
+```
+
+To target an older NIF version, disable default features and explicitly enable
+the required version:
+
+```toml
+[dependencies]
+rustler = { version = "...", default-features = false, features = ["nif_version_2_15"] }
 ```
 
 #### Community

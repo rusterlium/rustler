@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 See [`UPGRADE.md`](./UPGRADE.md) for additional help when upgrading to newer
 versions.
 
+## Unreleased
+
+### Changed
+
+- Raise the default NIF API version to 2.17 (Erlang/OTP 26)
+
 ## 0.39.0 - 2026-10-12
 
 ### Added
