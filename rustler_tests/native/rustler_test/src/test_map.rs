@@ -9,6 +9,23 @@ rustler::atoms! {
 }
 
 #[rustler::nif]
+pub fn term_map_operation<'a>(
+    operation: &str,
+    map: Term<'a>,
+    key: Term<'a>,
+    value: Term<'a>,
+) -> NifResult<Term<'a>> {
+    match operation {
+        "get" => map.map_get(key),
+        "size" => Ok(map.map_size()?.encode(map.get_env())),
+        "put" => map.map_put(key, value),
+        "remove" => map.map_remove(key),
+        "update" => map.map_update(key, value),
+        _ => Err(Error::BadArg),
+    }
+}
+
+#[rustler::nif]
 pub fn sum_map_values(iter: MapIterator) -> NifResult<i64> {
     let res: NifResult<Vec<i64>> = iter.map(|(_key, value)| value.decode::<i64>()).collect();
 

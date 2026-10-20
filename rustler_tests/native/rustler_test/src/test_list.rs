@@ -1,5 +1,20 @@
-use rustler::{Error, ListIterator, NifResult};
+use rustler::{Encoder, Error, ListIterator, NifResult, Term};
 use std::panic;
+
+#[rustler::nif]
+pub fn term_list_operation<'a>(
+    operation: &str,
+    list: Term<'a>,
+    head: Term<'a>,
+) -> NifResult<Term<'a>> {
+    match operation {
+        "length" => Ok(list.list_length()?.encode(list.get_env())),
+        "cell" => Ok(list.list_get_cell()?.encode(list.get_env())),
+        "reverse" => list.list_reverse(),
+        "prepend" => Ok(list.list_prepend(head)),
+        _ => Err(Error::BadArg),
+    }
+}
 
 #[rustler::nif]
 pub fn sum_list(iter: ListIterator) -> NifResult<i64> {
