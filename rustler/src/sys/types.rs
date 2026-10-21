@@ -86,7 +86,12 @@ pub struct ErlNifEntry {
 }
 
 impl ErlNifEntry {
-    pub const fn new(name: &CStr, nif_funcs: &[ErlNifFunc], load: LoadFun) -> Self {
+    pub const fn new(
+        name: &CStr,
+        nif_funcs: &[ErlNifFunc],
+        load: LoadFun,
+        upgrade: UpgradeFun,
+    ) -> Self {
         let min_erts = if cfg!(feature = "nif_version_2_18") {
             c"OTP-29.0"
         } else if cfg!(feature = "nif_version_2_17") {
@@ -107,7 +112,7 @@ impl ErlNifEntry {
             funcs: nif_funcs.as_ptr(),
             load: Some(load),
             reload: None,
-            upgrade: None,
+            upgrade: Some(upgrade),
             unload: None,
             vm_variant: c"beam.vanilla".as_ptr(),
             options: 0,

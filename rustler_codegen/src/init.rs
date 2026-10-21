@@ -7,6 +7,7 @@ use syn::{Ident, Result, Token};
 pub struct InitMacroInput {
     name: syn::Lit,
     load: TokenStream,
+    upgrade: TokenStream,
 }
 
 impl Parse for InitMacroInput {
@@ -14,9 +15,14 @@ impl Parse for InitMacroInput {
         let name = syn::Lit::parse(input)?;
 
         let options = parse_expr_assigns(input);
-        let load = extract_option(options, "load");
+        let load = extract_option(&options, "load");
+        let upgrade = extract_option(&options, "upgrade");
 
-        Ok(InitMacroInput { name, load })
+        Ok(InitMacroInput {
+            name,
+            load,
+            upgrade,
+        })
     }
 }
 
@@ -32,12 +38,12 @@ fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
     vec
 }
 
-fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
-    for syn::ExprAssign { left, right, .. } in args.into_iter() {
-        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
+fn extract_option(args: &[syn::ExprAssign], name: &str) -> TokenStream {
+    for syn::ExprAssign { left, right, .. } in args.iter() {
+        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &**left {
             if let Some(ident) = path.get_ident() {
                 if *ident == name {
-                    let value = *right;
+                    let value = &**right;
                     return quote!(Some(#value));
                 }
             }
@@ -52,6 +58,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
     fn from(input: InitMacroInput) -> Self {
         let name = input.name;
         let load = input.load;
+        let upgrade = input.upgrade;
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::ErlNifEntry> = None;
@@ -85,10 +92,37 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 nif_load
             };
 
+            let upgrade = {
+                extern "C" fn nif_upgrade(
+                    env: *mut rustler::sys::ErlNifEnv,
+                    _old_priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    load_info: rustler::sys::ErlNifTerm
+                ) -> rustler::codegen_runtime::c_int {
+                    unsafe {
+                        let mut env = rustler::Env::new_init_env(&env, env);
+                        let load_info = rustler::Term::new(env, load_info);
+
+                        if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
+                            return 1;
+                        }
+
+                        #upgrade.map_or(1, |inner| {
+                            rustler::codegen_runtime::handle_nif_init_call(
+                                inner, env, load_info
+                            )
+                        })
+                    }
+                };
+
+                nif_upgrade
+            };
+
             let entry = rustler::codegen_runtime::ErlNifEntry::new(
                 unsafe { ::core::ffi::CStr::from_bytes_with_nul_unchecked(concat!(#name, "\0").as_bytes()) },
                 &nif_funcs,
-                load
+                load,
+                upgrade
             );
 
             unsafe {
