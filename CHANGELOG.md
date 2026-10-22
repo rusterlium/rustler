@@ -13,16 +13,16 @@ versions.
 ### Added
 
 - `Encoder` and `Decoder` for `char`, as its Unicode code point; decoding
-  rejects integers that are no Unicode scalar value
+  rejects integers that are no Unicode scalar value (#785)
 - `Encoder` and `Decoder` for the `std::num::NonZero*` integers; decoding
-  rejects zero
+  rejects zero (#785)
 
 ### Changed
 
 - Raise the default NIF API version to 2.17 (Erlang/OTP 26)
 - Decoding an integer too large or too small for the target type, such as 256
   as a `u8`, returns `Error::BadArg` instead of truncating it. This affects
-  `i8`, `u8`, `i16`, `u16`, and, on 32-bit targets, `isize` and `usize`
+  `i8`, `u8`, `i16`, `u16`, and, on 32-bit targets, `isize` and `usize` (#785)
 
 ## 0.39.0 - 2026-10-12
 
