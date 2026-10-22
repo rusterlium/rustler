@@ -34,13 +34,16 @@ macro_rules! impl_number_decoder {
     ($dec_type:ty, $nif_type:ty, $decode_fun:ident) => {
         impl<'a> Decoder<'a> for $dec_type {
             #[inline]
+            #[allow(clippy::useless_conversion, clippy::unnecessary_fallible_conversions)]
             fn decode(term: Term) -> NifResult<$dec_type> {
                 #![allow(unused_unsafe)]
                 let mut res: $nif_type = Default::default();
                 if erl_get!($decode_fun, term, res) == 0 {
                     return Err(Error::BadArg);
                 }
-                Ok(res as $dec_type)
+                // An integer the term holds but the type cannot, such as 300 for a `u8`, is
+                // rejected rather than truncated.
+                <$dec_type>::try_from(res).map_err(|_| Error::BadArg)
             }
         }
     };
@@ -92,6 +95,20 @@ impl Decoder<'_> for f32 {
         } else {
             Err(Error::BadArg)
         }
+    }
+}
+
+/// A `char` is its Unicode code point, as Elixir's `?a` is `97`. Decoding rejects integers that
+/// are no Unicode scalar value, such as surrogates.
+impl Encoder for char {
+    fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
+        u32::from(*self).encode(env)
+    }
+}
+
+impl<'a> Decoder<'a> for char {
+    fn decode(term: Term<'a>) -> NifResult<char> {
+        char::from_u32(term.decode()?).ok_or(Error::BadArg)
     }
 }
 

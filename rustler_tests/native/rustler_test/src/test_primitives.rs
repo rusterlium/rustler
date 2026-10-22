@@ -21,6 +21,36 @@ pub fn echo_u8(n: u8) -> u8 {
 }
 
 #[rustler::nif]
+pub fn echo_i8(n: i8) -> i8 {
+    n
+}
+
+#[rustler::nif]
+pub fn echo_u16(n: u16) -> u16 {
+    n
+}
+
+#[rustler::nif]
+pub fn echo_i16(n: i16) -> i16 {
+    n
+}
+
+#[rustler::nif]
+pub fn echo_char(c: char) -> char {
+    c
+}
+
+#[rustler::nif]
+pub fn echo_non_zero_u8(n: std::num::NonZeroU8) -> std::num::NonZeroU8 {
+    n
+}
+
+#[rustler::nif]
+pub fn echo_non_zero_i64(n: std::num::NonZeroI64) -> std::num::NonZeroI64 {
+    n
+}
+
+#[rustler::nif]
 pub fn option_inc(opt: Option<f64>) -> Option<f64> {
     opt.map(|num| num + 1.0)
 }

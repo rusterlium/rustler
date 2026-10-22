@@ -5,13 +5,19 @@ the changelog.
 
 ## 0.39 -> 0.40
 
-The default NIF API version is raised to 2.17 (Erlang/OTP 26). To target an
-older OTP version, disable default features and explicitly enable the
-required NIF version in your `Cargo.toml`, for example:
+1. The default NIF API version is raised to 2.17 (Erlang/OTP 26). To target an
+   older OTP version, disable default features and explicitly enable the
+   required NIF version in your `Cargo.toml`, for example:
 
-```toml
-rustler = { version = "0.40", default-features = false, features = ["nif_version_2_15"] }
-```
+   ```toml
+   rustler = { version = "0.40", default-features = false, features = ["nif_version_2_15"] }
+   ```
+
+2. Decoding an integer the target type cannot hold now fails with
+   `Error::BadArg` (an `ArgumentError` in Elixir) instead of truncating it:
+   `256` no longer decodes as a `u8` equal to `0`. Code that relied on the
+   truncation should decode a wider type and convert it explicitly, such as
+   `term.decode::<u32>()? as u8`.
 
 ## 0.38 -> 0.39
 
