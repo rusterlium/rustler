@@ -1,6 +1,11 @@
 default:
     @just --choose
 
+setup:
+    cd rustler_mix && mix deps.get
+    cd rustler_tests && mix deps.get
+    cargo fetch
+
 build:
     cargo build
     cd rustler_mix && mix deps.get && mix compile
@@ -27,3 +32,9 @@ lint:
 
 regenerate:
     rustler/otp_headers/update.sh
+
+doc:
+    cd rustler_mix && mix docs
+
+regenerate-rustdoc:
+    cd rustler_mix && mix run -e 'Rustler.ExDoc.Retriever.generate_json!()'

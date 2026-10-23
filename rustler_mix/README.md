@@ -47,7 +47,6 @@ end
 The Rust crate compilation can be controlled via Mix compile-time configuration in `config/config.exs`.
 See [configuration options](https://hexdocs.pm/rustler/Rustler.html#module-configuration-options) for more details.
 
-
 ## Loading the NIF
 
 Loading a Rustler NIF is done in almost the same way as normal NIFs.
