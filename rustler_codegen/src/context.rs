@@ -1,7 +1,7 @@
 use heck::ToSnakeCase;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{Data, Field, Fields, Ident, Lifetime, Lit, Meta, TypeParam, Variant};
+use syn::{Attribute, Data, Field, Fields, Ident, Lifetime, Lit, Meta, TypeParam, Variant};
 
 use super::RustlerAttr;
 
@@ -110,13 +110,10 @@ impl<'a> Context<'a> {
                 .iter()
                 .map(|field| {
                     let atom_fun = Self::field_to_atom_fun(field);
-
-                    let ident = field.ident.as_ref().unwrap();
-                    let ident_str = ident.to_string();
-                    let ident_str = Self::remove_raw(&ident_str);
+                    let atom_name = Self::field_atom_name(field);
 
                     quote! {
-                        #atom_fun = #ident_str,
+                        #atom_fun = #atom_name,
                     }
                 })
                 .collect()
@@ -124,15 +121,38 @@ impl<'a> Context<'a> {
     }
 
     pub fn field_to_atom_fun(field: &Field) -> Ident {
-        let ident = field.ident.as_ref().unwrap();
-        Self::ident_to_atom_fun(ident)
+        Self::atom_fun(&Self::field_atom_name(field))
     }
 
-    pub fn ident_to_atom_fun(ident: &Ident) -> Ident {
-        let ident_str = ident.to_string().to_snake_case();
-        let ident_str = Self::remove_raw(&ident_str);
+    pub fn field_atom_name(field: &Field) -> String {
+        Self::rename_attr(&field.attrs).unwrap_or_else(|| {
+            let ident = field.ident.as_ref().unwrap();
+            Self::ident_to_atom_name(ident)
+        })
+    }
 
-        Ident::new(&format!("atom_{ident_str}"), Span::call_site())
+    pub fn variant_to_atom_fun(variant: &Variant) -> Ident {
+        Self::atom_fun(&Self::variant_atom_name(variant))
+    }
+
+    pub fn variant_atom_name(variant: &Variant) -> String {
+        Self::rename_attr(&variant.attrs)
+            .unwrap_or_else(|| Self::ident_to_atom_name(&variant.ident))
+    }
+
+    pub fn ident_to_atom_name(ident: &Ident) -> String {
+        let ident_str = ident.to_string();
+        Self::remove_raw(&ident_str).to_snake_case()
+    }
+
+    fn atom_fun(atom_name: &str) -> Ident {
+        let suffix = atom_name
+            .as_bytes()
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>();
+
+        Ident::new(&format!("atom_{}", suffix), Span::call_site())
     }
 
     pub fn escape_ident_with_index(ident_str: &str, index: usize, infix: &str) -> Ident {
@@ -159,6 +179,33 @@ impl<'a> Context<'a> {
             .split("r#")
             .last()
             .expect("split has always at least one element")
+    }
+
+    fn rename_attr(attrs: &[Attribute]) -> Option<String> {
+        attrs.iter().find_map(|attr| {
+            if !attr.path().is_ident("rustler") {
+                return None;
+            }
+
+            let Meta::List(list) = &attr.meta else {
+                return None;
+            };
+
+            let mut rename = None;
+            list.parse_nested_meta(|nested_meta| {
+                if nested_meta.path.is_ident("rename") {
+                    let value = nested_meta.value()?;
+                    let lit: syn::LitStr = value.parse()?;
+                    rename = Some(lit.value());
+                    Ok(())
+                } else {
+                    Err(nested_meta.error("Expected rename in rustler attribute"))
+                }
+            })
+            .unwrap_or_else(|err| panic!("{}", err));
+
+            rename
+        })
     }
 
     fn encode_decode_attr_set(attrs: &[RustlerAttr]) -> bool {
