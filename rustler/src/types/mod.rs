@@ -33,6 +33,7 @@ pub mod reference;
 pub use self::reference::Reference;
 
 pub mod i128;
+pub mod nonzero;
 pub mod path;
 
 pub use crate::elixir::{r#struct as elixir_struct, truthy};
