@@ -42,6 +42,11 @@ use std::mem::MaybeUninit;
 /// # result
 /// # }
 /// ```
+///
+/// ## Improper lists
+/// The iterator panics when it reaches the tail of an improper list, i.e. a list that does not end
+/// in `[]`. To work with improper lists, walk the cells yourself with [`Term::list_get_cell`].
+/// Decoding into a `Vec` instead returns `Error::BadArg` for an improper list.
 pub struct ListIterator<'a> {
     term: Term<'a>,
 }
@@ -114,9 +119,15 @@ where
 {
     #[inline]
     fn decode(term: Term<'a>) -> NifResult<Self> {
-        let iter: ListIterator = term.decode()?;
-        let res: NifResult<Self> = iter.map(|x| x.decode::<T>()).collect();
-        res
+        // Walk the cells instead of using `ListIterator`, which panics on an improper list.
+        let mut res = Vec::new();
+        let mut rest = term;
+        while !rest.is_empty_list() {
+            let (head, tail) = rest.list_get_cell()?;
+            res.push(head.decode()?);
+            rest = tail;
+        }
+        Ok(res)
     }
 }
 
