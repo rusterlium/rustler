@@ -2,7 +2,6 @@ default:
     @just --choose
 
 setup:
-    cargo binstall rustdoc-md
     cd rustler_mix && mix deps.get
     cd rustler_tests && mix deps.get
     cargo fetch
@@ -34,18 +33,8 @@ lint:
 regenerate:
     rustler/otp_headers/update.sh
 
-doc: regenerate-rustdoc
+doc:
     cd rustler_mix && mix docs
 
 regenerate-rustdoc:
-    RUSTC_BOOTSTRAP=1 \
-    RUSTDOCFLAGS="-Z unstable-options --output-format=json" \
-    cargo doc --no-deps --all-features
-
-    rustdoc-md \
-        --path target/doc/rustler.json \
-        --output doc/rust-api.md \
-
-    rustdoc-md \
-        --path target/doc/rustler_codegen.json \
-        --output doc/rust-codegen.md \
+    cd rustler_mix && mix run -e 'Rustler.ExDoc.Retriever.generate_json!()'
