@@ -22,7 +22,7 @@ pub unsafe fn internal_set_symbols(callbacks: *mut DynNifCallbacks) {
 /// Write symbols to `DYN_NIF_CALLBACKS`. This function is not called on Windows
 /// as the symbols are filled directly via `internal_set_symbols` from `init!`,
 /// and it is a no-op if directly linked symbols are used, as we do by default
-/// on Linux.
+/// on Linux unless the `dynamic_symbols` feature is enabled.
 pub unsafe fn internal_write_symbols() {
     let filler = nif_filler::new();
     DYN_NIF_CALLBACKS.write_symbols(filler);
@@ -49,7 +49,7 @@ macro_rules! use_snippet {
     };
 
     (include, $version:expr, $sizeof_long:expr) => {
-        #[cfg(any(target_os = "macos", windows))]
+        #[cfg(any(target_os = "macos", windows, feature = "dynamic_symbols"))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",
@@ -60,7 +60,7 @@ macro_rules! use_snippet {
             ".rs"
         ));
 
-        #[cfg(not(any(target_os = "macos", windows)))]
+        #[cfg(not(any(target_os = "macos", windows, feature = "dynamic_symbols")))]
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/otp_headers/",

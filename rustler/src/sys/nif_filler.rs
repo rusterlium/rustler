@@ -10,7 +10,7 @@ impl DynNifFiller for NoopNifFiller {
     fn write<T: Copy>(&self, _field: &mut Option<T>, _name: &str) {}
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", all(unix, feature = "dynamic_symbols")))]
 mod dlsym_filler {
     use libc::{RTLD_GLOBAL, RTLD_NOLOAD, RTLD_NOW};
     use libloading::os::unix::Library;
@@ -47,14 +47,14 @@ mod dlsym_filler {
 
 // On Windows the callback table is always supplied directly by the caller
 // via `internal_set_symbols`, so no dlsym-based (or otherwise) filler is
-// ever actually needed there. For Linux, we use direct symbol lookups again.
-// Thus, the DlSym filler is only used on macos for now
-#[cfg(not(target_os = "macos"))]
+// ever actually needed there. Other Unix systems link the symbols directly,
+// unless the `dynamic_symbols` feature asks for the dlsym filler.
+#[cfg(not(any(target_os = "macos", all(unix, feature = "dynamic_symbols"))))]
 pub(crate) fn new() -> impl DynNifFiller {
     NoopNifFiller
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", all(unix, feature = "dynamic_symbols")))]
 pub(crate) fn new() -> impl DynNifFiller {
     dlsym_filler::DlsymNifFiller::new()
 }

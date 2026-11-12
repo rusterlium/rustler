@@ -12,6 +12,9 @@ versions.
 
 ### Added
 
+- `dynamic_symbols` feature to look up the `enif_*` functions at load time on
+  Linux and other Unix systems, so that `cargo test` links a NIF library again
+  when it enables the feature as a dev-dependency
 - `Encoder` and `Decoder` for `char`, as its Unicode code point; decoding
   rejects integers that are no Unicode scalar value (#785)
 - `Encoder` and `Decoder` for the `std::num::NonZero*` integers; decoding
