@@ -24,6 +24,12 @@ versions.
   as a `u8`, returns `Error::BadArg` instead of truncating it. This affects
   `i8`, `u8`, `i16`, `u16`, and, on 32-bit targets, `isize` and `usize` (#785)
 
+### Fixed
+
+- `Rustler.Compiler.Config` skips `<crate>/target` before walking external
+  resources; cyclic directory symlinks inside `<crate>/target` no longer hang
+  `mix compile`
+
 ## 0.39.0 - 2026-10-12
 
 ### Added
