@@ -7,6 +7,14 @@ use syn::{Ident, Result, Token};
 pub struct InitMacroInput {
     name: syn::Lit,
     load: TokenStream,
+    upgrade: Upgrade,
+}
+
+#[derive(Debug)]
+enum Upgrade {
+    Disabled,
+    Empty,
+    Callback(TokenStream),
 }
 
 impl Parse for InitMacroInput {
@@ -14,9 +22,14 @@ impl Parse for InitMacroInput {
         let name = syn::Lit::parse(input)?;
 
         let options = parse_expr_assigns(input);
-        let load = extract_option(options, "load");
+        let load = extract_option(&options, "load");
+        let upgrade = extract_upgrade(&options);
 
-        Ok(InitMacroInput { name, load })
+        Ok(InitMacroInput {
+            name,
+            load,
+            upgrade,
+        })
     }
 }
 
@@ -32,12 +45,38 @@ fn parse_expr_assigns(input: ParseStream) -> Vec<syn::ExprAssign> {
     vec
 }
 
-fn extract_option(args: Vec<syn::ExprAssign>, name: &str) -> TokenStream {
-    for syn::ExprAssign { left, right, .. } in args.into_iter() {
-        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &*left {
+fn extract_upgrade(args: &[syn::ExprAssign]) -> Upgrade {
+    for syn::ExprAssign { left, right, .. } in args.iter() {
+        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &**left {
+            if path.get_ident().is_some_and(|ident| *ident == "upgrade") {
+                match &**right {
+                    // Special case: If `upgrade` is a boolean, use an empty callback or disable upgrading, respectively
+                    syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Bool(value),
+                        ..
+                    }) => {
+                        return if value.value {
+                            Upgrade::Empty
+                        } else {
+                            Upgrade::Disabled
+                        }
+                    }
+
+                    value => return Upgrade::Callback(quote!(#value)),
+                }
+            }
+        }
+    }
+
+    Upgrade::Disabled
+}
+
+fn extract_option(args: &[syn::ExprAssign], name: &str) -> TokenStream {
+    for syn::ExprAssign { left, right, .. } in args.iter() {
+        if let syn::Expr::Path(syn::ExprPath { path, .. }) = &**left {
             if let Some(ident) = path.get_ident() {
                 if *ident == name {
-                    let value = *right;
+                    let value = &**right;
                     return quote!(Some(#value));
                 }
             }
@@ -52,6 +91,44 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
     fn from(input: InitMacroInput) -> Self {
         let name = input.name;
         let load = input.load;
+        let upgrade = match input.upgrade {
+            Upgrade::Disabled => quote!(None),
+            Upgrade::Empty => quote!({
+                extern "C" fn nif_upgrade(
+                    _env: *mut rustler::sys::ErlNifEnv,
+                    _old_priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    _load_info: rustler::sys::ErlNifTerm,
+                ) -> rustler::codegen_runtime::c_int {
+                    0
+                }
+
+                Some(nif_upgrade)
+            }),
+            Upgrade::Callback(callback) => quote!({
+                extern "C" fn nif_upgrade(
+                    env: *mut rustler::sys::ErlNifEnv,
+                    _old_priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    _priv_data: *mut *mut rustler::codegen_runtime::c_void,
+                    load_info: rustler::sys::ErlNifTerm
+                ) -> rustler::codegen_runtime::c_int {
+                    unsafe {
+                        let mut env = rustler::Env::new_init_env(&env, env);
+                        let load_info = rustler::Term::new(env, load_info);
+
+                        if !rustler::codegen_runtime::ResourceRegistration::register_all_collected(env).is_ok() {
+                            return 1;
+                        }
+
+                        rustler::codegen_runtime::handle_nif_init_call(
+                            #callback, env, load_info
+                        )
+                    }
+                };
+
+                Some(nif_upgrade)
+            }),
+        };
 
         let inner = quote! {
             static mut NIF_ENTRY: Option<rustler::codegen_runtime::ErlNifEntry> = None;
@@ -85,10 +162,13 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 nif_load
             };
 
+            let upgrade = #upgrade;
+
             let entry = rustler::codegen_runtime::ErlNifEntry::new(
                 unsafe { ::core::ffi::CStr::from_bytes_with_nul_unchecked(concat!(#name, "\0").as_bytes()) },
                 &nif_funcs,
-                load
+                load,
+                upgrade
             );
 
             unsafe {
@@ -151,5 +231,42 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
 
             #maybe_primary_nif_init
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{InitMacroInput, Upgrade};
+
+    fn parse_upgrade(input: &str) -> Upgrade {
+        syn::parse_str::<InitMacroInput>(input).unwrap().upgrade
+    }
+
+    #[test]
+    fn upgrade_defaults_to_disabled() {
+        assert!(matches!(
+            parse_upgrade("\"Elixir.Test\""),
+            Upgrade::Disabled
+        ));
+        assert!(matches!(
+            parse_upgrade("\"Elixir.Test\", upgrade = false"),
+            Upgrade::Disabled
+        ));
+    }
+
+    #[test]
+    fn true_upgrade_uses_empty_callback() {
+        assert!(matches!(
+            parse_upgrade("\"Elixir.Test\", upgrade = true"),
+            Upgrade::Empty
+        ));
+    }
+
+    #[test]
+    fn upgrade_callback_is_preserved() {
+        assert!(matches!(
+            parse_upgrade("\"Elixir.Test\", upgrade = on_upgrade"),
+            Upgrade::Callback(_)
+        ));
     }
 }
