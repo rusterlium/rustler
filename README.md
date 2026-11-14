@@ -84,6 +84,25 @@ the required version:
 rustler = { version = "...", default-features = false, features = ["nif_version_2_15"] }
 ```
 
+#### Running `cargo test`
+
+On Linux, a NIF library links the `enif_*` functions directly, and the BEAM
+provides them when it loads the library. A test binary runs without the BEAM,
+so it fails to link. The `dynamic_symbols` feature looks the functions up at
+load time instead, as Rustler does on macOS. Enable it only for tests:
+
+```toml
+[dev-dependencies]
+rustler = { version = "...", features = ["dynamic_symbols"] }
+```
+
+With resolver 2 or later, Cargo enables features of dev-dependencies only when
+it builds tests, examples, or benchmarks, so the released library keeps the
+direct references. Build the release library on its own: a build that includes
+the tests, such as `cargo build --release --all-targets`, enables the feature for
+it too. Tests still cannot call into the NIF API, as there is no BEAM to call,
+and for the same reason they cannot use the `allocator` feature.
+
 #### Community
 
 You can find us in the `#rustler:matrix.org` channel on [Matrix](https://matrix.to/#/#rustler:matrix.org)

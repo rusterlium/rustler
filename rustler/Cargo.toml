@@ -15,6 +15,9 @@ default = ["nif_version_2_17"]
 derive = []
 allocator = []
 serde = ["dep:serde"]
+# Look up the `enif_*` functions at load time via `dlsym` instead of linking
+# them directly, as on macOS. Lets `cargo test` link a NIF crate on Linux.
+dynamic_symbols = ["dep:libloading", "dep:libc"]
 # for nif versions and their changes see
 # https://github.com/erlang/otp/blob/master/erts/emulator/beam/erl_nif.h
 nif_version_2_14 = []
@@ -32,6 +35,10 @@ serde = { version = "1", optional = true }
 [target.'cfg(target_os = "macos")'.dependencies]
 libloading = "0.9"
 libc = "0.2"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+libloading = { version = "0.9", optional = true }
+libc = { version = "0.2", optional = true }
 
 [package.metadata.release]
 
