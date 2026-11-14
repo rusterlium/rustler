@@ -90,7 +90,7 @@ impl ErlNifEntry {
         name: &CStr,
         nif_funcs: &[ErlNifFunc],
         load: LoadFun,
-        upgrade: UpgradeFun,
+        upgrade: Option<UpgradeFun>,
     ) -> Self {
         let min_erts = if cfg!(feature = "nif_version_2_18") {
             c"OTP-29.0"
@@ -112,7 +112,7 @@ impl ErlNifEntry {
             funcs: nif_funcs.as_ptr(),
             load: Some(load),
             reload: None,
-            upgrade: Some(upgrade),
+            upgrade,
             unload: None,
             vm_variant: c"beam.vanilla".as_ptr(),
             options: 0,
