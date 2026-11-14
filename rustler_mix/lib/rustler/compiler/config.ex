@@ -92,11 +92,30 @@ defmodule Rustler.Compiler.Config do
     |> Enum.flat_map(&expand_paths/1)
   end
 
+  # The walk never enters the Cargo target. A target can hold a huge tree, and
+  # the walk follows symlinks, so two links back to their own directory there
+  # would make it endless.
   defp expand_paths(path) do
     path
-    |> Path.join("**/*")
-    |> Path.wildcard()
-    |> Enum.reject(&(String.starts_with?(&1, "#{path}/target/") or File.dir?(&1)))
+    |> list_dir()
+    |> List.delete("target")
+    |> Enum.flat_map(&files(Path.join(path, &1)))
+  end
+
+  defp files(path) do
+    if File.dir?(path) do
+      path |> list_dir() |> Enum.flat_map(&files(Path.join(path, &1)))
+    else
+      [path]
+    end
+  end
+
+  # Leaves out the names that start with a dot, as `Path.wildcard/1` does.
+  defp list_dir(path) do
+    case File.ls(path) do
+      {:ok, names} -> names |> Enum.reject(&String.starts_with?(&1, ".")) |> Enum.sort()
+      {:error, _} -> []
+    end
   end
 
   defp local_crate?(package) do
