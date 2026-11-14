@@ -93,33 +93,72 @@ defmodule Rustler do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
+      import Rustler, only: [sigil_CARGO: 2, sigil_RUST: 2]
+
       otp_app = Keyword.fetch!(opts, :otp_app)
       env = Application.compile_env(otp_app, __MODULE__, [])
-      config = Rustler.Compiler.compile_crate(otp_app, env, opts)
 
-      for resource <- config.external_resources do
-        @external_resource resource
-      end
-
-      @rustler_signatures config.signatures
-      @external_resource Rustler.Compiler.signature_file(config)
-
-      if config.lib do
-        @load_from config.load_from
-        @load_data config.load_data
-        @load_data_fun config.load_data_fun
-
-        @before_compile Rustler
-      end
+      Module.register_attribute(__MODULE__, :rustler_cargo, accumulate: true)
+      Module.register_attribute(__MODULE__, :rustler_rust, accumulate: true)
+      @rustler_opts opts
+      @rustler_config env
+      @before_compile Rustler
     end
   end
 
   defmacro __before_compile__(env) do
+    opts = Module.get_attribute(env.module, :rustler_opts)
+    config_env = Module.get_attribute(env.module, :rustler_config)
+    cargo_blocks = Module.get_attribute(env.module, :rustler_cargo) |> Enum.reverse()
+    rust_blocks = Module.get_attribute(env.module, :rustler_rust) |> Enum.reverse()
+    otp_app = Keyword.fetch!(opts, :otp_app)
+    crate = config_env[:crate] || opts[:crate] || otp_app
+
+    opts =
+      if cargo_blocks == [] and rust_blocks == [] do
+        opts
+      else
+        path =
+          config_env[:path] || opts[:path] ||
+            if mix_application?() do
+              Path.join(["native", to_string(crate)])
+            else
+              Path.join([".rustler", to_string(crate)])
+            end
+
+        generate_crate(path, cargo_blocks, rust_blocks)
+        Keyword.put(opts, :path, path)
+      end
+
+    config = Rustler.Compiler.compile_crate(otp_app, config_env, opts)
+
+    resources =
+      Enum.map(config.external_resources, fn resource ->
+        quote do
+          @external_resource unquote(resource)
+        end
+      end)
+      |> Kernel.++([
+        quote do
+          @external_resource unquote(Rustler.Compiler.signature_file(config))
+        end
+      ])
+
+    if config.lib do
+      compile_module(env, config, resources)
+    else
+      quote do
+        (unquote_splicing(resources))
+      end
+    end
+  end
+
+  defp compile_module(env, config, resources) do
     default_load_data_value = %Rustler.Compiler.Config{}.load_data
     default_fun_value = %Rustler.Compiler.Config{}.load_data_fun
 
-    load_data = Module.get_attribute(env.module, :load_data)
-    load_data_fun = Module.get_attribute(env.module, :load_data_fun)
+    load_data = config.load_data
+    load_data_fun = config.load_data_fun
 
     load_data =
       case {load_data, load_data_fun} do
@@ -149,7 +188,7 @@ defmodule Rustler do
       end
 
     stubs =
-      for {name, arity} <- Module.get_attribute(env.module, :rustler_signatures) || [],
+      for {name, arity} <- config.signatures,
           fun = String.to_atom(name),
           not Module.defines?(env.module, {fun, arity}) do
         args = Macro.generate_arguments(arity, env.module)
@@ -161,6 +200,7 @@ defmodule Rustler do
       end
 
     quote do
+      unquote_splicing(resources)
       unquote_splicing(stubs)
 
       @on_load :rustler_init
@@ -171,7 +211,7 @@ defmodule Rustler do
         # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
 
-        {otp_app, path} = @load_from
+        {otp_app, path} = unquote(Macro.escape(config.load_from))
 
         load_path =
           otp_app
@@ -182,6 +222,36 @@ defmodule Rustler do
 
         :erlang.load_nif(load_path, load_data)
       end
+    end
+  end
+
+  defp mix_application? do
+    Process.whereis(Mix.ProjectStack) && Mix.Project.config()[:app]
+  end
+
+  defp generate_crate(path, cargo_blocks, rust_blocks) do
+    if rust_blocks != [] do
+      if cargo_blocks == [] do
+        Mix.shell().error("Must define a ~CARGO block for inline ~RUST")
+        raise "Missing ~CARGO block"
+      end
+
+      File.mkdir_p!(Path.join(path, "src"))
+
+      File.write!(Path.join(path, "Cargo.toml"), Enum.join(cargo_blocks, "\n"))
+      File.write!(Path.join([path, "src", "lib.rs"]), Enum.join(rust_blocks, "\n"))
+    end
+  end
+
+  defmacro sigil_CARGO({:<<>>, _, _} = content, []) do
+    quote do
+      @rustler_cargo unquote(content)
+    end
+  end
+
+  defmacro sigil_RUST({:<<>>, _, _} = content, []) do
+    quote do
+      @rustler_rust unquote(content)
     end
   end
 end
