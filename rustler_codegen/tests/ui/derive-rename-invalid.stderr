@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> tests/ui/derive-rename-invalid.rs:3:10
+  |
+3 | #[derive(NifMap)]
+  |          ^^^^^^
+  |
+  = help: message: expected `=`
