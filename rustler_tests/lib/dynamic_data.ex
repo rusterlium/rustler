@@ -9,6 +9,4 @@ defmodule DynamicData do
     otp_app: :rustler_test,
     crate: :dynamic_load,
     load_data_fun: {DynamicData.Config, :nif_data}
-
-  def get_dataset, do: :erlang.nif_error(:nif_not_loaded)
 end
