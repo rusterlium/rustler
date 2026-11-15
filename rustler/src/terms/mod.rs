@@ -1,10 +1,10 @@
 //! Transparent, typed wrappers around raw Erlang terms.
 //!
-//! These wrappers complement the higher-level APIs in [`crate::types`]. [`Atom`] and
-//! [`LocalPid`] implement [`crate::FreeTerm`]; all other wrappers implement
+//! These wrappers complement the higher-level APIs in [`crate::types`]. [`Atom`], [`LocalPid`],
+//! and [`LocalPort`] implement [`crate::FreeTerm`]; all other wrappers implement
 //! [`crate::BoundTerm`] and retain the lifetime of their originating environment.
-//! Integers, floats, references, ports, and general pids are conservatively bound: their
-//! representation is not guaranteed to be environment-independent.
+//! Integers, floats, references, external ports, and general pids are conservatively bound:
+//! their representation is not guaranteed to be environment-independent.
 //!
 //! All wrappers implement [`crate::Decoder`]. Decoding checks the term's type and retains
 //! its raw representation without copying, returning [`crate::Error::BadArg`] on a type
@@ -190,6 +190,7 @@ pub mod fun;
 pub mod integer;
 pub mod list;
 pub mod local_pid;
+pub mod local_port;
 pub mod map;
 pub mod pid;
 pub mod port;
@@ -206,6 +207,7 @@ pub use fun::Fun;
 pub use integer::Integer;
 pub use list::List;
 pub use local_pid::LocalPid;
+pub use local_port::LocalPort;
 pub use map::Map;
 pub use pid::Pid;
 pub use port::Port;

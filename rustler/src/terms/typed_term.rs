@@ -2,18 +2,20 @@
 
 #[cfg(feature = "nif_version_2_15")]
 use super::Bitstring;
-use super::{Atom, Binary, Float, Fun, Integer, List, LocalPid, Map, Pid, Port, Reference, Tuple};
+use super::{
+    Atom, Binary, Float, Fun, Integer, List, LocalPid, LocalPort, Map, Pid, Port, Reference, Tuple,
+};
 use crate::sys::ErlNifTerm;
 use crate::{BoundTerm, Decoder, Encoder, Env, Error, NifResult, Term, TermType};
 
 /// A supported Erlang term classified into its typed wrapper.
 ///
-/// Local pids select `LocalPid`; remote pids select `Pid`. Byte-aligned bitstrings select
-/// `Binary`; other bitstrings select `Bitstring` when NIF 2.15 is enabled. Unsupported types
-/// return `Error::BadArg` during decoding.
+/// Local pids and ports select `LocalPid` and `LocalPort`; remote pids and ports select `Pid` and
+/// `Port`. Byte-aligned bitstrings select `Binary`; other bitstrings select `Bitstring` when NIF
+/// 2.15 is enabled. Unsupported types return `Error::BadArg` during decoding.
 ///
 /// The enum as a whole is bound to an environment, even though individual `Atom` and
-/// `LocalPid` payloads can be extracted and used independently.
+/// `LocalPid` and `LocalPort` payloads can be extracted and used independently.
 ///
 /// ```compile_fail
 /// use rustler::{Term, TypedTerm};
@@ -33,6 +35,7 @@ pub enum TypedTerm<'a> {
     Integer(Integer<'a>),
     List(List<'a>),
     LocalPid(LocalPid),
+    LocalPort(LocalPort),
     Map(Map<'a>),
     Pid(Pid<'a>),
     Port(Port<'a>),
@@ -65,7 +68,11 @@ impl<'a> TypedTerm<'a> {
                 Err(Error::BadArg) => Pid::from_term(term).map(Self::Pid),
                 Err(error) => Err(error),
             },
-            TermType::Port => Port::from_term(term).map(Self::Port),
+            TermType::Port => match LocalPort::from_term(term) {
+                Ok(port) => Ok(Self::LocalPort(port)),
+                Err(Error::BadArg) => Port::from_term(term).map(Self::Port),
+                Err(error) => Err(error),
+            },
             TermType::Ref => Reference::from_term(term).map(Self::Reference),
             TermType::Tuple => Tuple::from_term(term).map(Self::Tuple),
             TermType::Unknown => Err(Error::BadArg),
@@ -84,6 +91,7 @@ impl<'a> TypedTerm<'a> {
             Self::Integer(term) => term.as_c_arg(),
             Self::List(term) => term.as_c_arg(),
             Self::LocalPid(term) => term.as_c_arg(),
+            Self::LocalPort(term) => term.as_c_arg(),
             Self::Map(term) => term.as_c_arg(),
             Self::Pid(term) => term.as_c_arg(),
             Self::Port(term) => term.as_c_arg(),
@@ -96,7 +104,7 @@ impl<'a> TypedTerm<'a> {
     ///
     /// # Safety
     ///
-    /// `env` must own the term, unless this is an `Atom` or `LocalPid` variant.
+    /// `env` must own the term, unless this is an `Atom`, `LocalPid`, or `LocalPort` variant.
     pub unsafe fn to_term(&self, env: Env<'a>) -> Term<'a> {
         BoundTerm::to_term(self, env)
     }
@@ -134,6 +142,7 @@ impl Encoder for TypedTerm<'_> {
             Self::Integer(term) => term.encode(env),
             Self::List(term) => term.encode(env),
             Self::LocalPid(term) => term.encode(env),
+            Self::LocalPort(term) => term.encode(env),
             Self::Map(term) => term.encode(env),
             Self::Pid(term) => term.encode(env),
             Self::Port(term) => term.encode(env),

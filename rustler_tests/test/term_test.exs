@@ -104,6 +104,7 @@ defmodule RustlerTest.TermTest do
         list: [1, 2],
         list: [1 | :tail],
         local_pid: self(),
+        local_port: port,
         map: %{key: :value},
         pid: self(),
         port: port,
@@ -147,6 +148,14 @@ defmodule RustlerTest.TermTest do
   test "free terms survive clearing and dropping their source environment" do
     assert RustlerTest.free_term_after_clear(:atom, :example) == :example
     assert RustlerTest.free_term_after_clear(:local_pid, self()) == self()
+
+    port = Port.open({:spawn_executable, System.find_executable("cat")}, [])
+
+    try do
+      assert RustlerTest.free_term_after_clear(:local_port, port) == port
+    after
+      Port.close(port)
+    end
   end
 
   test "encoded bound terms survive clearing and dropping their source environment" do
@@ -255,6 +264,7 @@ defmodule RustlerTest.TermTest do
         list: [%{key: ["value"]}],
         list: [1 | :tail],
         local_pid: self(),
+        local_port: port,
         map: %{key: ["value"]},
         pid: remote_pid,
         port: port,

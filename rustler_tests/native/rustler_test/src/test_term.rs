@@ -19,6 +19,7 @@ mod atoms {
         integer,
         list,
         local_pid,
+        local_port,
         map,
         pid,
         port,
@@ -46,6 +47,7 @@ pub fn typed_term_roundtrip<'a>(
             TypedTerm::Integer(_) => atoms::integer(),
             TypedTerm::List(_) => atoms::list(),
             TypedTerm::LocalPid(_) => atoms::local_pid(),
+            TypedTerm::LocalPort(_) => atoms::local_port(),
             TypedTerm::Map(_) => atoms::map(),
             TypedTerm::Pid(_) => atoms::pid(),
             TypedTerm::Port(_) => atoms::port(),
@@ -102,6 +104,8 @@ pub fn raw_term_roundtrip<'a>(kind: Atom, term: Term<'a>) -> NifResult<Term<'a>>
         raw_roundtrip::<terms::List>(term)
     } else if kind == atoms::local_pid() {
         raw_roundtrip::<terms::LocalPid>(term)
+    } else if kind == atoms::local_port() {
+        raw_roundtrip::<terms::LocalPort>(term)
     } else if kind == atoms::map() {
         raw_roundtrip::<terms::Map>(term)
     } else if kind == atoms::pid() {
@@ -134,6 +138,8 @@ pub fn free_term_after_clear<'a>(env: Env<'a>, kind: Atom, term: Term<'a>) -> Ni
         free_after_clear::<terms::Atom>(env, term)
     } else if kind == atoms::local_pid() {
         free_after_clear::<terms::LocalPid>(env, term)
+    } else if kind == atoms::local_port() {
+        free_after_clear::<terms::LocalPort>(env, term)
     } else {
         Err(Error::BadArg)
     }
