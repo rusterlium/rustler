@@ -6,13 +6,13 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{self, Child, Command, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use libtest_mimic::{Arguments, Failed, Trial};
@@ -60,7 +60,16 @@ pub fn run(manifest_dir: &str) -> ! {
                 .with_ignored_flag(test.ignore)
         })
         .collect();
-    libtest_mimic::run(&arguments, trials).exit()
+    let conclusion = libtest_mimic::run(&arguments, trials);
+
+    // The node stops when its connection closes. We wait for that, so that
+    // no node outlives the test binary.
+    let node = suite.node.lock().unwrap();
+    let _ = node.stream.shutdown(Shutdown::Both);
+    if let Some(reader) = node.reader.lock().unwrap().take() {
+        let _ = reader.join();
+    }
+    conclusion.exit()
 }
 
 /// A test passes, or fails with a report.
@@ -183,6 +192,8 @@ struct Node {
     /// Writes hold the lock of `state`, so frames don't mix.
     stream: TcpStream,
     state: Mutex<State>,
+    /// The thread that reads the verdicts, and waits for the node at its end.
+    reader: Mutex<Option<JoinHandle<()>>>,
 }
 
 #[derive(Default)]
@@ -283,11 +294,13 @@ impl Node {
         let node = Arc::new(Node {
             stream: stream.try_clone().map_err(io)?,
             state: Mutex::default(),
+            reader: Mutex::default(),
         });
-        thread::spawn({
+        let reader = thread::spawn({
             let node = node.clone();
             move || node.read_verdicts(stream, child)
         });
+        *node.reader.lock().unwrap() = Some(reader);
         Ok((node, tests))
     }
 
