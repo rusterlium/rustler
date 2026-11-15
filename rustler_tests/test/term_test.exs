@@ -81,6 +81,15 @@ defmodule RustlerTest.TermTest do
     assert RustlerTest.term_type(make_ref()) == :reference
   end
 
+  test "deferred terms encode heterogeneous values and borrowed inputs" do
+    value = %{nested: ["value"]}
+    assert RustlerTest.deferred_term(0, value, "hello") == 42
+    assert RustlerTest.deferred_term(1, value, "hello") == "hello"
+    assert RustlerTest.deferred_term(2, value, "hello") == value
+    assert RustlerTest.deferred_term(3, value, "hello") == ["hello", value, 42]
+    assert_raise ArgumentError, fn -> RustlerTest.deferred_term(4, value, "hello") end
+  end
+
   if RustlerTest.Helper.has_nif_version("2.18") do
     test "term size" do
       assert RustlerTest.term_size(%{}) > 0

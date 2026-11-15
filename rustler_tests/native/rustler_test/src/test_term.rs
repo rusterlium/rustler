@@ -1,6 +1,6 @@
 use rustler::{
-    terms, Atom, BoundTerm, Decoder, Encoder, Env, Error, FreeTerm, NifResult, OwnedEnv, Term,
-    TypedTerm,
+    terms, Atom, BoundTerm, Decoder, DeferredTerm, Encoder, Env, Error, FreeTerm, NifResult,
+    OwnedEnv, Term, TypedTerm,
 };
 use std::cmp::Ordering;
 use std::io::Write;
@@ -26,6 +26,17 @@ mod atoms {
         reference,
         tuple,
         unknown,
+    }
+}
+
+#[rustler::nif]
+pub fn deferred_term<'a>(kind: i32, term: Term<'a>, text: &'a str) -> NifResult<DeferredTerm<'a>> {
+    match kind {
+        0 => Ok(42_i32.defer()),
+        1 => Ok(text.defer()),
+        2 => Ok(term.defer()),
+        3 => Ok(vec![text.defer(), term.defer(), 42_i32.defer()].defer()),
+        _ => Err(Error::BadArg),
     }
 }
 

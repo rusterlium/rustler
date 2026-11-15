@@ -64,6 +64,7 @@ defmodule RustlerTest do
   def term_internal_hash(_, _), do: err()
   def term_phash2_hash(_), do: err()
   def term_type(_term), do: err()
+  def deferred_term(_kind, _term, _text), do: err()
   def raw_term_roundtrip(_kind, _term), do: err()
   def raw_bound_copy(_term), do: err()
   def free_term_after_clear(_kind, _term), do: err()
@@ -184,6 +185,7 @@ defmodule RustlerTest do
 
   def panic_in_nif(), do: err()
   def panic_in_encode(), do: err()
+  def panic_in_deferred_encode(), do: err()
   def panic_in_decode(_), do: err()
 
   if Helper.has_nif_version("2.16") do

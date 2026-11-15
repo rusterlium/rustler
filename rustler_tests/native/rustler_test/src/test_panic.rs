@@ -1,4 +1,4 @@
-use rustler::{Decoder, Encoder, Env, Term};
+use rustler::{Decoder, DeferredTerm, Encoder, Env, Term};
 
 #[rustler::nif]
 pub fn panic_in_nif() -> i32 {
@@ -22,6 +22,11 @@ impl<'a> Decoder<'a> for Panicking {
 #[rustler::nif]
 pub fn panic_in_encode() -> Panicking {
     Panicking
+}
+
+#[rustler::nif]
+pub fn panic_in_deferred_encode() -> DeferredTerm<'static> {
+    Panicking.defer()
 }
 
 #[rustler::nif]

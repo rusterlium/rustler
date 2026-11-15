@@ -44,7 +44,7 @@ pub mod terms;
 
 mod term;
 
-pub use crate::traits::{BoundTerm, Decoder, Encoder, FreeTerm};
+pub use crate::traits::{BoundTerm, Decoder, DeferredTerm, Encoder, FreeTerm};
 
 pub use crate::erlang::ErlOption;
 pub use crate::term::Term;

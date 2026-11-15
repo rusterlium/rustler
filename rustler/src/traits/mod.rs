@@ -5,5 +5,5 @@ mod free_term;
 
 pub use bound_term::BoundTerm;
 pub use decoder::Decoder;
-pub use encoder::Encoder;
+pub use encoder::{DeferredTerm, Encoder};
 pub use free_term::FreeTerm;
