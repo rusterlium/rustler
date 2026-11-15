@@ -90,6 +90,7 @@ impl From<InitMacroInput> for proc_macro2::TokenStream {
                 &nif_funcs,
                 load
             );
+            unsafe { rustler::codegen_runtime::write_manifest(#name, &nif_funcs) };
 
             unsafe {
                 // Leak nif_funcs
