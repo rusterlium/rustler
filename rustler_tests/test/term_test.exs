@@ -145,6 +145,17 @@ defmodule RustlerTest.TermTest do
     assert_raise ArgumentError, fn -> RustlerTest.raw_term_roundtrip(:local_pid, remote_pid) end
   end
 
+  test "general ports accept remote ports but free local ports reject them" do
+    remote_port =
+      :erlang.binary_to_term(<<131, 89, 119, 14, "remote@invalid", 0::32, 0::32>>)
+
+    assert RustlerTest.raw_term_roundtrip(:port, remote_port) === remote_port
+
+    assert_raise ArgumentError, fn ->
+      RustlerTest.raw_term_roundtrip(:local_port, remote_port)
+    end
+  end
+
   test "free terms survive clearing and dropping their source environment" do
     assert RustlerTest.free_term_after_clear(:atom, :example) == :example
     assert RustlerTest.free_term_after_clear(:local_pid, self()) == self()
@@ -250,6 +261,9 @@ defmodule RustlerTest.TermTest do
     remote_pid =
       :erlang.binary_to_term(<<131, 88, 119, 14, "remote@invalid", 0::32, 0::32, 1::32>>)
 
+    remote_port =
+      :erlang.binary_to_term(<<131, 89, 119, 14, "remote@invalid", 0::32, 0::32>>)
+
     try do
       cases = [
         atom: :example,
@@ -267,7 +281,7 @@ defmodule RustlerTest.TermTest do
         local_port: port,
         map: %{key: ["value"]},
         pid: remote_pid,
-        port: port,
+        port: remote_port,
         reference: make_ref(),
         tuple: {},
         tuple: {:ok, ["value"]}
