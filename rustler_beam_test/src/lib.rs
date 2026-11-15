@@ -70,59 +70,6 @@ impl<O: Outcome, E: Debug> Outcome for Result<O, E> {
     }
 }
 
-/// Used by the code that `#[rustler_beam_test::test]` generates.
-#[doc(hidden)]
-pub mod __private {
-    pub use crate::{step, Test};
-    pub use rustler::codegen_runtime::{c_char, c_int, inventory, ErlNifEnv, ErlNifTerm};
-    pub use rustler::Nif;
-}
-
-/// Registers a test as a NIF of the library, as `#[rustler::nif]` does for a
-/// function. The NIF has one argument, and the runner knows it by the prefix
-/// of its name.
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __test {
-    ($name:ident, $ignore:expr, $should_panic:expr, $test:expr) => {
-        $crate::__private::inventory::submit!($crate::__private::Nif {
-            // In a block of its own, so that the test sees its own items by
-            // these names.
-            name: {
-                const NAME: &str = concat!(
-                    "rustler_beam_test ",
-                    module_path!(),
-                    "::",
-                    stringify!($name),
-                    "\0"
-                );
-                // The BEAM looks a NIF up by an atom of Latin-1 characters.
-                const _: () = assert!(
-                    NAME.is_ascii() && NAME.len() <= 256,
-                    "the path of a test must be ASCII and at most 237 bytes long"
-                );
-                NAME.as_ptr() as *const $crate::__private::c_char
-            },
-            arity: 1,
-            flags: 0,
-            raw_func: {
-                unsafe extern "C" fn nif(
-                    env: *mut $crate::__private::ErlNifEnv,
-                    _argc: $crate::__private::c_int,
-                    argv: *const $crate::__private::ErlNifTerm,
-                ) -> $crate::__private::ErlNifTerm {
-                    const TEST: $crate::__private::Test = $crate::__private::Test {
-                        ignore: $ignore,
-                        should_panic: $should_panic,
-                    };
-                    unsafe { $crate::__private::step(env, argv, &TEST, $test) }
-                }
-                nif
-            },
-        });
-    };
-}
-
 /// What `#[ignore]` and `#[should_panic]` say about a test.
 #[doc(hidden)]
 pub struct Test {
