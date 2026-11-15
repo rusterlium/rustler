@@ -12,6 +12,14 @@ fn factorial_of_five() {
     assert_eq!(crate::factorial(5), 120);
 }
 
+/// A name that the attribute used for an item of its own.
+const NAME: &str = "Ada";
+
+#[rustler_beam_test::test]
+fn a_test_sees_the_items_of_its_module() {
+    assert_eq!(NAME, "Ada");
+}
+
 #[rustler_beam_test::test]
 fn integers_round_trip(env: Env) {
     for n in [i64::MIN, -1, 0, 1, i64::MAX] {

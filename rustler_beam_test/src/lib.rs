@@ -85,20 +85,24 @@ pub mod __private {
 #[macro_export]
 macro_rules! __test {
     ($name:ident, $ignore:expr, $should_panic:expr, $test:expr) => {
-        const NAME: &str = concat!(
-            "rustler_beam_test ",
-            module_path!(),
-            "::",
-            stringify!($name),
-            "\0"
-        );
-        // The BEAM looks a NIF up by an atom of Latin-1 characters.
-        const _: () = assert!(
-            NAME.is_ascii() && NAME.len() <= 256,
-            "the path of a test must be ASCII and at most 237 bytes long"
-        );
         $crate::__private::inventory::submit!($crate::__private::Nif {
-            name: NAME.as_ptr() as *const $crate::__private::c_char,
+            // In a block of its own, so that the test sees its own items by
+            // these names.
+            name: {
+                const NAME: &str = concat!(
+                    "rustler_beam_test ",
+                    module_path!(),
+                    "::",
+                    stringify!($name),
+                    "\0"
+                );
+                // The BEAM looks a NIF up by an atom of Latin-1 characters.
+                const _: () = assert!(
+                    NAME.is_ascii() && NAME.len() <= 256,
+                    "the path of a test must be ASCII and at most 237 bytes long"
+                );
+                NAME.as_ptr() as *const $crate::__private::c_char
+            },
             arity: 1,
             flags: 0,
             raw_func: {
