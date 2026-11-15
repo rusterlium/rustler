@@ -9,7 +9,6 @@ use std::io::{self, Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{self, Child, Command, Stdio};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -213,7 +212,7 @@ impl Erl {
 impl Drop for Erl {
     fn drop(&mut self) {
         let _ = self.0.kill();
-        self.wait();
+        let _ = self.0.wait();
     }
 }
 
@@ -234,23 +233,22 @@ impl Node {
     /// Starts `erl`, loads the library into it, and returns the manifest that
     /// the library wrote.
     fn start(library: &Path) -> Result<(Arc<Node>, String), String> {
-        static STARTED: AtomicU32 = AtomicU32::new(0);
         let io = |error: io::Error| format!("cannot start the BEAM node: {error}");
 
         // Only this process and the node know the token. With it, the node
         // shows that it is the node, and not another process on the machine.
-        let mut token = [0; 16];
+        // Each node also has files of its own, under another random name,
+        // since test binaries can start nodes at the same time.
+        let mut random = [0; 32];
         fs::File::open("/dev/urandom")
-            .and_then(|mut random| random.read_exact(&mut token))
+            .and_then(|mut source| source.read_exact(&mut random))
             .map_err(io)?;
-        let token: String = token.iter().map(|byte| format!("{byte:02x}")).collect();
-        // Test binaries can start nodes at the same time, so each node has
-        // files of its own.
-        let unique = format!(
-            "{}_{}",
-            process::id(),
-            STARTED.fetch_add(1, Ordering::Relaxed)
-        );
+        let [token, unique] = [&random[..16], &random[16..]].map(|bytes| {
+            bytes
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>()
+        });
         // A rename replaces the driver in one step, so no node reads half of it.
         let driver = library.with_file_name("rustler_beam_test_driver.erl");
         let scratch = driver.with_extension(&unique);
