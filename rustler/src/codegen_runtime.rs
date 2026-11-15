@@ -21,9 +21,10 @@ pub use crate::sys::{
     ErlNifFunc, ErlNifTerm,
 };
 
-/// Writes the module of a library and its NIFs to the file that the
-/// environment variable `RUSTLER_NIF_MANIFEST` names: the module on the first
-/// line, then one line `<arity> <name>` for each NIF.
+/// Writes the module of a library and its NIFs to a new file at the path that
+/// the environment variable `RUSTLER_NIF_MANIFEST` names: the module on the
+/// first line, then one line `<arity> <name>` for each NIF. When a file or a
+/// link is at that path already, it writes nothing.
 ///
 /// `erlang:load_nif/2` accepts a library only from the module that the library
 /// names, and only when that module defines each NIF. The BEAM asks the library
@@ -45,7 +46,11 @@ pub unsafe fn write_manifest(module: &str, nifs: &[ErlNifFunc]) {
             manifest.push_str(&format!("{} {name}\n", nif.arity));
         }
         // A tool that finds no file reports that.
-        let _ = std::fs::write(path, manifest);
+        let _ = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+            .and_then(|mut file| std::io::Write::write_all(&mut file, manifest.as_bytes()));
     }
     #[cfg(not(feature = "nif_manifest"))]
     let _ = (module, nifs);
