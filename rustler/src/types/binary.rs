@@ -490,7 +490,7 @@ impl PartialEq<OwnedBinary> for Binary<'_> {
 /// ## Binary terms
 impl<'a> Term<'a> {
     pub fn into_binary(self) -> NifResult<Binary<'a>> {
-        Binary::from_term(self)
+        crate::terms::Binary::from_term(self)?.into_binary(self.get_env())
     }
 }
 
