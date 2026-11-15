@@ -63,7 +63,8 @@ rustler_beam_test_runner::main!();
 ## Tests
 
 A test takes no argument or a `rustler::Env`. It fails when it panics, or when
-it returns an `Err`. `#[ignore]` and `#[should_panic]` work as on a `#[test]`.
+it returns an `Err`. `#[ignore]`, `#[should_panic]`, and
+`#[should_panic(expected = "...")]` work as on a `#[test]`.
 
 Each test runs as one NIF call in a new process, on a normal scheduler, so
 the `Env` is bound to a process, as in a NIF. The tests share the node and run
@@ -87,8 +88,8 @@ free of Rustler, so it links without a BEAM. It:
    directory of its own in the target directory,
 2. starts `erl` with a small driver, which connects back to the test target
    on the loopback interface,
-3. has the driver load the library, list its tests, and run each test that
-   `cargo test` selects.
+3. has the driver load the library and send back the names of its NIFs,
+   among them the tests, and then run each test that `cargo test` selects.
 
 `erlang:load_nif/2` accepts a library only from the module that
 `rustler::init!` names, and only when that module defines every NIF. The
