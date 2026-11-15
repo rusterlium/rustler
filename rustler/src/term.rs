@@ -67,7 +67,7 @@ impl<'a> Term<'a> {
     ///
     /// # Unsafe
     /// The caller must ensure that `env` is the environment that `inner` belongs to,
-    /// unless `inner` is an atom term.
+    /// unless `inner` is environment-independent, such as an atom or local pid.
     #[inline]
     pub unsafe fn new(env: Env<'a>, inner: ErlNifTerm) -> Self {
         Term { term: inner, env }

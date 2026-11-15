@@ -1,9 +1,6 @@
 #[cfg(feature = "nif_version_2_17")]
 use crate::sys::enif_make_new_atom_len;
-use crate::sys::{
-    c_char, c_uint, enif_get_atom, enif_get_atom_length, enif_make_existing_atom_len,
-    ErlNifCharEncoding, ErlNifEnv, ErlNifTerm,
-};
+use crate::sys::{c_char, enif_make_existing_atom_len, ErlNifCharEncoding, ErlNifEnv, ErlNifTerm};
 #[cfg(not(feature = "nif_version_2_17"))]
 use crate::sys::{enif_is_exception, enif_make_atom_len};
 use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
@@ -208,7 +205,7 @@ impl Term<'_> {
     ///
     /// Will return None if the term is not an atom.
     pub fn atom_to_string(&self) -> NifResult<String> {
-        unsafe { get_atom(self.get_env().as_c_arg(), self.as_c_arg()) }
+        crate::terms::Atom::from_term(*self)?.to_string(self.get_env())
     }
 }
 
@@ -432,61 +429,5 @@ unsafe fn make_existing_atom(
         Ok(atom_out.assume_init())
     } else {
         Err(Error::BadArg)
-    }
-}
-
-#[cfg(feature = "nif_version_2_17")]
-unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
-    let mut len = 0;
-    let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_UTF8);
-    if success == 0 {
-        return Err(Error::BadArg);
-    }
-
-    let mut string = String::with_capacity(len as usize + 1);
-    let bytes = string.as_mut_vec();
-    let nbytes = enif_get_atom(
-        env,
-        term,
-        bytes.as_mut_ptr() as *mut c_char,
-        len + 1,
-        ErlNifCharEncoding::ERL_NIF_UTF8,
-    );
-    assert!(nbytes as c_uint == len + 1);
-
-    bytes.set_len(len as usize);
-
-    Ok(string)
-}
-
-#[cfg(not(feature = "nif_version_2_17"))]
-unsafe fn get_atom(env: *mut ErlNifEnv, term: ErlNifTerm) -> Result<String, Error> {
-    let mut len = 0;
-    let success = enif_get_atom_length(env, term, &mut len, ErlNifCharEncoding::ERL_NIF_LATIN1);
-    if success == 0 {
-        return Err(Error::BadArg);
-    }
-
-    let mut bytes: Vec<u8> = Vec::with_capacity(len as usize + 1);
-    let nbytes = enif_get_atom(
-        env,
-        term,
-        bytes.as_mut_ptr() as *mut c_char,
-        len + 1,
-        ErlNifCharEncoding::ERL_NIF_LATIN1,
-    );
-    assert!(nbytes as c_uint == len + 1);
-
-    bytes.set_len(len as usize);
-
-    let nonascii_count = bytes.iter().filter(|&&b| b >= 128).count();
-    if nonascii_count == 0 {
-        Ok(String::from_utf8_unchecked(bytes))
-    } else {
-        let mut out = String::with_capacity(bytes.len() + nonascii_count);
-        for b in bytes {
-            out.push(b as char);
-        }
-        Ok(out)
     }
 }
