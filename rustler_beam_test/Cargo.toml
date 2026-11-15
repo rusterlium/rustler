@@ -1,0 +1,13 @@
+[package]
+name = "rustler_beam_test"
+description = "Write the tests of a Rustler NIF library in Rust and run them inside a real BEAM"
+repository = "https://github.com/rusterlium/rustler"
+version = "0.39.0"
+license = "MIT/Apache-2.0"
+readme = "README.md"
+edition = "2021"
+rust-version = "1.91"
+
+[dependencies]
+rustler = { path = "../rustler", version = "0.39.0", features = ["nif_manifest"] }
+rustler_beam_test_macros = { path = "macros", version = "0.39.0" }
