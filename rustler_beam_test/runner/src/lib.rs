@@ -33,10 +33,10 @@ macro_rules! main {
 pub fn run(manifest_dir: &str) -> ! {
     let arguments = Arguments::from_args();
     let started = build(manifest_dir).and_then(|library| {
-        let (node, tests) = Node::start(&library)?;
-        Ok((library, node, tests))
+        let (node, manifest) = Node::start(&library)?;
+        Ok((library, node, manifest))
     });
-    let (library, node, tests) = started.unwrap_or_else(|error| {
+    let (library, node, manifest) = started.unwrap_or_else(|error| {
         eprintln!("error: {error}");
         process::exit(1)
     });
@@ -46,18 +46,21 @@ pub fn run(manifest_dir: &str) -> ! {
         node: Mutex::new(node),
         gate: RwLock::new(()),
     });
-    let trials = tests
-        .into_iter()
+    // The manifest has a line `<arity> <name>` for each NIF, and the attribute
+    // names a test `rustler_beam_test <path>` or `rustler_beam_test ignored <path>`.
+    let trials = manifest
+        .lines()
+        .filter_map(|line| line.strip_prefix("1 rustler_beam_test "))
         .map(|test| {
+            let (ignored, path) = test
+                .strip_prefix("ignored ")
+                .map_or((false, test), |path| (true, path));
             // `cargo test` names a test by its path without the crate.
-            let path = test.nif.split_once(' ').map_or("", |(_, path)| path);
-            let name = path
-                .split_once("::")
-                .map_or(path, |(_, name)| name)
-                .to_string();
+            let name = path.split_once("::").map_or(path, |(_, name)| name);
+            let nif = format!("rustler_beam_test {test}");
             let suite = suite.clone();
-            Trial::test(name, move || suite.run(&test.nif).map_err(Failed::from))
-                .with_ignored_flag(test.ignore)
+            Trial::test(name, move || suite.run(&nif).map_err(Failed::from))
+                .with_ignored_flag(ignored)
         })
         .collect();
     let conclusion = libtest_mimic::run(&arguments, trials);
@@ -74,13 +77,6 @@ pub fn run(manifest_dir: &str) -> ! {
 
 /// A test passes, or fails with a report.
 type Verdict = Result<(), String>;
-
-/// A test of the library, as the node lists it.
-struct Test {
-    /// The name of the test NIF.
-    nif: String,
-    ignore: bool,
-}
 
 /// The node died, with `in_flight` tests waiting for their verdict.
 #[derive(Clone)]
@@ -210,8 +206,9 @@ const BOOT: &str = "[Source, Port] = init:get_plain_arguments(), \
     Module:main(list_to_integer(Port)).";
 
 impl Node {
-    /// Starts `erl`, loads the library into it, and returns its tests.
-    fn start(library: &Path) -> Result<(Arc<Node>, Vec<Test>), String> {
+    /// Starts `erl`, loads the library into it, and returns the manifest that
+    /// the library wrote.
+    fn start(library: &Path) -> Result<(Arc<Node>, String), String> {
         static STARTED: AtomicU32 = AtomicU32::new(0);
         let io = |error: io::Error| format!("cannot start the BEAM node: {error}");
 
@@ -274,23 +271,13 @@ impl Node {
                     wait(&mut child)
                 )
             })?;
-        let Some((0, mut listed)) = answer.split_first() else {
+        let Some((0, manifest)) = answer.split_first() else {
             return Err(format!(
                 "the BEAM cannot load {}: {}",
                 library.display(),
                 String::from_utf8_lossy(answer.get(1..).unwrap_or_default())
             ));
         };
-        let mut tests = Vec::new();
-        while let [ignore, high, low, rest @ ..] = listed {
-            let (nif, rest) = rest.split_at(u16::from_be_bytes([*high, *low]) as usize);
-            tests.push(Test {
-                nif: String::from_utf8_lossy(nif).into_owned(),
-                ignore: *ignore == 1,
-            });
-            listed = rest;
-        }
-
         let node = Arc::new(Node {
             stream: stream.try_clone().map_err(io)?,
             state: Mutex::default(),
@@ -301,7 +288,7 @@ impl Node {
             move || node.read_verdicts(stream, child)
         });
         *node.reader.lock().unwrap() = Some(reader);
-        Ok((node, tests))
+        Ok((node, String::from_utf8_lossy(manifest).into_owned()))
     }
 
     /// Sends a test to the node. Returns `None` when the node is dead.

@@ -14,7 +14,7 @@ use rustler::{Encoder, Env, Term};
 pub use rustler_beam_test_macros::test;
 
 mod atoms {
-    rustler::atoms! { ok, failed, next_message, describe }
+    rustler::atoms! { ok, failed, next_message }
 }
 
 /// What a test function returns: `()`, a [`Receive`], or a `Result` of one of
@@ -70,23 +70,16 @@ impl<O: Outcome, E: Debug> Outcome for Result<O, E> {
     }
 }
 
-/// What `#[ignore]` and `#[should_panic]` say about a test.
-#[doc(hidden)]
-pub struct Test {
-    pub ignore: bool,
-    /// The text that the message of the panic must contain.
-    pub should_panic: Option<&'static str>,
-}
-
 /// The tests that wait for a message, by the number that the driver passes
 /// back with it.
 static WAITING: Mutex<BTreeMap<u64, Receive>> = Mutex::new(BTreeMap::new());
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
-/// One call of a test NIF. Its argument is `describe`, `start`, or
+/// One call of a test NIF. Its argument is `start`, or
 /// `{Continuation, Message}` after it returned `{next_message, Continuation}`.
-/// For `describe` it returns whether the test is ignored. Else it returns
-/// `ok`, `{failed, Report}`, or `{next_message, Continuation}`.
+/// It returns `ok`, `{failed, Report}`, or `{next_message, Continuation}`.
+/// `should_panic` holds the text that the message of the panic must contain
+/// when the test has `#[should_panic]`.
 ///
 /// # Safety
 ///
@@ -95,16 +88,12 @@ static NEXT: AtomicU64 = AtomicU64::new(0);
 pub unsafe fn step<O: Outcome>(
     env: *mut ErlNifEnv,
     argv: *const ErlNifTerm,
-    test: &Test,
+    should_panic: Option<&str>,
     run: impl for<'a> FnOnce(Env<'a>) -> O,
 ) -> ErlNifTerm {
     let lifetime = ();
     let env = Env::new(&lifetime, env);
     let argument = Term::new(env, *argv);
-    if argument == atoms::describe().to_term(env) {
-        return test.ignore.encode(env).as_c_arg();
-    }
-
     let caught = catch_panic(|| match argument.decode::<(u64, Term)>() {
         Ok((continuation, message)) => {
             let Receive(then) = WAITING
@@ -117,7 +106,7 @@ pub unsafe fn step<O: Outcome>(
         Err(_) => run(env).into_step(),
     });
 
-    let step = match (caught, test.should_panic) {
+    let step = match (caught, should_panic) {
         (Err(panic), None) => Step::Failed(panic.report),
         (Err(panic), Some(expected)) if panic.message.contains(expected) => Step::Passed,
         (Err(panic), Some(expected)) => Step::Failed(format!(

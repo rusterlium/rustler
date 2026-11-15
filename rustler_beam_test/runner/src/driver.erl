@@ -6,12 +6,12 @@
 %% node connects to it. Frames have a length prefix of 4 bytes:
 %%
 %%   to the node    <<Library/binary>>
-%%   to the binary  <<0, Tests/binary>> | <<1, Reason/binary>>
+%%   to the binary  <<0, Manifest/binary>> | <<1, Reason/binary>>
 %%   to the node    <<Id:32, Test/binary>>
 %%   to the binary  <<Id:32, 0>> | <<Id:32, 1, Report/binary>>
 %%
-%% The first two load the library, and the other two run a test. `Tests` holds
-%% <<Ignore:8, Size:16, Test:Size/binary>> for each test.
+%% The first two load the library, and the other two run a test. `Manifest`
+%% lists the module and the NIFs of the library, as the library wrote it.
 -module(rustler_beam_test_driver).
 -export([main/1]).
 
@@ -23,8 +23,8 @@ main(Port) ->
             halt();
         {tcp, Socket, Library} ->
             try load(unicode:characters_to_list(Library)) of
-                {Module, Tests} ->
-                    ok = gen_tcp:send(Socket, [0 | Tests]),
+                {Module, Manifest} ->
+                    ok = gen_tcp:send(Socket, [0, Manifest]),
                     serve(Socket, Module, #{})
             catch
                 error:Reason ->
@@ -40,13 +40,16 @@ main(Port) ->
 %% the BEAM checks them. So one call that the BEAM refuses tells us the module
 %% to compile, with a stub for each NIF.
 load(Library) ->
-    Manifest = os:getenv("RUSTLER_NIF_MANIFEST"),
+    Path = os:getenv("RUSTLER_NIF_MANIFEST"),
     {error, Refusal} = erlang:load_nif(Library, 0),
-    {Module, Functions} =
-        case file:read_file(Manifest) of
-            {ok, Lines} -> parse(binary:split(Lines, <<"\n">>, [global, trim]));
+    Manifest =
+        case file:read_file(Path) of
+            {ok, Content} -> Content;
             {error, enoent} -> error({no_manifest, Refusal})
         end,
+    [Name | Nifs] = binary:split(Manifest, <<"\n">>, [global, trim]),
+    Module = binary_to_atom(Name),
+    Functions = [nif(binary:split(Nif, <<" ">>)) || Nif <- Nifs],
     Load = call(load_nif, [{string, 1, Library}, {integer, 1, 0}]),
     Forms = [
         {attribute, 1, module, Module},
@@ -57,23 +60,8 @@ load(Library) ->
     {ok, Module, Code} = compile:forms(Forms),
     {module, Module} = code:load_binary(Module, "rustler_beam_test", Code),
     ok = Module:'$load'(),
-    ok = file:delete(Manifest),
-    {Module, [describe(Module, Test, atom_to_binary(Test)) || {Test, 1} <- Functions]}.
-
-%% A test is a NIF with this prefix in its name, and it tells whether it is
-%% ignored.
-describe(Module, Test, <<"rustler_beam_test ", _/binary>> = Name) ->
-    Ignore =
-        case Module:Test(describe) of
-            true -> 1;
-            false -> 0
-        end,
-    <<Ignore:8, (byte_size(Name)):16, Name/binary>>;
-describe(_, _, _) ->
-    <<>>.
-
-parse([Module | Nifs]) ->
-    {binary_to_atom(Module), [nif(binary:split(Nif, <<" ">>)) || Nif <- Nifs]}.
+    ok = file:delete(Path),
+    {Module, Manifest}.
 
 nif([Arity, Name]) ->
     {binary_to_atom(Name), binary_to_integer(Arity)}.

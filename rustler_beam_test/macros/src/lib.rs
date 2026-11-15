@@ -47,8 +47,21 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
+    // The runner knows a test, and whether it is ignored, by the prefix of its
+    // NIF name.
+    let prefix = if ignore {
+        "rustler_beam_test ignored "
+    } else {
+        "rustler_beam_test "
+    };
+    // The BEAM looks a NIF up by an atom of at most 255 Latin-1 characters.
+    let too_long = format!(
+        "the path of a test must be ASCII and at most {} bytes long",
+        255 - prefix.len()
+    );
+
     // The test registers as a NIF with one argument, as `#[rustler::nif]`
-    // registers a function. The runner knows it by the prefix of its name.
+    // registers a function.
     quote! {
         #[cfg(feature = "beam_test")]
         const _: () = {
@@ -58,12 +71,8 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
                 // by these names.
                 name: {
                     const NAME: &str =
-                        concat!("rustler_beam_test ", module_path!(), "::", stringify!(#name), "\0");
-                    // The BEAM looks a NIF up by an atom of Latin-1 characters.
-                    const _: () = assert!(
-                        NAME.is_ascii() && NAME.len() <= 256,
-                        "the path of a test must be ASCII and at most 237 bytes long"
-                    );
+                        concat!(#prefix, module_path!(), "::", stringify!(#name), "\0");
+                    const _: () = assert!(NAME.is_ascii() && NAME.len() <= 256, #too_long);
                     NAME.as_ptr() as *const rustler::codegen_runtime::c_char
                 },
                 arity: 1,
@@ -74,11 +83,7 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
                         _argc: rustler::codegen_runtime::c_int,
                         argv: *const rustler::codegen_runtime::ErlNifTerm,
                     ) -> rustler::codegen_runtime::ErlNifTerm {
-                        const TEST: ::rustler_beam_test::Test = ::rustler_beam_test::Test {
-                            ignore: #ignore,
-                            should_panic: #should_panic,
-                        };
-                        unsafe { ::rustler_beam_test::step(env, argv, &TEST, #call) }
+                        unsafe { ::rustler_beam_test::step(env, argv, #should_panic, #call) }
                     }
                     nif
                 },
