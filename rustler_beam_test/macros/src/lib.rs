@@ -14,14 +14,14 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     // The compiler knows these two only on a `#[test]` function, so the test
     // itself carries what they say.
     let mut ignore = false;
-    let mut should_panic = quote!(None);
+    let mut should_panic = quote!(::core::option::Option::None);
     let mut error = None;
     function.attrs.retain(|attr| {
         if attr.path().is_ident("ignore") {
             ignore = true;
         } else if attr.path().is_ident("should_panic") {
             match expected_message(attr) {
-                Ok(expected) => should_panic = quote!(Some(#expected)),
+                Ok(expected) => should_panic = quote!(::core::option::Option::Some(#expected)),
                 Err(invalid) => error = Some(invalid),
             }
         } else {
@@ -34,9 +34,9 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let name = &function.sig.ident;
-    let call = match function.sig.inputs.len() {
-        0 => quote!(|_env| #name()),
-        1 => quote!(|env| #name(env)),
+    let run = match function.sig.inputs.len() {
+        0 => quote!(|_| #name()),
+        1 => quote!(#name),
         _ => {
             return syn::Error::new(
                 function.sig.inputs.span(),
@@ -60,6 +60,12 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
         255 - prefix.len()
     );
 
+    // The NIF that runs the test calls it by its name, so none of the names
+    // that the NIF brings in can be the name of the test.
+    let nif = quote::format_ident!("{name}_nif");
+    let site = proc_macro::Span::mixed_site().into();
+    let (env, argv) = (syn::Ident::new("env", site), syn::Ident::new("argv", site));
+
     // The test registers as a NIF with one argument, as `#[rustler::nif]`
     // registers a function.
     quote! {
@@ -78,14 +84,14 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
                 arity: 1,
                 flags: 0,
                 raw_func: {
-                    unsafe extern "C" fn nif(
-                        env: *mut rustler::codegen_runtime::ErlNifEnv,
-                        _argc: rustler::codegen_runtime::c_int,
-                        argv: *const rustler::codegen_runtime::ErlNifTerm,
+                    unsafe extern "C" fn #nif(
+                        #env: *mut rustler::codegen_runtime::ErlNifEnv,
+                        _: rustler::codegen_runtime::c_int,
+                        #argv: *const rustler::codegen_runtime::ErlNifTerm,
                     ) -> rustler::codegen_runtime::ErlNifTerm {
-                        unsafe { ::rustler_beam_test::step(env, argv, #should_panic, #call) }
+                        unsafe { ::rustler_beam_test::step(#env, #argv, #should_panic, #run) }
                     }
-                    nif
+                    #nif
                 },
             });
         };
