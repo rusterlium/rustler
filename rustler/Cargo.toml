@@ -15,6 +15,9 @@ default = ["nif_version_2_17"]
 derive = []
 allocator = []
 serde = ["dep:serde"]
+# Lets a tool learn the module and the NIFs of a library before it loads the
+# library: see `codegen_runtime::write_manifest`. For test builds only.
+nif_manifest = []
 # for nif versions and their changes see
 # https://github.com/erlang/otp/blob/master/erts/emulator/beam/erl_nif.h
 nif_version_2_14 = []

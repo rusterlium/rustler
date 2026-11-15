@@ -1,0 +1,13 @@
+[package]
+name = "rustler_beam_test_runner"
+description = "The test harness of rustler_beam_test: runs the tests of a NIF library in an erl node"
+repository = "https://github.com/rusterlium/rustler"
+version = "0.39.0"
+license = "MIT/Apache-2.0"
+readme = "../README.md"
+edition = "2021"
+rust-version = "1.91"
+
+[dependencies]
+libtest-mimic = "0.8"
+serde_json = "1"

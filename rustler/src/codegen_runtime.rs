@@ -21,6 +21,41 @@ pub use crate::sys::{
     ErlNifFunc, ErlNifTerm,
 };
 
+/// Writes the module of a library and its NIFs to a new file at the path that
+/// the environment variable `RUSTLER_NIF_MANIFEST` names: the module on the
+/// first line, then one line `<arity> <name>` for each NIF. When a file or a
+/// link is at that path already, it writes nothing.
+///
+/// `erlang:load_nif/2` accepts a library only from the module that the library
+/// names, and only when that module defines each NIF. The BEAM asks the library
+/// for both before it checks them, so a tool that knows neither can call
+/// `erlang:load_nif/2` from any module, read this file, and then load the
+/// library from a module that fits. The first call fails, as it must.
+///
+/// Without the `nif_manifest` feature this does nothing.
+///
+/// # Safety
+///
+/// The name of each NIF is a C string.
+pub unsafe fn write_manifest(module: &str, nifs: &[ErlNifFunc]) {
+    #[cfg(feature = "nif_manifest")]
+    if let Some(path) = std::env::var_os("RUSTLER_NIF_MANIFEST") {
+        let mut manifest = format!("{module}\n");
+        for nif in nifs {
+            let name = std::ffi::CStr::from_ptr(nif.name).to_string_lossy();
+            manifest.push_str(&format!("{} {name}\n", nif.arity));
+        }
+        // A tool that finds no file reports that.
+        let _ = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path)
+            .and_then(|mut file| std::io::Write::write_all(&mut file, manifest.as_bytes()));
+    }
+    #[cfg(not(feature = "nif_manifest"))]
+    let _ = (module, nifs);
+}
+
 pub unsafe trait NifReturnable {
     unsafe fn into_returned(self, env: Env) -> NifReturned;
 }
