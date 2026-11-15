@@ -63,8 +63,7 @@ rustler_beam_test_runner::main!();
 ## Tests
 
 A test takes no argument or a `rustler::Env`. It fails when it panics, or when
-it returns an `Err`. `#[ignore]`, `#[should_panic]`, and
-`#[should_panic(expected = "...")]` work as on a `#[test]`.
+it returns an `Err`. `#[ignore]` and `#[should_panic]` work as on a `#[test]`.
 
 Each test runs as one NIF call in a new process, on a normal scheduler, so
 the `Env` is bound to a process, as in a NIF. The tests share the node and run

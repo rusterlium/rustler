@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::spanned::Spanned;
 
 /// Marks a function as a test that runs inside a BEAM.
@@ -99,18 +99,22 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// The text of `#[should_panic(expected = "...")]`, or an empty one, which
-/// every panic message contains.
+/// The text of `#[should_panic = "..."]` or `#[should_panic(expected = "...")]`,
+/// or an empty one, which every panic message contains.
 fn expected_message(attr: &syn::Attribute) -> syn::Result<String> {
     let mut expected = String::new();
-    if !matches!(attr.meta, syn::Meta::Path(_)) {
-        attr.parse_nested_meta(|meta| {
+    match &attr.meta {
+        syn::Meta::Path(_) => {}
+        syn::Meta::NameValue(pair) => {
+            expected = syn::parse2::<syn::LitStr>(pair.value.to_token_stream())?.value();
+        }
+        syn::Meta::List(_) => attr.parse_nested_meta(|meta| {
             if !meta.path.is_ident("expected") {
                 return Err(meta.error("the only argument is `expected = \"...\"`"));
             }
             expected = meta.value()?.parse::<syn::LitStr>()?.value();
             Ok(())
-        })?;
+        })?,
     }
     Ok(expected)
 }

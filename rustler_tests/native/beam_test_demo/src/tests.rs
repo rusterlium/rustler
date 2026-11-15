@@ -156,6 +156,12 @@ fn a_panic_in_the_beam_fails_the_test(env: Env) {
     );
 }
 
+#[rustler_beam_test::test]
+#[should_panic = "lost our number"]
+fn should_panic_also_takes_the_text_after_an_equals_sign() {
+    panic!("the BEAM lost our number");
+}
+
 /// `cargo test -p beam_test_demo -- --ignored fails_on_purpose` shows the
 /// report of a failure.
 #[rustler_beam_test::test]
