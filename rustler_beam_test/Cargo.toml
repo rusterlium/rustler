@@ -9,5 +9,7 @@ edition = "2021"
 rust-version = "1.91"
 
 [dependencies]
-rustler = { path = "../rustler", version = "0.39.0", features = ["nif_manifest"] }
+# The library picks its NIF version, and 2.15 is the lowest that rustler builds
+# with.
+rustler = { path = "../rustler", version = "0.39.0", default-features = false, features = ["nif_manifest", "nif_version_2_15"] }
 rustler_beam_test_macros = { path = "macros", version = "0.39.0" }
