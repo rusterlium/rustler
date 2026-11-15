@@ -22,16 +22,17 @@ use libtest_mimic::{Arguments, Failed, Trial};
 macro_rules! main {
     () => {
         fn main() {
-            $crate::run(env!("CARGO_MANIFEST_DIR"))
+            $crate::run(env!("CARGO_MANIFEST_DIR"), env!("CARGO_TARGET_TMPDIR"))
         }
     };
 }
 
 /// Runs the tests of the NIF library of the package in `manifest_dir`, as
-/// the arguments of the test binary ask, and exits.
-pub fn run(manifest_dir: &str) -> ! {
+/// the arguments of the test binary ask, and exits. `scratch` is the
+/// directory that cargo gives the test target for its data.
+pub fn run(manifest_dir: &str, scratch: &str) -> ! {
     let arguments = Arguments::from_args();
-    let started = build(manifest_dir).and_then(|library| {
+    let started = build(manifest_dir, Path::new(scratch)).and_then(|library| {
         let (node, manifest) = Node::start(&library)?;
         Ok((library, node, manifest))
     });
@@ -133,22 +134,26 @@ impl Suite {
 }
 
 /// Builds the NIF library with the tests in it, and returns its path.
-fn build(manifest_dir: &str) -> Result<PathBuf, String> {
+fn build(manifest_dir: &str, scratch: &Path) -> Result<PathBuf, String> {
     let manifest = Path::new(manifest_dir).join("Cargo.toml");
-    // The library builds in the profile of this binary, into a directory of
-    // its own next to its `deps` directory, which keeps the library with the
-    // tests away from the one that `cargo build` writes.
+    // Cargo builds this binary below `<root>/<profile>` and gives it
+    // `<root>/tmp` for its data, whatever the layout below the profile. The
+    // library builds in the same profile, into a directory of its own there,
+    // which keeps it away from the library that `cargo build` writes.
     let binary =
         env::current_exe().map_err(|error| format!("cannot find the test binary: {error}"))?;
-    let profile_dir = binary
-        .ancestors()
-        .nth(2)
-        .ok_or("the test binary is not in a target directory")?;
+    let scratch = fs::canonicalize(scratch)
+        .map_err(|error| format!("cannot find {}: {error}", scratch.display()))?;
+    let profile_dir = scratch
+        .parent()
+        .and_then(|root| binary.strip_prefix(root).ok())
+        .and_then(|path| path.components().next())
+        .ok_or_else(|| format!("{} is not where cargo builds it", binary.display()))?;
     // `cargo test` builds in the profile `test` into `debug`, and in any
     // other profile into a directory of its name.
-    let profile = match profile_dir.file_name() {
-        Some(name) if name != "debug" => name.to_owned(),
-        _ => "test".into(),
+    let profile = match profile_dir.as_os_str() {
+        dir if dir == "debug" => "test".into(),
+        dir => dir.to_owned(),
     };
 
     let output = Command::new(env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
@@ -159,7 +164,7 @@ fn build(manifest_dir: &str) -> Result<PathBuf, String> {
         .arg("--profile")
         .arg(profile)
         .arg("--target-dir")
-        .arg(profile_dir.join("beam_test"))
+        .arg(scratch.join("beam_test"))
         .stderr(Stdio::inherit())
         .output()
         .map_err(|error| format!("cannot run cargo: {error}"))?;
