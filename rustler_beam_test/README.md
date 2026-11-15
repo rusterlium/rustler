@@ -84,8 +84,9 @@ The attribute registers the test as one more NIF of the library, like
 `#[rustler::nif]` does, behind the `beam_test` feature. The test target is
 free of Rustler, so it links without a BEAM. It:
 
-1. builds the library with `cargo build --lib --features beam_test`, into a
-   directory of its own in the target directory,
+1. builds the library with `cargo build --lib --features beam_test`, in the
+   profile of the test target, into a directory of its own in the target
+   directory,
 2. starts `erl` with a small driver, which connects back to the test target
    on the loopback interface,
 3. has the driver load the library and send back the names of its NIFs,

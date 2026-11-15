@@ -136,23 +136,30 @@ impl Suite {
 /// Builds the NIF library with the tests in it, and returns its path.
 fn build(manifest_dir: &str) -> Result<PathBuf, String> {
     let manifest = Path::new(manifest_dir).join("Cargo.toml");
-    // A directory of its own, next to the `deps` directory of this binary,
-    // keeps the library with the tests away from the one that `cargo build`
-    // writes.
-    let target = env::current_exe()
-        .map_err(|error| format!("cannot find the test binary: {error}"))?
+    // The library builds in the profile of this binary, into a directory of
+    // its own next to its `deps` directory, which keeps the library with the
+    // tests away from the one that `cargo build` writes.
+    let binary =
+        env::current_exe().map_err(|error| format!("cannot find the test binary: {error}"))?;
+    let profile_dir = binary
         .ancestors()
         .nth(2)
-        .ok_or("the test binary is not in a target directory")?
-        .join("beam_test");
+        .ok_or("the test binary is not in a target directory")?;
+    // Cargo writes the profile `dev` into `debug`.
+    let profile = match profile_dir.file_name() {
+        Some(name) if name != "debug" => name.to_owned(),
+        _ => "dev".into(),
+    };
 
     let output = Command::new(env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
         .args(["build", "--quiet", "--lib", "--features", "beam_test"])
         .arg("--message-format=json-render-diagnostics")
         .arg("--manifest-path")
         .arg(&manifest)
+        .arg("--profile")
+        .arg(profile)
         .arg("--target-dir")
-        .arg(target)
+        .arg(profile_dir.join("beam_test"))
         .stderr(Stdio::inherit())
         .output()
         .map_err(|error| format!("cannot run cargo: {error}"))?;
