@@ -88,7 +88,8 @@ free of Rustler, so it links without a BEAM. It:
    profile of the test target, into a directory of its own in the target
    directory,
 2. starts `erl` with a small driver, which connects back to the test target
-   on the loopback interface,
+   on the loopback interface and proves with a random token that it is the
+   node that the test target started,
 3. has the driver load the library and send back the names of its NIFs,
    among them the tests, and then run each test that `cargo test` selects.
 

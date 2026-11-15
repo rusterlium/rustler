@@ -5,32 +5,34 @@
 %% The test binary listens on a TCP port of the loopback interface, and the
 %% node connects to it. Frames have a length prefix of 4 bytes:
 %%
-%%   to the node    <<Library/binary>>
+%%   to the binary  <<Token/binary>>
 %%   to the binary  <<0, Manifest/binary>> | <<1, Reason/binary>>
 %%   to the node    <<Id:32, Test/binary>>
 %%   to the binary  <<Id:32, 0>> | <<Id:32, 1, Report/binary>>
 %%
-%% The first two load the library, and the other two run a test. `Manifest`
-%% lists the module and the NIFs of the library, as the library wrote it.
+%% With the token from RUSTLER_BEAM_TEST_TOKEN, the node shows that it is the
+%% node that the binary started. The second frame tells whether the library
+%% loaded, and the other two run a test. `Manifest` lists the module and the
+%% NIFs of the library, as the library wrote it.
 -module(rustler_beam_test_driver).
--export([main/1]).
+-export([main/2]).
 
-main(Port) ->
+main(Port, Library) ->
     Options = [binary, {packet, 4}, {active, true}, {nodelay, true}],
-    {ok, Socket} = gen_tcp:connect({127, 0, 0, 1}, Port, Options),
-    receive
-        {tcp_closed, Socket} ->
-            halt();
-        {tcp, Socket, Library} ->
-            try load(unicode:characters_to_list(Library)) of
+    case gen_tcp:connect({127, 0, 0, 1}, Port, Options) of
+        {ok, Socket} ->
+            send(Socket, os:getenv("RUSTLER_BEAM_TEST_TOKEN")),
+            try load(Library) of
                 {Module, Manifest} ->
-                    ok = gen_tcp:send(Socket, [0, Manifest]),
+                    send(Socket, [0, Manifest]),
                     serve(Socket, Module, #{})
             catch
-                error:Reason ->
-                    ok = gen_tcp:send(Socket, [1, format("~tp", [Reason])]),
+                Class:Reason ->
+                    send(Socket, [1, format("~tp:~tp", [Class, Reason])]),
                     halt(1)
-            end
+            end;
+        {error, _} ->
+            halt()
     end.
 
 %% `erlang:load_nif/2` accepts a library only from the module that the library
@@ -60,6 +62,7 @@ load(Library) ->
     {ok, Module, Code} = compile:forms(Forms),
     {module, Module} = code:load_binary(Module, "rustler_beam_test", Code),
     ok = Module:'$load'(),
+    % Only now: while the file is there, the library writes no second one.
     ok = file:delete(Path),
     {Module, Manifest}.
 
@@ -82,10 +85,17 @@ serve(Socket, Module, Running) ->
             serve(Socket, Module, Running#{Monitor => Id});
         {'DOWN', Monitor, process, _, Exit} ->
             {Id, Rest} = maps:take(Monitor, Running),
-            ok = gen_tcp:send(Socket, [<<Id:32>> | verdict(Exit)]),
+            send(Socket, [<<Id:32>> | verdict(Exit)]),
             serve(Socket, Module, Rest);
         {tcp_closed, Socket} ->
             halt()
+    end.
+
+%% The node stops when the test binary has gone.
+send(Socket, Frame) ->
+    case gen_tcp:send(Socket, Frame) of
+        ok -> ok;
+        {error, _} -> halt()
     end.
 
 verdict({verdict, ok}) -> [0];

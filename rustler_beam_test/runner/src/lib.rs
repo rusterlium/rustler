@@ -69,7 +69,7 @@ pub fn run(manifest_dir: &str) -> ! {
     // no node outlives the test binary.
     let node = suite.node.lock().unwrap();
     let _ = node.stream.shutdown(Shutdown::Both);
-    wait(&mut node.erl.lock().unwrap());
+    node.erl.lock().unwrap().wait();
     conclusion.exit()
 }
 
@@ -193,7 +193,27 @@ struct Node {
     /// Writes hold the lock of `state`, so frames don't mix.
     stream: TcpStream,
     state: Mutex<State>,
-    erl: Mutex<Child>,
+    erl: Mutex<Erl>,
+}
+
+/// An `erl` process, which is killed when the runner lets go of it.
+struct Erl(Child);
+
+impl Erl {
+    /// Waits for the process to exit, and says how it exited.
+    fn wait(&mut self) -> String {
+        match self.0.wait() {
+            Ok(status) => status.to_string(),
+            Err(error) => error.to_string(),
+        }
+    }
+}
+
+impl Drop for Erl {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        self.wait();
+    }
 }
 
 #[derive(Default)]
@@ -204,10 +224,10 @@ struct State {
 }
 
 /// Evaluated by `erl`: compiles and runs the driver.
-const BOOT: &str = "[Source, Port] = init:get_plain_arguments(), \
+const BOOT: &str = "[Source, Port, Library] = init:get_plain_arguments(), \
     {ok, Module, Code} = compile:file(Source, [binary, report]), \
     {module, Module} = code:load_binary(Module, Source, Code), \
-    Module:main(list_to_integer(Port)).";
+    Module:main(list_to_integer(Port), Library).";
 
 impl Node {
     /// Starts `erl`, loads the library into it, and returns the manifest that
@@ -216,11 +236,13 @@ impl Node {
         static STARTED: AtomicU32 = AtomicU32::new(0);
         let io = |error: io::Error| format!("cannot start the BEAM node: {error}");
 
-        // `erlang:load_nif/2` adds the extension itself.
-        let path = library.with_extension("");
-        let path = path
-            .to_str()
-            .ok_or("the path of the library is not UTF-8")?;
+        // Only this process and the node know the token. With it, the node
+        // shows that it is the node, and not another process on the machine.
+        let mut token = [0; 16];
+        fs::File::open("/dev/urandom")
+            .and_then(|mut random| random.read_exact(&mut token))
+            .map_err(io)?;
+        let token: String = token.iter().map(|byte| format!("{byte:02x}")).collect();
         // Test binaries can start nodes at the same time, so each node has
         // files of its own.
         let unique = format!(
@@ -238,24 +260,41 @@ impl Node {
         let listener = TcpListener::bind(("127.0.0.1", 0)).map_err(io)?;
         let port = listener.local_addr().map_err(io)?.port();
         // The node stops when its connection to this process closes.
-        let mut child = Command::new("erl")
+        let mut erl = Command::new("erl")
             .args(["-noinput", "-eval", BOOT, "-extra"])
             .arg(&driver)
             .arg(port.to_string())
+            // `erlang:load_nif/2` adds the extension itself.
+            .arg(library.with_extension(""))
+            .env("RUSTLER_BEAM_TEST_TOKEN", &token)
             .env("RUSTLER_NIF_MANIFEST", manifest)
+            // A node that crashes leaves no `erl_crash.dump` behind.
+            .env("ERL_CRASH_DUMP_SECONDS", "0")
             .stdin(Stdio::null())
             // Tools read the list of tests from the stdout of this process.
             .stdout(io::stderr())
             .spawn()
+            .map(Erl)
             .map_err(|error| format!("cannot run `erl`: {error}"))?;
 
         // `accept` alone would wait forever for a node that failed to boot.
         listener.set_nonblocking(true).map_err(io)?;
+        let hello = frame(token.as_bytes());
         let mut stream = loop {
             match listener.accept() {
-                Ok((stream, _)) => break stream,
+                Ok((mut stream, _)) => {
+                    stream.set_nonblocking(false).map_err(io)?;
+                    stream
+                        .set_read_timeout(Some(Duration::from_secs(5)))
+                        .map_err(io)?;
+                    // The node sends the token first, and any other peer goes.
+                    let mut heard = vec![0; hello.len()];
+                    if stream.read_exact(&mut heard).is_ok() && heard == hello {
+                        break stream;
+                    }
+                }
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
-                    if let Some(status) = child.try_wait().map_err(io)? {
+                    if let Some(status) = erl.0.try_wait().map_err(io)? {
                         return Err(format!("`erl` stopped before it connected ({status})"));
                     }
                     thread::sleep(Duration::from_millis(5));
@@ -263,18 +302,16 @@ impl Node {
                 Err(error) => return Err(io(error)),
             }
         };
-        stream.set_nonblocking(false).map_err(io)?;
+        stream.set_read_timeout(None).map_err(io)?;
         stream.set_nodelay(true).map_err(io)?;
 
-        let answer = write_frame(&stream, path.as_bytes())
-            .and_then(|()| read_frame(&mut stream))
-            .map_err(|_| {
-                format!(
-                    "the BEAM node died while it loaded {} ({})",
-                    library.display(),
-                    wait(&mut child)
-                )
-            })?;
+        let answer = read_frame(&mut stream).map_err(|_| {
+            format!(
+                "the BEAM node died while it loaded {} ({})",
+                library.display(),
+                erl.wait()
+            )
+        })?;
         let Some((0, manifest)) = answer.split_first() else {
             return Err(format!(
                 "the BEAM cannot load {}: {}",
@@ -285,7 +322,7 @@ impl Node {
         let node = Arc::new(Node {
             stream: stream.try_clone().map_err(io)?,
             state: Mutex::default(),
-            erl: Mutex::new(child),
+            erl: Mutex::new(erl),
         });
         thread::spawn({
             let node = node.clone();
@@ -305,7 +342,7 @@ impl Node {
         let (sender, receiver) = channel();
         state.waiting.insert(id, sender);
         // When the write fails, the node is dead, and `read_verdicts` answers.
-        let _ = write_frame(&self.stream, &[&id.to_be_bytes(), test.as_bytes()].concat());
+        let _ = (&self.stream).write_all(&frame(&[&id.to_be_bytes(), test.as_bytes()].concat()));
         Some(receiver)
     }
 
@@ -331,7 +368,7 @@ impl Node {
             state.waiting.len()
         };
         let death = Death {
-            status: wait(&mut self.erl.lock().unwrap()),
+            status: self.erl.lock().unwrap().wait(),
             in_flight,
         };
         if in_flight > 1 {
@@ -346,15 +383,9 @@ impl Node {
     }
 }
 
-fn wait(child: &mut Child) -> String {
-    match child.wait() {
-        Ok(status) => status.to_string(),
-        Err(error) => error.to_string(),
-    }
-}
-
-fn write_frame(mut stream: &TcpStream, frame: &[u8]) -> io::Result<()> {
-    stream.write_all(&[&(frame.len() as u32).to_be_bytes(), frame].concat())
+/// The bytes with their length in front, as the driver reads and writes them.
+fn frame(bytes: &[u8]) -> Vec<u8> {
+    [&(bytes.len() as u32).to_be_bytes(), bytes].concat()
 }
 
 fn read_frame(stream: &mut TcpStream) -> io::Result<Vec<u8>> {
