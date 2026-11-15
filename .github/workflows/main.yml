@@ -125,6 +125,10 @@ jobs:
 
       - run: cargo test
 
+      - name: Run Rust tests inside the BEAM
+        run: cargo test -p beam_test_demo
+        if: "startsWith(matrix.os, 'ubuntu')"
+
       - name: Test rustler_mix
         working-directory: rustler_mix
         run: |

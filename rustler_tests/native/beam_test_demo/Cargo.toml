@@ -1,0 +1,26 @@
+[package]
+name = "beam_test_demo"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+# Without a BEAM, the test binary of a NIF library does not link on Linux.
+test = false
+
+# Runs the tests of the library inside a BEAM.
+[[test]]
+name = "beam"
+harness = false
+
+[features]
+# The runner builds the library with this feature, to get the tests into it.
+beam_test = ["dep:rustler_beam_test"]
+
+[dependencies]
+rustler = { path = "../../../rustler" }
+rustler_beam_test = { path = "../../../rustler_beam_test", optional = true }
+
+[dev-dependencies]
+rustler_beam_test_runner = { path = "../../../rustler_beam_test/runner" }
