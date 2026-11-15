@@ -12,7 +12,7 @@ use std::process::{self, Child, Command, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex, RwLock};
-use std::thread::{self, JoinHandle};
+use std::thread;
 use std::time::Duration;
 
 use libtest_mimic::{Arguments, Failed, Trial};
@@ -69,9 +69,7 @@ pub fn run(manifest_dir: &str) -> ! {
     // no node outlives the test binary.
     let node = suite.node.lock().unwrap();
     let _ = node.stream.shutdown(Shutdown::Both);
-    if let Some(reader) = node.reader.lock().unwrap().take() {
-        let _ = reader.join();
-    }
+    wait(&mut node.erl.lock().unwrap());
     conclusion.exit()
 }
 
@@ -188,8 +186,7 @@ struct Node {
     /// Writes hold the lock of `state`, so frames don't mix.
     stream: TcpStream,
     state: Mutex<State>,
-    /// The thread that reads the verdicts, and waits for the node at its end.
-    reader: Mutex<Option<JoinHandle<()>>>,
+    erl: Mutex<Child>,
 }
 
 #[derive(Default)]
@@ -235,7 +232,7 @@ impl Node {
         let port = listener.local_addr().map_err(io)?.port();
         // The node stops when its connection to this process closes.
         let mut child = Command::new("erl")
-            .args(["-noshell", "-noinput", "-eval", BOOT, "-extra"])
+            .args(["-noinput", "-eval", BOOT, "-extra"])
             .arg(&driver)
             .arg(port.to_string())
             .env("RUSTLER_NIF_MANIFEST", manifest)
@@ -281,13 +278,12 @@ impl Node {
         let node = Arc::new(Node {
             stream: stream.try_clone().map_err(io)?,
             state: Mutex::default(),
-            reader: Mutex::default(),
+            erl: Mutex::new(child),
         });
-        let reader = thread::spawn({
+        thread::spawn({
             let node = node.clone();
-            move || node.read_verdicts(stream, child)
+            move || node.read_verdicts(stream)
         });
-        *node.reader.lock().unwrap() = Some(reader);
         Ok((node, String::from_utf8_lossy(manifest).into_owned()))
     }
 
@@ -307,7 +303,7 @@ impl Node {
     }
 
     /// Hands each verdict to the test that waits for it, until the node dies.
-    fn read_verdicts(&self, mut stream: TcpStream, mut child: Child) {
+    fn read_verdicts(&self, mut stream: TcpStream) {
         while let Ok(frame) = read_frame(&mut stream) {
             let (id, verdict) = frame.split_at(4);
             let verdict = match verdict {
@@ -328,7 +324,7 @@ impl Node {
             state.waiting.len()
         };
         let death = Death {
-            status: wait(&mut child),
+            status: wait(&mut self.erl.lock().unwrap()),
             in_flight,
         };
         if in_flight > 1 {
