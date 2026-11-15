@@ -46,7 +46,7 @@ defmodule Rustler.Compiler do
         # HACK: Cargo does not allow forcing a recompilation, but we need the
         # compiler-artifact messages, so force a recompilation via a "config
         # change"
-        args ++ ["--cfg", "build_#{System.system_time(:millisecond)}"]
+        args ++ ["--", "--cfg", "build_#{System.system_time(:millisecond)}"]
       else
         args
       end
@@ -160,7 +160,14 @@ defmodule Rustler.Compiler do
   end
 
   defp expected_files(config) do
-    lib = if config.lib, do: [output_file(config.crate, :lib, config.target)], else: []
+    lib =
+      if config.lib do
+        crate_name = config.crate |> to_string() |> String.replace("-", "_")
+        [output_file(crate_name, :lib, config.target)]
+      else
+        []
+      end
+
     bins = for bin <- config.binaries, do: output_file(bin, :bin, config.target)
 
     for filename <- lib ++ bins do

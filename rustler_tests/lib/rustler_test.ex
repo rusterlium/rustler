@@ -18,7 +18,9 @@ defmodule RustlerTest do
 
   use Rustler,
     otp_app: :rustler_test,
-    crate: :rustler_test,
+    crate: :"rustler-test",
+    path: "native/rustler_test",
+    load_from: {:rustler_test, "priv/native/rustler_test"},
     features: [Helper.nif_feature_from_running_version()]
 
   defp err, do: :erlang.nif_error(:nif_not_loaded)
