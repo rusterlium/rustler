@@ -145,10 +145,11 @@ fn build(manifest_dir: &str) -> Result<PathBuf, String> {
         .ancestors()
         .nth(2)
         .ok_or("the test binary is not in a target directory")?;
-    // Cargo writes the profile `dev` into `debug`.
+    // `cargo test` builds in the profile `test` into `debug`, and in any
+    // other profile into a directory of its name.
     let profile = match profile_dir.file_name() {
         Some(name) if name != "debug" => name.to_owned(),
-        _ => "dev".into(),
+        _ => "test".into(),
     };
 
     let output = Command::new(env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
