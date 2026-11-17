@@ -32,7 +32,7 @@ defmodule Rustler.Mixfile do
   defp package do
     [
       description: "Mix compiler and runtime helpers for Rustler.",
-      files: ["lib", "priv", "mix.exs", "README.md"],
+      files: ["lib", "src", "priv", "mix.exs", "README.md"],
       maintainers: ["hansihe"],
       licenses: ["MIT", "Apache-2.0"],
       links: %{
