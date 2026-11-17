@@ -39,7 +39,9 @@ defmodule Rustler.Compiler do
   def signature_file(config) do
     if config.skip_compilation? do
       {otp_app, path} = config.load_from
-      :rustler.signature_path(Application.app_dir(otp_app, path))
+      :rustler.signature_path(
+        Application.app_dir(otp_app, output_file(path, :lib, config.target))
+      )
     else
       :rustler.signature_path(
         Path.join(priv_dir(), output_file(config.crate, :lib, config.target))

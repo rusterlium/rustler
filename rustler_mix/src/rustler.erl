@@ -13,7 +13,8 @@
 get_path(Application, Crate) ->
     filename:join([
         code:priv_dir(Application),
-        binary:join([Crate, platform_ext()], <<".">>)
+        <<"native">>,
+        <<Crate/binary, (platform_ext())/binary>>
     ]).
 
 get_signatures(Application, Crate) ->
