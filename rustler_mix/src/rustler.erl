@@ -22,7 +22,13 @@ get_signatures(Application, Crate) ->
     extract_signatures(Path, 1).
 
 signature_path(LibraryPath) ->
-    RootPath = filename:rootname(LibraryPath, filename:extension(LibraryPath)),
+    RootPath =
+        case filename:extension(LibraryPath) of
+            Ext when Ext =:= <<".so">>; Ext =:= <<".dll">>; Ext =:= <<".dylib">> ->
+                filename:rootname(LibraryPath, Ext);
+            _ ->
+                LibraryPath
+        end,
     <<RootPath/binary, ".signature-v1.txt">>.
 
 write_signatures(LibraryPath, SignaturePath) ->
