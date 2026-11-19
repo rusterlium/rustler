@@ -23,6 +23,11 @@ defmodule RustlerTest.ListTest do
     assert RustlerTest.sum_list(RustlerTest.make_list()) == 6
   end
 
+  test "decoding into a Vec fails on improper lists and non-lists" do
+    assert_raise ArgumentError, fn -> RustlerTest.sum_list_as_floats([1.0, 2.0 | 3.0]) end
+    assert_raise ArgumentError, fn -> RustlerTest.sum_list_as_floats(:not_a_list) end
+  end
+
   test "sum float list" do
     assert_in_delta RustlerTest.sum_list_as_floats([1, 2, 3, 4]), 10.0, 0.01
     assert_in_delta RustlerTest.sum_list_as_floats([1.0, 2.0, 3.0, 4.0]), 10.0, 0.01
